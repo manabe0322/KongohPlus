@@ -4,6 +4,7 @@
 #' @param dt_csp_init The initial data.table of a crime stain profile
 change_data_type_csp <- function(dt_csp_init){
 
+  # Remove spaces of the names
   names(dt_csp_init) <- gsub(" ", "", names(dt_csp_init))
 
   name_dt_csp <- names(dt_csp_init)
@@ -74,7 +75,8 @@ calc_mmw <- function(){
 }
 
 # Load csp
-dt_csp_init <- fread("C:/Users/manab/Documents/RStudio/KongohPlus/inst/extdata/examples/mix7_CSP.csv")
+#dt_csp_init <- fread("C:/Users/manab/Documents/RStudio/KongohPlus/inst/extdata/examples/mix7_CSP.csv")
+dt_csp_init <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/mix7_CSP.csv")
 
 # Change data type of dt_csp_init
 dt_csp_init <- change_data_type_csp(dt_csp_init)
