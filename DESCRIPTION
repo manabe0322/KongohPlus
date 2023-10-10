@@ -1,11 +1,16 @@
 Package: KongohPlus
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Probabilistic genotyping software based on a quantitative continuous model
 Version: 0.1.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
-Description: More about what it does (maybe more than one line)
-    Use four spaces when indenting paragraphs within the Description.
+Author: Sho Manabe <manabesh@hirakata.kmu.ac.jp>
+Maintainer: Sho Manabe <manabesh@hirakata.kmu.ac.jp>
+Description: Probabilistic genotyping software based on a quantitative continuous model.
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
+Depends:
+    R (>= 4.3.0), 
+    shiny
+Imports:
+    data.table, 
+    gtools
