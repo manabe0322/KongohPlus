@@ -430,4 +430,11 @@ sr_consider_all_mk[, 4] <- FALSE
 sr_consider_all_mk[17, 4] <- TRUE
 sr_consider_all_mk[19, 4] <- TRUE
 
+############
+# Analysis #
+############
+
+tmp <- arrange_exp_data(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dye_all_mk, sr_consider_all_mk, max_dist_pu = 1)
+exp_list <- tmp[[1]]
+gt_list <- tmp[[2]]
 
