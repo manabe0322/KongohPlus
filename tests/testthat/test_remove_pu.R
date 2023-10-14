@@ -5,12 +5,12 @@ test_that("remove_pu pattern1", {
   ##############
 
   # Information on peaks
-  peaks <- c(11, 12, 13, 14)
+  peaks <- as.character(c(11, 12, 13, 14))
   sizes <- c(100, 104, 108, 112)
   heights <- c(200, 1000, 100, 1005)
 
   # Genotype
-  gt <- c(12, 14)
+  gt <- as.character(c(12, 14))
 
   # Dye
   dye <- "B"
@@ -36,10 +36,10 @@ test_that("remove_pu pattern1", {
   ########
 
   expect_equal(length(peaks_new), 4)
-  expect_equal(peaks_new[1], 11)
-  expect_equal(peaks_new[2], 12)
-  expect_equal(peaks_new[3], 13)
-  expect_equal(peaks_new[4], 14)
+  expect_equal(peaks_new[1], "11")
+  expect_equal(peaks_new[2], "12")
+  expect_equal(peaks_new[3], "13")
+  expect_equal(peaks_new[4], "14")
   expect_equal(sizes_new[1], 100)
   expect_equal(sizes_new[2], 104)
   expect_equal(sizes_new[3], 108)
@@ -57,12 +57,12 @@ test_that("remove_pu pattern2", {
   ##############
 
   # Information on peaks
-  peaks <- c(11, 12, 13, 14)
+  peaks <- as.character(c(11, 12, 13, 14))
   sizes <- c(100, 104, 108, 112)
   heights <- c(200, 1000, 100, 1005)
 
   # Genotype
-  gt <- c(12, 14)
+  gt <- as.character(c(12, 14))
 
   # Dye
   dye <- "B"
@@ -88,9 +88,9 @@ test_that("remove_pu pattern2", {
   ########
 
   expect_equal(length(peaks_new), 3)
-  expect_equal(peaks_new[1], 12)
-  expect_equal(peaks_new[2], 13)
-  expect_equal(peaks_new[3], 14)
+  expect_equal(peaks_new[1], "12")
+  expect_equal(peaks_new[2], "13")
+  expect_equal(peaks_new[3], "14")
   expect_equal(sizes_new[1], 104)
   expect_equal(sizes_new[2], 108)
   expect_equal(sizes_new[3], 112)
@@ -106,12 +106,12 @@ test_that("remove_pu pattern3", {
   ##############
 
   # Information on peaks
-  peaks <- c(11, 12, 13, 14)
+  peaks <- as.character(c(11, 12, 13, 14))
   sizes <- c(100, 104, 108, 112)
   heights <- c(200, 1000, 100, 1005)
 
   # Genotype
-  gt <- c(12, 14)
+  gt <- as.character(c(12, 14))
 
   # Dye
   dye <- "B"
@@ -137,10 +137,10 @@ test_that("remove_pu pattern3", {
   ########
 
   expect_equal(length(peaks_new), 4)
-  expect_equal(peaks_new[1], 11)
-  expect_equal(peaks_new[2], 12)
-  expect_equal(peaks_new[3], 13)
-  expect_equal(peaks_new[4], 14)
+  expect_equal(peaks_new[1], "11")
+  expect_equal(peaks_new[2], "12")
+  expect_equal(peaks_new[3], "13")
+  expect_equal(peaks_new[4], "14")
   expect_equal(sizes_new[1], 100)
   expect_equal(sizes_new[2], 104)
   expect_equal(sizes_new[3], 108)
@@ -158,12 +158,12 @@ test_that("remove_pu pattern4", {
   ##############
 
   # Information on peaks
-  peaks <- c(11, 12, 13, 14)
+  peaks <- as.character(c(11, 12, 13, 14))
   sizes <- c(100, 104, 108, 112)
   heights <- c(200, 1000, 100, 1005)
 
   # Genotype
-  gt <- c(12, 14)
+  gt <- as.character(c(12, 14))
 
   # Dye
   dye <- "B"
@@ -189,8 +189,8 @@ test_that("remove_pu pattern4", {
   ########
 
   expect_equal(length(peaks_new), 2)
-  expect_equal(peaks_new[1], 12)
-  expect_equal(peaks_new[2], 14)
+  expect_equal(peaks_new[1], "12")
+  expect_equal(peaks_new[2], "14")
   expect_equal(sizes_new[1], 104)
   expect_equal(sizes_new[2], 112)
   expect_equal(heights_new[1], 1000)
