@@ -362,11 +362,71 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dy
     size_list[[i]] <- size_list_one
     height_list[[i]] <- height_list_one
     gt_list[[i]] <- gt_one
-    names(peak_list) <- names(size_list) <- names(height_list) <- names(gt_list) <- sample_names
   }
+
+  # Define names
+  names(peak_list) <- names(size_list) <- names(height_list) <- names(gt_list) <- sample_names
 
   # Return
   return(list(peak_list, size_list, height_list, gt_list))
+}
+
+#' get_ae_data
+#'
+#' @description The function to get data of the locus-specific amplification efficiency
+#' @param height_list A list of peak heights
+get_ae_data <- function(height_list){
+
+  # Number of samples
+  n_sample <- length(height_list)
+
+  # Markers
+  markers <- names(height_list[[1]])
+
+  # Number of markers
+  n_mk <- length(markers)
+
+  # Define an object for the sum of peak heights per marker
+  height_sum <- matrix(0, n_sample, n_mk)
+  rownames(height_sum) <- names(height_list)
+  colnames(height_sum) <- markers
+
+  # Assing the sum of peak heights per marker
+  for(i in 1:n_sample){
+    height_sum[i, ] <- sapply(height_list[[i]], sum)
+  }
+
+  # Extract used data (i.e, removing AE = 0)
+  height_sum <- height_sum[apply(height_sum, 1, prod) > 0, , drop = FALSE]
+
+  # Number of used samples
+  n_sample_use <- nrow(height_sum)
+
+  if(n_sample_use > 0){
+
+    # Define an object for the locus-specific amplification efficiency
+    ae_data <- matrix(0, n_sample_use, n_mk)
+    rownames(ae_data) <- rownames(height_sum)
+    colnames(ae_data) <- markers
+
+    # Calculate the locus-specific amplification efficiency
+    for(i in 1:n_sample_use){
+      ae_data[i, ] <- height_sum[i, ] / mean(height_sum[i, ])
+    }
+
+  # No data
+  }else{
+    ae_data <- height_sum
+  }
+
+  # Output object
+  ae_list <- list()
+  ae_list[[1]] <- ae_data
+  ae_list[[2]] <- height_sum
+  names(ae_list) <- c("AE", "H_per_mk")
+
+  # Return
+  return(list(ae_data, height_sum))
 }
 
 
@@ -439,3 +499,6 @@ size_list <- tmp[[2]]
 height_list <- tmp[[3]]
 gt_list <- tmp[[4]]
 
+ae_list <- get_ae_data(height_list)
+ae_data <- ae_list[[1]]
+height_sum <- ae_list[[2]]
