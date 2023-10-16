@@ -3,8 +3,6 @@
 #' @description The function to change data type of dt_csp_init
 #' @param dt_csp_init The initial data.table of a crime stain profile
 change_data_type_csp <- function(dt_csp_init){
-
-  # Remove spaces of the names
   names(dt_csp_init) <- gsub(" ", "", names(dt_csp_init))
 
   name_dt_csp <- names(dt_csp_init)
@@ -13,7 +11,6 @@ change_data_type_csp <- function(dt_csp_init){
   col_numeric <- c(name_dt_csp[grep("Size", name_dt_csp)], name_dt_csp[grep("Height", name_dt_csp)])
   dt_csp_init[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
 
-  # Return
   return(dt_csp_init)
 }
 
@@ -25,30 +22,24 @@ change_data_type_csp <- function(dt_csp_init){
 #' @param heights
 make_gt_comb <- function(hnc, peaks, heights){
 
-  # Number of peaks
   n_peak <- length(peaks)
 
   # Genotypes of one contributor
   gts <- combinations(n = n_peak, r = 2, v = peaks, repeats.allowed = TRUE)
 
-  # Number of genotypes
   n_gt <- nrow(gts)
 
   # Indices of genotypes of each contributor
   id_gt_comb <- permutations(n = n_gt, r = hnc, repeats.allowed = TRUE)
 
-  # Number of genotype combinations
   n_gt_comb <- nrow(id_gt_comb)
 
-  # Define the object for genotype combinations
   gt_comb <- matrix(0, n_gt_comb, 2 * hnc)
 
-  # Assign genotypes
   for(i in 1:hnc){
     gt_comb[, c(2 * (i - 1) + 1, 2 * i)] <- gts[id_gt_comb[, i], ]
   }
 
-  # Return
   return(gt_comb)
 }
 

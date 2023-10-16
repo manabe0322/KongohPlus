@@ -3,8 +3,6 @@
 #' @description The function to change data type of dt_exp_init
 #' @param dt_exp_init The initial data.table of experimental data
 change_data_type_exp <- function(dt_exp_init){
-
-  # Remove spaces of the names
   names(dt_exp_init) <- gsub(" ", "", names(dt_exp_init))
 
   name_dt_exp <- names(dt_exp_init)
@@ -13,10 +11,8 @@ change_data_type_exp <- function(dt_exp_init){
   col_numeric <- c(name_dt_exp[grep("Size", name_dt_exp)], name_dt_exp[grep("Height", name_dt_exp)])
   dt_exp_init[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
 
-  # Replace "" to NA
   dt_exp_init[which(dt_exp_init == "", arr.ind = TRUE)] <- NA
 
-  # Return
   return(dt_exp_init)
 }
 
@@ -25,18 +21,14 @@ change_data_type_exp <- function(dt_exp_init){
 #' @description The function to change data type of dt_gt_init
 #' @param dt_gt_init The initial data.table of genotype data
 change_data_type_gt <- function(dt_gt_init){
-
-  # Remove spaces of the names
   names(dt_gt_init) <- gsub(" ", "", names(dt_gt_init))
 
   name_dt_gt <- names(dt_gt_init)
   col_char <- c("SampleName", "Marker", name_dt_gt[grep("Allele", name_dt_gt)])
   dt_gt_init[, (col_char) := lapply(.SD, as.character), .SDcols = col_char]
 
-  # Replace "" to NA
   dt_gt_init[which(dt_gt_init == "", arr.ind = TRUE)] <- NA
 
-  # Return
   return(dt_gt_init)
 }
 
@@ -46,7 +38,6 @@ change_data_type_gt <- function(dt_gt_init){
 #' @param dt_seq_init The initial data.table of sequence data
 change_data_type_seq <- function(dt_seq_init){
 
-  # Remove spaces of the names
   names(dt_seq_init) <- gsub(" ", "", names(dt_seq_init))
 
   name_dt_seq <- names(dt_seq_init)
@@ -55,10 +46,8 @@ change_data_type_seq <- function(dt_seq_init){
   col_numeric <- c("Count")
   dt_seq_init[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
 
-  # Replace "" to NA
   dt_seq_init[which(dt_seq_init == "", arr.ind = TRUE)] <- NA
 
-  # Return
   return(dt_seq_init)
 }
 
@@ -71,22 +60,17 @@ change_data_type_seq <- function(dt_seq_init){
 #' @param dye_all_mk Dyes of all markers
 pick_al_size <- function(dt_exp_one, dt_gt_one, at_all_mk, dye_all_mk){
 
-  # Define objects
   al_mk <- al_peak <- al_size <- al_dye <- numeric(0)
 
-  # Names of dt_exp_one
   name_dt_exp <- names(dt_exp_one)
 
-  # Extract data of one sample
   markers <- dt_exp_one[, Marker]
   peak_all_mk <- dt_exp_one[, grep("Allele", name_dt_exp), with = FALSE]
   size_all_mk <- dt_exp_one[, grep("Size", name_dt_exp), with = FALSE]
   height_all_mk <- dt_exp_one[, grep("Height", name_dt_exp), with = FALSE]
 
-  # Number of markers
   n_mk <- length(markers)
 
-  # Column indices of dt_gt_one
   index_gt_allele <- grep("Allele", names(dt_gt_one))
 
   for(i in 1:n_mk){
@@ -184,7 +168,6 @@ remove_same_bin <- function(peaks, sizes, heights){
     heights <- heights[-index_cut]
   }
 
-  # Return
   return(list(peaks, sizes, heights))
 }
 
@@ -233,7 +216,6 @@ remove_pu <- function(peaks, sizes, heights, gt, dye, al_size, al_dye, max_dist_
     heights <- heights[-index_pu]
   }
 
-  # Return
   return(list(peaks, sizes, heights))
 }
 
@@ -248,33 +230,20 @@ remove_pu <- function(peaks, sizes, heights, gt, dye, al_size, al_dye, max_dist_
 #' @param sr_consider_all_mk Information on consideration of back, forward, double-back, and minus 2-nt stutters in all markers
 #' @param max_dist_pu The maximum distance between a pull-up peak and the parent allele
 arrange_exp_data <- function(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dye_all_mk, sr_consider_all_mk, max_dist_pu = 1){
-
-  # Define output objects
   peak_list <- size_list <- height_list <- gt_list <- list()
 
-  # Names of dt_exp_init
   name_dt_exp <- names(dt_exp_init)
-
-  # Column indices of dt_exp_init
   index_exp_peak <- grep("Allele", name_dt_exp)
   index_exp_size <- grep("Size", name_dt_exp)
   index_exp_height <- grep("Height", name_dt_exp)
-
-  # Extract sample names
   sample_names <- unique(dt_exp_init[, SampleName])
 
-  # Names of dt_gt_init
   name_dt_gt <- names(dt_gt_init)
-
-  # Column indices of dt_gt_init
   index_gt_allele <- grep("Allele", name_dt_gt)
 
-  # Number of markers for parameters
   n_par_mk <- length(par_markers)
 
   for(i in 1:length(sample_names)){
-
-    # Extract data of one sample
     dt_exp_one <- dt_exp_init[dt_exp_init[, SampleName] == sample_names[i], ]
     markers <- dt_exp_one[, Marker]
     peak_all_mk <- dt_exp_one[, index_exp_peak, with = FALSE]
@@ -294,8 +263,6 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dy
     colnames(gt_one) <- c("Allele1", "Allele2")
 
     for(j in 1:n_par_mk){
-
-      # Extract data of one marker
       mk <- par_markers[j]
       index_mk <- which(markers == mk)
       peaks <- as.character(peak_all_mk[index_mk, ])
@@ -316,19 +283,13 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dy
 
       # Extract the genotype of one marker
       gt <- as.character(dt_gt_one[dt_gt_one[, Marker] == mk, index_gt_allele, with = FALSE])
-
-      # Assign the genotype
       gt_one[j, ] <- gt
 
       # Make detectable peaks in the profile under the genotype
       cand_peak <- make_cand_peak(as.numeric(gt), c(sr_consider_all_mk[rownames(sr_consider_all_mk) == mk, ]))
 
-      # Indices of used peaks
       index_use <- which(is.element(peaks, as.character(cand_peak)))
-
       if(length(index_use) > 0){
-
-        # Extract used data
         peaks_use <- peaks[index_use]
         sizes_use <- sizes[index_use]
         heights_use <- heights[index_use]
@@ -345,7 +306,6 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dy
         sizes_use <- tmp[[2]]
         heights_use <- tmp[[3]]
 
-        # Assign
         peak_list_one[[j]] <- peaks_use
         size_list_one[[j]] <- sizes_use
         height_list_one[[j]] <- heights_use
@@ -356,7 +316,6 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dy
       }
     }
 
-    # Assign
     names(peak_list_one) <- names(size_list_one) <- names(height_list_one) <- par_markers
     peak_list[[i]] <- peak_list_one
     size_list[[i]] <- size_list_one
@@ -364,10 +323,7 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dy
     gt_list[[i]] <- gt_one
   }
 
-  # Define names
   names(peak_list) <- names(size_list) <- names(height_list) <- names(gt_list) <- sample_names
-
-  # Return
   return(list(peak_list, size_list, height_list, gt_list))
 }
 
@@ -376,35 +332,22 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dy
 #' @description The function to get data of the locus-specific amplification efficiency
 #' @param height_list A list of peak heights
 get_ae_data <- function(height_list){
-
-  # Number of samples
   n_sample <- length(height_list)
-
-  # Markers
   markers <- names(height_list[[1]])
-
-  # Number of markers
   n_mk <- length(markers)
 
-  # Define an object for the sum of peak heights per marker
   height_sum <- matrix(0, n_sample, n_mk)
   rownames(height_sum) <- names(height_list)
   colnames(height_sum) <- markers
 
-  # Assing the sum of peak heights per marker
   for(i in 1:n_sample){
     height_sum[i, ] <- sapply(height_list[[i]], sum)
   }
 
   # Extract used data (i.e, removing AE = 0)
   height_sum <- height_sum[apply(height_sum, 1, prod) > 0, , drop = FALSE]
-
-  # Number of used samples
   n_sample_use <- nrow(height_sum)
-
   if(n_sample_use > 0){
-
-    # Define an object for the locus-specific amplification efficiency
     ae_data <- matrix(0, n_sample_use, n_mk)
     rownames(ae_data) <- rownames(height_sum)
     colnames(ae_data) <- markers
@@ -413,19 +356,14 @@ get_ae_data <- function(height_list){
     for(i in 1:n_sample_use){
       ae_data[i, ] <- height_sum[i, ] / mean(height_sum[i, ])
     }
-
-  # No data
   }else{
     ae_data <- height_sum
   }
 
-  # Output object
   ae_list <- list()
   ae_list[[1]] <- ae_data
   ae_list[[2]] <- height_sum
   names(ae_list) <- c("AE", "H_per_mk")
-
-  # Return
   return(list(ae_data, height_sum))
 }
 
@@ -437,27 +375,92 @@ get_ae_data <- function(height_list){
 #' @param gt A character vector of the genotype in one marker
 calc_sr <- function(peaks, heights, gt, sr_consider){
 
-  # Define objects
+  # bsr: back stutter ratio
+  # fsr: forward stutter ratio
+  # dsr: double-back stutter ratio
+  # m2sr: minus 2-nt stutter ratio
+  # al: allele
+  # tac: total allelic product
   bsr <- fsr <- dsr <- m2sr <- al <- tac <- rep(0, 2)
 
-  # Change data type of peaks (character to numeric)
   peaks <- as.numeric(peaks)
 
-  # Change data type of gt (character to numeric)
   gt <- as.numeric(gt)
-
-  # Unique alleles in the genotype
   gt <- sort(unique(gt[!is.na(gt)]))
 
-  # Homozygote
-  if(length(gt) == 1){
+  ##############
+  # Homozygote #
+  ##############
 
+  if(length(gt) == 1){
     al[1] <- gt
 
     # No allelic drop-out
     if(is.element(gt, peaks)){
+      tac[1] <- sum(heights)
+      h_al <- heights[peaks == gt]
 
-      tac[1] <- sum(height)
+      # Back stutter
+      if(sr_consider["BS"]){
+        peak_bs <- round(gt - 1, 1)
+        if(is.element(peak_bs, peaks)){
+          bsr[1] <- heights[peaks == peak_bs] / h_al
+        }
+      }
+
+      # Forward stutter
+      if(sr_condiser["FS"]){
+        peak_fs <- round(gt + 1, 1)
+        if(is.element(peak_fs, peaks)){
+          fsr[1] <- heights[peaks == peak_fs] / h_al
+        }
+      }
+
+      # Double-back stutter
+      if(sr_condiser["DS"]){
+        peak_ds <- round(gt - 2, 1)
+        if(is.element(peak_ds, peaks)){
+          dsr[1] <- heights[peaks == peak_ds] / h_al
+        }
+      }
+
+      # Minus 2-nt stutter
+      if(sr_condiser["M2S"]){
+        if(gt %% 1 < 0.15){
+          peak_m2s <- round(gt - 0.8, 1)  # Allele x or x.1
+        }else{
+          peak_m2s <- round(gt - 0.2, 1)  # Allele x.2, x.3, ...
+        }
+        if(is.element(p_m2s, peaks)){
+          m2sr[1] <- heights[peaks == p_m2s] / h_al
+        }
+      }
+    }
+
+  ################
+  # Heterozygote #
+  ################
+
+  }else{
+
+    # Other than one repeat difference
+    if(abs(round(gt[1] - gt[2], 1)) != 1){
+
+      for(i in 1:2){
+
+        # One allele
+        al_1 <- gt[i]
+
+        # No allelic drop-out
+        if(is.element(al_1, peaks)){
+
+          # Another allele
+          al_2 <- gt[3 - i]
+
+
+        }
+      }
+
     }
   }
 }
@@ -469,26 +472,16 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
 #' @param height_list A list of heights
 #' @param sr_consider_all_mk Information on consideration of back, forward, double-back, and minus 2-nt stutters in all markers
 get_sr_data <- function(peak_list, height_list, gt_list, sr_consider_all_mk){
-
-  # Number of samples
   n_sample <- length(peak_list)
-
-  # Markers
   markers <- names(peak_list[[1]])
-
-  # Number of markers
   n_mk <- length(markers)
 
   for(i in 1:n_sample){
-
-    # Extract data of one sample
     peak_list_one <- peak_list[[i]]
     height_list_one <- height_list[[i]]
     gt_list_one <- gt_list[[i]]
 
     for(j in 1:n_mk){
-
-      # Extract data of one marker
       peaks <- peak_list_one[[j]]
       heights <- height_list_one[[j]]
       gt <- gt_list_one[j, ]
