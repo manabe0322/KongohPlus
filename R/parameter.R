@@ -393,10 +393,11 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
   ##############
 
   if(length(gt) == 1){
-    al[1] <- al_1 <- gt
+    al_1 <- gt
 
     # No allelic drop-out
     if(is.element(al_1, peaks)){
+      al[1] <- al_1
       tac[1] <- sum(heights)
       h_al <- heights[peaks == al_1]
 
@@ -409,7 +410,7 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
       }
 
       # Forward stutter
-      if(sr_condiser["FS"]){
+      if(sr_consider["FS"]){
         fs <- round(al_1 + 1, 1)
         if(is.element(fs, peaks)){
           fsr[1] <- heights[peaks == fs] / h_al
@@ -417,7 +418,7 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
       }
 
       # Double-back stutter
-      if(sr_condiser["DS"]){
+      if(sr_consider["DS"]){
         ds <- round(al_1 - 2, 1)
         if(is.element(ds, peaks)){
           dsr[1] <- heights[peaks == ds] / h_al
@@ -425,7 +426,7 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
       }
 
       # Minus 2-nt stutter
-      if(sr_condiser["M2S"]){
+      if(sr_consider["M2S"]){
         if(al_1 %% 1 < 0.15){
           m2s <- round(al_1 - 0.8, 1)  # Allele x or x.1
         }else{
@@ -447,10 +448,11 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
     if(abs(round(gt[1] - gt[2], 1)) != 1){
 
       for(i in 1:2){
-        al[i] <- al_1 <- gt[i]
+        al_1 <- gt[i]
 
         # No allelic drop-out
         if(is.element(al_1, peaks)){
+          al[i] <- al_1
           h_sum <- h_al <- heights[peaks == al_1]
 
           # Candidates of shared peaks
@@ -547,8 +549,6 @@ get_sr_data <- function(peak_list, height_list, gt_list, sr_consider_all_mk){
       gt <- gt_list_one[j, ]
 
       if(length(peaks) > 0){
-
-        # Extract information on consideration of back, forward, double-back, and minus 2-nt stutters in one marker
         sr_consider <- sr_consider_all_mk[j, ]
 
         sr_one_mk <- calc_sr(peaks, heights, gt, sr_consider)
