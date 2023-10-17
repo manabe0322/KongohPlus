@@ -4,7 +4,6 @@ test_that("pick_al_size, AT = 30", {
   # Conditions #
   ##############
 
-  # Experimental data
   peak_all_mk <- size_all_mk <- height_all_mk <- matrix("", 5, 20)
   peak_all_mk[1, ] <- c("OL", "OL", "OL", "OL", "12", "OL", "14", "15", "16", "17", "OL", "OL", "", "", "", "", "", NA, "", NA)
   peak_all_mk[2, ] <- c("X", "Y", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", NA, "", NA)
@@ -29,17 +28,14 @@ test_that("pick_al_size, AT = 30", {
   dt_exp_one <- cbind(dt_exp_left, dt_exp_right)
   dt_exp_one <- change_data_type_exp(dt_exp_one)
 
-  # Genotype data
   dt_gt_one <- data.table(SampleName = rep("Example1", 5),
                           Marker = c("D3S1358", "AMEL", "D2S441", "D22S1045", "D10S1248"),
                           Allele1 = c("16", "X", "10", "11", "13"),
                           Allele2 = c("16", "Y", "11", "15", "15"))
 
-  # Analytical thresholds
   at_all_mk <- rep(30, 5)
   names(at_all_mk) <- c("D3S1358", "AMEL", "D2S441", "D22S1045", "D10S1248")
 
-  # Dyes
   dye_all_mk <- c("B", "G", "Y", "R", "P")
   names(dye_all_mk) <- c("D3S1358", "AMEL", "D2S441", "D22S1045", "D10S1248")
 
@@ -98,7 +94,6 @@ test_that("pick_al_size, AT = 4500", {
   # Conditions #
   ##############
 
-  # Experimental data
   peak_all_mk <- size_all_mk <- height_all_mk <- matrix("", 5, 20)
   peak_all_mk[1, ] <- c("OL", "OL", "OL", "OL", "12", "OL", "14", "15", "16", "17", "OL", "OL", "", "", "", "", "", NA, "", NA)
   peak_all_mk[2, ] <- c("X", "Y", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", NA, "", NA)
@@ -123,17 +118,14 @@ test_that("pick_al_size, AT = 4500", {
   dt_exp_one <- cbind(dt_exp_left, dt_exp_right)
   dt_exp_one <- change_data_type_exp(dt_exp_one)
 
-  # Genotype data
   dt_gt_one <- data.table(SampleName = rep("Example1", 5),
                           Marker = c("D3S1358", "AMEL", "D2S441", "D22S1045", "D10S1248"),
                           Allele1 = c("16", "X", "10", "11", "13"),
                           Allele2 = c("16", "Y", "11", "15", "15"))
 
-  # Analytical thresholds
   at_all_mk <- rep(4500, 5)
   names(at_all_mk) <- c("D3S1358", "AMEL", "D2S441", "D22S1045", "D10S1248")
 
-  # Dyes
   dye_all_mk <- c("B", "G", "Y", "R", "P")
   names(dye_all_mk) <- c("D3S1358", "AMEL", "D2S441", "D22S1045", "D10S1248")
 

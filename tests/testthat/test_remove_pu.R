@@ -4,22 +4,13 @@ test_that("remove_pu pattern1", {
   # Conditions #
   ##############
 
-  # Information on peaks
   peaks <- as.character(c(11, 12, 13, 14))
   sizes <- c(100, 104, 108, 112)
   heights <- c(200, 1000, 100, 1005)
-
-  # Genotype
   gt <- as.character(c(12, 14))
-
-  # Dye
   dye <- "B"
-
-  # Information on alleles
   al_size <- c(104, 112, 200)
   al_dye <- c("B", "B", "G")
-
-  # The maximum distance between a pull-up peak and the parent allele
   max_dist_pu <- 1
 
   #######
@@ -56,22 +47,13 @@ test_that("remove_pu pattern2", {
   # Conditions #
   ##############
 
-  # Information on peaks
   peaks <- as.character(c(11, 12, 13, 14))
   sizes <- c(100, 104, 108, 112)
   heights <- c(200, 1000, 100, 1005)
-
-  # Genotype
   gt <- as.character(c(12, 14))
-
-  # Dye
   dye <- "B"
-
-  # Information on alleles
   al_size <- c(104, 112, 101)
   al_dye <- c("B", "B", "G")
-
-  # The maximum distance between a pull-up peak and the parent allele
   max_dist_pu <- 1
 
   #######
@@ -105,22 +87,13 @@ test_that("remove_pu pattern3", {
   # Conditions #
   ##############
 
-  # Information on peaks
   peaks <- as.character(c(11, 12, 13, 14))
   sizes <- c(100, 104, 108, 112)
   heights <- c(200, 1000, 100, 1005)
-
-  # Genotype
   gt <- as.character(c(12, 14))
-
-  # Dye
   dye <- "B"
-
-  # Information on alleles
   al_size <- c(104, 112, 103)
   al_dye <- c("B", "B", "G")
-
-  # The maximum distance between a pull-up peak and the parent allele
   max_dist_pu <- 1
 
   #######
@@ -157,22 +130,13 @@ test_that("remove_pu pattern4", {
   # Conditions #
   ##############
 
-  # Information on peaks
   peaks <- as.character(c(11, 12, 13, 14))
   sizes <- c(100, 104, 108, 112)
   heights <- c(200, 1000, 100, 1005)
-
-  # Genotype
   gt <- as.character(c(12, 14))
-
-  # Dye
   dye <- "B"
-
-  # Information on alleles
   al_size <- c(104, 112, 101, 109)
   al_dye <- c("B", "B", "G", "G")
-
-  # The maximum distance between a pull-up peak and the parent allele
   max_dist_pu <- 1
 
   #######

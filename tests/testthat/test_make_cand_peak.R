@@ -4,10 +4,7 @@ test_that("make_cand_peak pattern1", {
   # Conditions #
   ##############
 
-  # Genotype combination
   gt_comb <- c(10, 15, 17, 19.2)
-
-  # Information on consideration of stutters
   sr_consider <- rep(TRUE, 4)
 
   #######
@@ -29,10 +26,7 @@ test_that("make_cand_peak pattern2", {
   # Conditions #
   ##############
 
-  # Genotype combination
   gt_comb <- c(10, 15, 17, 19.2)
-
-  # Information on consideration of stutters
   sr_consider <- c(TRUE, TRUE, TRUE, FALSE)
 
   #######
@@ -54,10 +48,7 @@ test_that("make_cand_peak pattern3", {
   # Conditions #
   ##############
 
-  # Genotype combination
   gt_comb <- c(10, 15, 17, 19.2)
-
-  # Information on consideration of stutters
   sr_consider <- c(TRUE, TRUE, FALSE, FALSE)
 
   #######
@@ -79,10 +70,7 @@ test_that("make_cand_peak pattern4", {
   # Conditions #
   ##############
 
-  # Genotype combination
   gt_comb <- c(10, 15, 17, 19.2)
-
-  # Information on consideration of stutters
   sr_consider <- c(TRUE, FALSE, FALSE, FALSE)
 
   #######
@@ -104,10 +92,7 @@ test_that("make_cand_peak pattern5", {
   # Conditions #
   ##############
 
-  # Genotype combination
   gt_comb <- c(10, 15, 17, 19.2)
-
-  # Information on consideration of stutters
   sr_consider <- rep(FALSE, 4)
 
   #######

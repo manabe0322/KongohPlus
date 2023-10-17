@@ -22,7 +22,6 @@ test_that("get_ae_data", {
   height_list_2[[5]] <- c(4030, 3970)
   names(height_list_2) <- paste0("mk", 1:5)
 
-  # Define height_list
   height_list <- list()
   height_list[[1]] <- height_list_1
   height_list[[2]] <- height_list_2
