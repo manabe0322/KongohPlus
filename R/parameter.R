@@ -393,46 +393,46 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
   ##############
 
   if(length(gt) == 1){
-    al[1] <- gt
+    al[1] <- al_1 <- gt
 
     # No allelic drop-out
-    if(is.element(gt, peaks)){
+    if(is.element(al_1, peaks)){
       tac[1] <- sum(heights)
-      h_al <- heights[peaks == gt]
+      h_al <- heights[peaks == al_1]
 
       # Back stutter
       if(sr_consider["BS"]){
-        peak_bs <- round(gt - 1, 1)
-        if(is.element(peak_bs, peaks)){
-          bsr[1] <- heights[peaks == peak_bs] / h_al
+        bs <- round(al_1 - 1, 1)
+        if(is.element(bs, peaks)){
+          bsr[1] <- heights[peaks == bs] / h_al
         }
       }
 
       # Forward stutter
       if(sr_condiser["FS"]){
-        peak_fs <- round(gt + 1, 1)
-        if(is.element(peak_fs, peaks)){
-          fsr[1] <- heights[peaks == peak_fs] / h_al
+        fs <- round(al_1 + 1, 1)
+        if(is.element(fs, peaks)){
+          fsr[1] <- heights[peaks == fs] / h_al
         }
       }
 
       # Double-back stutter
       if(sr_condiser["DS"]){
-        peak_ds <- round(gt - 2, 1)
-        if(is.element(peak_ds, peaks)){
-          dsr[1] <- heights[peaks == peak_ds] / h_al
+        ds <- round(al_1 - 2, 1)
+        if(is.element(ds, peaks)){
+          dsr[1] <- heights[peaks == ds] / h_al
         }
       }
 
       # Minus 2-nt stutter
       if(sr_condiser["M2S"]){
-        if(gt %% 1 < 0.15){
-          peak_m2s <- round(gt - 0.8, 1)  # Allele x or x.1
+        if(al_1 %% 1 < 0.15){
+          m2s <- round(al_1 - 0.8, 1)  # Allele x or x.1
         }else{
-          peak_m2s <- round(gt - 0.2, 1)  # Allele x.2, x.3, ...
+          m2s <- round(al_1 - 0.2, 1)  # Allele x.2, x.3, ...
         }
-        if(is.element(p_m2s, peaks)){
-          m2sr[1] <- heights[peaks == p_m2s] / h_al
+        if(is.element(m2s, peaks)){
+          m2sr[1] <- heights[peaks == m2s] / h_al
         }
       }
     }
@@ -447,22 +447,82 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
     if(abs(round(gt[1] - gt[2], 1)) != 1){
 
       for(i in 1:2){
-
-        # One allele
-        al_1 <- gt[i]
+        al[i] <- al_1 <- gt[i]
 
         # No allelic drop-out
         if(is.element(al_1, peaks)){
+          h_sum <- h_al <- heights[peaks == al_1]
 
-          # Another allele
+          # Candidates of shared peaks
           al_2 <- gt[3 - i]
+          cand_share <- al_2
+          if(sr_consider["BS"]){
+            cand_share <- c(cand_share, al_2 - 1)
+          }
+          if(sr_consider["FS"]){
+            cand_share <- c(cand_share, al_2 + 1)
+          }
+          if(sr_consider["DS"]){
+            cand_share <- c(cand_share, al_2 - 2)
+          }
+          if(sr_consider["M2S"]){
+            if(al_2 %% 1 < 0.15){
+              cand_share <- c(cand_share, al_2 - 0.8)  # Allele x or x.1
+            }else{
+              cand_share <- c(cand_share, al_2 - 0.2)  # Allele x.2, x.3, ...
+            }
+          }
+          cand_share <- round(sort(unique(cand_share)), 1)
 
+          # Back stutter
+          if(sr_consider["BS"]){
+            bs <- round(al_1 - 1, 1)
+            if(is.element(bs, peaks) && !is.element(bs, cand_share)){
+              h_bs <- heights[peaks == bs]
+              bsr[i] <- h_bs / h_al
+              h_sum <- h_sum + h_bs
+            }
+          }
 
+          # Forward stutter
+          if(sr_consider["FS"]){
+            fs <- round(al_1 + 1, 1)
+            if(is.element(fs, peaks) && !is.element(fs, cand_share)){
+              h_fs <- heights[peaks == fs]
+              fsr[i] <- h_fs / h_al
+              h_sum <- h_sum + h_fs
+            }
+          }
+
+          # Double-back stutter
+          if(sr_consider["DS"]){
+            ds <- round(al_1 - 2, 1)
+            if(is.element(ds, peaks) && !is.element(ds, cand_share)){
+              h_ds <- heights[peaks == ds]
+              dsr[i] <- h_ds / h_al
+              h_sum <- h_sum + h_ds
+            }
+          }
+
+          # Minus 2-nt stutter
+          if(sr_consider["M2S"]){
+            if(al_1 %% 1 < 0.15){
+              m2s <- round(al_1 - 0.8, 1)  # Allele x or x.1
+            }else{
+              m2s <- round(al_1 - 0.2, 1)  # Allele x.2, x.3, ...
+            }
+            if(is.element(m2s, peaks) && !is.element(m2s, cand_share)){
+              h_m2s <- heights[peaks == m2s]
+              m2sr[i] <- h_m2s / h_al
+              h_sum <- h_sum + h_m2s
+            }
+          }
+          tac[i] <- h_sum
         }
       }
-
     }
   }
+  return(list(bsr, fsr, dsr, m2sr, al, tac))
 }
 
 #' get_sr_data
