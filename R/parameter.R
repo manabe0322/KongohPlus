@@ -336,35 +336,35 @@ get_ae_data <- function(height_list){
   markers <- names(height_list[[1]])
   n_mk <- length(markers)
 
-  height_sum <- matrix(0, n_sample, n_mk)
-  rownames(height_sum) <- names(height_list)
-  colnames(height_sum) <- markers
+  height_ae <- matrix(0, n_sample, n_mk)
+  rownames(height_ae) <- names(height_list)
+  colnames(height_ae) <- markers
 
   for(i in 1:n_sample){
-    height_sum[i, ] <- sapply(height_list[[i]], sum)
+    height_ae[i, ] <- sapply(height_list[[i]], sum)
   }
 
   # Extract used data (i.e, removing AE = 0)
-  height_sum <- height_sum[apply(height_sum, 1, prod) > 0, , drop = FALSE]
-  n_sample_use <- nrow(height_sum)
+  height_ae <- height_ae[apply(height_ae, 1, prod) > 0, , drop = FALSE]
+  n_sample_use <- nrow(height_ae)
   if(n_sample_use > 0){
     ae_data <- matrix(0, n_sample_use, n_mk)
-    rownames(ae_data) <- rownames(height_sum)
+    rownames(ae_data) <- rownames(height_ae)
     colnames(ae_data) <- markers
 
     # Calculate the locus-specific amplification efficiency
     for(i in 1:n_sample_use){
-      ae_data[i, ] <- height_sum[i, ] / mean(height_sum[i, ])
+      ae_data[i, ] <- height_ae[i, ] / mean(height_ae[i, ])
     }
   }else{
-    ae_data <- height_sum
+    ae_data <- height_ae
   }
 
   ae_list <- list()
   ae_list[[1]] <- ae_data
-  ae_list[[2]] <- height_sum
-  names(ae_list) <- c("AE", "H_per_mk")
-  return(list(ae_data, height_sum))
+  ae_list[[2]] <- height_ae
+  names(ae_list) <- c("AE", "Height_AE")
+  return(ae_list)
 }
 
 #' calc_sr
@@ -379,9 +379,9 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
   # fsr: forward stutter ratio
   # dsr: double-back stutter ratio
   # m2sr: minus 2-nt stutter ratio
-  # al: allele
-  # tac: total allelic product
-  bsr <- fsr <- dsr <- m2sr <- al <- tac <- rep(0, 2)
+  # allele_sr: allele data for stutter ratios
+  # height_sr: height data for stutter ratios (i.e., total allelic product)
+  bsr <- fsr <- dsr <- m2sr <- allele_sr <- height_sr <- rep(0, 2)
 
   peaks <- as.numeric(peaks)
 
@@ -397,8 +397,8 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
 
     # No allelic drop-out
     if(is.element(al_1, peaks)){
-      al[1] <- al_1
-      tac[1] <- sum(heights)
+      allele_sr[1] <- al_1
+      height_sr[1] <- sum(heights)
       h_al <- heights[peaks == al_1]
 
       # Back stutter
@@ -452,7 +452,7 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
 
         # No allelic drop-out
         if(is.element(al_1, peaks)){
-          al[i] <- al_1
+          allele_sr[i] <- al_1
           h_sum <- h_al <- heights[peaks == al_1]
 
           # Candidates of shared peaks
@@ -519,12 +519,12 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
               h_sum <- h_sum + h_m2s
             }
           }
-          tac[i] <- h_sum
+          height_sr[i] <- h_sum
         }
       }
     }
   }
-  return(list(bsr, fsr, dsr, m2sr, al, tac))
+  return(list(bsr, fsr, dsr, m2sr, allele_sr, height_sr))
 }
 
 #' get_sr_data
@@ -537,6 +537,10 @@ get_sr_data <- function(peak_list, height_list, gt_list, sr_consider_all_mk){
   n_sample <- length(peak_list)
   markers <- names(peak_list[[1]])
   n_mk <- length(markers)
+
+  bsr_data <- fsr_data <- dsr_data <- m2sr_data <- allele_sr_data <- height_sr_data <- matrix(0, 2 * n_sample, n_mk)
+  rownames(bsr_data) <- rownames(fsr_data) <- rownames(dsr_data) <- rownames(m2sr_data) <- rownames(allele_sr_data) <- rownames(height_sr_data) <- names(height_list)
+  colnames(bsr_data) <- colnames(fsr_data) <- colnames(dsr_data) <- colnames(m2sr_data) <- colnames(allele_sr_data) <- colnames(height_sr_data) <- markers
 
   for(i in 1:n_sample){
     peak_list_one <- peak_list[[i]]
@@ -552,10 +556,25 @@ get_sr_data <- function(peak_list, height_list, gt_list, sr_consider_all_mk){
         sr_consider <- sr_consider_all_mk[j, ]
 
         sr_one_mk <- calc_sr(peaks, heights, gt, sr_consider)
-
+        bsr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[1]]
+        fsr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[2]]
+        dsr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[3]]
+        m2sr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[4]]
+        allele_sr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[5]]
+        height_sr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[6]]
       }
     }
   }
+
+  sr_list <- list()
+  sr_list[[1]] <- bsr_data
+  sr_list[[2]] <- fsr_data
+  sr_list[[3]] <- dsr_data
+  sr_list[[4]] <- m2sr_data
+  sr_list[[5]] <- allele_sr_data
+  sr_list[[6]] <- height_sr_data
+  names(sr_list) <- c("BSR", "FSR", "DSR", "M2SR", "Allele_SR", "Height_SR")
+  return(sr_list)
 }
 
 ##############
@@ -629,4 +648,12 @@ gt_list <- tmp[[4]]
 
 ae_list <- get_ae_data(height_list)
 ae_data <- ae_list[[1]]
-height_sum <- ae_list[[2]]
+height_ae <- ae_list[[2]]
+
+sr_list <- get_sr_data(peak_list, height_list, gt_list, sr_consider_all_mk)
+bsr_data <- sr_list[[1]]
+fsr_data <- sr_list[[2]]
+dsr_data <- sr_list[[3]]
+m2sr_data <- sr_list[[4]]
+allele_sr_data <- sr_list[[5]]
+height_sr_data <- sr_list[[6]]
