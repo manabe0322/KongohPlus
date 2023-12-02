@@ -577,83 +577,86 @@ get_sr_data <- function(peak_list, height_list, gt_list, sr_consider_all_mk){
   return(sr_list)
 }
 
-##############
-# Load files #
-##############
+test_parameter <- function(){
 
-# Load experimental data
-#dt_exp_init <- fread("C:/Users/manab/Documents/RStudio/KongohPlus/inst/extdata/examples/expData_kakeiken.csv")
-dt_exp_init <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/expData_kakeiken.csv")
+  ##############
+  # Load files #
+  ##############
 
-# Change data type of dt_exp_init
-dt_exp_init <- change_data_type_exp(dt_exp_init)
+  # Load experimental data
+  #dt_exp_init <- fread("C:/Users/manab/Documents/RStudio/KongohPlus/inst/extdata/examples/expData_kakeiken.csv")
+  dt_exp_init <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/expData_kakeiken.csv")
 
-# Load genotype data
-#dt_gt_init <- fread("C:/Users/manab/Documents/RStudio/KongohPlus/inst/extdata/examples/gtData_kakeiken.csv")
-dt_gt_init <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/gtData_kakeiken.csv")
+  # Change data type of dt_exp_init
+  dt_exp_init <- change_data_type_exp(dt_exp_init)
 
-# Change data type of dt_gt_init
-dt_gt_init <- change_data_type_gt(dt_gt_init)
+  # Load genotype data
+  #dt_gt_init <- fread("C:/Users/manab/Documents/RStudio/KongohPlus/inst/extdata/examples/gtData_kakeiken.csv")
+  dt_gt_init <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/gtData_kakeiken.csv")
 
-# Load sequence data
-#dt_seq_init <- fread("C:/Users/manab/Documents/RStudio/KongohPlus/inst/extdata/examples/Sequence-data_GF_Example.csv")
-dt_seq_init <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/Sequence-data_GF_Example.csv")
+  # Change data type of dt_gt_init
+  dt_gt_init <- change_data_type_gt(dt_gt_init)
 
-# Change data type of dt_seq_init
-dt_seq_init <- change_data_type_seq(dt_seq_init)
+  # Load sequence data
+  #dt_seq_init <- fread("C:/Users/manab/Documents/RStudio/KongohPlus/inst/extdata/examples/Sequence-data_GF_Example.csv")
+  dt_seq_init <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/Sequence-data_GF_Example.csv")
 
-# Check files
+  # Change data type of dt_seq_init
+  dt_seq_init <- change_data_type_seq(dt_seq_init)
+
+  # Check files
   # sample names
   # markers
 
 
-############
-# Settings #
-############
+  ############
+  # Settings #
+  ############
 
-# Markers
-markers <- unique(dt_exp_init[, Marker])
+  # Markers
+  markers <- unique(dt_exp_init[, Marker])
 
-# Sex chromosomal markers
-sex_markers <- c("Yindel", "AMEL", "DYS391")
+  # Sex chromosomal markers
+  sex_markers <- c("Yindel", "AMEL", "DYS391")
 
-# Markers for parameters
-par_markers <- setdiff(markers, sex_markers)
+  # Markers for parameters
+  par_markers <- setdiff(markers, sex_markers)
 
-# Analytical thresholds
-at_all_mk <- c(rep(12, 5), rep(20, 6), rep(13, 4), rep(16, 5), rep(19, 4))
-names(at_all_mk) <- markers
+  # Analytical thresholds
+  at_all_mk <- c(rep(12, 5), rep(20, 6), rep(13, 4), rep(16, 5), rep(19, 4))
+  names(at_all_mk) <- markers
 
-# Dyes
-dye_all_mk <- c(rep("B", 5), rep("G", 6), rep("Y", 4), rep("R", 5), rep("P", 4))
-names(dye_all_mk) <- markers
+  # Dyes
+  dye_all_mk <- c(rep("B", 5), rep("G", 6), rep("Y", 4), rep("R", 5), rep("P", 4))
+  names(dye_all_mk) <- markers
 
-# Consideration of stutters
-sr_consider_all_mk <- matrix(TRUE, length(par_markers), 4)
-rownames(sr_consider_all_mk) <- par_markers
-colnames(sr_consider_all_mk) <- c("BS", "FS", "DS", "M2S")
-sr_consider_all_mk[, 4] <- FALSE
-sr_consider_all_mk[17, 4] <- TRUE
-sr_consider_all_mk[19, 4] <- TRUE
+  # Consideration of stutters
+  sr_consider_all_mk <- matrix(TRUE, length(par_markers), 4)
+  rownames(sr_consider_all_mk) <- par_markers
+  colnames(sr_consider_all_mk) <- c("BS", "FS", "DS", "M2S")
+  sr_consider_all_mk[, 4] <- FALSE
+  sr_consider_all_mk[17, 4] <- TRUE
+  sr_consider_all_mk[19, 4] <- TRUE
 
-############
-# Analysis #
-############
+  ############
+  # Analysis #
+  ############
 
-tmp <- arrange_exp_data(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dye_all_mk, sr_consider_all_mk, max_dist_pu = 1)
-peak_list <- tmp[[1]]
-size_list <- tmp[[2]]
-height_list <- tmp[[3]]
-gt_list <- tmp[[4]]
+  tmp <- arrange_exp_data(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dye_all_mk, sr_consider_all_mk, max_dist_pu = 1)
+  peak_list <- tmp[[1]]
+  size_list <- tmp[[2]]
+  height_list <- tmp[[3]]
+  gt_list <- tmp[[4]]
 
-ae_list <- get_ae_data(height_list)
-ae_data <- ae_list[[1]]
-height_ae <- ae_list[[2]]
+  ae_list <- get_ae_data(height_list)
+  ae_data <- ae_list[[1]]
+  height_ae <- ae_list[[2]]
 
-sr_list <- get_sr_data(peak_list, height_list, gt_list, sr_consider_all_mk)
-bsr_data <- sr_list[[1]]
-fsr_data <- sr_list[[2]]
-dsr_data <- sr_list[[3]]
-m2sr_data <- sr_list[[4]]
-allele_sr_data <- sr_list[[5]]
-height_sr_data <- sr_list[[6]]
+  sr_list <- get_sr_data(peak_list, height_list, gt_list, sr_consider_all_mk)
+  bsr_data <- sr_list[[1]]
+  fsr_data <- sr_list[[2]]
+  dsr_data <- sr_list[[3]]
+  m2sr_data <- sr_list[[4]]
+  allele_sr_data <- sr_list[[5]]
+  height_sr_data <- sr_list[[6]]
+}

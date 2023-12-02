@@ -65,13 +65,14 @@ calc_mmw <- function(){
 
 }
 
-# Load csp
-#dt_csp_init <- fread("C:/Users/manab/Documents/RStudio/KongohPlus/inst/extdata/examples/mix7_CSP.csv")
-dt_csp_init <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/mix7_CSP.csv")
+test_calc <- function(){
+  # Load csp
+  #dt_csp_init <- fread("C:/Users/manab/Documents/RStudio/KongohPlus/inst/extdata/examples/mix7_CSP.csv")
+  dt_csp_init <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/mix7_CSP.csv")
 
-# Change data type of dt_csp_init
-dt_csp_init <- change_data_type_csp(dt_csp_init)
+  # Change data type of dt_csp_init
+  dt_csp_init <- change_data_type_csp(dt_csp_init)
 
-# Remove sex chromosomal markers
-dt_csp <- dt_csp_init[which(!is.element(dt_csp_init[, Marker], c("Yindel", "AMEL", "DYS391"))), , ]
-
+  # Remove sex chromosomal markers
+  dt_csp <- dt_csp_init[which(!is.element(dt_csp_init[, Marker], c("Yindel", "AMEL", "DYS391"))), , ]
+}
