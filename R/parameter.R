@@ -653,15 +653,36 @@ test_parameter <- function(){
   height_list <- tmp[[3]]
   gt_list <- tmp[[4]]
 
-  ae_list <- get_ae_data(height_list)
-  ae_data <- ae_list[[1]]
-  height_ae <- ae_list[[2]]
+  tmp <- get_ae_data(height_list)
+  ae_data <- tmp[[1]]
+  height_ae <- tmp[[2]]
 
-  sr_list <- get_sr_data(peak_list, height_list, gt_list, sr_consider_all_mk)
-  bsr_data <- sr_list[[1]]
-  fsr_data <- sr_list[[2]]
-  dsr_data <- sr_list[[3]]
-  m2sr_data <- sr_list[[4]]
-  allele_sr_data <- sr_list[[5]]
-  height_sr_data <- sr_list[[6]]
+  tmp <- get_sr_data(peak_list, height_list, gt_list, sr_consider_all_mk)
+  bsr_data <- tmp[[1]]
+  fsr_data <- tmp[[2]]
+  dsr_data <- tmp[[3]]
+  m2sr_data <- tmp[[4]]
+  allele_sr_data <- tmp[[5]]
+  height_sr_data <- tmp[[6]]
+
+  ########
+  # Stan #
+  ########
+
+  # model_ae <- cmdstan_model(paste0(path_pack, "/stan/model_ae.stan"))
+  # model_ae <- cmdstan_model("inst/stan/model_ae.stan") # cpp_options = list(stan_threads = TRUE)
+  n_ae_data <- nrow(ae_data)
+  n_mk <- ncol(ae_data)
+  for(i in 1:n_mk){
+    data_list_ae <- list(N = n_ae_data, AE = ae_data[, i], Height = height_ae[, i])
+
+    fit_ae <- model_ae$sample(
+      data_list_ae,
+      iter_warmup = 10000,
+      iter_sampling = 10000,
+      chains = 1,
+      parallel_chains = 4
+    )
+  }
+
 }
