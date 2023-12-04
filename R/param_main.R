@@ -19,6 +19,7 @@ test_parameter <- function(){
   dt_gt_init <- change_data_type_gt(dt_gt_init)
 
   # Load sequence data
+  # Already registerd or user prepared
   #dt_seq_init <- fread("C:/Users/manab/Documents/RStudio/KongohPlus/inst/extdata/examples/Sequence-data_GF_Example.csv")
   dt_seq_init <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/Sequence-data_GF_Example.csv")
 
@@ -93,6 +94,8 @@ test_parameter <- function(){
 
   # model_ae <- cmdstan_model(paste0(path_pack, "/stan/model_ae.stan"))
   # model_ae <- cmdstan_model("inst/stan/model_ae.stan") # cpp_options = list(stan_threads = TRUE)
+  # saveRDS(model_ae, "data/model_ae.rds")
+  # readRDS("data/model_ae.rds")
   n_ae_data <- nrow(ae_data)
   n_mk <- ncol(ae_data)
   for(i in 1:n_mk){
@@ -107,22 +110,39 @@ test_parameter <- function(){
     )
   }
 
-  # model_sr_allele <- cmdstan_model("inst/stan/model_sr_allele.stan")
+  # model_sr_gen <- cmdstan_model("inst/stan/model_sr_gen.stan")
+  # saveRDS(model_ae, "data/model_sr_gen.rds")
+  # readRDS("data/model_sr_gen.rds")
   for(i in 1:n_mk){
-    index_bsr <- which(bsr_data[, i] != 0)
-    bsr <- bsr_data[index_bsr, i]
-    bsr_al <- allele_sr_data[index_bsr, i]
-    bsr_h <- height_sr_data[index_bsr, i]
+    # Extract data of one marker
+    tmp <- extract_sr_use(bsr_data[, i], allele_sr_data[, i], height_sr_data[, i], lus_all_mk[[i]])
+    bsr_one_mk <- tmp[[1]]
+    bsr_al_one_mk <- tmp[[2]]
+    bsr_h_one_mk <- tmp[[3]]
+    bsr_lus_one_mk <- tmp[[4]]
 
-    data_list_bsr <- list(N = length(bsr), SR = bsr, Allele = bsr_al, Height = bsr_h)
-
-    fit_bsr <- model_sr_allele$sample(
-      data_list_bsr,
+    # Allele model
+    data_list_bsr_allele <- list(N = length(bsr), SR = bsr_one_mk, XVal = bsr_al_one_mk, Height = bsr_h_one_mk)
+    fit_bsr_allele <- model_sr_gen$sample(
+      data_list_bsr_allele,
       iter_warmup = 10000,
       iter_sampling = 10000,
       chains = 1,
       parallel_chains = 4
     )
+
+    # LUS model
+    data_list_bsr_lus <- list(N = length(bsr), SR = bsr_one_mk, XVal = bsr_lus_one_mk, Height = bsr_h_one_mk)
+    fit_bsr_lus <- model_sr_gen$sample(
+      data_list_bsr_lus,
+      iter_warmup = 10000,
+      iter_sampling = 10000,
+      chains = 1,
+      parallel_chains = 4
+    )
+
+    # Multi-seq model
+    data_list_bsr_multi <- list()
   }
 
 }
