@@ -12,9 +12,10 @@ Depends:
     R (>= 4.3.0), 
     shiny
 Imports:
+    cmdstanr, 
     data.table, 
     gtools, 
-    Rcpp,
+    Rcpp, 
     shinyjs
 Suggests: 
     testthat (>= 3.0.0)
