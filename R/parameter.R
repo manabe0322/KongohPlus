@@ -539,7 +539,12 @@ get_sr_data <- function(peak_list, height_list, gt_list, sr_consider_all_mk){
   n_mk <- length(markers)
 
   bsr_data <- fsr_data <- dsr_data <- m2sr_data <- allele_sr_data <- height_sr_data <- matrix(0, 2 * n_sample, n_mk)
-  rownames(bsr_data) <- rownames(fsr_data) <- rownames(dsr_data) <- rownames(m2sr_data) <- rownames(allele_sr_data) <- rownames(height_sr_data) <- names(height_list)
+
+  # Define row and column names
+  tmp <- sapply(names(height_list), rep, 2)
+  tmp[1, ] <- paste0(tmp[1, ], "_data1")
+  tmp[2, ] <- paste0(tmp[2, ], "_data2")
+  rownames(bsr_data) <- rownames(fsr_data) <- rownames(dsr_data) <- rownames(m2sr_data) <- rownames(allele_sr_data) <- rownames(height_sr_data) <- as.vector(tmp)
   colnames(bsr_data) <- colnames(fsr_data) <- colnames(dsr_data) <- colnames(m2sr_data) <- colnames(allele_sr_data) <- colnames(height_sr_data) <- markers
 
   for(i in 1:n_sample){
