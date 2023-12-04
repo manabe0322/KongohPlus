@@ -212,3 +212,42 @@ get_sr_data <- function(peak_list, height_list, gt_list, sr_consider_all_mk){
   names(sr_list) <- c("BSR", "FSR", "DSR", "M2SR", "Allele_SR", "Height_SR")
   return(sr_list)
 }
+
+#' extract_sr_use
+#'
+#' @description The function to extract SR data used
+#' @param sr_one_mk A vector of the stutter ratios in one marker
+#' @param sr_al_one_mk A vector of the parent alleles of each stutter ratio
+#' @param sr_h_one_mk A vector of the total allelic products of each stutter ratio
+#' @param lus_one_mk A vector of the LUS of each allele in one marker
+extract_sr_use <- function(sr_one_mk, sr_al_one_mk, sr_h_one_mk, lus_one_mk){
+  # Remove data without stutter ratio
+  index_non_zero <- which(sr_one_mk != 0)
+  sr_one_mk <- sr_one_mk[index_non_zero]
+  sr_al_one_mk <- sr_al_one_mk[index_non_zero]
+  sr_h_one_mk <- sr_h_one_mk[index_non_zero]
+
+  # Assign the LUS value to each allele
+  al_names <- names(lus_one_mk)
+  sr_lus_one_mk <- rep(-1, length(sr_one_mk))
+  for(i in 1:length(lus_one_mk)){
+    index_al <- which(sr_al_one_mk == al_names[i])
+    if(length(index_al) > 0){
+      sr_lus_one_mk[index_al] <- lus_one_mk[i]
+    }
+  }
+
+  # Remove data without sequence information
+  index_no_seq <- which(sr_lus_one_mk == -1)
+  if(length(index_no_seq) > 0){
+    sr_one_mk <- sr_one_mk[- index_no_seq]
+    sr_al_one_mk <- sr_al_one_mk[- index_no_seq]
+    sr_h_one_mk <- sr_h_one_mk[- index_no_seq]
+    sr_lus_one_mk <- sr_lus_one_mk[- index_no_seq]
+  }
+
+  # Make an output object
+  sr_use_list <- list(sr_one_mk, sr_al_one_mk, sr_h_one_mk, sr_lus_one_mk)
+  names(sr_use_list) <- c("stutter ratio", "parent allele", "total allelic product", "LUS of parent allele")
+  return(sr_use_list)
+}
