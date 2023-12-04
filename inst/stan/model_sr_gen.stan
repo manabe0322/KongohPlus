@@ -1,7 +1,7 @@
 data{
   int N;
   vector[N] SR;
-  vector[N] Allele;
+  vector[N] Xval;
   vector[N] Height;
 }
 
@@ -13,6 +13,6 @@ parameters{
 
 model{
   for(i in 1:N){
-    SR[i] ~ lognormal(log(slope * Allele[i] + intercept), sqrt(sigma / Height[i]));
+    SR[i] ~ lognormal(log(slope * Xval[i] + intercept), sqrt(sigma / Height[i]));
   }
 }
