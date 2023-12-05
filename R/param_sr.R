@@ -223,12 +223,12 @@ get_sr_data <- function(peak_list, height_list, gt_list, sr_consider_all_mk){
 extract_sr_use <- function(sr_one_mk, sr_al_one_mk, sr_h_one_mk, lus_one_mk){
   # Remove data without stutter ratio
   index_non_zero <- which(sr_one_mk != 0)
-  sr_one_mk <- sr_one_mk[index_non_zero]
-  sr_al_one_mk <- sr_al_one_mk[index_non_zero]
-  sr_h_one_mk <- sr_h_one_mk[index_non_zero]
+  sr_one_mk <- as.numeric(sr_one_mk[index_non_zero])
+  sr_al_one_mk <- as.numeric(sr_al_one_mk[index_non_zero])
+  sr_h_one_mk <- as.numeric(sr_h_one_mk[index_non_zero])
 
   # Assign the LUS value to each allele
-  al_names <- names(lus_one_mk)
+  al_names <- as.numeric(names(lus_one_mk))
   sr_lus_one_mk <- rep(-1, length(sr_one_mk))
   for(i in 1:length(lus_one_mk)){
     index_al <- which(sr_al_one_mk == al_names[i])
