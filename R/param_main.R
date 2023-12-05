@@ -105,14 +105,14 @@ test_parameter <- function(){
       data_list_ae,
       iter_warmup = 10000,
       iter_sampling = 10000,
-      chains = 1,
+      chains = 4,
       parallel_chains = 4
     )
   }
 
   # model_sr_gen <- cmdstan_model("inst/stan/model_sr_gen.stan")
-  # saveRDS(model_ae, "data/model_sr_gen.rds")
-  # readRDS("data/model_sr_gen.rds")
+  # saveRDS(model_sr_gen, "data/model_sr_gen.rds")
+  # model_sr_gen <- readRDS("data/model_sr_gen.rds")
   for(i in 1:n_mk){
     # Extract data of one marker
     tmp <- extract_sr_use(bsr_data[, i], allele_sr_data[, i], height_sr_data[, i], lus_all_mk[[i]])
@@ -120,29 +120,47 @@ test_parameter <- function(){
     bsr_al_one_mk <- tmp[[2]]
     bsr_h_one_mk <- tmp[[3]]
     bsr_lus_one_mk <- tmp[[4]]
+    reps_one_mk <- reps_all_mk[[i]]
+    seq_al_one_mk <- seq_al_all_mk[[i]]
+    seq_count_one_mk <- seq_count_all_mk[[i]]
 
     # Allele model
-    data_list_bsr_allele <- list(N = length(bsr), SR = bsr_one_mk, XVal = bsr_al_one_mk, Height = bsr_h_one_mk)
+    data_list_bsr_allele <- list(N = length(bsr_one_mk), SR = bsr_one_mk, XVal = bsr_al_one_mk, Height = bsr_h_one_mk)
     fit_bsr_allele <- model_sr_gen$sample(
       data_list_bsr_allele,
-      iter_warmup = 10000,
-      iter_sampling = 10000,
-      chains = 1,
+      iter_warmup = 1000,
+      iter_sampling = 1000,
+      chains = 4,
       parallel_chains = 4
     )
 
     # LUS model
-    data_list_bsr_lus <- list(N = length(bsr), SR = bsr_one_mk, XVal = bsr_lus_one_mk, Height = bsr_h_one_mk)
+    data_list_bsr_lus <- list(N = length(bsr_one_mk), SR = bsr_one_mk, XVal = bsr_lus_one_mk, Height = bsr_h_one_mk)
     fit_bsr_lus <- model_sr_gen$sample(
       data_list_bsr_lus,
       iter_warmup = 10000,
       iter_sampling = 10000,
-      chains = 1,
+      chains = 4,
       parallel_chains = 4
     )
 
     # Multi-seq model
-    data_list_bsr_multi <- list()
-  }
+    max_cand_us <- max(unlist(reps_one_mk))
+    for(j in 1:max_cand_us){
+      min_us <- j
+      bsr_ca_one_mk <- make_sr_ca_one_mk(min_us, reps_one_mk, seq_al_one_mk, seq_count_one_mk, bsr_al_one_mk)
+      data_list_bsr_multi <- list(N = length(bsr_one_mk), SR = bsr_one_mk, XVal = bsr_ca_one_mk, Height = bsr_h_one_mk)
+      fit_bsr_multi <- model_sr_gen$sample(
+        data_list_bsr_multi,
+        iter_warmup = 10000,
+        iter_sampling = 10000,
+        chains = 4,
+        parallel_chains = 4,
+        show_messages = FALSE,
+        show_exceptions = FALSE
+      )
 
+      print(fit_bsr_multi)
+    }
+  }
 }
