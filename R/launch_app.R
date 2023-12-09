@@ -10,7 +10,7 @@ KongohPlus <- function(){
 
   ui <- fluidPage(useShinyjs(),
                   theme = shinytheme("cerulean"),
-                  navbarPage(title = paste0("KongohPlus ver. ", ver_soft),
+                  navbarPage(title = "KongohPlus", #paste0("KongohPlus ver. ", ver_soft)
                              id = "navbar",
                              position = c("fixed-top"),
                              tags$style(type = "text/css", "body{padding-top: 70px;}"),
@@ -26,7 +26,7 @@ KongohPlus <- function(){
                              navbarMenu("Tools",
                                         tabPanel("Example files"),
                                         tabPanel("Support manual interpretation"),
-                                        tabPanel("Estimate parameters"),
+                                        est_par_ui("est_par"),
                                         tabPanel("Validation mode")
                              ),
 
@@ -36,12 +36,14 @@ KongohPlus <- function(){
                                         tabPanel("Typing kit")
                              ),
 
+                             tabPanel("Example files"),
+
                              tabPanel("Manual")
                   )
   )
 
   server <- function(input, output, session){
-
+    est_par_server("est_par")
   }
 
   shinyApp(ui, server)
