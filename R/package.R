@@ -5,3 +5,4 @@
 #' @importFrom gtools combinations permutations
 #' @importFrom Rcpp sourceCpp
 #' @importFrom shinyjs useShinyjs
+#' @importFrom shinythemes shinytheme
