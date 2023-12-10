@@ -105,6 +105,19 @@ search_kit <- function(markers, path_pack){
   return(kit)
 }
 
+#' extract_sex_markers
+#'
+#' @description The function to extract sex chromosomal markers
+#' @param kit A kit name
+#' @param path_pack The package path
+extract_sex_markers <- function(kit, path_pack){
+  kit_info <- fread(paste0(path_pack, "/extdata/kit", kit, ".csv"))
+  setkey(kit_info, Sex_Chr)
+  kit_info_sex_chr <- kit_info["Yes"]
+  sex_markers <- kit_info_sex_chr[, Marker]
+  return(sex_markers)
+}
+
 #' check_file_est_par
 #'
 #' @description The function to check files for estimating parameters
@@ -146,9 +159,25 @@ check_file_est_par <- function(dt_exp, dt_gt, dt_seq, path_pack){
             error_message <- "The marker set of the experimental data is not the same as that of the genotype data!"
           }else{
 
+            # Whether the marker set for estimating parameters is included in the marker set of the sequence data or not
+            sex_markers <- extract_sex_markers(kit_exp[1], path_pack)
+            markers_par <- setdiff(markers_exp, sex_markers)
+            markers_seq <- unique(dt_seq[, Marker])
+            if(!all(is.element(markers_par, markers_seq))){
+              error_message <- "Some markers of the experimental data are not included in the sequence data!"
+            }else{
+
+              # Whether sample names of the experimental data are the same as those of the genotype data or not
+              sn_exp <- unique(dt_exp[, SampleName])
+              sn_gt <- unique(dt_gt[, SampleName])
+              if(!setequal(sn_exp, sn_gt)){
+                error_message <- "Sample names of the experimental data are not the same as those of the genotype data!"
+              }
+            }
           }
         }
       }
     }
   }
+  return(error_message)
 }

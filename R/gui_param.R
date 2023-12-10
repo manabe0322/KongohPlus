@@ -1,31 +1,25 @@
-#' est_par_load_ui
+#' est_par_setting_ui
 #'
-#' @description The function to create the ui module for loading data to estimate parameters
-est_par_load_ui <- function(id){
-  ns <- NS(id)
-
-  tabPanel("Load",
-           br(),
-           fluidRow(
-             column(4,
-                    fileInput(ns("exp_data"), label = h4("Experimental data"), accept = ".csv")
-             ),
-             column(4,
-                    fileInput(ns("gt_data"), label = h4("Genotype data"), accept = ".csv"),
-             ),
-             column(4,
-                    fileInput(ns("seq_data"), label = h4("Sequence data"), accept = ".csv")
-             )
-           ),
-           br(),
-           actionButton(ns("act_est_par_next"), label = "Next", class = "btn btn-primary btn-lg")
-  )
-}
-
+#' @description The function to create the ui module for setting to estimate parameters
 est_par_setting_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("Setting")
+  tabPanel("Setting",
+           br(),
+           sidebarLayout(
+             sidebarPanel(width = 3,
+                          fileInput(ns("exp_data"), label = h4("Experimental data"), accept = ".csv"),
+                          fileInput(ns("gt_data"), label = h4("Genotype data"), accept = ".csv"),
+                          selectInput(ns("seq_data"), label = h4("Sequence data"), choices = c("sequence_data_default.csv"), selected = c("sequence_data_default.csv"), multiple = FALSE),
+                          uiOutput(ns("kit_par")),
+                          actionButton(ns("act_advanced"), "Advanced setting")
+             ),
+             mainPanel(width = 9,
+                       dataTableOutput(ns("dt_par_setting"))
+             )
+           ),
+           actionButton(ns("act_analyze_est_par"), label = "Analyze", class = "btn btn-primary btn-lg")
+  )
 }
 
 est_par_result_ui <- function(id){
@@ -43,18 +37,18 @@ est_par_ui <- function(id){
   tabPanel("Estimate parameters",
            titlePanel("Estimate parameters"),
            br(),
-           tabsetPanel(
-             est_par_load_ui(ns("est_par_load")),
-             est_par_setting_ui(ns("est_par_setting")),
-             est_par_result_ui(ns("est_par_result"))
+           tabsetPanel(id = ns("tabset_est_par"),
+                       type = "tabs",
+                       est_par_setting_ui(ns("est_par_setting")),
+                       est_par_result_ui(ns("est_par_result"))
            )
   )
 }
 
-#' est_par_load_server
+#' est_par_setting_server
 #'
-#' @description The function to create the server module for loading data to estimate parameters
-est_par_load_server <- function(id){
+#' @description The function to create the server module for setting to estimate parameters
+est_par_setting_server <- function(id, path_pack, parent_session){
   moduleServer(
     id,
     function(input, output, session){
@@ -77,7 +71,7 @@ est_par_load_server <- function(id){
           return(NULL)
         }else{
           dt_gt <- fread(file_input$datapath)
-          dt_gt <- change_data_type_exp(dt_gt)
+          dt_gt <- change_data_type_gt(dt_gt)
           return(dt_gt)
         }
       })
@@ -88,42 +82,58 @@ est_par_load_server <- function(id){
         if(is.null(file_input)){
           return(NULL)
         }else{
-          dt_seq <- fread(file_input$datapath)
-          dt_seq <- change_data_type_exp(dt_seq)
+          dt_seq <- fread(paste0(path_pack, "/extdata/sequence_data/", file_input))
+          dt_seq <- change_data_type_seq(dt_seq)
           return(dt_seq)
         }
       })
 
-      observeEvent(input$act_est_par_next){
-        # Check input files
-      }
-    }
-  )
-}
+      output$kit_par <- renderUI({
+        ns <- session$ns
+        selectInput(ns("kit_par"), label = h4("Kit"), choices = c("GlobalFiler", "Identifiler"), selected = "GlobalFiler", multiple = FALSE)
+      })
 
-est_par_setting_server <- function(id){
-  moduleServer(
-    id,
-    function(input, output, session){}
+      output$dt_par_setting <- renderDataTable({
+        datatable(
+          data.table(Marker = c("A", "B", "C"),
+                     BSR = c("Allele", "LUS", "Multi-seq")),
+          rownames = FALSE
+        )
+      })
+
+      observeEvent(input$act_analyze_est_par, {
+        updateTabsetPanel(session = parent_session, inputId = "tabset_est_par", selected = "Result")
+      })
+
+      react_list <- list(react_dt_exp = react_dt_exp, react_dt_gt = react_dt_gt)
+      return(react_list)
+    }
   )
 }
 
 est_par_result_server <- function(id){
   moduleServer(
     id,
-    function(input, output, session){}
+    function(input, output, session){
+      # Check input files
+      #error_message <- check_file_est_par(dt_exp, dt_gt, dt_seq, path_pack)
+      #if(error_message != ""){
+      #  showModal(modalDialog(title = "Error", error_message, easyClose = TRUE, footer = NULL))
+      #}else{
+      #updateTabsetPanel(session = parent_session, inputId = "tabset_est_par", selected = "est_par_setting")
+      #}
+    }
   )
 }
 
 #' est_par_server
 #'
 #' @description The function to create the server module for estimating parameters
-est_par_server <- function(id){
+est_par_server <- function(id, path_pack){
   moduleServer(
     id,
     function(input, output, session){
-      est_par_load_server("est_par_load")
-      est_par_setting_server("est_par_setting")
+      react_list <- est_par_setting_server("est_par_setting", path_pack, session)
       est_par_result_server("est_par_result")
     }
   )

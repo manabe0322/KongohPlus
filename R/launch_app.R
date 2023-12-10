@@ -4,13 +4,15 @@
 #' @usage KongohPlus()
 #' @export
 KongohPlus <- function(){
-  ver_soft <- packageVersion("KongohPlus")
-  path_pack <- path.package("KongohPlus", quiet = FALSE)
+  ver_soft <- "0.1.0"
+  #ver_soft <- packageVersion("KongohPlus")
+  path_pack <- "C:/Users/manab/Documents/RStudio/KongohPlus/inst"
+  #path_pack <- path.package("KongohPlus", quiet = FALSE)
   options(shiny.maxRequestSize = 500 * 1024^2)
 
   ui <- fluidPage(useShinyjs(),
                   theme = shinytheme("cerulean"),
-                  navbarPage(title = "KongohPlus", #paste0("KongohPlus ver. ", ver_soft)
+                  navbarPage(title = paste0("KongohPlus ver. ", ver_soft),
                              id = "navbar",
                              position = c("fixed-top"),
                              tags$style(type = "text/css", "body{padding-top: 70px;}"),
@@ -43,7 +45,7 @@ KongohPlus <- function(){
   )
 
   server <- function(input, output, session){
-    est_par_server("est_par")
+    est_par_server("est_par", path_pack)
   }
 
   shinyApp(ui, server)
