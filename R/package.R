@@ -2,8 +2,8 @@
 #'
 #' @importFrom cmdstanr cmdstan_model
 #' @importFrom data.table data.table fread setDT
-#' @importFrom glue glue
 #' @importFrom gtools combinations permutations
+#' @importFrom magrittr "%>%"
 #' @importFrom Rcpp sourceCpp
 #' @importFrom shinyjs useShinyjs
 #' @importFrom shinythemes shinytheme

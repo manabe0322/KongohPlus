@@ -14,8 +14,8 @@ Depends:
 Imports:
     cmdstanr, 
     data.table, 
-    glue, 
     gtools, 
+    magrittr, 
     Rcpp, 
     shinyjs, 
     shinythemes
