@@ -14,9 +14,10 @@ Depends:
 Imports:
     cmdstanr, 
     data.table, 
+    glue, 
     gtools, 
     Rcpp, 
-    shinyjs,
+    shinyjs, 
     shinythemes
 Suggests: 
     testthat (>= 3.0.0)
