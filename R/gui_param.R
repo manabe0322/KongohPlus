@@ -10,15 +10,17 @@ est_par_setting_ui <- function(id){
              sidebarPanel(width = 3,
                           fileInput(ns("exp_data"), label = h4("Experimental data"), accept = ".csv"),
                           fileInput(ns("gt_data"), label = h4("Genotype data"), accept = ".csv"),
-                          selectInput(ns("seq_data"), label = h4("Sequence data"), choices = c("sequence_data_default.csv"), selected = c("sequence_data_default.csv"), multiple = FALSE),
+                          uiOutput(ns("seq_data")),
                           uiOutput(ns("kit_par")),
-                          actionButton(ns("act_advanced"), "Advanced setting")
+                          actionButton(ns("act_advanced"), "Advanced setting"),
+                          br(),
+                          br(),
+                          actionButton(ns("act_analyze_est_par"), label = "Analyze", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 9,
                        dataTableOutput(ns("dt_par_setting"))
              )
-           ),
-           actionButton(ns("act_analyze_est_par"), label = "Analyze", class = "btn btn-primary btn-lg")
+           )
   )
 }
 
@@ -88,17 +90,49 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         }
       })
 
-      output$kit_par <- renderUI({
+      output$seq_data <- renderUI({
         ns <- session$ns
-        selectInput(ns("kit_par"), label = h4("Kit"), choices = c("GlobalFiler", "Identifiler"), selected = "GlobalFiler", multiple = FALSE)
+        seq_files <- list.files(paste0(path_pack, "/extdata/sequence_data"))
+        selectInput(ns("seq_data"), label = h4("Sequence data"), choices = seq_files, selected = seq_files[1], multiple = FALSE)
       })
 
-      output$dt_par_setting <- renderDataTable({
-        datatable(
-          data.table(Marker = c("A", "B", "C"),
-                     BSR = c("Allele", "LUS", "Multi-seq")),
-          rownames = FALSE
-        )
+      output$kit_par <- renderUI({
+        ns <- session$ns
+        kit_names <- list.files(paste0(path_pack, "/extdata/kit"))
+        kit_names <- gsub(".csv", "", kit_names)
+        selectInput(ns("kit_par"), label = h4("Kit"), choices = kit_names, selected = kit_names[1], multiple = FALSE)
+      })
+
+      observeEvent(input$kit_par, ignoreInit = TRUE, {
+        # Extract autosomal markers
+        kit <- input$kit_par
+        dt_kit_info <- fread(paste0(path_pack, "/extdata/kit/", kit, ".csv"))
+        setkey(dt_kit_info, Sex_Chr)
+        dt_kit_auto <- dt_kit_info[""]
+        markers_par <- dt_kit_auto[, Marker]
+        n_mk <- length(markers_par)
+
+        bsr_checked <- rep('checked=\"checked\"', n_mk)
+        fsr_checked <- rep('', n_mk)
+        fsr_checked[markers_par == "D22S1045"] <- 'checked=\"checked\"'
+        dsr_checked <- rep('', n_mk)
+
+        dt_kit_setting <- data.table(Marker = markers_par)
+        dt_kit_setting$AT = glue('<input type="number" name="AT" value="{rep(50, n_mk)}"><br>')
+        dt_kit_setting$BSR = glue('<input type="checkbox" name="BSR" {bsr_checked} value="{paste0("bsr_mk", 1:n_mk)}"><br>')
+        dt_kit_setting$FSR = glue('<input type="checkbox" name="FSR" {fsr_checked} value="{paste0("fsr_mk", 1:n_mk)}"><br>')
+        dt_kit_setting$DSR = glue('<input type="checkbox" name="DSR" {dsr_checked} value="{paste0("dsr_mk", 1:n_mk)}"><br>')
+
+        output$dt_par_setting <- renderDataTable(server = FALSE, {
+          datatable(
+            dt_kit_setting,
+            colnames = c("Marker", "AT (RFU)", "Marker-specific BSR", "Marker-specific FSR", "Marker-specific DSR"),
+            selection = "none",
+            options = list(iDisplayLength = 50, ordering = FALSE, autowidth = FALSE),
+            rownames = FALSE,
+            escape = FALSE
+          )
+        })
       })
 
       observeEvent(input$act_analyze_est_par, {
