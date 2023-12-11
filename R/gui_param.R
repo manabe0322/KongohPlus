@@ -6,6 +6,19 @@ est_par_setting_ui <- function(id){
 
   tabPanel("Setting",
            br(),
+
+           tags$style(
+             HTML(
+               "td > div.form-group > div.checkbox {
+                  margin:0px;
+                  bottom:10px;
+                }
+                td > div.form-group {
+                  position:absolute;
+                }"
+             )
+           ),
+
            sidebarLayout(
              sidebarPanel(width = 3,
                           fileInput(ns("exp_data"), label = h4("Experimental data"), accept = ".csv"),
@@ -18,17 +31,7 @@ est_par_setting_ui <- function(id){
                           actionButton(ns("act_analyze_est_par"), label = "Analyze", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 9,
-                       verbatimTextOutput("value1"),
-                       dataTableOutput(ns("dt_par_setting")), tags$script(HTML('$(document).on("click", "input", function () {
-                                                             var checkboxes = document.getElementsByName("BSR");
-                                                             var checkboxesChecked = [];
-                                                             for (var i=0; i<checkboxes.length; i++) {
-                                                             if (checkboxes[i].checked) {
-                                                             checkboxesChecked.push(checkboxes[i].value);
-                                                             }
-                                                             }
-                                                             Shiny.onInputChange("checked_rows",checkboxesChecked);  })'))
-
+                       dataTableOutput(ns("dt_kit_set"))
              )
            )
   )
@@ -64,6 +67,42 @@ est_par_setting_server <- function(id, path_pack, parent_session){
   moduleServer(
     id,
     function(input, output, session){
+      checkboxColumn <- function(len, col, ...) {
+        inputs <- character(len)
+        for(i in seq_len(len)) {
+          inputs[i] <- as.character(
+            checkboxInput(paste0("checkb_", col, "_", i), label = NULL, ...)
+          )
+        }
+        return(inputs)
+      }
+
+      js <- function(dtid, cols, ns = identity) {
+        code <- vector("list", length(cols))
+        for(i in seq_along(cols)) {
+          col <- cols[i]
+          code[[i]] <- c(
+            sprintf(
+              "$('body').on('click', '[id^=checkb_%d_]', function() {",
+              col),
+            "  var id = this.getAttribute('id');",
+            sprintf(
+              "  var i = parseInt(/checkb_%d_(\\d+)/.exec(id)[1]);",
+              col),
+            "  var value = $(this).prop('checked');",
+            sprintf(
+              "  var info = [{row: i, col: %d, value: value}];",
+              col),
+            sprintf(
+              "  Shiny.setInputValue('%s', info);",
+              session$ns(sprintf("%s_cell_edit:DT.cellInfo", dtid))
+            ),
+            "});"
+          )
+        }
+        do.call(c, code)
+      }
+
       # Load experimental data
       react_dt_exp <- reactive({
         file_input <- input$exp_data
@@ -100,6 +139,39 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         }
       })
 
+      rv_dt_kit_set <- reactiveVal()
+
+      react_dt_kit_set0 <- reactive({
+        # Extract autosomal markers
+        kit <- input$kit_par
+        dt_kit_info <- fread(paste0(path_pack, "/extdata/kit/", kit, ".csv"))
+        setkey(dt_kit_info, Sex_Chr)
+        dt_kit_auto <- dt_kit_info[""]
+        markers_par <- dt_kit_auto[, Marker]
+        n_mk <- length(markers_par)
+
+        # Make a data.table for kit-setting
+        dt_kit_set0 <- data.table(Marker = markers_par)
+        return(dt_kit_set0)
+      })
+
+      react_dt_kit_set1 <- reactive({
+        dt_kit_set1 <- react_dt_kit_set0()
+        dt_kit_set1$bool_bsr <- FALSE
+        dt_kit_set1$bool_fsr <- FALSE
+        dt_kit_set1$bool_dsr <- FALSE
+        return(dt_kit_set1)
+      })
+
+      react_dt_kit_set2 <- reactive({
+        dt_kit_set2 <- react_dt_kit_set0()
+        n_mk <- nrow(dt_kit_set2)
+        dt_kit_set2$check_bsr <- checkboxColumn(n_mk, 2)
+        dt_kit_set2$check_fsr <- checkboxColumn(n_mk, 3)
+        dt_kit_set2$check_dsr <- checkboxColumn(n_mk, 4)
+        return(dt_kit_set2)
+      })
+
       output$seq_data <- renderUI({
         ns <- session$ns
         seq_files <- list.files(paste0(path_pack, "/extdata/sequence_data"))
@@ -113,44 +185,30 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         selectInput(ns("kit_par"), label = h4("Kit"), choices = kit_names, selected = kit_names[1], multiple = FALSE)
       })
 
-      output$value1 <- renderPrint({ input$checked_rows })
-
       observeEvent(input$kit_par, ignoreInit = TRUE, {
-        output$dt_par_setting <- renderDataTable(server = FALSE, {
-          # Extract autosomal markers
-          kit <- input$kit_par
-          dt_kit_info <- fread(paste0(path_pack, "/extdata/kit/", kit, ".csv"))
-          setkey(dt_kit_info, Sex_Chr)
-          dt_kit_auto <- dt_kit_info[""]
-          markers_par <- dt_kit_auto[, Marker]
-          n_mk <- length(markers_par)
+        rv_dt_kit_set(react_dt_kit_set1())
 
-          # Define the default checked information
-          bsr_checked <- rep('checked=\"checked\"', n_mk)
-          fsr_checked <- rep('', n_mk)
-          fsr_checked[markers_par == "D22S1045"] <- 'checked=\"checked\"'
-          dsr_checked <- rep('', n_mk)
-
-          # Make a data.table for kit-setting
-          dt_kit_setting <- data.table(Marker = markers_par)
-          dt_kit_setting$AT = glue('<input type="number" name="AT" value="{rep(50, n_mk)}"><br>')
-          dt_kit_setting$BSR = glue('<input type="checkbox" name="BSR" {bsr_checked} value="{paste0("bsr_mk", 1:n_mk)}"><br>')
-          dt_kit_setting$FSR = glue('<input type="checkbox" name="FSR" {fsr_checked} value="{paste0("fsr_mk", 1:n_mk)}"><br>')
-          dt_kit_setting$DSR = glue('<input type="checkbox" name="DSR" {dsr_checked} value="{paste0("dsr_mk", 1:n_mk)}"><br>')
-
+        output$dt_kit_set <- renderDataTable(server = FALSE, {
           datatable(
-            dt_kit_setting,
-            colnames = c("Marker", "AT (RFU)", "Marker-specific BSR", "Marker-specific FSR", "Marker-specific DSR"),
+            isolate(react_dt_kit_set2()),
+            colnames = c("Marker", "Marker-specific BSR", "Marker-specific FSR", "Marker-specific DSR"),
             selection = "none",
             options = list(iDisplayLength = 50, ordering = FALSE, autowidth = FALSE),
             rownames = FALSE,
-            escape = FALSE
+            escape = FALSE,
+            callback = JS(js("dt_kit_set", c(2, 3, 4))) # checkboxesColumns : c(2, 3, 4)
           )
         })
       })
 
+      observeEvent(input[["dt_kit_set_cell_edit"]], {
+        info <- input[["dt_kit_set_cell_edit"]] # this input contains the info of the edit
+        rv_dt_kit_set(editData(rv_dt_kit_set(), info))
+        print(rv_dt_kit_set())
+      })
+
       observeEvent(input$act_analyze_est_par, {
-        print(input$checked_rows)
+        print(rv_dt_kit_set())
         updateTabsetPanel(session = parent_session, inputId = "tabset_est_par", selected = "Result")
       })
 
