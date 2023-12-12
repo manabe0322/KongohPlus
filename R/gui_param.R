@@ -7,17 +7,17 @@ est_par_setting_ui <- function(id){
   tabPanel("Setting",
            br(),
 
-           tags$style(
-             HTML(
-               "td > div.form-group > div.checkbox {
-                  margin:0px;
-                  bottom:10px;
-                }
-                td > div.form-group {
-                  position:absolute;
-                }"
-             )
-           ),
+#           tags$style(
+#             HTML(
+#               "td > div.form-group > div.checkbox {
+#                  margin:0px;
+#                  bottom:10px;
+#                }
+#                td > div.form-group {
+#                  position:absolute;
+#                }"
+#             )
+#           ),
 
            sidebarLayout(
              sidebarPanel(width = 3,
@@ -67,9 +67,9 @@ est_par_setting_server <- function(id, path_pack, parent_session){
   moduleServer(
     id,
     function(input, output, session){
-      checkboxColumn <- function(len, col, ...) {
+      checkboxColumn <- function(len, col, ...){
         inputs <- character(len)
-        for(i in seq_len(len)) {
+        for(i in seq_len(len)){
           inputs[i] <- as.character(
             checkboxInput(paste0("checkb_", col, "_", i), label = NULL, ...)
           )
@@ -77,11 +77,40 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         return(inputs)
       }
 
-      js <- function(dtid, cols, ns = identity) {
-        code <- vector("list", length(cols))
-        for(i in seq_along(cols)) {
-          col <- cols[i]
-          code[[i]] <- c(
+      numericColumn <- function(len, col, ...){
+        inputs <- character(len)
+        for(i in seq_len(len)){
+          inputs[i] <- as.character(
+            numericInput(paste0("numeric_", col, "_", i), label = NULL, ...)
+          )
+        }
+        return(inputs)
+      }
+
+      js <- function(dtid, col_numeric, cols_check, ns = identity){
+        code <- vector("list", 1 + length(cols_check))
+        code[[1]] <- c(
+          sprintf(
+            "$('body').on('change', '[id^=numeric_%d_]', function() {",
+            col_numeric),
+          "  var id = this.getAttribute('id');",
+          sprintf(
+            "  var i = parseInt(/numeric_%d_(\\d+)/.exec(id)[1]);",
+            col_numeric),
+          "  var value = $(this).val('value');",
+          sprintf(
+            "  var info = [{row: i, col: %d, value: value}];",
+            col_numeric),
+          sprintf(
+            "  Shiny.setInputValue('%s', info);",
+            session$ns(sprintf("%s_cell_edit:DT.cellInfo", dtid))
+          ),
+          "});"
+        )
+
+        for(i in seq_along(cols_check)){
+          col <- cols_check[i]
+          code[[i + 1]] <- c(
             sprintf(
               "$('body').on('click', '[id^=checkb_%d_]', function() {",
               col),
@@ -157,18 +186,20 @@ est_par_setting_server <- function(id, path_pack, parent_session){
 
       react_dt_kit_set1 <- reactive({
         dt_kit_set1 <- react_dt_kit_set0()
-        dt_kit_set1$bool_bsr <- FALSE
-        dt_kit_set1$bool_fsr <- FALSE
-        dt_kit_set1$bool_dsr <- FALSE
+        dt_kit_set1$AT <- 50
+        dt_kit_set1$Bool_BSR <- FALSE
+        dt_kit_set1$Bool_FSR <- FALSE
+        dt_kit_set1$Bool_DSR <- FALSE
         return(dt_kit_set1)
       })
 
       react_dt_kit_set2 <- reactive({
         dt_kit_set2 <- react_dt_kit_set0()
         n_mk <- nrow(dt_kit_set2)
-        dt_kit_set2$check_bsr <- checkboxColumn(n_mk, 2)
-        dt_kit_set2$check_fsr <- checkboxColumn(n_mk, 3)
-        dt_kit_set2$check_dsr <- checkboxColumn(n_mk, 4)
+        dt_kit_set2$numeric_at <- numericColumn(n_mk, 2, value = 50)
+        dt_kit_set2$check_bsr <- checkboxColumn(n_mk, 3)
+        dt_kit_set2$check_fsr <- checkboxColumn(n_mk, 4)
+        dt_kit_set2$check_dsr <- checkboxColumn(n_mk, 5)
         return(dt_kit_set2)
       })
 
@@ -196,13 +227,14 @@ est_par_setting_server <- function(id, path_pack, parent_session){
             options = list(iDisplayLength = 50, ordering = FALSE, autowidth = FALSE),
             rownames = FALSE,
             escape = FALSE,
-            callback = JS(js("dt_kit_set", c(2, 3, 4))) # checkboxesColumns : c(2, 3, 4)
+            callback = JS(js("dt_kit_set", 2, c(3, 4, 5)))
           )
         })
       })
 
       observeEvent(input[["dt_kit_set_cell_edit"]], {
         info <- input[["dt_kit_set_cell_edit"]] # this input contains the info of the edit
+        print(info)
         rv_dt_kit_set(editData(rv_dt_kit_set(), info))
         print(rv_dt_kit_set())
       })

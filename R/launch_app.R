@@ -6,8 +6,8 @@
 KongohPlus <- function(){
   ver_soft <- "0.1.0"
   #ver_soft <- packageVersion("KongohPlus")
-  path_pack <- "D:/RStudio_GitHub/KongohPlus/inst"
-  #path_pack <- "C:/Users/manab/Documents/RStudio/KongohPlus/inst"
+  #path_pack <- "D:/RStudio_GitHub/KongohPlus/inst"
+  path_pack <- "C:/Users/manab/Documents/RStudio/KongohPlus/inst"
   #path_pack <- path.package("KongohPlus", quiet = FALSE)
   options(shiny.maxRequestSize = 500 * 1024^2)
 
