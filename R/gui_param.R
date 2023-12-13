@@ -97,7 +97,7 @@ est_par_setting_server <- function(id, path_pack, parent_session){
           sprintf(
             "  var i = parseInt(/numeric_%d_(\\d+)/.exec(id)[1]);",
             col_numeric),
-          "  var value = $(this).val('value');",
+          "  var value = $(this).val();",
           sprintf(
             "  var info = [{row: i, col: %d, value: value}];",
             col_numeric),
