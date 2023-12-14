@@ -89,42 +89,24 @@ est_par_setting_server <- function(id, path_pack, parent_session){
       js <- function(dtid, col_numeric, cols_check, ns = identity){
         code <- vector("list", 1 + length(cols_check))
         code[[1]] <- c(
-          sprintf(
-            "$('body').on('change', '[id^=numeric_%d_]', function() {",
-            col_numeric),
+          sprintf("$('body').on('change', '[id^=numeric_%d_]', function() {", col_numeric),
           "  var id = this.getAttribute('id');",
-          sprintf(
-            "  var i = parseInt(/numeric_%d_(\\d+)/.exec(id)[1]);",
-            col_numeric),
+          sprintf("  var i = parseInt(/numeric_%d_(\\d+)/.exec(id)[1]);", col_numeric),
           "  var value = $(this).val();",
-          sprintf(
-            "  var info = [{row: i, col: %d, value: value}];",
-            col_numeric),
-          sprintf(
-            "  Shiny.setInputValue('%s', info);",
-            session$ns(sprintf("%s_cell_edit:DT.cellInfo", dtid))
-          ),
+          sprintf("  var info = [{row: i, col: %d, value: value}];", col_numeric),
+          sprintf("  Shiny.setInputValue('%s', info);", session$ns(sprintf("%s_cell_edit:DT.cellInfo", dtid))),
           "});"
         )
 
         for(i in seq_along(cols_check)){
           col <- cols_check[i]
           code[[i + 1]] <- c(
-            sprintf(
-              "$('body').on('click', '[id^=checkb_%d_]', function() {",
-              col),
+            sprintf("$('body').on('click', '[id^=checkb_%d_]', function() {", col),
             "  var id = this.getAttribute('id');",
-            sprintf(
-              "  var i = parseInt(/checkb_%d_(\\d+)/.exec(id)[1]);",
-              col),
+            sprintf("  var i = parseInt(/checkb_%d_(\\d+)/.exec(id)[1]);", col),
             "  var value = $(this).prop('checked');",
-            sprintf(
-              "  var info = [{row: i, col: %d, value: value}];",
-              col),
-            sprintf(
-              "  Shiny.setInputValue('%s', info);",
-              session$ns(sprintf("%s_cell_edit:DT.cellInfo", dtid))
-            ),
+            sprintf("  var info = [{row: i, col: %d, value: value}];", col),
+            sprintf("  Shiny.setInputValue('%s', info);", session$ns(sprintf("%s_cell_edit:DT.cellInfo", dtid))),
             "});"
           )
         }
@@ -232,10 +214,10 @@ est_par_setting_server <- function(id, path_pack, parent_session){
       })
 
       observeEvent(input[["dt_kit_set_cell_edit"]], {
-        info <- input[["dt_kit_set_cell_edit"]] # this input contains the info of the edit
-        print(info)
+        info <- input[["dt_kit_set_cell_edit"]]
+        options(warn = -1) # To suppress the message: Warning in coerceValue(v, data[i, j, drop = TRUE]) : The data type is not supported: logical
         rv_dt_kit_set(editData(rv_dt_kit_set(), info))
-        print(rv_dt_kit_set())
+        options(warn = 0)
       })
 
       observeEvent(input$act_analyze_est_par, {
