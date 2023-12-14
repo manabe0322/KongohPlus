@@ -11,6 +11,14 @@ KongohPlus <- function(){
   #path_pack <- path.package("KongohPlus", quiet = FALSE)
   options(shiny.maxRequestSize = 500 * 1024^2)
 
+  stan_models <- list.files("D:/RStudio_GitHub/KongohPlus/data")
+  #stan_models <- list.files(paste0(path_pack, "/data"))
+  if(!is.element("model_ae.rds", stan_models)){
+    model_ae <- cmdstan_model(paste0(path_pack, "/stan/model_ae.stan"))
+    saveRDS(model_ae, "D:/RStudio_GitHub/KongohPlus/data/model_ae.rds")
+    #saveRDS(model_ae, paste0(path_pack, "/data/model_ae.rds"))
+  }
+
   ui <- fluidPage(useShinyjs(),
                   theme = shinytheme("cerulean"),
                   tags$style(type = "text/css", "body{padding-top: 70px;}"),
