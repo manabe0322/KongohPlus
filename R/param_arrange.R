@@ -171,12 +171,12 @@ remove_pu <- function(peaks, sizes, heights, gt, dye, al_size, al_dye, max_dist_
 #' @description The function to arrange experimental data
 #' @param dt_exp_init The initial data.table of experimental data
 #' @param dt_gt_init The initial data.table of genotype data
-#' @param par_markers Markers for parameters
+#' @param markers_par Markers for parameters
 #' @param at_all_mk Analytical thresholds of all markers
 #' @param dye_all_mk Dyes of all markers
 #' @param sr_consider_all_mk Information on consideration of back, forward, double-back, and minus 2-nt stutters in all markers
 #' @param max_dist_pu The maximum distance between a pull-up peak and the parent allele
-arrange_exp_data <- function(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dye_all_mk, sr_consider_all_mk, max_dist_pu = 1){
+arrange_exp_data <- function(dt_exp_init, dt_gt_init, markers_par, at_all_mk, dye_all_mk, sr_consider_all_mk, max_dist_pu = 1){
   peak_list <- size_list <- height_list <- gt_list <- list()
 
   name_dt_exp <- names(dt_exp_init)
@@ -188,7 +188,7 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dy
   name_dt_gt <- names(dt_gt_init)
   index_gt_allele <- grep("Allele", name_dt_gt)
 
-  n_par_mk <- length(par_markers)
+  n_par_mk <- length(markers_par)
 
   for(i in 1:length(sample_names)){
     dt_exp_one <- dt_exp_init[dt_exp_init[, SampleName] == sample_names[i], ]
@@ -206,11 +206,11 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dy
     # Define objects for one sample
     peak_list_one <- size_list_one <- height_list_one <- list()
     gt_one <- matrix(NA, nrow = n_par_mk, ncol = 2)
-    rownames(gt_one) <- par_markers
+    rownames(gt_one) <- markers_par
     colnames(gt_one) <- c("Allele1", "Allele2")
 
     for(j in 1:n_par_mk){
-      mk <- par_markers[j]
+      mk <- markers_par[j]
       index_mk <- which(markers == mk)
       peaks <- as.character(peak_all_mk[index_mk, ])
       sizes <- as.numeric(size_all_mk[index_mk, ])
@@ -263,7 +263,7 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, par_markers, at_all_mk, dy
       }
     }
 
-    names(peak_list_one) <- names(size_list_one) <- names(height_list_one) <- par_markers
+    names(peak_list_one) <- names(size_list_one) <- names(height_list_one) <- markers_par
     peak_list[[i]] <- peak_list_one
     size_list[[i]] <- size_list_one
     height_list[[i]] <- height_list_one
