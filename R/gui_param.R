@@ -226,6 +226,12 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         selectInput(ns("kit_par"), label = h4("Kit"), choices = kit_names, selected = kit_names[1], multiple = FALSE)
       })
 
+      observeEvent(input$act_advanced, {
+        # MCMC conditions
+        # Maximum pull-up distance
+        # Consideration of LUS and Multi-sequence models
+      })
+
       observeEvent(input$kit_par, ignoreInit = TRUE, {
         rv_dt_kit_set(react_dt_kit_set1())
 
@@ -279,13 +285,6 @@ est_par_result_server <- function(id){
   moduleServer(
     id,
     function(input, output, session){
-      # Check input files
-      #error_message <- check_file_est_par(dt_exp, dt_gt, dt_seq, path_pack)
-      #if(error_message != ""){
-      #  showModal(modalDialog(title = "Error", error_message, easyClose = TRUE, footer = NULL))
-      #}else{
-      #updateTabsetPanel(session = parent_session, inputId = "tabset_est_par", selected = "est_par_setting")
-      #}
     }
   )
 }
