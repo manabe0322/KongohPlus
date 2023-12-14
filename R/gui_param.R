@@ -24,7 +24,9 @@ est_par_setting_ui <- function(id){
                           fileInput(ns("gt_data"), label = h4("Genotype data"), accept = ".csv"),
                           uiOutput(ns("seq_data")),
                           uiOutput(ns("kit_par")),
+                          br(),
                           actionButton(ns("act_advanced"), "Advanced setting"),
+                          br(),
                           br(),
                           br(),
                           actionButton(ns("act_analyze_est_par"), label = "Analyze", class = "btn btn-primary btn-lg")
@@ -221,8 +223,19 @@ est_par_setting_server <- function(id, path_pack, parent_session){
       })
 
       observeEvent(input$act_analyze_est_par, {
-        print(rv_dt_kit_set())
-        updateTabsetPanel(session = parent_session, inputId = "tabset_est_par", selected = "Result")
+        # Fix data.table
+        dt_exp <- react_dt_exp()
+        dt_gt <- react_dt_gt()
+        dt_seq <- react_dt_seq()
+        dt_kit_set <- rv_dt_kit_set()
+
+        # Check input files and setting
+        error_message <- check_est_par(dt_exp, dt_gt, dt_seq, dt_kit_set)
+        if(error_message != ""){
+          showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
+        }else{
+          updateTabsetPanel(session = parent_session, inputId = "tabset_est_par", selected = "Result")
+        }
       })
 
       react_list <- list(react_dt_exp = react_dt_exp, react_dt_gt = react_dt_gt)
