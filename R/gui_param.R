@@ -7,17 +7,16 @@ est_par_setting_ui <- function(id){
   tabPanel("Setting",
            br(),
 
-#           tags$style(
-#             HTML(
-#               "td > div.form-group > div.checkbox {
-#                  margin:0px;
-#                  bottom:10px;
-#                }
-#                td > div.form-group {
-#                  position:absolute;
-#                }"
-#             )
-#           ),
+           tags$style(
+             HTML(
+               "td > div.form-group {
+                  margin: 0px;
+                  height: 30px;
+                  display: flex;
+                  align-items: center;
+                }"
+             )
+           ),
 
            sidebarLayout(
              sidebarPanel(width = 3,
@@ -196,7 +195,7 @@ est_par_setting_server <- function(id, path_pack, parent_session){
       react_dt_kit_set2 <- reactive({
         dt_kit_set2 <- react_dt_kit_set0()
         n_mk <- nrow(dt_kit_set2)
-        dt_kit_set2$numeric_at <- numericColumn(n_mk, 2, value = 50)
+        dt_kit_set2$numeric_at <- numericColumn(n_mk, 2, value = 50, width = "50%")
         dt_kit_set2$check_bsr <- checkboxColumn(n_mk, 3)
         dt_kit_set2$check_fsr <- checkboxColumn(n_mk, 4)
         dt_kit_set2$check_dsr <- checkboxColumn(n_mk, 5)
@@ -222,7 +221,7 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         output$dt_kit_set <- renderDataTable(server = FALSE, {
           datatable(
             isolate(react_dt_kit_set2()),
-            colnames = c("Marker", "Marker-specific BSR", "Marker-specific FSR", "Marker-specific DSR"),
+            colnames = c("Marker", "AT", "Marker-specific BSR", "Marker-specific FSR", "Marker-specific DSR"),
             selection = "none",
             options = list(iDisplayLength = 50, ordering = FALSE, autowidth = FALSE),
             rownames = FALSE,
