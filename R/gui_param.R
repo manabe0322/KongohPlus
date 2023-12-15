@@ -269,9 +269,9 @@ est_par_setting_server <- function(id, path_pack, parent_session){
 
       observeEvent(input[["dt_kit_set_cell_edit"]], {
         info <- input[["dt_kit_set_cell_edit"]]
-        options(warn = -1) # To suppress the message: Warning in coerceValue(v, data[i, j, drop = TRUE]) : The data type is not supported: logical
-        rv_dt_kit_set(editData(rv_dt_kit_set(), info))
-        options(warn = 0)
+        dt_kit_set <- rv_dt_kit_set()
+        dt_kit_set[[info[1, "col"]]][info[1, "row"]] <- info[1, "value"]
+        rv_dt_kit_set(dt_kit_set)
 
         print(rv_dt_kit_set())
       })
