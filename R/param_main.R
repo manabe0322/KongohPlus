@@ -54,10 +54,10 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set){
   seq_count_all_mk <- tmp[[4]]
 
   # Load the MCMC models
-  model_ae <- readRDS("data/model_ae.rds")
-  model_sr_gen <- readRDS("data/model_sr_gen.rds")
-  model_sr_together <- readRDS("data/model_sr_together.rds")
-  model_sr_uni <- readRDS("data/model_sr_uni.rds")
+  model_ae <- readRDS(paste0(path_pack, "/model/model_ae.rds"))
+  model_sr_gen <- readRDS(paste0(path_pack, "/model/model_sr_gen.rds"))
+  model_sr_together <- readRDS(paste0(path_pack, "/model/model_sr_together.rds"))
+  model_sr_uni <- readRDS(paste0(path_pack, "/model/model_sr_uni.rds"))
 
   # Perform the MCMC for the locus-specific amplification efficiency
   n_ae_data <- nrow(ae_data)
@@ -74,59 +74,11 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set){
   }
 
   # Perform the MCMC for the back stutter ratio
-  for(i in 1:n_mk){
+  model_bsr_all_mk
 
-  }
+  # Perform the MCMC for the forward stutter ratio
 
+  # Perform the MCMC for the double-back stutter ratio
 
-  for(i in 1:n_mk){
-    # Extract data of one marker
-    tmp <- extract_sr_use(bsr_data[, i], allele_sr_data[, i], height_sr_data[, i], lus_all_mk[[i]])
-    bsr_one_mk <- tmp[[1]]
-    bsr_al_one_mk <- tmp[[2]]
-    bsr_h_one_mk <- tmp[[3]]
-    bsr_lus_one_mk <- tmp[[4]]
-    reps_one_mk <- reps_all_mk[[i]]
-    seq_al_one_mk <- seq_al_all_mk[[i]]
-    seq_count_one_mk <- seq_count_all_mk[[i]]
-
-    # Allele model
-    data_list_bsr_allele <- list(N = length(bsr_one_mk), SR = bsr_one_mk, XVal = bsr_al_one_mk, Height = bsr_h_one_mk)
-    fit_bsr_allele <- model_sr_gen$sample(
-      data_list_bsr_allele,
-      iter_warmup = 1000,
-      iter_sampling = 1000,
-      chains = 4,
-      parallel_chains = 4
-    )
-
-    # LUS model
-    data_list_bsr_lus <- list(N = length(bsr_one_mk), SR = bsr_one_mk, XVal = bsr_lus_one_mk, Height = bsr_h_one_mk)
-    fit_bsr_lus <- model_sr_gen$sample(
-      data_list_bsr_lus,
-      iter_warmup = 10000,
-      iter_sampling = 10000,
-      chains = 4,
-      parallel_chains = 4
-    )
-
-    # Multi-seq model
-    max_cand_us <- max(unlist(reps_one_mk))
-    for(j in 1:max_cand_us){
-      min_us <- j
-      bsr_ca_one_mk <- make_sr_ca_one_mk(min_us, reps_one_mk, seq_al_one_mk, seq_count_one_mk, bsr_al_one_mk)
-      data_list_bsr_multi <- list(N = length(bsr_one_mk), SR = bsr_one_mk, XVal = bsr_ca_one_mk, Height = bsr_h_one_mk)
-      fit_bsr_multi <- model_sr_gen$sample(
-        data_list_bsr_multi,
-        iter_warmup = 10000,
-        iter_sampling = 10000,
-        chains = 4,
-        parallel_chains = 4,
-        show_messages = FALSE,
-        show_exceptions = FALSE
-      )
-
-      print(fit_bsr_multi)
-    }
-  }
+  # Perform the MCMC for the minus 2-nt stutter ratio
 }
