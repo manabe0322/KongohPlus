@@ -53,16 +53,32 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set){
   seq_al_all_mk <- tmp[[3]]
   seq_count_all_mk <- tmp[[4]]
 
-  # Perform the MCMC for the locus-specific amplification efficiency
+  # Load the MCMC models
   model_ae <- readRDS("data/model_ae.rds")
-  mcmc_data_ae <- run_mcmc_ae(model_ae, ae_data, height_ae_data,
-                              n_warmup, n_sampling, n_chains, n_parallel_chains)
+  model_sr_gen <- readRDS("data/model_sr_gen.rds")
+  model_sr_together <- readRDS("data/model_sr_together.rds")
+  model_sr_uni <- readRDS("data/model_sr_uni.rds")
+
+  # Perform the MCMC for the locus-specific amplification efficiency
+  n_ae_data <- nrow(ae_data)
+  ae_median_myu_all_mk <- ae_median_sigma_all_mk <- ae_rhat_myu_all_mk <- ae_rhat_sigma_all_mk <- rep(NA, n_mk)
+  ae_traceplot_all_mk <- list()
+  for(i in 1:n_mk){
+    data_list_ae <- list(N = n_ae_data, AE = ae_data[, i], Height = height_ae_data[, i])
+    tmp <- run_mcmc_ae(model_ae, data_list_ae, n_warmup, n_sampling, n_chains, n_parallel_chains)
+    ae_median_myu_all_mk[i] <- tmp$median_myu
+    ae_median_sigma_all_mk[i] <- tmp$median_sigma
+    ae_rhat_myu_all_mk[i] <- tmp$rhat_myu
+    ae_rhat_sigma_all_mk[i] <- tmp$rhat_sigma
+    ae_traceplot_all_mk[[i]] <- tmp$traceplot
+  }
 
   # Perform the MCMC for the back stutter ratio
+  for(i in 1:n_mk){
 
-  # model_sr_gen <- cmdstan_model("inst/stan/model_sr_gen.stan")
-  # saveRDS(model_sr_gen, "data/model_sr_gen.rds")
-  # model_sr_gen <- readRDS("data/model_sr_gen.rds")
+  }
+
+
   for(i in 1:n_mk){
     # Extract data of one marker
     tmp <- extract_sr_use(bsr_data[, i], allele_sr_data[, i], height_sr_data[, i], lus_all_mk[[i]])

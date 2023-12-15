@@ -4,20 +4,10 @@
 #' @usage KongohPlus()
 #' @export
 KongohPlus <- function(){
-  ver_soft <- "0.1.0"
-  #ver_soft <- packageVersion("KongohPlus")
-  path_pack <- "D:/RStudio_GitHub/KongohPlus/inst"
-  #path_pack <- "C:/Users/manab/Documents/RStudio/KongohPlus/inst"
-  #path_pack <- path.package("KongohPlus", quiet = FALSE)
+  ver_soft <- packageVersion("KongohPlus")
+  path_pack <- path.package("KongohPlus", quiet = FALSE)
   options(shiny.maxRequestSize = 500 * 1024^2)
-
-  stan_models <- list.files("D:/RStudio_GitHub/KongohPlus/data")
-  #stan_models <- list.files(paste0(path_pack, "/data"))
-  if(!is.element("model_ae.rds", stan_models)){
-    model_ae <- cmdstan_model(paste0(path_pack, "/stan/model_ae.stan"))
-    saveRDS(model_ae, "D:/RStudio_GitHub/KongohPlus/data/model_ae.rds")
-    #saveRDS(model_ae, paste0(path_pack, "/data/model_ae.rds"))
-  }
+  compile_stan_code(path_pack)
 
   ui <- fluidPage(useShinyjs(),
                   theme = shinytheme("cerulean"),
@@ -26,7 +16,6 @@ KongohPlus <- function(){
                   navbarPage(title = paste0("KongohPlus ver. ", ver_soft),
                              id = "navbar",
                              position = c("fixed-top"),
-
 
                              tabPanel("Load"),
 

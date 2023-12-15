@@ -12,6 +12,7 @@ Depends:
     R (>= 4.3.0), 
     shiny
 Imports:
+    bayesplot, 
     cmdstanr, 
     data.table, 
     gtools, 
