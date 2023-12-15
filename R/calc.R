@@ -18,8 +18,6 @@ change_data_type_csp <- function(dt_csp_init){
 #'
 #' @description The function to make genotype combinations
 #' @param hnc The hypothesized number of contributors
-#' @param peaks
-#' @param heights
 make_gt_comb <- function(hnc, peaks, heights){
 
   n_peak <- length(peaks)
