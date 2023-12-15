@@ -15,6 +15,7 @@ Imports:
     bayesplot, 
     cmdstanr, 
     data.table, 
+    DT, 
     gtools, 
     magrittr, 
     Rcpp, 
