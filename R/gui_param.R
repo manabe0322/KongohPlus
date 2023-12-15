@@ -260,13 +260,14 @@ est_par_setting_server <- function(id, path_pack, parent_session){
                    h4("Pull-up"),
                    checkboxInput(session$ns("pu_auto"), label = "Automatically removed", value = TRUE),
                    numericInput(session$ns("pu_dist"), label = "Maximum pull-up distance (bp)", value = 1),
+                   br(),
                    h4("Stutter model"),
-                   numericInput(session$ns("motif_lus"), label = "Minimum number of motifs for considering the LUS model", value = 2),
-                   numericInput(session$ns("motif_lus"), label = "Minimum number of motifs for considering the multi-sequence model", value = 3)
+                   numericInput(session$ns("motif_lus"), label = "Minimum number of repeat motifs for considering the LUS model", value = 2),
+                   numericInput(session$ns("motif_lus"), label = "Minimum number of repeat motifs for considering the multi-sequence model", value = 3)
             )
           ),
           footer = tagList(
-            disabled(actionButton(session$ns("act_advance_save"), "Save")),
+            actionButton(session$ns("act_advance_save"), "Save"),
             modalButton("Cancel")
           ),
           size = "l"
