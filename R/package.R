@@ -9,3 +9,4 @@
 #' @importFrom Rcpp sourceCpp
 #' @importFrom shinyjs useShinyjs
 #' @importFrom shinythemes shinytheme
+"_PACKAGE"
