@@ -2,6 +2,7 @@
 #'
 #' @description The function to extract sample names with inappropriate marker sets from a data.table
 #' @param dt The input data.table for estimating parameters
+#' @param markers_par The target markers for estimating parameters
 check_dt_mk_est_par <- function(dt, markers_par){
   # Extract sample names
   setkey(dt, SampleName)
