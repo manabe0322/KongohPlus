@@ -8,6 +8,8 @@ check_dt_mk_est_par(dt, markers_par)
 }
 \arguments{
 \item{dt}{The input data.table for estimating parameters}
+
+\item{markers_par}{The target markers for estimating parameters}
 }
 \description{
 The function to extract sample names with inappropriate marker sets from a data.table
