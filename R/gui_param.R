@@ -7,10 +7,6 @@ est_par_setting_ui <- function(id){
   tabPanel("Setting",
            br(),
 
-#           tags$style('td .shiny-input-container{width:auto;}
-#                td{width:auto;}
-#                '),
-
            tags$style(
              HTML(
                "td > div.form-group {
@@ -66,7 +62,30 @@ est_par_setting_ui <- function(id){
 est_par_result_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("Result")
+  tabPanel("Result",
+           br(),
+           tabsetPanel(id = ns("tabset_est_par_result"),
+                       type = "tabs",
+                       tabPanel("AE",
+                                sidebarLayout(
+                                  sidebarPanel(width = 2,
+                                               actionButton(ns("act_trace_ae"), label = "Trace plot"),
+                                               br(),
+                                               br(),
+                                               br(),
+                                               actionButton(ns("act_plot_ae"), label = "Data plot")
+                                  ),
+                                  mainPanel(width = 10,
+                                            dataTableOutput(ns("dt_result_ae"))
+                                  )
+                                )
+                       ),
+                       tabPanel("BSR"),
+                       tabPanel("FSR"),
+                       tabPanel("DSR"),
+                       tabPanel("M2SR")
+           )
+  )
 }
 
 #' est_par_ui
@@ -196,8 +215,8 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         dt_kit_set1 <- react_dt_kit_set0()
         dt_kit_set1$AT <- 50
         dt_kit_set1$Model_BSR <- "Locus-specific"
-        dt_kit_set1$Model_FSR <- "Common variance"
-        dt_kit_set1$Model_DSR <- "Common variance"
+        dt_kit_set1$Model_FSR <- "Multiple loci together"
+        dt_kit_set1$Model_DSR <- "Multiple loci together"
         dt_kit_set1$Model_M2SR <- "Not consider"
         return(dt_kit_set1)
       })
@@ -206,10 +225,10 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         dt_kit_set2 <- react_dt_kit_set0()
         n_mk <- nrow(dt_kit_set2)
         dt_kit_set2$numeric_at <- numericColumn(n_mk, 3, value = 50, width = "75%")
-        dt_kit_set2$select_bsr <- selectColumn(n_mk, 4, choices = c("Not consider", "Locus-specific", "Common variance"), select_default = rep("Locus-specific", n_mk), width = "90%")
-        dt_kit_set2$select_fsr <- selectColumn(n_mk, 5, choices = c("Not consider", "Locus-specific", "Common variance"), select_default = rep("Common variance", n_mk), width = "90%")
-        dt_kit_set2$select_dsr <- selectColumn(n_mk, 6, choices = c("Not consider", "Locus-specific", "Common variance"), select_default = rep("Common variance", n_mk), width = "90%")
-        dt_kit_set2$select_m2sr <- selectColumn(n_mk, 7, choices = c("Not consider", "Locus-specific", "Common variance"), select_default = rep("Not consider", n_mk), width = "90%")
+        dt_kit_set2$select_bsr <- selectColumn(n_mk, 4, choices = c("Not consider", "Locus-specific", "Multiple loci together"), select_default = rep("Locus-specific", n_mk), width = "90%")
+        dt_kit_set2$select_fsr <- selectColumn(n_mk, 5, choices = c("Not consider", "Locus-specific", "Multiple loci together"), select_default = rep("Multiple loci together", n_mk), width = "90%")
+        dt_kit_set2$select_dsr <- selectColumn(n_mk, 6, choices = c("Not consider", "Locus-specific", "Multiple loci together"), select_default = rep("Multiple loci together", n_mk), width = "90%")
+        dt_kit_set2$select_m2sr <- selectColumn(n_mk, 7, choices = c("Not consider", "Locus-specific", "Multiple loci together"), select_default = rep("Not consider", n_mk), width = "90%")
         return(dt_kit_set2)
       })
 
