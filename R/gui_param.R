@@ -195,6 +195,7 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         }
       })
 
+      # Kit setting
       rv_dt_kit_set <- reactiveVal()
 
       react_dt_kit_set0 <- reactive({
@@ -246,9 +247,30 @@ est_par_setting_server <- function(id, path_pack, parent_session){
       })
 
       observeEvent(input$act_advanced, {
-        # MCMC conditions
-        # Maximum pull-up distance
-        # Consideration of LUS and Multi-sequence models
+        showModal(modalDialog(
+          title = "Advanced setting",
+          fluidRow(
+            column(6,
+                   h4("MCMC conditions"),
+                   numericInput(session$ns("warmup"), label = "Warmup iterations", value = 2000),
+                   numericInput(session$ns("sampling"), label = "Sampling iterations", value = 2000),
+                   numericInput(session$ns("chains"), label = "Number of chains", value = 4)
+            ),
+            column(6,
+                   h4("Pull-up"),
+                   checkboxInput(session$ns("pu_auto"), label = "Automatically removed", value = TRUE),
+                   numericInput(session$ns("pu_dist"), label = "Maximum pull-up distance (bp)", value = 1),
+                   h4("Stutter model"),
+                   numericInput(session$ns("motif_lus"), label = "Minimum number of motifs for considering the LUS model", value = 2),
+                   numericInput(session$ns("motif_lus"), label = "Minimum number of motifs for considering the multi-sequence model", value = 3)
+            )
+          ),
+          footer = tagList(
+            disabled(actionButton(session$ns("act_advance_save"), "Save")),
+            modalButton("Cancel")
+          ),
+          size = "l"
+        ))
       })
 
       observeEvent(input$kit_par, ignoreInit = TRUE, {
@@ -288,7 +310,7 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set)
+          results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set, n_warmup, n_sampling, n_chains, n_parallel_chains)
 
           updateTabsetPanel(session = parent_session, inputId = "tabset_est_par", selected = "Result")
         }
