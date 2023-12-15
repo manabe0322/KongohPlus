@@ -2,7 +2,7 @@
 #'
 #' @importFrom bayesplot mcmc_trace
 #' @importFrom cmdstanr cmdstan_model
-#' @importFrom data.table data.table fread setDT
+#' @importFrom data.table data.table fread setDT setkey
 #' @importFrom DT datatable dataTableOutput renderDataTable
 #' @importFrom gtools combinations permutations
 #' @importFrom magrittr "%>%"
