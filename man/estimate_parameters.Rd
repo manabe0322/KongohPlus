@@ -4,7 +4,16 @@
 \alias{estimate_parameters}
 \title{estimate_parameters}
 \usage{
-estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set)
+estimate_parameters(
+  dt_exp,
+  dt_gt,
+  dt_seq,
+  dt_kit_set,
+  n_warmup,
+  n_sampling,
+  n_chains,
+  n_parallel_chains
+)
 }
 \arguments{
 \item{dt_exp}{The data.table of the experimental data}
@@ -14,6 +23,14 @@ estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set)
 \item{dt_seq}{The data.table of the sequence data}
 
 \item{dt_kit_set}{The data.table of the kit-setting}
+
+\item{n_warmup}{The number of simulations for warm-up}
+
+\item{n_sampling}{The number of simulations for sampling}
+
+\item{n_chains}{The number of chains}
+
+\item{n_parallel_chains}{The number of parallel chains}
 }
 \description{
 The function to estimate parameters
