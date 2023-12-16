@@ -7,6 +7,7 @@
 #' @importFrom gtools combinations permutations
 #' @importFrom magrittr "%>%"
 #' @importFrom Rcpp sourceCpp
+#' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
 #' @importFrom shinyjs useShinyjs
 #' @importFrom shinythemes shinytheme
 "_PACKAGE"

@@ -19,6 +19,7 @@ Imports:
     gtools, 
     magrittr, 
     Rcpp, 
+    shinyFeedback,
     shinyjs, 
     shinythemes
 Suggests: 
