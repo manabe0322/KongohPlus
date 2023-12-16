@@ -12,7 +12,7 @@ estimate_parameters(
   n_warmup,
   n_sampling,
   n_chains,
-  n_parallel_chains
+  n_parallel_chains = detectCores()
 )
 }
 \arguments{

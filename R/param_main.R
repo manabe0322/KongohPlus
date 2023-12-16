@@ -18,7 +18,7 @@ calc_aic <- function(log_like, n_par){
 #' @param n_sampling The number of simulations for sampling
 #' @param n_chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
-estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, n_warmup, n_sampling, n_chains, n_parallel_chains){
+estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, n_warmup, n_sampling, n_chains, n_parallel_chains = detectCores()){
   # Extract information on setting
   markers_par <- dt_kit_set[, Marker]
   n_mk <- length(markers_par)

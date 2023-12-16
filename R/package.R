@@ -6,6 +6,7 @@
 #' @importFrom DT datatable dataTableOutput JS renderDataTable
 #' @importFrom gtools combinations permutations
 #' @importFrom magrittr "%>%"
+#' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
 #' @importFrom shinyjs useShinyjs
