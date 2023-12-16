@@ -113,7 +113,8 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         do.call(c, code)
       }
 
-      # Load experimental data
+      #### Experimental data ####
+
       react_dt_exp <- reactive({
         file_input <- input$exp_data
         if(is.null(file_input)){
@@ -125,7 +126,8 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         }
       })
 
-      # Load genotype data
+      #### Genotype data ####
+
       react_dt_gt <- reactive({
         file_input <- input$gt_data
         if(is.null(file_input)){
@@ -137,7 +139,8 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         }
       })
 
-      # Load sequence data
+      #### Sequence data ####
+
       react_dt_seq <- reactive({
         file_input <- input$seq_data
         if(is.null(file_input)){
@@ -149,9 +152,18 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         }
       })
 
-      # Kit setting
+      output$seq_data <- renderUI({
+        ns <- session$ns
+        seq_files <- list.files(paste0(path_pack, "/extdata/sequence_data"))
+        selectInput(ns("seq_data"), label = h4("Sequence data"), choices = seq_files, selected = seq_files[1], multiple = FALSE)
+      })
+
+      #### Kit-setting ####
+
+      # Define the reactive value
       rv_dt_kit_set <- reactiveVal()
 
+      # Initial data.table
       react_dt_kit_set0 <- reactive({
         # Extract autosomal markers
         kit <- input$kit_par
@@ -166,6 +178,7 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         return(dt_kit_set0)
       })
 
+      # Main data.table
       react_dt_kit_set1 <- reactive({
         dt_kit_set1 <- react_dt_kit_set0()
         dt_kit_set1$AT <- 50
@@ -176,6 +189,7 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         return(dt_kit_set1)
       })
 
+      # Displayed data.table
       react_dt_kit_set2 <- reactive({
         dt_kit_set2 <- react_dt_kit_set0()
         n_mk <- nrow(dt_kit_set2)
@@ -187,20 +201,41 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         return(dt_kit_set2)
       })
 
-      output$seq_data <- renderUI({
-        ns <- session$ns
-        seq_files <- list.files(paste0(path_pack, "/extdata/sequence_data"))
-        selectInput(ns("seq_data"), label = h4("Sequence data"), choices = seq_files, selected = seq_files[1], multiple = FALSE)
-      })
-
+      # Select kit
       output$kit_par <- renderUI({
         kit_names <- list.files(paste0(path_pack, "/extdata/kit"))
         kit_names <- gsub(".csv", "", kit_names)
         selectInput(session$ns("kit_par"), label = h4("Kit"), choices = kit_names, selected = kit_names[1], multiple = FALSE)
       })
 
+      # Output data.table
+      observeEvent(input$kit_par, ignoreInit = TRUE, {
+        rv_dt_kit_set(react_dt_kit_set1())
+
+        output$dt_kit_set <- renderDataTable(server = FALSE, {
+          datatable(
+            isolate(react_dt_kit_set2()),
+            colnames = c("Marker", "Dye", "AT", "BSR model", "FSR model", "DSR model", "M2SR model"),
+            selection = "none",
+            options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+            rownames = FALSE,
+            escape = FALSE,
+            callback = JS(js("dt_kit_set", 3, c(4, 5, 6, 7)))
+          )
+        })
+      })
+
+      # Reflect changing to the main data.table
+      observeEvent(input[["dt_kit_set_cell_edit"]], {
+        info <- input[["dt_kit_set_cell_edit"]]
+        dt_kit_set <- rv_dt_kit_set()
+        dt_kit_set[[info[1, "col"]]][info[1, "row"]] <- info[1, "value"]
+        rv_dt_kit_set(dt_kit_set)
+      })
+
       #### Advanced setting ####
 
+      # Define reactive values
       rv_advanced <- reactiveValues()
       rv_advanced$warmup <- 2000
       rv_advanced$sampling <- 2000
@@ -210,6 +245,7 @@ est_par_setting_server <- function(id, path_pack, parent_session){
       rv_advanced$motif_lus <- 2
       rv_advanced$motif_multi <- 3
 
+      # Make the setting pop-up window
       observeEvent(input$act_advanced, {
         showModal(modalDialog(
           title = "Advanced setting",
@@ -304,6 +340,7 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         })
       })
 
+      # Save the setting
       observeEvent(input$act_advance_save, {
         req(input$warmup)
         req(input$sampling)
@@ -333,28 +370,7 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         }
       })
 
-      observeEvent(input$kit_par, ignoreInit = TRUE, {
-        rv_dt_kit_set(react_dt_kit_set1())
-
-        output$dt_kit_set <- renderDataTable(server = FALSE, {
-          datatable(
-            isolate(react_dt_kit_set2()),
-            colnames = c("Marker", "Dye", "AT", "BSR model", "FSR model", "DSR model", "M2SR model"),
-            selection = "none",
-            options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
-            rownames = FALSE,
-            escape = FALSE,
-            callback = JS(js("dt_kit_set", 3, c(4, 5, 6, 7)))
-          )
-        })
-      })
-
-      observeEvent(input[["dt_kit_set_cell_edit"]], {
-        info <- input[["dt_kit_set_cell_edit"]]
-        dt_kit_set <- rv_dt_kit_set()
-        dt_kit_set[[info[1, "col"]]][info[1, "row"]] <- info[1, "value"]
-        rv_dt_kit_set(dt_kit_set)
-      })
+      #### Analyze ####
 
       observeEvent(input$act_analyze_est_par, {
         # Fix data.table
@@ -363,12 +379,20 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         dt_seq <- react_dt_seq()
         dt_kit_set <- rv_dt_kit_set()
 
+        # Fix parameters
+        n_warmup <- rv_advanced$warmup
+        n_sampling <- rv_advanced$sampling
+        n_chains <- rv_advanced$chains
+        pu_dist <- rv_advanced$pu_dist
+        motif_lus <- rv_advanced$motif_lus
+        motif_multi <- rv_advanced$motif_multi
+
         # Check input files and setting
         error_message <- check_est_par(dt_exp, dt_gt, dt_seq, dt_kit_set)
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set, n_warmup, n_sampling, n_chains, n_parallel_chains)
+          results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set, n_warmup, n_sampling, n_chains)
 
           updateTabsetPanel(session = parent_session, inputId = "tabset_est_par", selected = "Result")
         }
