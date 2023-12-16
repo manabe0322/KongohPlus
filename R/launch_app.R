@@ -3,13 +3,18 @@
 #' @description Main window
 #' @usage KongohPlus()
 #' @export
-KongohPlus <- function(){
+KongohPlus <- function(bool_compile = TRUE){
   ver_soft <- packageVersion("KongohPlus")
   path_pack <- path.package("KongohPlus", quiet = FALSE)
   options(shiny.maxRequestSize = 500 * 1024^2)
-  compile_stan_code(path_pack)
+
+  # Compile stan codes
+  if(bool_compile){
+    compile_stan_code(path_pack)
+  }
 
   ui <- fluidPage(useShinyjs(),
+                  useShinyFeedback(),
                   theme = shinytheme("cerulean"),
                   tags$style(type = "text/css", "body{padding-top: 70px;}"),
 
