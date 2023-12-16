@@ -59,52 +59,6 @@ est_par_setting_ui <- function(id){
   )
 }
 
-est_par_result_ui <- function(id){
-  ns <- NS(id)
-
-  tabPanel("Result",
-           br(),
-           tabsetPanel(id = ns("tabset_est_par_result"),
-                       type = "tabs",
-                       tabPanel("AE",
-                                sidebarLayout(
-                                  sidebarPanel(width = 2,
-                                               actionButton(ns("act_trace_ae"), label = "Trace plot"),
-                                               br(),
-                                               br(),
-                                               br(),
-                                               actionButton(ns("act_plot_ae"), label = "Data plot")
-                                  ),
-                                  mainPanel(width = 10,
-                                            dataTableOutput(ns("dt_result_ae"))
-                                  )
-                                )
-                       ),
-                       tabPanel("BSR"),
-                       tabPanel("FSR"),
-                       tabPanel("DSR"),
-                       tabPanel("M2SR")
-           )
-  )
-}
-
-#' est_par_ui
-#'
-#' @description The function to create the ui module for estimating parameters
-est_par_ui <- function(id){
-  ns <- NS(id)
-
-  tabPanel("Estimate parameters",
-           titlePanel("Estimate parameters"),
-           br(),
-           tabsetPanel(id = ns("tabset_est_par"),
-                       type = "tabs",
-                       est_par_setting_ui(ns("est_par_setting")),
-                       est_par_result_ui(ns("est_par_result"))
-           )
-  )
-}
-
 #' est_par_setting_server
 #'
 #' @description The function to create the server module for setting to estimate parameters
@@ -240,11 +194,21 @@ est_par_setting_server <- function(id, path_pack, parent_session){
       })
 
       output$kit_par <- renderUI({
-        ns <- session$ns
         kit_names <- list.files(paste0(path_pack, "/extdata/kit"))
         kit_names <- gsub(".csv", "", kit_names)
-        selectInput(ns("kit_par"), label = h4("Kit"), choices = kit_names, selected = kit_names[1], multiple = FALSE)
+        selectInput(session$ns("kit_par"), label = h4("Kit"), choices = kit_names, selected = kit_names[1], multiple = FALSE)
       })
+
+      #### Advanced setting ####
+
+      rv_advanced <- reactiveValues()
+      rv_advanced$warmup <- 2000
+      rv_advanced$sampling <- 2000
+      rv_advanced$chains <- 4
+      rv_advanced$pu_auto <- TRUE
+      rv_advanced$pu_dist <- 1
+      rv_advanced$motif_lus <- 2
+      rv_advanced$motif_multi <- 3
 
       observeEvent(input$act_advanced, {
         showModal(modalDialog(
@@ -252,18 +216,18 @@ est_par_setting_server <- function(id, path_pack, parent_session){
           fluidRow(
             column(6,
                    h4("MCMC conditions"),
-                   numericInput(session$ns("warmup"), label = "Warmup iterations", value = 2000),
-                   numericInput(session$ns("sampling"), label = "Sampling iterations", value = 2000),
-                   numericInput(session$ns("chains"), label = "Number of chains", value = 4)
+                   numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_advanced$warmup),
+                   numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_advanced$sampling),
+                   numericInput(session$ns("chains"), label = "Number of chains", value = rv_advanced$chains)
             ),
             column(6,
                    h4("Pull-up"),
-                   checkboxInput(session$ns("pu_auto"), label = "Automatically removed", value = TRUE),
-                   numericInput(session$ns("pu_dist"), label = "Maximum pull-up distance (bp)", value = 1),
+                   checkboxInput(session$ns("pu_auto"), label = "Automatically removed", value = rv_advanced$pu_auto),
+                   numericInput(session$ns("pu_dist"), label = "Maximum pull-up distance (bp)", value = rv_advanced$pu_dist),
                    br(),
                    h4("Stutter model"),
-                   numericInput(session$ns("motif_lus"), label = "Minimum number of repeat motifs for considering the LUS model", value = 2),
-                   numericInput(session$ns("motif_lus"), label = "Minimum number of repeat motifs for considering the multi-sequence model", value = 3)
+                   numericInput(session$ns("motif_lus"), label = "Minimum number of repeat motifs for considering the LUS model", value = rv_advanced$motif_lus),
+                   numericInput(session$ns("motif_multi"), label = "Minimum number of repeat motifs for considering the multi-sequence model", value = rv_advanced$motif_multi)
             )
           ),
           footer = tagList(
@@ -272,6 +236,101 @@ est_par_setting_server <- function(id, path_pack, parent_session){
           ),
           size = "l"
         ))
+
+        observeEvent(input$warmup, {
+          warmup <- input$warmup
+          if(!is.integer(warmup)){
+            showFeedbackDanger(inputId = "warmup", text = "A positive integer is required!")
+          }else if(warmup <= 0){
+            showFeedbackDanger(inputId = "warmup", text = "A positive integer is required!")
+          }else{
+            hideFeedback("warmup")
+          }
+        })
+
+        observeEvent(input$sampling, {
+          sampling <- input$sampling
+          if(!is.integer(sampling)){
+            showFeedbackDanger(inputId = "sampling", text = "A positive integer is required!")
+          }else if(sampling <= 0){
+            showFeedbackDanger(inputId = "sampling", text = "A positive integer is required!")
+          }else{
+            hideFeedback("sampling")
+          }
+        })
+
+        observeEvent(input$chains, {
+          chains <- input$chains
+          if(!is.integer(chains)){
+            showFeedbackDanger(inputId = "chains", text = "A positive integer is required!")
+          }else if(chains <= 0){
+            showFeedbackDanger(inputId = "chains", text = "A positive integer is required!")
+          }else{
+            hideFeedback("chains")
+          }
+        })
+
+        observeEvent(input$pu_dist, {
+          pu_dist <- input$pu_dist
+          if(!is.numeric(pu_dist)){
+            showFeedbackDanger(inputId = "pu_dist", text = "A positive number is required!")
+          }else if(pu_dist <= 0){
+            showFeedbackDanger(inputId = "pu_dist", text = "A positive number is required!")
+          }else{
+            hideFeedback("pu_dist")
+          }
+        })
+
+        observeEvent(input$motif_lus, {
+          motif_lus <- input$motif_lus
+          if(!is.integer(motif_lus)){
+            showFeedbackDanger(inputId = "motif_lus", text = "A positive integer is required!")
+          }else if(motif_lus <= 0){
+            showFeedbackDanger(inputId = "motif_lus", text = "A positive integer is required!")
+          }else{
+            hideFeedback("motif_lus")
+          }
+        })
+
+        observeEvent(input$motif_multi, {
+          motif_multi <- input$motif_multi
+          if(!is.integer(motif_multi)){
+            showFeedbackDanger(inputId = "motif_multi", text = "A positive integer is required!")
+          }else if(motif_multi <= 0){
+            showFeedbackDanger(inputId = "motif_multi", text = "A positive integer is required!")
+          }else{
+            hideFeedback("motif_multi")
+          }
+        })
+      })
+
+      observeEvent(input$act_advance_save, {
+        req(input$warmup)
+        req(input$sampling)
+        req(input$chains)
+        req(input$pu_dist)
+        req(input$motif_lus)
+        req(input$motif_multi)
+
+        isolate(warmup <- input$warmup)
+        isolate(sampling <- input$sampling)
+        isolate(chains <- input$chains)
+        isolate(pu_auto <- input$pu_auto)
+        isolate(pu_dist <- input$pu_dist)
+        isolate(motif_lus <- input$motif_lus)
+        isolate(motif_multi <- input$motif_multi)
+
+        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains), is.numeric(pu_dist), is.integer(motif_lus), is.integer(motif_multi))){
+          rv_advanced$warmup <- warmup
+          rv_advanced$sampling <- sampling
+          rv_advanced$chains <- chains
+          rv_advanced$pu_auto <- pu_auto
+          rv_advanced$pu_dist <- pu_dist
+          rv_advanced$motif_lus <- motif_lus
+          rv_advanced$motif_multi <- motif_multi
+
+          removeModal()
+        }
       })
 
       observeEvent(input$kit_par, ignoreInit = TRUE, {
@@ -295,8 +354,6 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         dt_kit_set <- rv_dt_kit_set()
         dt_kit_set[[info[1, "col"]]][info[1, "row"]] <- info[1, "value"]
         rv_dt_kit_set(dt_kit_set)
-
-        print(rv_dt_kit_set())
       })
 
       observeEvent(input$act_analyze_est_par, {
@@ -319,27 +376,6 @@ est_par_setting_server <- function(id, path_pack, parent_session){
 
       react_list <- list(react_dt_exp = react_dt_exp, react_dt_gt = react_dt_gt)
       return(react_list)
-    }
-  )
-}
-
-est_par_result_server <- function(id){
-  moduleServer(
-    id,
-    function(input, output, session){
-    }
-  )
-}
-
-#' est_par_server
-#'
-#' @description The function to create the server module for estimating parameters
-est_par_server <- function(id, path_pack){
-  moduleServer(
-    id,
-    function(input, output, session){
-      react_list <- est_par_setting_server("est_par_setting", path_pack, session)
-      est_par_result_server("est_par_result")
     }
   )
 }
