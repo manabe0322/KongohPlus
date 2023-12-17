@@ -9,6 +9,10 @@ estimate_parameters(
   dt_gt,
   dt_seq,
   dt_kit_set,
+  model_ae,
+  model_sr_gen,
+  model_sr_together,
+  model_sr_uni,
   n_warmup,
   n_sampling,
   n_chains,
@@ -23,6 +27,14 @@ estimate_parameters(
 \item{dt_seq}{The data.table of the sequence data}
 
 \item{dt_kit_set}{The data.table of the kit-setting}
+
+\item{model_ae}{The stan model for AE}
+
+\item{model_sr_gen}{The stan model for the general stutter ratio}
+
+\item{model_sr_together}{The stan model for the stutter ratio when considering multiple loci together}
+
+\item{model_sr_uni}{The stan model for the uniform stutter ratio}
 
 \item{n_warmup}{The number of simulations for warm-up}
 

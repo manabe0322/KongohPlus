@@ -22,8 +22,11 @@ est_par_server <- function(id, path_pack){
   moduleServer(
     id,
     function(input, output, session){
-      data_est_par_setting <- est_par_setting_server("est_par_setting", path_pack, session)
-      est_par_result_server("est_par_result", reactive(data_est_par_setting$results_est_par))
+      rv_output <- est_par_setting_server("est_par_setting", path_pack, session)
+
+      observe({
+        est_par_result_server("est_par_result", rv_output)
+      })
     }
   )
 }

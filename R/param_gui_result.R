@@ -95,13 +95,14 @@ est_par_result_ui <- function(id){
   )
 }
 
-est_par_result_server <- function(id, react_results_est_par){
+est_par_result_server <- function(id, rv_output){
   moduleServer(
     id,
     function(input, output, session){
+      results_est_par <- rv_output$results_est_par
+
       dt_result_ae <- NULL
-      if(!is.null(react_results_est_par())){
-        results_est_par <- react_results_est_par()
+      if(!is.null(results_est_par)){
         markers_par <- results_est_par$markers_par
         ae_median_myu_all_mk <- results_est_par$ae_median_myu_all_mk
         ae_median_sigma_all_mk <- results_est_par$ae_median_sigma_all_mk

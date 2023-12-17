@@ -4,7 +4,7 @@
 \alias{est_par_setting_server}
 \title{est_par_setting_server}
 \usage{
-est_par_setting_server(id, path_pack, parent_session)
+est_par_setting_server(id, path_pack, session_param_top)
 }
 \description{
 The function to create the server module for setting to estimate parameters

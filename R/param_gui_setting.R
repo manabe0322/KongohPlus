@@ -114,49 +114,56 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       }
 
       rv_output <- reactiveValues()
-      rv_output$dt_exp <- react_dt_exp()
-      rv_output$dt_gt <- react_dt_gt()
-      rv_output$dt_kit_set <- rv_dt_kit_set()
-      rv_output$results_est_par <- rv_results_est_par()
+      rv_output$dt_exp <- NULL
+      rv_output$dt_gt <- NULL
+      rv_output$dt_kit_set <- NULL
+      rv_output$results_est_par <- NULL
 
       #### Experimental data ####
 
-      react_dt_exp <- reactive({
+      observeEvent(input$exp_data, {
         file_input <- input$exp_data
-        if(is.null(file_input)){
-          return(NULL)
-        }else{
+        if(!is.null(file_input)){
           dt_exp <- fread(file_input$datapath)
           dt_exp <- change_data_type_exp(dt_exp)
-          return(dt_exp)
+          rv_output$dt_exp <- dt_exp
         }
       })
+
+#      react_dt_exp <- reactive({
+#        file_input <- input$exp_data
+#        if(is.null(file_input)){
+#          return(NULL)
+#        }else{
+#          dt_exp <- fread(file_input$datapath)
+#          dt_exp <- change_data_type_exp(dt_exp)
+#          return(dt_exp)
+#        }
+#      })
 
       #### Genotype data ####
 
-      react_dt_gt <- reactive({
+      observeEvent(input$gt_data, {
         file_input <- input$gt_data
-        if(is.null(file_input)){
-          return(NULL)
-        }else{
+        if(!is.null(file_input)){
           dt_gt <- fread(file_input$datapath)
           dt_gt <- change_data_type_gt(dt_gt)
-          return(dt_gt)
+          rv_output$dt_gt <- dt_gt
         }
       })
+
+#      react_dt_gt <- reactive({
+#        file_input <- input$gt_data
+#        if(is.null(file_input)){
+#          return(NULL)
+#        }else{
+#          dt_gt <- fread(file_input$datapath)
+#          dt_gt <- change_data_type_gt(dt_gt)
+#          return(dt_gt)
+#        }
+#      })
 
       #### Sequence data ####
-
-      react_dt_seq <- reactive({
-        file_input <- input$seq_data
-        if(is.null(file_input)){
-          return(NULL)
-        }else{
-          dt_seq <- fread(paste0(path_pack, "/extdata/sequence_data/", file_input))
-          dt_seq <- change_data_type_seq(dt_seq)
-          return(dt_seq)
-        }
-      })
 
       output$seq_data <- renderUI({
         ns <- session$ns
@@ -164,10 +171,27 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         selectInput(ns("seq_data"), label = h4("Sequence data"), choices = seq_files, selected = seq_files[1], multiple = FALSE)
       })
 
-      #### Kit-setting ####
+      observeEvent(input$seq_data, {
+        file_input <- input$seq_data
+        if(!is.null(file_input)){
+          dt_seq <- fread(paste0(path_pack, "/extdata/sequence_data/", file_input))
+          dt_seq <- change_data_type_seq(dt_seq)
+          rv_output$dt_seq <- dt_seq
+        }
+      })
 
-      # Define the reactive value
-      rv_dt_kit_set <- reactiveVal()
+#      react_dt_seq <- reactive({
+#        file_input <- input$seq_data
+#        if(is.null(file_input)){
+#          return(NULL)
+#        }else{
+#          dt_seq <- fread(paste0(path_pack, "/extdata/sequence_data/", file_input))
+#          dt_seq <- change_data_type_seq(dt_seq)
+#          return(dt_seq)
+#        }
+#      })
+
+      #### Kit-setting ####
 
       # Initial data.table
       react_dt_kit_set0 <- reactive({
@@ -216,7 +240,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
 
       # Output data.table
       observeEvent(input$kit_par, ignoreInit = TRUE, {
-        rv_dt_kit_set(react_dt_kit_set1())
+        rv_output$dt_kit_set <- react_dt_kit_set1()
 
         output$dt_kit_set <- renderDataTable(server = FALSE, {
           datatable(
@@ -234,9 +258,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       # Reflect changing to the main data.table
       observeEvent(input[["dt_kit_set_cell_edit"]], {
         info <- input[["dt_kit_set_cell_edit"]]
-        dt_kit_set <- rv_dt_kit_set()
+        dt_kit_set <- rv_output$dt_kit_set
         dt_kit_set[[info[1, "col"]]][info[1, "row"]] <- info[1, "value"]
-        rv_dt_kit_set(dt_kit_set)
+        rv_output$dt_kit_set <- dt_kit_set
       })
 
       #### Advanced setting ####
@@ -378,16 +402,12 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
 
       #### Analyze ####
 
-      # Define the initial reactive object for assigning results
-      rv_results_est_par <- reactiveVal(NULL)
-
       observeEvent(input$act_analyze_est_par, {
         # Fix data.table
-        dt_exp <- react_dt_exp()
-        dt_gt <- react_dt_gt()
-        dt_seq <- react_dt_seq()
-        dt_kit_set <- rv_dt_kit_set()
-        react_dt_kit_set <- reactive(dt_kit_set)
+        dt_exp <- rv_output$dt_exp
+        dt_gt <- rv_output$dt_gt
+        dt_seq <- rv_output$dt_seq
+        dt_kit_set <- rv_output$dt_kit_set
 
         # Fix parameters
         n_warmup <- rv_advanced$warmup
@@ -402,8 +422,14 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set, n_warmup, n_sampling, n_chains)
-          rv_results_est_par(results_est_par)
+          # Load the MCMC models
+          model_ae <- readRDS(paste0(path_pack, "/model/model_ae.rds"))
+          model_sr_gen <- readRDS(paste0(path_pack, "/model/model_sr_gen.rds"))
+          model_sr_together <- readRDS(paste0(path_pack, "/model/model_sr_together.rds"))
+          model_sr_uni <- readRDS(paste0(path_pack, "/model/model_sr_uni.rds"))
+
+          results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, model_sr_gen, model_sr_together, model_sr_uni, n_warmup, n_sampling, n_chains)
+          rv_output$results_est_par <- results_est_par
 
           updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result")
         }

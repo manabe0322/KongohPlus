@@ -14,11 +14,15 @@ calc_aic <- function(log_like, n_par){
 #' @param dt_gt The data.table of the genotype data
 #' @param dt_seq The data.table of the sequence data
 #' @param dt_kit_set The data.table of the kit-setting
+#' @param n_parallel_chains The number of parallel chains
+#' @param model_ae The stan model for AE
+#' @param model_sr_gen The stan model for the general stutter ratio
+#' @param model_sr_together The stan model for the stutter ratio when considering multiple loci together
+#' @param model_sr_uni The stan model for the uniform stutter ratio
 #' @param n_warmup The number of simulations for warm-up
 #' @param n_sampling The number of simulations for sampling
 #' @param n_chains The number of chains
-#' @param n_parallel_chains The number of parallel chains
-estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, n_warmup, n_sampling, n_chains, n_parallel_chains = detectCores()){
+estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, model_sr_gen, model_sr_together, model_sr_uni, n_warmup, n_sampling, n_chains, n_parallel_chains = detectCores()){
   # Extract information on setting
   markers_par <- dt_kit_set[, Marker]
   n_mk <- length(markers_par)
@@ -65,12 +69,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, n_warmup, n_s
   reps_all_mk <- tmp[[2]]
   seq_al_all_mk <- tmp[[3]]
   seq_count_all_mk <- tmp[[4]]
-
-  # Load the MCMC models
-  model_ae <- readRDS(paste0(path_pack, "/model/model_ae.rds"))
-  model_sr_gen <- readRDS(paste0(path_pack, "/model/model_sr_gen.rds"))
-  model_sr_together <- readRDS(paste0(path_pack, "/model/model_sr_together.rds"))
-  model_sr_uni <- readRDS(paste0(path_pack, "/model/model_sr_uni.rds"))
 
   # Perform the MCMC for the locus-specific amplification efficiency
   n_ae_data <- nrow(ae_data)
