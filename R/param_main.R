@@ -667,7 +667,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, n_warmup, n_s
     m2sr_best_model_all_mk[index_mk_not_consider_m2sr] <- "Not consider"
   }
 
-  return(list("ae_median_myu_all_mk" = ae_median_myu_all_mk,
+  return(list("markers_par" = markers_par,
+              "ae_median_myu_all_mk" = ae_median_myu_all_mk,
               "ae_median_sigma_all_mk" = ae_median_sigma_all_mk,
               "ae_rhat_myu_all_mk" = ae_rhat_myu_all_mk,
               "ae_rhat_sigma_all_mk" = ae_rhat_sigma_all_mk,

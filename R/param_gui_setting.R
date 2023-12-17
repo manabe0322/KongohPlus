@@ -62,7 +62,7 @@ est_par_setting_ui <- function(id){
 #' est_par_setting_server
 #'
 #' @description The function to create the server module for setting to estimate parameters
-est_par_setting_server <- function(id, path_pack, parent_session){
+est_par_setting_server <- function(id, path_pack, session_param_top){
   moduleServer(
     id,
     function(input, output, session){
@@ -112,6 +112,12 @@ est_par_setting_server <- function(id, path_pack, parent_session){
         }
         do.call(c, code)
       }
+
+      rv_output <- reactiveValues()
+      rv_output$dt_exp <- react_dt_exp()
+      rv_output$dt_gt <- react_dt_gt()
+      rv_output$dt_kit_set <- rv_dt_kit_set()
+      rv_output$results_est_par <- rv_results_est_par()
 
       #### Experimental data ####
 
@@ -182,9 +188,9 @@ est_par_setting_server <- function(id, path_pack, parent_session){
       react_dt_kit_set1 <- reactive({
         dt_kit_set1 <- react_dt_kit_set0()
         dt_kit_set1$AT <- 50
-        dt_kit_set1$Model_BSR <- "Locus-specific"
-        dt_kit_set1$Model_FSR <- "Multiple loci together"
-        dt_kit_set1$Model_DSR <- "Multiple loci together"
+        dt_kit_set1$Model_BSR <- "Not consider"
+        dt_kit_set1$Model_FSR <- "Not consider"
+        dt_kit_set1$Model_DSR <- "Not consider"
         dt_kit_set1$Model_M2SR <- "Not consider"
         return(dt_kit_set1)
       })
@@ -372,12 +378,16 @@ est_par_setting_server <- function(id, path_pack, parent_session){
 
       #### Analyze ####
 
+      # Define the initial reactive object for assigning results
+      rv_results_est_par <- reactiveVal(NULL)
+
       observeEvent(input$act_analyze_est_par, {
         # Fix data.table
         dt_exp <- react_dt_exp()
         dt_gt <- react_dt_gt()
         dt_seq <- react_dt_seq()
         dt_kit_set <- rv_dt_kit_set()
+        react_dt_kit_set <- reactive(dt_kit_set)
 
         # Fix parameters
         n_warmup <- rv_advanced$warmup
@@ -393,13 +403,13 @@ est_par_setting_server <- function(id, path_pack, parent_session){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set, n_warmup, n_sampling, n_chains)
+          rv_results_est_par(results_est_par)
 
-          updateTabsetPanel(session = parent_session, inputId = "tabset_est_par", selected = "Result")
+          updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result")
         }
       })
 
-      react_list <- list(react_dt_exp = react_dt_exp, react_dt_gt = react_dt_gt)
-      return(react_list)
+      return(rv_output)
     }
   )
 }
