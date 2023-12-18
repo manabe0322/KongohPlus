@@ -6,6 +6,7 @@ est_par_result_ui <- function(id){
            tabsetPanel(id = ns("tabset_est_par_result"),
                        type = "tabs",
                        tabPanel("AE",
+                                br(),
                                 sidebarLayout(
                                   sidebarPanel(width = 2,
                                                actionButton(ns("act_trace_ae"), label = "Trace plot"),
@@ -20,6 +21,7 @@ est_par_result_ui <- function(id){
                                 )
                        ),
                        tabPanel("BSR",
+                                br(),
                                 sidebarLayout(
                                   sidebarPanel(width = 2,
                                                actionButton(ns("change_model_bsr"), label = "Change model"),
@@ -38,6 +40,7 @@ est_par_result_ui <- function(id){
                                 )
                        ),
                        tabPanel("FSR",
+                                br(),
                                 sidebarLayout(
                                   sidebarPanel(width = 2,
                                                actionButton(ns("change_model_fsr"), label = "Change model"),
@@ -56,6 +59,7 @@ est_par_result_ui <- function(id){
                                 )
                        ),
                        tabPanel("DSR",
+                                br(),
                                 sidebarLayout(
                                   sidebarPanel(width = 2,
                                                actionButton(ns("change_model_dsr"), label = "Change model"),
@@ -74,6 +78,7 @@ est_par_result_ui <- function(id){
                                 )
                        ),
                        tabPanel("M2SR",
+                                br(),
                                 sidebarLayout(
                                   sidebarPanel(width = 2,
                                                actionButton(ns("change_model_m2sr"), label = "Change model"),
@@ -101,135 +106,485 @@ est_par_result_server <- function(id, rv_output){
     function(input, output, session){
       results_est_par <- rv_output$results_est_par
 
-      dt_result_ae <- NULL
-      if(!is.null(results_est_par)){
+      rv_results <- reactiveValues()
+      rv_results$dt_result_ae <- NULL
+      rv_results$dt_result_bsr <- NULL
+      rv_results$dt_result_fsr <- NULL
+      rv_results$dt_result_dsr <- NULL
+      rv_results$dt_result_m2sr <- NULL
+      if(is.null(results_est_par)){
+        markers_par <- NULL
+
+        ae_median_myu_all_mk <- NULL
+        ae_median_sigma_all_mk <- NULL
+        ae_rhat_myu_all_mk <- NULL
+        ae_rhat_sigma_all_mk <- NULL
+        ae_trace_all_mk <- NULL
+
+        bsr_allele_median_slope_all_mk <- NULL
+        bsr_allele_median_intercept_all_mk <- NULL
+        bsr_allele_median_sigma_all_mk <- NULL
+        bsr_allele_rhat_slope_all_mk <- NULL
+        bsr_allele_rhat_intercept_all_mk <- NULL
+        bsr_allele_rhat_sigma_all_mk <- NULL
+        bsr_allele_trace <- NULL
+        bsr_lus_median_slope_all_mk <- NULL
+        bsr_lus_median_intercept_all_mk <- NULL
+        bsr_lus_median_sigma_all_mk <- NULL
+        bsr_lus_rhat_slope_all_mk <- NULL
+        bsr_lus_rhat_intercept_all_mk <- NULL
+        bsr_lus_rhat_sigma_all_mk <- NULL
+        bsr_lus_trace <- NULL
+        bsr_multi_median_slope_all_mk <- NULL
+        bsr_multi_median_intercept_all_mk <- NULL
+        bsr_multi_median_sigma_all_mk <- NULL
+        bsr_multi_min_us_all_mk <- NULL
+        bsr_multi_rhat_slope_all_mk <- NULL
+        bsr_multi_rhat_intercept_all_mk <- NULL
+        bsr_multi_rhat_sigma_all_mk <- NULL
+        bsr_multi_trace <- NULL
+        bsr_best_model_all_mk <- NULL
+        bsr_best_median_myu_all_mk <- NULL
+        bsr_best_median_slope_all_mk <- NULL
+        bsr_best_median_intercept_all_mk <- NULL
+        bsr_best_median_sigma_all_mk <- NULL
+        bsr_best_min_us_all_mk <- NULL
+        bsr_best_rhat_myu_all_mk <- NULL
+        bsr_best_rhat_slope_all_mk <- NULL
+        bsr_best_rhat_intercept_all_mk <- NULL
+        bsr_best_rhat_sigma_all_mk <- NULL
+        bsr_best_trace_all_mk <- NULL
+
+        fsr_allele_median_slope_all_mk <- NULL
+        fsr_allele_median_intercept_all_mk <- NULL
+        fsr_allele_median_sigma_all_mk <- NULL
+        fsr_allele_rhat_slope_all_mk <- NULL
+        fsr_allele_rhat_intercept_all_mk <- NULL
+        fsr_allele_rhat_sigma_all_mk <- NULL
+        fsr_allele_trace <- NULL
+        fsr_lus_median_slope_all_mk <- NULL
+        fsr_lus_median_intercept_all_mk <- NULL
+        fsr_lus_median_sigma_all_mk <- NULL
+        fsr_lus_rhat_slope_all_mk <- NULL
+        fsr_lus_rhat_intercept_all_mk <- NULL
+        fsr_lus_rhat_sigma_all_mk <- NULL
+        fsr_lus_trace <- NULL
+        fsr_multi_median_slope_all_mk <- NULL
+        fsr_multi_median_intercept_all_mk <- NULL
+        fsr_multi_median_sigma_all_mk <- NULL
+        fsr_multi_min_us_all_mk <- NULL
+        fsr_multi_rhat_slope_all_mk <- NULL
+        fsr_multi_rhat_intercept_all_mk <- NULL
+        fsr_multi_rhat_sigma_all_mk <- NULL
+        fsr_multi_trace <- NULL
+        fsr_best_model_all_mk <- NULL
+        fsr_best_median_myu_all_mk <- NULL
+        fsr_best_median_slope_all_mk <- NULL
+        fsr_best_median_intercept_all_mk <- NULL
+        fsr_best_median_sigma_all_mk <- NULL
+        fsr_best_min_us_all_mk <- NULL
+        fsr_best_rhat_myu_all_mk <- NULL
+        fsr_best_rhat_slope_all_mk <- NULL
+        fsr_best_rhat_intercept_all_mk <- NULL
+        fsr_best_rhat_sigma_all_mk <- NULL
+        fsr_best_trace_all_mk <- NULL
+
+        dsr_allele_median_slope_all_mk <- NULL
+        dsr_allele_median_intercept_all_mk <- NULL
+        dsr_allele_median_sigma_all_mk <- NULL
+        dsr_allele_rhat_slope_all_mk <- NULL
+        dsr_allele_rhat_intercept_all_mk <- NULL
+        dsr_allele_rhat_sigma_all_mk <- NULL
+        dsr_allele_trace <- NULL
+        dsr_lus_median_slope_all_mk <- NULL
+        dsr_lus_median_intercept_all_mk <- NULL
+        dsr_lus_median_sigma_all_mk <- NULL
+        dsr_lus_rhat_slope_all_mk <- NULL
+        dsr_lus_rhat_intercept_all_mk <- NULL
+        dsr_lus_rhat_sigma_all_mk <- NULL
+        dsr_lus_trace <- NULL
+        dsr_multi_median_slope_all_mk <- NULL
+        dsr_multi_median_intercept_all_mk <- NULL
+        dsr_multi_median_sigma_all_mk <- NULL
+        dsr_multi_min_us_all_mk <- NULL
+        dsr_multi_rhat_slope_all_mk <- NULL
+        dsr_multi_rhat_intercept_all_mk <- NULL
+        dsr_multi_rhat_sigma_all_mk <- NULL
+        dsr_multi_trace <- NULL
+        dsr_best_model_all_mk <- NULL
+        dsr_best_median_myu_all_mk <- NULL
+        dsr_best_median_slope_all_mk <- NULL
+        dsr_best_median_intercept_all_mk <- NULL
+        dsr_best_median_sigma_all_mk <- NULL
+        dsr_best_min_us_all_mk <- NULL
+        dsr_best_rhat_myu_all_mk <- NULL
+        dsr_best_rhat_slope_all_mk <- NULL
+        dsr_best_rhat_intercept_all_mk <- NULL
+        dsr_best_rhat_sigma_all_mk <- NULL
+        dsr_best_trace_all_mk <- NULL
+
+        m2sr_best_model_all_mk <- NULL
+        m2sr_best_median_myu_all_mk <- NULL
+        m2sr_best_median_sigma_all_mk <- NULL
+        m2sr_best_rhat_myu_all_mk <- NULL
+        m2sr_best_rhat_sigma_all_mk <- NULL
+        m2sr_best_trace_all_mk <- NULL
+      }else{
         markers_par <- results_est_par$markers_par
+
         ae_median_myu_all_mk <- results_est_par$ae_median_myu_all_mk
         ae_median_sigma_all_mk <- results_est_par$ae_median_sigma_all_mk
         ae_rhat_myu_all_mk <- results_est_par$ae_rhat_myu_all_mk
         ae_rhat_sigma_all_mk <- results_est_par$ae_rhat_sigma_all_mk
-        ae_traceplot_all_mk <- results_est_par$ae_traceplot_all_mk
-        dt_result_ae <- data.table(Marker = markers_par,
-                                   Myu = ae_median_myu_all_mk,
-                                   Sigma = ae_median_sigma_all_mk,
-                                   Rhat_Myu = ae_rhat_myu_all_mk,
-                                   Rhat_Sigma = ae_rhat_sigma_all_mk)
+        ae_trace_all_mk <- results_est_par$ae_trace_all_mk
+        rv_results$dt_result_ae <- data.table(Marker = markers_par,
+                                              Myu = signif(ae_median_myu_all_mk, 3),
+                                              Sigma = signif(ae_median_sigma_all_mk, 3),
+                                              Rhat_Myu = signif(ae_rhat_myu_all_mk, 3),
+                                              Rhat_Sigma = signif(ae_rhat_sigma_all_mk, 3)
+                                   )
+
+        bsr_allele_median_slope_all_mk <- results_est_par$bsr_allele_median_slope_all_mk
+        bsr_allele_median_intercept_all_mk <- results_est_par$bsr_allele_median_intercept_all_mk
+        bsr_allele_median_sigma_all_mk <- results_est_par$bsr_allele_median_sigma_all_mk
+        bsr_allele_rhat_slope_all_mk <- results_est_par$bsr_allele_rhat_slope_all_mk
+        bsr_allele_rhat_intercept_all_mk <- results_est_par$bsr_allele_rhat_intercept_all_mk
+        bsr_allele_rhat_sigma_all_mk <- results_est_par$bsr_allele_rhat_sigma_all_mk
+        bsr_allele_trace <- results_est_par$bsr_allele_trace
+        bsr_lus_median_slope_all_mk <- results_est_par$bsr_lus_median_slope_all_mk
+        bsr_lus_median_intercept_all_mk <- results_est_par$bsr_lus_median_intercept_all_mk
+        bsr_lus_median_sigma_all_mk <- results_est_par$bsr_lus_median_sigma_all_mk
+        bsr_lus_rhat_slope_all_mk <- results_est_par$bsr_lus_rhat_slope_all_mk
+        bsr_lus_rhat_intercept_all_mk <- results_est_par$bsr_lus_rhat_intercept_all_mk
+        bsr_lus_rhat_sigma_all_mk <- results_est_par$bsr_lus_rhat_sigma_all_mk
+        bsr_lus_trace <- results_est_par$bsr_lus_trace
+        bsr_multi_median_slope_all_mk <- results_est_par$bsr_multi_median_slope_all_mk
+        bsr_multi_median_intercept_all_mk <- results_est_par$bsr_multi_median_intercept_all_mk
+        bsr_multi_median_sigma_all_mk <- results_est_par$bsr_multi_median_sigma_all_mk
+        bsr_multi_min_us_all_mk <- results_est_par$bsr_multi_min_us_all_mk
+        bsr_multi_rhat_slope_all_mk <- results_est_par$bsr_multi_rhat_slope_all_mk
+        bsr_multi_rhat_intercept_all_mk <- results_est_par$bsr_multi_rhat_intercept_all_mk
+        bsr_multi_rhat_sigma_all_mk <- results_est_par$bsr_multi_rhat_sigma_all_mk
+        bsr_multi_trace <- results_est_par$bsr_multi_trace
+        bsr_best_model_all_mk <- results_est_par$bsr_best_model_all_mk
+        bsr_best_median_myu_all_mk <- results_est_par$bsr_best_median_myu_all_mk
+        bsr_best_median_slope_all_mk <- results_est_par$bsr_best_median_slope_all_mk
+        bsr_best_median_intercept_all_mk <- results_est_par$bsr_best_median_intercept_all_mk
+        bsr_best_median_sigma_all_mk <- results_est_par$bsr_best_median_sigma_all_mk
+        bsr_best_min_us_all_mk <- results_est_par$bsr_best_min_us_all_mk
+        bsr_best_rhat_myu_all_mk <- results_est_par$bsr_best_rhat_myu_all_mk
+        bsr_best_rhat_slope_all_mk <- results_est_par$bsr_best_rhat_slope_all_mk
+        bsr_best_rhat_intercept_all_mk <- results_est_par$bsr_best_rhat_intercept_all_mk
+        bsr_best_rhat_sigma_all_mk <- results_est_par$bsr_best_rhat_sigma_all_mk
+        bsr_best_trace_all_mk <- results_est_par$bsr_best_trace_all_mk
+        rv_results$dt_result_bsr <- data.table(Marker = markers_par,
+                                               Model = bsr_best_model_all_mk,
+                                               Myu = signif(bsr_best_median_myu_all_mk, 3),
+                                               Slope = signif(bsr_best_median_slope_all_mk, 3),
+                                               Intercept = signif(bsr_best_median_intercept_all_mk, 3),
+                                               Sigma = signif(bsr_best_median_sigma_all_mk, 3),
+                                               Rhat_Myu = signif(bsr_best_rhat_myu_all_mk, 3),
+                                               Rhat_Slope = signif(bsr_best_rhat_slope_all_mk, 3),
+                                               Rhat_Intercept = signif(bsr_best_rhat_intercept_all_mk, 3),
+                                               Rhat_Sigma = signif(bsr_best_rhat_sigma_all_mk, 3)
+                                    )
+
+        fsr_allele_median_slope_all_mk <- results_est_par$fsr_allele_median_slope_all_mk
+        fsr_allele_median_intercept_all_mk <- results_est_par$fsr_allele_median_intercept_all_mk
+        fsr_allele_median_sigma_all_mk <- results_est_par$fsr_allele_median_sigma_all_mk
+        fsr_allele_rhat_slope_all_mk <- results_est_par$fsr_allele_rhat_slope_all_mk
+        fsr_allele_rhat_intercept_all_mk <- results_est_par$fsr_allele_rhat_intercept_all_mk
+        fsr_allele_rhat_sigma_all_mk <- results_est_par$fsr_allele_rhat_sigma_all_mk
+        fsr_allele_trace <- results_est_par$fsr_allele_trace
+        fsr_lus_median_slope_all_mk <- results_est_par$fsr_lus_median_slope_all_mk
+        fsr_lus_median_intercept_all_mk <- results_est_par$fsr_lus_median_intercept_all_mk
+        fsr_lus_median_sigma_all_mk <- results_est_par$fsr_lus_median_sigma_all_mk
+        fsr_lus_rhat_slope_all_mk <- results_est_par$fsr_lus_rhat_slope_all_mk
+        fsr_lus_rhat_intercept_all_mk <- results_est_par$fsr_lus_rhat_intercept_all_mk
+        fsr_lus_rhat_sigma_all_mk <- results_est_par$fsr_lus_rhat_sigma_all_mk
+        fsr_lus_trace <- results_est_par$fsr_lus_trace
+        fsr_multi_median_slope_all_mk <- results_est_par$fsr_multi_median_slope_all_mk
+        fsr_multi_median_intercept_all_mk <- results_est_par$fsr_multi_median_intercept_all_mk
+        fsr_multi_median_sigma_all_mk <- results_est_par$fsr_multi_median_sigma_all_mk
+        fsr_multi_min_us_all_mk <- results_est_par$fsr_multi_min_us_all_mk
+        fsr_multi_rhat_slope_all_mk <- results_est_par$fsr_multi_rhat_slope_all_mk
+        fsr_multi_rhat_intercept_all_mk <- results_est_par$fsr_multi_rhat_intercept_all_mk
+        fsr_multi_rhat_sigma_all_mk <- results_est_par$fsr_multi_rhat_sigma_all_mk
+        fsr_multi_trace <- results_est_par$fsr_multi_trace
+        fsr_best_model_all_mk <- results_est_par$fsr_best_model_all_mk
+        fsr_best_median_myu_all_mk <- results_est_par$fsr_best_median_myu_all_mk
+        fsr_best_median_slope_all_mk <- results_est_par$fsr_best_median_slope_all_mk
+        fsr_best_median_intercept_all_mk <- results_est_par$fsr_best_median_intercept_all_mk
+        fsr_best_median_sigma_all_mk <- results_est_par$fsr_best_median_sigma_all_mk
+        fsr_best_min_us_all_mk <- results_est_par$fsr_best_min_us_all_mk
+        fsr_best_rhat_myu_all_mk <- results_est_par$fsr_best_rhat_myu_all_mk
+        fsr_best_rhat_slope_all_mk <- results_est_par$fsr_best_rhat_slope_all_mk
+        fsr_best_rhat_intercept_all_mk <- results_est_par$fsr_best_rhat_intercept_all_mk
+        fsr_best_rhat_sigma_all_mk <- results_est_par$fsr_best_rhat_sigma_all_mk
+        fsr_best_trace_all_mk <- results_est_par$fsr_best_trace_all_mk
+        rv_results$dt_result_fsr <- data.table(Marker = markers_par,
+                                               Model = fsr_best_model_all_mk,
+                                               Myu = signif(fsr_best_median_myu_all_mk, 3),
+                                               Slope = signif(fsr_best_median_slope_all_mk, 3),
+                                               Intercept = signif(fsr_best_median_intercept_all_mk, 3),
+                                               Sigma = signif(fsr_best_median_sigma_all_mk, 3),
+                                               Rhat_Myu = signif(fsr_best_rhat_myu_all_mk, 3),
+                                               Rhat_Slope = signif(fsr_best_rhat_slope_all_mk, 3),
+                                               Rhat_Intercept = signif(fsr_best_rhat_intercept_all_mk, 3),
+                                               Rhat_Sigma = signif(fsr_best_rhat_sigma_all_mk, 3)
+                                    )
+
+        dsr_allele_median_slope_all_mk <- results_est_par$dsr_allele_median_slope_all_mk
+        dsr_allele_median_intercept_all_mk <- results_est_par$dsr_allele_median_intercept_all_mk
+        dsr_allele_median_sigma_all_mk <- results_est_par$dsr_allele_median_sigma_all_mk
+        dsr_allele_rhat_slope_all_mk <- results_est_par$dsr_allele_rhat_slope_all_mk
+        dsr_allele_rhat_intercept_all_mk <- results_est_par$dsr_allele_rhat_intercept_all_mk
+        dsr_allele_rhat_sigma_all_mk <- results_est_par$dsr_allele_rhat_sigma_all_mk
+        dsr_allele_trace <- results_est_par$dsr_allele_trace
+        dsr_lus_median_slope_all_mk <- results_est_par$dsr_lus_median_slope_all_mk
+        dsr_lus_median_intercept_all_mk <- results_est_par$dsr_lus_median_intercept_all_mk
+        dsr_lus_median_sigma_all_mk <- results_est_par$dsr_lus_median_sigma_all_mk
+        dsr_lus_rhat_slope_all_mk <- results_est_par$dsr_lus_rhat_slope_all_mk
+        dsr_lus_rhat_intercept_all_mk <- results_est_par$dsr_lus_rhat_intercept_all_mk
+        dsr_lus_rhat_sigma_all_mk <- results_est_par$dsr_lus_rhat_sigma_all_mk
+        dsr_lus_trace <- results_est_par$dsr_lus_trace
+        dsr_multi_median_slope_all_mk <- results_est_par$dsr_multi_median_slope_all_mk
+        dsr_multi_median_intercept_all_mk <- results_est_par$dsr_multi_median_intercept_all_mk
+        dsr_multi_median_sigma_all_mk <- results_est_par$dsr_multi_median_sigma_all_mk
+        dsr_multi_min_us_all_mk <- results_est_par$dsr_multi_min_us_all_mk
+        dsr_multi_rhat_slope_all_mk <- results_est_par$dsr_multi_rhat_slope_all_mk
+        dsr_multi_rhat_intercept_all_mk <- results_est_par$dsr_multi_rhat_intercept_all_mk
+        dsr_multi_rhat_sigma_all_mk <- results_est_par$dsr_multi_rhat_sigma_all_mk
+        dsr_multi_trace <- results_est_par$dsr_multi_trace
+        dsr_best_model_all_mk <- results_est_par$dsr_best_model_all_mk
+        dsr_best_median_myu_all_mk <- results_est_par$dsr_best_median_myu_all_mk
+        dsr_best_median_slope_all_mk <- results_est_par$dsr_best_median_slope_all_mk
+        dsr_best_median_intercept_all_mk <- results_est_par$dsr_best_median_intercept_all_mk
+        dsr_best_median_sigma_all_mk <- results_est_par$dsr_best_median_sigma_all_mk
+        dsr_best_min_us_all_mk <- results_est_par$dsr_best_min_us_all_mk
+        dsr_best_rhat_myu_all_mk <- results_est_par$dsr_best_rhat_myu_all_mk
+        dsr_best_rhat_slope_all_mk <- results_est_par$dsr_best_rhat_slope_all_mk
+        dsr_best_rhat_intercept_all_mk <- results_est_par$dsr_best_rhat_intercept_all_mk
+        dsr_best_rhat_sigma_all_mk <- results_est_par$dsr_best_rhat_sigma_all_mk
+        dsr_best_trace_all_mk <- results_est_par$dsr_best_trace_all_mk
+        rv_results$dt_result_dsr <- data.table(Marker = markers_par,Model = dsr_best_model_all_mk,
+                                               Myu = signif(dsr_best_median_myu_all_mk, 3),
+                                               Slope = signif(dsr_best_median_slope_all_mk, 3),
+                                               Intercept = signif(dsr_best_median_intercept_all_mk, 3),
+                                               Sigma = signif(dsr_best_median_sigma_all_mk, 3),
+                                               Rhat_Myu = signif(dsr_best_rhat_myu_all_mk, 3),
+                                               Rhat_Slope = signif(dsr_best_rhat_slope_all_mk, 3),
+                                               Rhat_Intercept = signif(dsr_best_rhat_intercept_all_mk, 3),
+                                               Rhat_Sigma = signif(dsr_best_rhat_sigma_all_mk, 3)
+                                    )
+
+        m2sr_best_model_all_mk <- results_est_par$m2sr_best_model_all_mk
+        m2sr_best_median_myu_all_mk <- results_est_par$m2sr_best_median_myu_all_mk
+        m2sr_best_median_sigma_all_mk <- results_est_par$m2sr_best_median_sigma_all_mk
+        m2sr_best_rhat_myu_all_mk <- results_est_par$m2sr_best_rhat_myu_all_mk
+        m2sr_best_rhat_sigma_all_mk <- results_est_par$m2sr_best_rhat_sigma_all_mk
+        m2sr_best_trace_all_mk <- results_est_par$m2sr_best_trace_all_mk
+        rv_results$dt_result_m2sr <- data.table(Marker = markers_par,
+                                                Model = m2sr_best_model_all_mk,
+                                                Myu = signif(m2sr_best_median_myu_all_mk, 3),
+                                                Sigma = signif(m2sr_best_median_sigma_all_mk, 3),
+                                                Rhat_Myu = signif(m2sr_best_rhat_myu_all_mk, 3),
+                                                Rhat_Sigma = signif(m2sr_best_rhat_sigma_all_mk, 3)
+                                     )
       }
 
-      output$dt_result_ae <- renderDataTable(server = FALSE, {
-        datatable(dt_result_ae)
+      rv_trace <- reactiveValues()
+      rv_trace$ae <- NULL
+      rv_trace$bsr <- NULL
+      rv_trace$fsr <- NULL
+      rv_trace$dsr <- NULL
+      rv_trace$m2sr <- NULL
+
+      observeEvent(input$act_trace_ae, {
+        if(!is.null(ae_trace_all_mk)){
+          row_index_select <- input$dt_result_ae_rows_selected
+          if(isTruthy(row_index_select)){
+            rv_trace$ae <- ae_trace_all_mk[[row_index_select]]
+
+            showModal(modalDialog(
+              title = "Trace plot",
+              plotOutput(session$ns("trace_ae")),
+              footer = tagList(
+                modalButton("Close")
+              ),
+              size = "l"
+            ))
+
+          }else{
+            showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
+          }
+        }
       })
 
-#      ae_median_myu_all_mk <- results_est_par$ae_median_myu_all_mk
-#      ae_median_sigma_all_mk <- results_est_par$ae_median_sigma_all_mk
-#      ae_rhat_myu_all_mk <- results_est_par$ae_rhat_myu_all_mk
-#      ae_rhat_sigma_all_mk <- results_est_par$ae_rhat_sigma_all_mk
-#      ae_traceplot_all_mk <- results_est_par$ae_traceplot_all_mk
-#      bsr_allele_median_slope_all_mk <- results_est_par$bsr_allele_median_slope_all_mk
-#      bsr_allele_median_intercept_all_mk <- results_est_par$bsr_allele_median_intercept_all_mk
-#      bsr_allele_median_sigma_all_mk <- results_est_par$bsr_allele_median_sigma_all_mk
-#      bsr_allele_rhat_slope_all_mk <- results_est_par$bsr_allele_rhat_slope_all_mk
-#      bsr_allele_rhat_intercept_all_mk <- results_est_par$bsr_allele_rhat_intercept_all_mk
-#      bsr_allele_rhat_sigma_all_mk <- results_est_par$bsr_allele_rhat_sigma_all_mk
-#      bsr_allele_trace <- results_est_par$bsr_allele_trace
-#      bsr_lus_median_slope_all_mk <- results_est_par$bsr_lus_median_slope_all_mk
-#      bsr_lus_median_intercept_all_mk <- results_est_par$bsr_lus_median_intercept_all_mk
-#      bsr_lus_median_sigma_all_mk <- results_est_par$bsr_lus_median_sigma_all_mk
-#      bsr_lus_rhat_slope_all_mk <- results_est_par$bsr_lus_rhat_slope_all_mk
-#      bsr_lus_rhat_intercept_all_mk <- results_est_par$bsr_lus_rhat_intercept_all_mk
-#      bsr_lus_rhat_sigma_all_mk <- results_est_par$bsr_lus_rhat_sigma_all_mk
-#      bsr_lus_trace <- results_est_par$bsr_lus_trace
-#      bsr_multi_median_slope_all_mk <- results_est_par$bsr_multi_median_slope_all_mk
-#      bsr_multi_median_intercept_all_mk <- results_est_par$bsr_multi_median_intercept_all_mk
-#      bsr_multi_median_sigma_all_mk <- results_est_par$bsr_multi_median_sigma_all_mk
-#      bsr_multi_min_us_all_mk <- results_est_par$bsr_multi_min_us_all_mk
-#      bsr_multi_rhat_slope_all_mk <- results_est_par$bsr_multi_rhat_slope_all_mk
-#      bsr_multi_rhat_intercept_all_mk <- results_est_par$bsr_multi_rhat_intercept_all_mk
-#      bsr_multi_rhat_sigma_all_mk <- results_est_par$bsr_multi_rhat_sigma_all_mk
-#      bsr_multi_trace <- results_est_par$bsr_multi_trace
-#      bsr_best_model_all_mk <- results_est_par$bsr_best_model_all_mk
-#      bsr_best_median_myu_all_mk <- results_est_par$bsr_best_median_myu_all_mk
-#      bsr_best_median_slope_all_mk <- results_est_par$bsr_best_median_slope_all_mk
-#      bsr_best_median_intercept_all_mk <- results_est_par$bsr_best_median_intercept_all_mk
-#      bsr_best_median_sigma_all_mk <- results_est_par$bsr_best_median_sigma_all_mk
-#      bsr_best_min_us_all_mk <- results_est_par$bsr_best_min_us_all_mk
-#      bsr_best_rhat_myu_all_mk <- results_est_par$bsr_best_rhat_myu_all_mk
-#      bsr_best_rhat_slope_all_mk <- results_est_par$bsr_best_rhat_slope_all_mk
-#      bsr_best_rhat_intercept_all_mk <- results_est_par$bsr_best_rhat_intercept_all_mk
-#      bsr_best_rhat_sigma_all_mk <- results_est_par$bsr_best_rhat_sigma_all_mk
-#      bsr_best_trace <- results_est_par$bsr_best_trace
-#      fsr_allele_median_slope_all_mk <- results_est_par$fsr_allele_median_slope_all_mk
-#      fsr_allele_median_intercept_all_mk <- results_est_par$fsr_allele_median_intercept_all_mk
-#      fsr_allele_median_sigma_all_mk <- results_est_par$fsr_allele_median_sigma_all_mk
-#      fsr_allele_rhat_slope_all_mk <- results_est_par$fsr_allele_rhat_slope_all_mk
-#      fsr_allele_rhat_intercept_all_mk <- results_est_par$fsr_allele_rhat_intercept_all_mk
-#      fsr_allele_rhat_sigma_all_mk <- results_est_par$fsr_allele_rhat_sigma_all_mk
-#      fsr_allele_trace <- results_est_par$fsr_allele_trace
-#      fsr_lus_median_slope_all_mk <- results_est_par$fsr_lus_median_slope_all_mk
-#      fsr_lus_median_intercept_all_mk <- results_est_par$fsr_lus_median_intercept_all_mk
-#      fsr_lus_median_sigma_all_mk <- results_est_par$fsr_lus_median_sigma_all_mk
-#      fsr_lus_rhat_slope_all_mk <- results_est_par$fsr_lus_rhat_slope_all_mk
-#      fsr_lus_rhat_intercept_all_mk <- results_est_par$fsr_lus_rhat_intercept_all_mk
-#      fsr_lus_rhat_sigma_all_mk <- results_est_par$fsr_lus_rhat_sigma_all_mk
-#      fsr_lus_trace <- results_est_par$fsr_lus_trace
-#      fsr_multi_median_slope_all_mk <- results_est_par$fsr_multi_median_slope_all_mk
-#      fsr_multi_median_intercept_all_mk <- results_est_par$fsr_multi_median_intercept_all_mk
-#      fsr_multi_median_sigma_all_mk <- results_est_par$fsr_multi_median_sigma_all_mk
-#      fsr_multi_min_us_all_mk <- results_est_par$fsr_multi_min_us_all_mk
-#      fsr_multi_rhat_slope_all_mk <- results_est_par$fsr_multi_rhat_slope_all_mk
-#      fsr_multi_rhat_intercept_all_mk <- results_est_par$fsr_multi_rhat_intercept_all_mk
-#      fsr_multi_rhat_sigma_all_mk <- results_est_par$fsr_multi_rhat_sigma_all_mk
-#      fsr_multi_trace <- results_est_par$fsr_multi_trace
-#      fsr_best_model_all_mk <- results_est_par$fsr_best_model_all_mk
-#      fsr_best_median_myu_all_mk <- results_est_par$fsr_best_median_myu_all_mk
-#      fsr_best_median_slope_all_mk <- results_est_par$fsr_best_median_slope_all_mk
-#      fsr_best_median_intercept_all_mk <- results_est_par$fsr_best_median_intercept_all_mk
-#      fsr_best_median_sigma_all_mk <- results_est_par$fsr_best_median_sigma_all_mk
-#      fsr_best_min_us_all_mk <- results_est_par$fsr_best_min_us_all_mk
-#      fsr_best_rhat_myu_all_mk <- results_est_par$fsr_best_rhat_myu_all_mk
-#      fsr_best_rhat_slope_all_mk <- fsr_best_rhat_slope_all_mk
-#      fsr_best_rhat_intercept_all_mk <- fsr_best_rhat_intercept_all_mk
-#      fsr_best_rhat_sigma_all_mk <- fsr_best_rhat_sigma_all_mk
-#      fsr_best_trace <- fsr_best_trace
-#      dsr_allele_median_slope_all_mk <- dsr_allele_median_slope_all_mk
-#      dsr_allele_median_intercept_all_mk <- dsr_allele_median_intercept_all_mk
-#      dsr_allele_median_sigma_all_mk <- dsr_allele_median_sigma_all_mk
-#      dsr_allele_rhat_slope_all_mk <- dsr_allele_rhat_slope_all_mk
-#      dsr_allele_rhat_intercept_all_mk <- dsr_allele_rhat_intercept_all_mk
-#      dsr_allele_rhat_sigma_all_mk <- dsr_allele_rhat_sigma_all_mk
-#      dsr_allele_trace <- dsr_allele_trace
-#      dsr_lus_median_slope_all_mk <- dsr_lus_median_slope_all_mk
-#      dsr_lus_median_intercept_all_mk <- dsr_lus_median_intercept_all_mk
-#      dsr_lus_median_sigma_all_mk <- dsr_lus_median_sigma_all_mk
-#      dsr_lus_rhat_slope_all_mk <- dsr_lus_rhat_slope_all_mk
-#      dsr_lus_rhat_intercept_all_mk <- dsr_lus_rhat_intercept_all_mk
-#      dsr_lus_rhat_sigma_all_mk <- dsr_lus_rhat_sigma_all_mk
-#      dsr_lus_trace <- dsr_lus_trace
-#      dsr_multi_median_slope_all_mk <- dsr_multi_median_slope_all_mk
-#      dsr_multi_median_intercept_all_mk <- dsr_multi_median_intercept_all_mk
-#      dsr_multi_median_sigma_all_mk <- dsr_multi_median_sigma_all_mk
-#      dsr_multi_min_us_all_mk <- dsr_multi_min_us_all_mk
-#      dsr_multi_rhat_slope_all_mk <- dsr_multi_rhat_slope_all_mk
-#      dsr_multi_rhat_intercept_all_mk <- dsr_multi_rhat_intercept_all_mk
-#      dsr_multi_rhat_sigma_all_mk <- dsr_multi_rhat_sigma_all_mk
-#      dsr_multi_trace <- dsr_multi_trace
-#      dsr_best_model_all_mk <- dsr_best_model_all_mk
-#      dsr_best_median_myu_all_mk <- dsr_best_median_myu_all_mk
-#      dsr_best_median_slope_all_mk <- dsr_best_median_slope_all_mk
-#      dsr_best_median_intercept_all_mk <- dsr_best_median_intercept_all_mk
-#      dsr_best_median_sigma_all_mk <- dsr_best_median_sigma_all_mk
-#      dsr_best_min_us_all_mk <- dsr_best_min_us_all_mk
-#      dsr_best_rhat_myu_all_mk <- dsr_best_rhat_myu_all_mk
-#      dsr_best_rhat_slope_all_mk <- dsr_best_rhat_slope_all_mk
-#      dsr_best_rhat_intercept_all_mk <- dsr_best_rhat_intercept_all_mk
-#      dsr_best_rhat_sigma_all_mk <- dsr_best_rhat_sigma_all_mk
-#      dsr_best_trace <- dsr_best_trace
-#      m2sr_best_model_all_mk <- m2sr_best_model_all_mk
-#      m2sr_best_median_myu_all_mk <- m2sr_best_median_myu_all_mk
-#      m2sr_best_median_sigma_all_mk <- m2sr_best_median_sigma_all_mk
-#      m2sr_best_rhat_myu_all_mk <- m2sr_best_rhat_myu_all_mk
-#      m2sr_best_rhat_sigma_all_mk <- m2sr_best_rhat_sigma_all_mk
-#      m2sr_best_trace <- m2sr_best_trace
+      output$trace_ae <- renderPlot({
+        rv_trace$ae
+      })
+
+      observeEvent(input$act_trace_bsr, {
+        if(!is.null(bsr_best_trace_all_mk)){
+          row_index_select <- input$dt_result_bsr_rows_selected
+          if(isTruthy(row_index_select)){
+            isolate(dt_result_bsr <- rv_results$dt_result_bsr)
+            if(dt_result_bsr$Model[row_index_select] != "Not consider"){
+              rv_trace$bsr <- bsr_best_trace_all_mk[[row_index_select]]
+
+              showModal(modalDialog(
+                title = "Trace plot",
+                plotOutput(session$ns("trace_bsr")),
+                footer = tagList(
+                  modalButton("Close")
+                ),
+                size = "l"
+              ))
+            }else{
+              showModal(modalDialog(title = "Information", "The back stutter ratio is not considered in the selected marker!", easyClose = TRUE, footer = NULL))
+            }
+          }else{
+            showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
+          }
+        }
+      })
+
+      output$trace_bsr <- renderPlot({
+        rv_trace$bsr
+      })
+
+      observeEvent(input$act_trace_fsr, {
+        if(!is.null(fsr_best_trace_all_mk)){
+          row_index_select <- input$dt_result_fsr_rows_selected
+          if(isTruthy(row_index_select)){
+            isolate(dt_result_fsr <- rv_results$dt_result_fsr)
+            if(dt_result_fsr$Model[row_index_select] != "Not consider"){
+              rv_trace$fsr <- fsr_best_trace_all_mk[[row_index_select]]
+
+              showModal(modalDialog(
+                title = "Trace plot",
+                plotOutput(session$ns("trace_fsr")),
+                footer = tagList(
+                  modalButton("Close")
+                ),
+                size = "l"
+              ))
+            }else{
+              showModal(modalDialog(title = "Information", "The forward stutter ratio is not considered in the selected marker!", easyClose = TRUE, footer = NULL))
+            }
+          }else{
+            showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
+          }
+        }
+      })
+
+      output$trace_fsr <- renderPlot({
+        rv_trace$fsr
+      })
+
+      observeEvent(input$act_trace_dsr, {
+        if(!is.null(dsr_best_trace_all_mk)){
+          row_index_select <- input$dt_result_dsr_rows_selected
+          if(isTruthy(row_index_select)){
+            isolate(dt_result_dsr <- rv_results$dt_result_dsr)
+            if(dt_result_dsr$Model[row_index_select] != "Not consider"){
+              rv_trace$dsr <- dsr_best_trace_all_mk[[row_index_select]]
+
+              showModal(modalDialog(
+                title = "Trace plot",
+                plotOutput(session$ns("trace_dsr")),
+                footer = tagList(
+                  modalButton("Close")
+                ),
+                size = "l"
+              ))
+            }else{
+              showModal(modalDialog(title = "Information", "The double-back stutter ratio is not considered in the selected marker!", easyClose = TRUE, footer = NULL))
+            }
+          }else{
+            showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
+          }
+        }
+      })
+
+      output$trace_dsr <- renderPlot({
+        rv_trace$dsr
+      })
+
+      observeEvent(input$act_trace_m2sr, {
+        if(!is.null(m2sr_best_trace_all_mk)){
+          row_index_select <- input$dt_result_m2sr_rows_selected
+          if(isTruthy(row_index_select)){
+            isolate(dt_result_m2sr <- rv_results$dt_result_m2sr)
+            if(dt_result_m2sr$Model[row_index_select] != "Not consider"){
+              rv_trace$m2sr <- m2sr_best_trace_all_mk[[row_index_select]]
+
+              showModal(modalDialog(
+                title = "Trace plot",
+                plotOutput(session$ns("trace_m2sr")),
+                footer = tagList(
+                  modalButton("Close")
+                ),
+                size = "l"
+              ))
+            }else{
+              showModal(modalDialog(title = "Information", "The minus 2-nt stutter ratio is not considered in the selected marker!", easyClose = TRUE, footer = NULL))
+            }
+          }else{
+            showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
+          }
+        }
+      })
+
+      output$trace_m2sr <- renderPlot({
+        rv_trace$m2sr
+      })
+
+      output$dt_result_ae <- renderDataTable(server = FALSE, {
+        datatable(
+          rv_results$dt_result_ae,
+          selection = list(mode = "single", target = "row"),
+          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        )
+      })
+
+      output$dt_result_bsr <- renderDataTable(server = FALSE, {
+        datatable(
+          rv_results$dt_result_bsr,
+          selection = list(mode = "single", target = "row"),
+          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        )
+      })
+
+      output$dt_result_fsr <- renderDataTable(server = FALSE, {
+        datatable(
+          rv_results$dt_result_fsr,
+          selection = list(mode = "single", target = "row"),
+          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        )
+      })
+
+      output$dt_result_dsr <- renderDataTable(server = FALSE, {
+        datatable(
+          rv_results$dt_result_dsr,
+          selection = list(mode = "single", target = "row"),
+          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        )
+      })
+
+      output$dt_result_m2sr <- renderDataTable(server = FALSE, {
+        datatable(
+          rv_results$dt_result_m2sr,
+          selection = list(mode = "single", target = "row"),
+          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        )
+      })
     }
   )
 }

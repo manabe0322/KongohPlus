@@ -35,7 +35,7 @@ pick_al_size <- function(dt_exp_one, dt_gt_one, at_all_mk, dye_all_mk){
     heights <- heights[index_not_na]
 
     # Remove peaks below AT
-    index_above_at <- which(heights >= at_all_mk[names(at_all_mk) == mk])
+    index_above_at <- which(heights >= at_all_mk[i])
     peaks <- peaks[index_above_at]
     sizes <- sizes[index_above_at]
     heights <- heights[index_above_at]
@@ -48,7 +48,7 @@ pick_al_size <- function(dt_exp_one, dt_gt_one, at_all_mk, dye_all_mk){
     al_mk <- c(al_mk, rep(mk, length(index_al)))
     al_peak <- c(al_peak, peaks[index_al])
     al_size <- c(al_size, sizes[index_al])
-    al_dye <- c(al_dye, rep(dye_all_mk[names(dye_all_mk) == mk], length(index_al)))
+    al_dye <- c(al_dye, rep(dye_all_mk[i], length(index_al)))
   }
 
   # Make the output object
@@ -168,35 +168,35 @@ remove_pu <- function(peaks, sizes, heights, gt, dye, al_size, al_dye, max_dist_
 
 #' arrange_exp_data
 #'
-#' @description The function to arrange experimental data
-#' @param dt_exp_init The initial data.table of experimental data
-#' @param dt_gt_init The initial data.table of genotype data
+#' @description The function to arrange the experimental data
+#' @param dt_exp The data.table of the experimental data
+#' @param dt_gt The data.table of the genotype data
 #' @param markers_par Markers for parameters
 #' @param at_all_mk Analytical thresholds of all markers
 #' @param dye_all_mk Dyes of all markers
 #' @param sr_consider_all_mk Information on consideration of back, forward, double-back, and minus 2-nt stutters in all markers
 #' @param max_dist_pu The maximum distance between a pull-up peak and the parent allele
-arrange_exp_data <- function(dt_exp_init, dt_gt_init, markers_par, at_all_mk, dye_all_mk, sr_consider_all_mk, max_dist_pu = 1){
+arrange_exp_data <- function(dt_exp, dt_gt, markers_par, at_all_mk, dye_all_mk, sr_consider_all_mk, max_dist_pu = 1){
   peak_list <- size_list <- height_list <- gt_list <- list()
 
-  name_dt_exp <- names(dt_exp_init)
+  name_dt_exp <- names(dt_exp)
   index_exp_peak <- grep("Allele", name_dt_exp)
   index_exp_size <- grep("Size", name_dt_exp)
   index_exp_height <- grep("Height", name_dt_exp)
-  sample_names <- unique(dt_exp_init[, SampleName])
+  sample_names <- unique(dt_exp[, SampleName])
 
-  name_dt_gt <- names(dt_gt_init)
+  name_dt_gt <- names(dt_gt)
   index_gt_allele <- grep("Allele", name_dt_gt)
 
   n_par_mk <- length(markers_par)
 
   for(i in 1:length(sample_names)){
-    dt_exp_one <- dt_exp_init[dt_exp_init[, SampleName] == sample_names[i], ]
+    dt_exp_one <- dt_exp[dt_exp[, SampleName] == sample_names[i], ]
     markers <- dt_exp_one[, Marker]
     peak_all_mk <- dt_exp_one[, index_exp_peak, with = FALSE]
     size_all_mk <- dt_exp_one[, index_exp_size, with = FALSE]
     height_all_mk <- dt_exp_one[, index_exp_height, with = FALSE]
-    dt_gt_one <- dt_gt_init[dt_gt_init[, SampleName] == sample_names[i], ]
+    dt_gt_one <- dt_gt[dt_gt[, SampleName] == sample_names[i], ]
 
     # Pick up allele sizes
     al_size_info <- pick_al_size(dt_exp_one, dt_gt_one, at_all_mk, dye_all_mk)
@@ -223,7 +223,7 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, markers_par, at_all_mk, dy
       heights <- heights[index_not_na]
 
       # Remove peaks below AT
-      index_above_at <- which(heights >= at_all_mk[names(at_all_mk) == mk])
+      index_above_at <- which(heights >= at_all_mk[j])
       peaks <- peaks[index_above_at]
       sizes <- sizes[index_above_at]
       heights <- heights[index_above_at]
@@ -233,7 +233,7 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, markers_par, at_all_mk, dy
       gt_one[j, ] <- gt
 
       # Make detectable peaks in the profile under the genotype
-      cand_peak <- make_cand_peak(as.numeric(gt), c(sr_consider_all_mk[rownames(sr_consider_all_mk) == mk, ]))
+      cand_peak <- make_cand_peak(as.numeric(gt), c(sr_consider_all_mk[j, ]))
 
       index_use <- which(is.element(peaks, as.character(cand_peak)))
       if(length(index_use) > 0){
@@ -248,7 +248,7 @@ arrange_exp_data <- function(dt_exp_init, dt_gt_init, markers_par, at_all_mk, dy
         heights_use <- tmp[[3]]
 
         # Remove pull-up peaks
-        tmp <- remove_pu(peaks_use, sizes_use, heights_use, gt, dye_all_mk[names(dye_all_mk) == mk], al_size, al_dye, max_dist_pu)
+        tmp <- remove_pu(peaks_use, sizes_use, heights_use, gt, dye_all_mk[j], al_size, al_dye, max_dist_pu)
         peaks_use <- tmp[[1]]
         sizes_use <- tmp[[2]]
         heights_use <- tmp[[3]]

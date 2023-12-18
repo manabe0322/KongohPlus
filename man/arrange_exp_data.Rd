@@ -5,8 +5,8 @@
 \title{arrange_exp_data}
 \usage{
 arrange_exp_data(
-  dt_exp_init,
-  dt_gt_init,
+  dt_exp,
+  dt_gt,
   markers_par,
   at_all_mk,
   dye_all_mk,
@@ -15,9 +15,9 @@ arrange_exp_data(
 )
 }
 \arguments{
-\item{dt_exp_init}{The initial data.table of experimental data}
+\item{dt_exp}{The data.table of the experimental data}
 
-\item{dt_gt_init}{The initial data.table of genotype data}
+\item{dt_gt}{The data.table of the genotype data}
 
 \item{markers_par}{Markers for parameters}
 
@@ -30,5 +30,5 @@ arrange_exp_data(
 \item{max_dist_pu}{The maximum distance between a pull-up peak and the parent allele}
 }
 \description{
-The function to arrange experimental data
+The function to arrange the experimental data
 }

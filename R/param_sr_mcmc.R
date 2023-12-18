@@ -34,7 +34,7 @@ run_mcmc_sr_gen <- function(model_sr_gen, data_list_sr, n_warmup, n_sampling, n_
   rhat_sigma <- fit_sr_summary$rhat[which(fit_sr_summary$variable == "sigma")]
 
   # Trace plot
-  fit_sr$draws() %>% mcmc_trace(pars = c("myu", "sigma")) -> traceplot
+  fit_sr$draws() %>% mcmc_trace(pars = c("slope", "intercept", "sigma")) -> traceplot
 
   return(list("median_loglike" = median_loglike,
               "median_slope" = median_slope, "median_intercept" = median_intercept, "median_sigma" = median_sigma,
@@ -68,7 +68,7 @@ run_mcmc_sr_together <- function(model_sr_together, data_list_sr, n_warmup, n_sa
   median_loglike <- fit_sr_summary$median[which(fit_sr_summary$variable == "lp__")]
 
   # Median of each parameter
-  n_mk_together <- model_sr_together$N
+  n_mk_together <- data_list_sr$NMk
   median_myus <- rep(NA, n_mk_together)
   for(i in 1:n_mk_together){
     median_myus[i] <- fit_sr_summary$median[which(fit_sr_summary$variable == paste0("myu[", i, "]"))]

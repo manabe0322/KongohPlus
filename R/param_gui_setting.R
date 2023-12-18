@@ -212,9 +212,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       react_dt_kit_set1 <- reactive({
         dt_kit_set1 <- react_dt_kit_set0()
         dt_kit_set1$AT <- 50
-        dt_kit_set1$Model_BSR <- "Not consider"
-        dt_kit_set1$Model_FSR <- "Not consider"
-        dt_kit_set1$Model_DSR <- "Not consider"
+        dt_kit_set1$Model_BSR <- "Locus-specific"
+        dt_kit_set1$Model_FSR <- "Multiple loci together"
+        dt_kit_set1$Model_DSR <- "Multiple loci together"
         dt_kit_set1$Model_M2SR <- "Not consider"
         return(dt_kit_set1)
       })
