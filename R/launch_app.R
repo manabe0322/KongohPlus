@@ -22,7 +22,7 @@ KongohPlus <- function(bool_compile = TRUE){
                              id = "navbar",
                              position = c("fixed-top"),
 
-                             tabPanel("Load"),
+                             load_ui("load"),
 
                              tabPanel("Deconvolution"),
 
@@ -50,6 +50,7 @@ KongohPlus <- function(bool_compile = TRUE){
   )
 
   server <- function(input, output, session){
+    load_server("load")
     est_par_server("est_par", path_pack)
   }
 
