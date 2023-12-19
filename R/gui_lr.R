@@ -9,10 +9,12 @@ lr_ui <- function(id){
              sidebarPanel(width = 3,
                           numericInput(ns("noc_lr"), label = h4("Number of contributors"), value = NULL),
                           uiOutput(ns("hp")),
-                          uiOutput(ns("hd"))
+                          uiOutput(ns("hd")),
+                          br(),
+                          actionButton(ns("act_analyze_lr"), label = "Analyze", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 9,
-                       selectInput(ns("analysis_method_lr"), label = h4("Analysis method"), choices = LETTERS[1:3])
+                       uiOutput(ns("analysis_method_lr"))
              )
            )
   )
@@ -21,7 +23,7 @@ lr_ui <- function(id){
 #' lr_server
 #'
 #' @description The function to create the server module for the likelihood ratio
-lr_server <- function(id, rv_file){
+lr_server <- function(id, path_pack, rv_file){
   moduleServer(
     id,
     function(input, output, session){
@@ -40,6 +42,12 @@ lr_server <- function(id, rv_file){
 
       output$hd <- renderUI({
         checkboxGroupInput(session$ns("hd"), label = h4("Defense hypothesis"), choices = rv_setting_lr$refs)
+      })
+
+      analysis_methods <- list.files(paste0(path_pack, "/extdata/analysis_method"))
+
+      output$analysis_method_lr <- renderUI({
+        selectInput(session$ns("analysis_method_lr"), label = h4("Analysis method"), choices = analysis_methods, selected = analysis_methods[1])
       })
     }
   )

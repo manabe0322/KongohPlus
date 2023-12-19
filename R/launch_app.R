@@ -51,9 +51,9 @@ KongohPlus <- function(bool_compile = TRUE){
 
   server <- function(input, output, session){
     rv_file <- load_server("load", session)
-    deconvo_server("deconvo")
+    deconvo_server("deconvo", path_pack)
     observe({
-      lr_server("lr", rv_file)
+      lr_server("lr", path_pack, rv_file)
     })
 
     est_par_server("est_par", path_pack)
