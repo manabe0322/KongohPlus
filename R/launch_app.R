@@ -24,9 +24,9 @@ KongohPlus <- function(bool_compile = TRUE){
 
                              load_ui("load"),
 
-                             tabPanel("Deconvolution"),
+                             deconvo_ui("deconvo"),
 
-                             tabPanel("Likelihood ratio"),
+                             lr_ui("lr"),
 
                              tabPanel("Project"),
 
@@ -50,7 +50,12 @@ KongohPlus <- function(bool_compile = TRUE){
   )
 
   server <- function(input, output, session){
-    load_server("load")
+    rv_file <- load_server("load", session)
+    deconvo_server("deconvo")
+    observe({
+      lr_server("lr", rv_file)
+    })
+
     est_par_server("est_par", path_pack)
   }
 
