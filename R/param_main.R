@@ -88,6 +88,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   # Perform the MCMC for the back stutter ratio
 
   ## Define objects
+  bsr_data_all_mk <- vector(mode = "list", length = n_mk)
+  names(bsr_data_all_mk) <- markers_par
   bsr_allele_median_slope_all_mk <- bsr_allele_median_intercept_all_mk <- bsr_allele_median_sigma_all_mk <- rep(NA, n_mk)
   bsr_allele_rhat_slope_all_mk <- bsr_allele_rhat_intercept_all_mk <- bsr_allele_rhat_sigma_all_mk <- rep(NA, n_mk)
   bsr_allele_trace <- as.list(rep(NA, n_mk))
@@ -168,14 +170,15 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         cand_min_us <- cand_min_us[cand_min_us <= max_cand_us]
         n_cand_min_us <- length(cand_min_us)
         loglike_multi <- rep(NA, n_cand_min_us)
-        result_bsr_multi_cand <- list()
+        bsr_ca_one_mk_cand <- result_bsr_multi_cand <- list()
         for(j in 1:n_cand_min_us){
-          bsr_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[j], reps_one_mk, seq_al_one_mk, seq_count_one_mk, bsr_al_one_mk)
+          bsr_ca_one_mk_cand[[j]] <- bsr_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[j], reps_one_mk, seq_al_one_mk, seq_count_one_mk, bsr_al_one_mk)
           data_list_bsr_multi <- list(N = length(bsr_one_mk), SR = bsr_one_mk, XVal = bsr_ca_one_mk, Height = bsr_h_one_mk)
           result_bsr_multi_cand[[j]] <- run_mcmc_sr_gen(model_sr_gen, data_list_bsr_multi, n_warmup, n_sampling, n_chains, n_parallel_chains)
           loglike_multi[j] <- result_bsr_multi_cand[[j]]$median_loglike
         }
         index_max_like_multi <- which.max(loglike_multi)
+        bsr_ca_one_mk <- bsr_ca_one_mk_cand[[index_max_like_multi]]
         tmp <- result_bsr_multi_cand[[index_max_like_multi]]
         log_likes[3] <- tmp$median_loglike
         bsr_multi_median_slope_all_mk[id_mk] <- tmp$median_slope
@@ -220,6 +223,19 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         bsr_best_rhat_sigma_all_mk[id_mk] <- bsr_multi_rhat_sigma_all_mk[id_mk]
         bsr_best_trace_all_mk[[id_mk]] <- bsr_multi_trace[[id_mk]]
       }
+
+      # Assign data
+      bsr_data_one_mk <- vector(mode = "list", length = 4)
+      names(bsr_data_one_mk) <- c("bsr", "bsr_al", "bsr_lus", "bsr_ca")
+      bsr_data_one_mk[[1]] <- bsr_one_mk
+      bsr_data_one_mk[[2]] <- bsr_al_one_mk
+      if(consider_lus){
+        bsr_data_one_mk[[3]] <- bsr_lus_one_mk
+      }
+      if(consider_multi){
+        bsr_data_one_mk[[4]] <- bsr_ca_one_mk
+      }
+      bsr_data_all_mk[[id_mk]] <- bsr_data_one_mk
     }
   }
 
@@ -237,6 +253,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       id_mk <- index_mk_together_bsr[i]
       tmp <- extract_sr_use(bsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
       bsr_one_mk <- tmp[[1]]
+      bsr_al_one_mk <- tmp[[2]]
       bsr_h_one_mk <- tmp[[3]]
 
       # Combine data
@@ -246,6 +263,13 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       # Make id_mk_together
       id_mk_count <- id_mk_count + 1
       id_mk_together <- c(id_mk_together, rep(id_mk_count, length(bsr_one_mk)))
+
+      # Assign data
+      bsr_data_one_mk <- vector(mode = "list", length = 4)
+      names(bsr_data_one_mk) <- c("bsr", "bsr_al", "bsr_lus", "bsr_ca")
+      bsr_data_one_mk[[1]] <- bsr_one_mk
+      bsr_data_one_mk[[2]] <- bsr_al_one_mk
+      bsr_data_all_mk[[id_mk]] <- bsr_data_one_mk
     }
     data_list_bsr_together <- list(N = length(bsr_together), NMk = n_mk_together_bsr, SR = bsr_together, Height = bsr_h_together, IndexMk = id_mk_together)
     tmp <- run_mcmc_sr_together(model_sr_together, data_list_bsr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
@@ -266,6 +290,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   # Perform the MCMC for the forward stutter ratio
 
   ## Define objects
+  fsr_data_all_mk <- vector(mode = "list", length = n_mk)
+  names(fsr_data_all_mk) <- markers_par
   fsr_allele_median_slope_all_mk <- fsr_allele_median_intercept_all_mk <- fsr_allele_median_sigma_all_mk <- rep(NA, n_mk)
   fsr_allele_rhat_slope_all_mk <- fsr_allele_rhat_intercept_all_mk <- fsr_allele_rhat_sigma_all_mk <- rep(NA, n_mk)
   fsr_allele_trace <- as.list(rep(NA, n_mk))
@@ -346,14 +372,15 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         cand_min_us <- cand_min_us[cand_min_us <= max_cand_us]
         n_cand_min_us <- length(cand_min_us)
         loglike_multi <- rep(NA, n_cand_min_us)
-        result_fsr_multi_cand <- list()
+        fsr_ca_one_mk_cand <- result_fsr_multi_cand <- list()
         for(j in 1:n_cand_min_us){
-          fsr_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[j], reps_one_mk, seq_al_one_mk, seq_count_one_mk, fsr_al_one_mk)
+          fsr_ca_one_mk_cand[[j]] <- fsr_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[j], reps_one_mk, seq_al_one_mk, seq_count_one_mk, fsr_al_one_mk)
           data_list_fsr_multi <- list(N = length(fsr_one_mk), SR = fsr_one_mk, XVal = fsr_ca_one_mk, Height = fsr_h_one_mk)
           result_fsr_multi_cand[[j]] <- run_mcmc_sr_gen(model_sr_gen, data_list_fsr_multi, n_warmup, n_sampling, n_chains, n_parallel_chains)
           loglike_multi[j] <- result_fsr_multi_cand[[j]]$median_loglike
         }
         index_max_like_multi <- which.max(loglike_multi)
+        fsr_ca_one_mk <- fsr_ca_one_mk_cand[[index_max_like_multi]]
         tmp <- result_fsr_multi_cand[[index_max_like_multi]]
         log_likes[3] <- tmp$median_loglike
         fsr_multi_median_slope_all_mk[id_mk] <- tmp$median_slope
@@ -398,6 +425,19 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         fsr_best_rhat_sigma_all_mk[id_mk] <- fsr_multi_rhat_sigma_all_mk[id_mk]
         fsr_best_trace_all_mk[[id_mk]] <- fsr_multi_trace[[id_mk]]
       }
+
+      # Assign data
+      fsr_data_one_mk <- vector(mode = "list", length = 4)
+      names(fsr_data_one_mk) <- c("fsr", "fsr_al", "fsr_lus", "fsr_ca")
+      fsr_data_one_mk[[1]] <- fsr_one_mk
+      fsr_data_one_mk[[2]] <- fsr_al_one_mk
+      if(consider_lus){
+        fsr_data_one_mk[[3]] <- fsr_lus_one_mk
+      }
+      if(consider_multi){
+        fsr_data_one_mk[[4]] <- fsr_ca_one_mk
+      }
+      fsr_data_all_mk[[id_mk]] <- fsr_data_one_mk
     }
   }
 
@@ -415,6 +455,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       id_mk <- index_mk_together_fsr[i]
       tmp <- extract_sr_use(fsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
       fsr_one_mk <- tmp[[1]]
+      fsr_al_one_mk <- tmp[[2]]
       fsr_h_one_mk <- tmp[[3]]
 
       # Combine data
@@ -424,6 +465,13 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       # Make id_mk_together
       id_mk_count <- id_mk_count + 1
       id_mk_together <- c(id_mk_together, rep(id_mk_count, length(fsr_one_mk)))
+
+      # Assign data
+      fsr_data_one_mk <- vector(mode = "list", length = 4)
+      names(fsr_data_one_mk) <- c("fsr", "fsr_al", "fsr_lus", "fsr_ca")
+      fsr_data_one_mk[[1]] <- fsr_one_mk
+      fsr_data_one_mk[[2]] <- fsr_al_one_mk
+      fsr_data_all_mk[[id_mk]] <- fsr_data_one_mk
     }
     data_list_fsr_together <- list(N = length(fsr_together), NMk = n_mk_together_fsr, SR = fsr_together, Height = fsr_h_together, IndexMk = id_mk_together)
     tmp <- run_mcmc_sr_together(model_sr_together, data_list_fsr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
@@ -444,6 +492,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   # Perform the MCMC for the double-back stutter ratio
 
   ## Define objects
+  dsr_data_all_mk <- vector(mode = "list", length = n_mk)
+  names(dsr_data_all_mk) <- markers_par
   dsr_allele_median_slope_all_mk <- dsr_allele_median_intercept_all_mk <- dsr_allele_median_sigma_all_mk <- rep(NA, n_mk)
   dsr_allele_rhat_slope_all_mk <- dsr_allele_rhat_intercept_all_mk <- dsr_allele_rhat_sigma_all_mk <- rep(NA, n_mk)
   dsr_allele_trace <- as.list(rep(NA, n_mk))
@@ -524,14 +574,15 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         cand_min_us <- cand_min_us[cand_min_us <= max_cand_us]
         n_cand_min_us <- length(cand_min_us)
         loglike_multi <- rep(NA, n_cand_min_us)
-        result_dsr_multi_cand <- list()
+        dsr_ca_one_mk_cand <- result_dsr_multi_cand <- list()
         for(j in 1:n_cand_min_us){
-          dsr_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[j], reps_one_mk, seq_al_one_mk, seq_count_one_mk, dsr_al_one_mk)
+          dsr_ca_one_mk_cand[[j]] <- dsr_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[j], reps_one_mk, seq_al_one_mk, seq_count_one_mk, dsr_al_one_mk)
           data_list_dsr_multi <- list(N = length(dsr_one_mk), SR = dsr_one_mk, XVal = dsr_ca_one_mk, Height = dsr_h_one_mk)
           result_dsr_multi_cand[[j]] <- run_mcmc_sr_gen(model_sr_gen, data_list_dsr_multi, n_warmup, n_sampling, n_chains, n_parallel_chains)
           loglike_multi[j] <- result_dsr_multi_cand[[j]]$median_loglike
         }
         index_max_like_multi <- which.max(loglike_multi)
+        dsr_ca_one_mk <- dsr_ca_one_mk_cand[[index_max_like_multi]]
         tmp <- result_dsr_multi_cand[[index_max_like_multi]]
         log_likes[3] <- tmp$median_loglike
         dsr_multi_median_slope_all_mk[id_mk] <- tmp$median_slope
@@ -576,6 +627,19 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         dsr_best_rhat_sigma_all_mk[id_mk] <- dsr_multi_rhat_sigma_all_mk[id_mk]
         dsr_best_trace_all_mk[[id_mk]] <- dsr_multi_trace[[id_mk]]
       }
+
+      # Assign data
+      dsr_data_one_mk <- vector(mode = "list", length = 4)
+      names(dsr_data_one_mk) <- c("dsr", "dsr_al", "dsr_lus", "dsr_ca")
+      dsr_data_one_mk[[1]] <- dsr_one_mk
+      dsr_data_one_mk[[2]] <- dsr_al_one_mk
+      if(consider_lus){
+        dsr_data_one_mk[[3]] <- dsr_lus_one_mk
+      }
+      if(consider_multi){
+        dsr_data_one_mk[[4]] <- dsr_ca_one_mk
+      }
+      dsr_data_all_mk[[id_mk]] <- dsr_data_one_mk
     }
   }
 
@@ -593,6 +657,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       id_mk <- index_mk_together_dsr[i]
       tmp <- extract_sr_use(dsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
       dsr_one_mk <- tmp[[1]]
+      dsr_al_one_mk <- tmp[[2]]
       dsr_h_one_mk <- tmp[[3]]
 
       # Combine data
@@ -602,6 +667,13 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       # Make id_mk_together
       id_mk_count <- id_mk_count + 1
       id_mk_together <- c(id_mk_together, rep(id_mk_count, length(dsr_one_mk)))
+
+      # Assign data
+      dsr_data_one_mk <- vector(mode = "list", length = 4)
+      names(dsr_data_one_mk) <- c("dsr", "dsr_al", "dsr_lus", "dsr_ca")
+      dsr_data_one_mk[[1]] <- dsr_one_mk
+      dsr_data_one_mk[[2]] <- dsr_al_one_mk
+      dsr_data_all_mk[[id_mk]] <- dsr_data_one_mk
     }
     data_list_dsr_together <- list(N = length(dsr_together), NMk = n_mk_together_dsr, SR = dsr_together, Height = dsr_h_together, IndexMk = id_mk_together)
     tmp <- run_mcmc_sr_together(model_sr_together, data_list_dsr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
@@ -628,6 +700,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   m2sr_best_trace_all_mk <- as.list(rep(NA, n_mk))
 
   ## M2SR: locus-specific
+  m2sr_data_all_mk <- vector(mode = "list", length = n_mk)
+  names(m2sr_data_all_mk) <- markers_par
   index_mk_specific_m2sr <- which(model_m2sr_all_mk == "Locus-specific")
   n_mk_specific_m2sr <- length(index_mk_specific_m2sr)
   if(n_mk_specific_m2sr > 0){
@@ -638,6 +712,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       # Extract data of one marker
       tmp <- extract_sr_use(m2sr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
       m2sr_one_mk <- tmp[[1]]
+      m2sr_al_one_mk <- tmp[[2]]
       m2sr_h_one_mk <- tmp[[3]]
 
       data_list_m2sr_uniform <- list(N = length(m2sr_one_mk), SR = m2sr_one_mk, Height = m2sr_h_one_mk)
@@ -648,6 +723,13 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       m2sr_best_rhat_myu_all_mk[id_mk] <- tmp$rhat_myu
       m2sr_best_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
       m2sr_best_trace_all_mk[[id_mk]] <- tmp$traceplot
+
+      # Assign data
+      m2sr_data_one_mk <- vector(mode = "list", length = 4)
+      names(m2sr_data_one_mk) <- c("m2sr", "m2sr_al", "m2sr_lus", "m2sr_ca")
+      m2sr_data_one_mk[[1]] <- m2sr_one_mk
+      m2sr_data_one_mk[[2]] <- m2sr_al_one_mk
+      m2sr_data_all_mk[[id_mk]] <- m2sr_data_one_mk
     }
   }
 
@@ -665,6 +747,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       id_mk <- index_mk_together_m2sr[i]
       tmp <- extract_sr_use(m2sr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
       m2sr_one_mk <- tmp[[1]]
+      m2sr_al_one_mk <- tmp[[2]]
       m2sr_h_one_mk <- tmp[[3]]
 
       # Combine data
@@ -674,6 +757,13 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       # Make id_mk_together
       id_mk_count <- id_mk_count + 1
       id_mk_together <- c(id_mk_together, rep(id_mk_count, length(m2sr_one_mk)))
+
+      # Assign data
+      m2sr_data_one_mk <- vector(mode = "list", length = 4)
+      names(m2sr_data_one_mk) <- c("m2sr", "m2sr_al", "m2sr_lus", "m2sr_ca")
+      m2sr_data_one_mk[[1]] <- m2sr_one_mk
+      m2sr_data_one_mk[[2]] <- m2sr_al_one_mk
+      m2sr_data_all_mk[[id_mk]] <- m2sr_data_one_mk
     }
     data_list_m2sr_together <- list(N = length(m2sr_together), NMk = n_mk_together_m2sr, SR = m2sr_together, Height = m2sr_h_together, IndexMk = id_mk_together)
     tmp <- run_mcmc_sr_together(model_sr_together, data_list_m2sr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
@@ -692,11 +782,13 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   }
 
   return(list("markers_par" = markers_par,
+              "ae_data" = ae_data,
               "ae_median_myu_all_mk" = ae_median_myu_all_mk,
               "ae_median_sigma_all_mk" = ae_median_sigma_all_mk,
               "ae_rhat_myu_all_mk" = ae_rhat_myu_all_mk,
               "ae_rhat_sigma_all_mk" = ae_rhat_sigma_all_mk,
               "ae_trace_all_mk" = ae_trace_all_mk,
+              "bsr_data_all_mk" = bsr_data_all_mk,
               "bsr_allele_median_slope_all_mk" = bsr_allele_median_slope_all_mk,
               "bsr_allele_median_intercept_all_mk" = bsr_allele_median_intercept_all_mk,
               "bsr_allele_median_sigma_all_mk" = bsr_allele_median_sigma_all_mk,
@@ -730,6 +822,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "bsr_best_rhat_intercept_all_mk" = bsr_best_rhat_intercept_all_mk,
               "bsr_best_rhat_sigma_all_mk" = bsr_best_rhat_sigma_all_mk,
               "bsr_best_trace_all_mk" = bsr_best_trace_all_mk,
+              "fsr_data_all_mk" = fsr_data_all_mk,
               "fsr_allele_median_slope_all_mk" = fsr_allele_median_slope_all_mk,
               "fsr_allele_median_intercept_all_mk" = fsr_allele_median_intercept_all_mk,
               "fsr_allele_median_sigma_all_mk" = fsr_allele_median_sigma_all_mk,
@@ -763,6 +856,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "fsr_best_rhat_intercept_all_mk" = fsr_best_rhat_intercept_all_mk,
               "fsr_best_rhat_sigma_all_mk" = fsr_best_rhat_sigma_all_mk,
               "fsr_best_trace_all_mk" = fsr_best_trace_all_mk,
+              "dsr_data_all_mk" = dsr_data_all_mk,
               "dsr_allele_median_slope_all_mk" = dsr_allele_median_slope_all_mk,
               "dsr_allele_median_intercept_all_mk" = dsr_allele_median_intercept_all_mk,
               "dsr_allele_median_sigma_all_mk" = dsr_allele_median_sigma_all_mk,
@@ -796,6 +890,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "dsr_best_rhat_intercept_all_mk" = dsr_best_rhat_intercept_all_mk,
               "dsr_best_rhat_sigma_all_mk" = dsr_best_rhat_sigma_all_mk,
               "dsr_best_trace_all_mk" = dsr_best_trace_all_mk,
+              "m2sr_data_all_mk" = m2sr_data_all_mk,
               "m2sr_best_model_all_mk" = m2sr_best_model_all_mk,
               "m2sr_best_median_myu_all_mk" = m2sr_best_median_myu_all_mk,
               "m2sr_best_median_sigma_all_mk" = m2sr_best_median_sigma_all_mk,
