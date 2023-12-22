@@ -90,6 +90,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   ## Define objects
   bsr_data_all_mk <- vector(mode = "list", length = n_mk)
   names(bsr_data_all_mk) <- markers_par
+  aics_bsr_all_mk <- vector(mode = "list", length = n_mk)
+  names(aics_bsr_all_mk) <- markers_par
   bsr_allele_median_slope_all_mk <- bsr_allele_median_intercept_all_mk <- bsr_allele_median_sigma_all_mk <- rep(NA, n_mk)
   bsr_allele_rhat_slope_all_mk <- bsr_allele_rhat_intercept_all_mk <- bsr_allele_rhat_sigma_all_mk <- rep(NA, n_mk)
   bsr_allele_trace <- as.list(rep(NA, n_mk))
@@ -132,7 +134,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         consider_lus <- FALSE
       }
 
-      log_likes <- rep(-Inf, 3)
+      log_likes <- rep(NA, 3)
       names(log_likes) <- c("Allele", "LUS", "Multi-sequence")
 
       # Allele model
@@ -192,7 +194,12 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       }
 
       # Best model
-      aics <- mapply(calc_aic, log_likes, c(3, 3, 4))
+      index_cand <- which(!is.na(log_likes))
+      log_likes <- log_likes[index_cand]
+      n_pars <- c(3, 3, 4)
+      n_pars <- n_pars[index_cand]
+      aics <- mapply(calc_aic, log_likes, n_pars)
+      names(aics) <- names(log_likes)
       index_best_model <- which.min(aics)
       if(index_best_model == 1){
         bsr_best_model_all_mk[id_mk] <- "Allele"
@@ -236,6 +243,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         bsr_data_one_mk[[4]] <- bsr_ca_one_mk
       }
       bsr_data_all_mk[[id_mk]] <- bsr_data_one_mk
+      aics_bsr_all_mk[[id_mk]] <- aics
     }
   }
 
@@ -292,6 +300,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   ## Define objects
   fsr_data_all_mk <- vector(mode = "list", length = n_mk)
   names(fsr_data_all_mk) <- markers_par
+  aics_fsr_all_mk <- vector(mode = "list", length = n_mk)
+  names(aics_fsr_all_mk) <- markers_par
   fsr_allele_median_slope_all_mk <- fsr_allele_median_intercept_all_mk <- fsr_allele_median_sigma_all_mk <- rep(NA, n_mk)
   fsr_allele_rhat_slope_all_mk <- fsr_allele_rhat_intercept_all_mk <- fsr_allele_rhat_sigma_all_mk <- rep(NA, n_mk)
   fsr_allele_trace <- as.list(rep(NA, n_mk))
@@ -334,7 +344,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         consider_lus <- FALSE
       }
 
-      log_likes <- rep(-Inf, 3)
+      log_likes <- rep(NA, 3)
       names(log_likes) <- c("Allele", "LUS", "Multi-sequence")
 
       # Allele model
@@ -394,7 +404,12 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       }
 
       # Best model
-      aics <- mapply(calc_aic, log_likes, c(3, 3, 4))
+      index_cand <- which(!is.na(log_likes))
+      log_likes <- log_likes[index_cand]
+      n_pars <- c(3, 3, 4)
+      n_pars <- n_pars[index_cand]
+      aics <- mapply(calc_aic, log_likes, n_pars)
+      names(aics) <- names(log_likes)
       index_best_model <- which.min(aics)
       if(index_best_model == 1){
         fsr_best_model_all_mk[id_mk] <- "Allele"
@@ -438,6 +453,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         fsr_data_one_mk[[4]] <- fsr_ca_one_mk
       }
       fsr_data_all_mk[[id_mk]] <- fsr_data_one_mk
+      aics_fsr_all_mk[[id_mk]] <- aics
     }
   }
 
@@ -494,6 +510,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   ## Define objects
   dsr_data_all_mk <- vector(mode = "list", length = n_mk)
   names(dsr_data_all_mk) <- markers_par
+  aics_dsr_all_mk <- vector(mode = "list", length = n_mk)
+  names(aics_dsr_all_mk) <- markers_par
   dsr_allele_median_slope_all_mk <- dsr_allele_median_intercept_all_mk <- dsr_allele_median_sigma_all_mk <- rep(NA, n_mk)
   dsr_allele_rhat_slope_all_mk <- dsr_allele_rhat_intercept_all_mk <- dsr_allele_rhat_sigma_all_mk <- rep(NA, n_mk)
   dsr_allele_trace <- as.list(rep(NA, n_mk))
@@ -536,7 +554,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         consider_lus <- FALSE
       }
 
-      log_likes <- rep(-Inf, 3)
+      log_likes <- rep(NA, 3)
       names(log_likes) <- c("Allele", "LUS", "Multi-sequence")
 
       # Allele model
@@ -596,7 +614,12 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       }
 
       # Best model
-      aics <- mapply(calc_aic, log_likes, c(3, 3, 4))
+      index_cand <- which(!is.na(log_likes))
+      log_likes <- log_likes[index_cand]
+      n_pars <- c(3, 3, 4)
+      n_pars <- n_pars[index_cand]
+      aics <- mapply(calc_aic, log_likes, n_pars)
+      names(aics) <- names(log_likes)
       index_best_model <- which.min(aics)
       if(index_best_model == 1){
         dsr_best_model_all_mk[id_mk] <- "Allele"
@@ -640,6 +663,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         dsr_data_one_mk[[4]] <- dsr_ca_one_mk
       }
       dsr_data_all_mk[[id_mk]] <- dsr_data_one_mk
+      aics_dsr_all_mk[[id_mk]] <- aics
     }
   }
 
@@ -789,6 +813,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "ae_rhat_sigma_all_mk" = ae_rhat_sigma_all_mk,
               "ae_trace_all_mk" = ae_trace_all_mk,
               "bsr_data_all_mk" = bsr_data_all_mk,
+              "aics_bsr_all_mk" = aics_bsr_all_mk,
               "bsr_allele_median_slope_all_mk" = bsr_allele_median_slope_all_mk,
               "bsr_allele_median_intercept_all_mk" = bsr_allele_median_intercept_all_mk,
               "bsr_allele_median_sigma_all_mk" = bsr_allele_median_sigma_all_mk,
@@ -823,6 +848,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "bsr_best_rhat_sigma_all_mk" = bsr_best_rhat_sigma_all_mk,
               "bsr_best_trace_all_mk" = bsr_best_trace_all_mk,
               "fsr_data_all_mk" = fsr_data_all_mk,
+              "aics_fsr_all_mk" = aics_fsr_all_mk,
               "fsr_allele_median_slope_all_mk" = fsr_allele_median_slope_all_mk,
               "fsr_allele_median_intercept_all_mk" = fsr_allele_median_intercept_all_mk,
               "fsr_allele_median_sigma_all_mk" = fsr_allele_median_sigma_all_mk,
@@ -857,6 +883,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "fsr_best_rhat_sigma_all_mk" = fsr_best_rhat_sigma_all_mk,
               "fsr_best_trace_all_mk" = fsr_best_trace_all_mk,
               "dsr_data_all_mk" = dsr_data_all_mk,
+              "aics_dsr_all_mk" = aics_dsr_all_mk,
               "dsr_allele_median_slope_all_mk" = dsr_allele_median_slope_all_mk,
               "dsr_allele_median_intercept_all_mk" = dsr_allele_median_intercept_all_mk,
               "dsr_allele_median_sigma_all_mk" = dsr_allele_median_sigma_all_mk,
