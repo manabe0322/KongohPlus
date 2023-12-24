@@ -9,6 +9,6 @@
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
-#' @importFrom shinyjs useShinyjs
+#' @importFrom shinyjs disable enable useShinyjs
 #' @importFrom shinythemes shinytheme
 "_PACKAGE"
