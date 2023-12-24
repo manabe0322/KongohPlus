@@ -72,8 +72,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
 
   # Perform the MCMC for the locus-specific amplification efficiency
   n_ae_data <- nrow(ae_data)
-  ae_median_myu_all_mk <- ae_median_sigma_all_mk <- ae_rhat_myu_all_mk <- ae_rhat_sigma_all_mk <- rep(NA, n_mk)
-  ae_trace_all_mk <- list()
+  ae_median_myu_all_mk <- ae_median_sigma_all_mk <- ae_rhat_myu_all_mk <- ae_rhat_sigma_all_mk <- ae_rhat_lp_all_mk <- rep(NA, n_mk)
+  ae_trace_all_mk <- vector(mode = "list", length = n_mk)
   for(i in 1:n_mk){
     cat(paste0("MCMC for the locus-specific amplification efficiency of the ", markers_par[i], "\n"))
     data_list_ae <- list(N = n_ae_data, AE = ae_data[, i], Height = height_ae_data[, i])
@@ -82,6 +82,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
     ae_median_sigma_all_mk[i] <- tmp$median_sigma
     ae_rhat_myu_all_mk[i] <- tmp$rhat_myu
     ae_rhat_sigma_all_mk[i] <- tmp$rhat_sigma
+    ae_rhat_lp_all_mk[i] <- tmp$rhat_lp
     ae_trace_all_mk[[i]] <- tmp$traceplot
   }
 
@@ -93,18 +94,18 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   aics_bsr_all_mk <- vector(mode = "list", length = n_mk)
   names(aics_bsr_all_mk) <- markers_par
   bsr_allele_median_slope_all_mk <- bsr_allele_median_intercept_all_mk <- bsr_allele_median_sigma_all_mk <- rep(NA, n_mk)
-  bsr_allele_rhat_slope_all_mk <- bsr_allele_rhat_intercept_all_mk <- bsr_allele_rhat_sigma_all_mk <- rep(NA, n_mk)
-  bsr_allele_trace <- as.list(rep(NA, n_mk))
+  bsr_allele_rhat_slope_all_mk <- bsr_allele_rhat_intercept_all_mk <- bsr_allele_rhat_sigma_all_mk <- bsr_allele_rhat_lp_all_mk <- rep(NA, n_mk)
+  bsr_allele_trace_all_mk <- vector(mode = "list", length = n_mk)
   bsr_lus_median_slope_all_mk <- bsr_lus_median_intercept_all_mk <- bsr_lus_median_sigma_all_mk <- rep(NA, n_mk)
-  bsr_lus_rhat_slope_all_mk <- bsr_lus_rhat_intercept_all_mk <- bsr_lus_rhat_sigma_all_mk <- rep(NA, n_mk)
-  bsr_lus_trace <- as.list(rep(NA, n_mk))
+  bsr_lus_rhat_slope_all_mk <- bsr_lus_rhat_intercept_all_mk <- bsr_lus_rhat_sigma_all_mk <- bsr_lus_rhat_lp_all_mk <- rep(NA, n_mk)
+  bsr_lus_trace_all_mk <- vector(mode = "list", length = n_mk)
   bsr_multi_median_slope_all_mk <- bsr_multi_median_intercept_all_mk <- bsr_multi_median_sigma_all_mk <- bsr_multi_min_us_all_mk <- rep(NA, n_mk)
-  bsr_multi_rhat_slope_all_mk <- bsr_multi_rhat_intercept_all_mk <- bsr_multi_rhat_sigma_all_mk <- rep(NA, n_mk)
-  bsr_multi_trace <- as.list(rep(NA, n_mk))
+  bsr_multi_rhat_slope_all_mk <- bsr_multi_rhat_intercept_all_mk <- bsr_multi_rhat_sigma_all_mk <- bsr_multi_rhat_lp_all_mk <- rep(NA, n_mk)
+  bsr_multi_trace_all_mk <- vector(mode = "list", length = n_mk)
   bsr_best_model_all_mk <- rep(NA, n_mk)
   bsr_best_median_myu_all_mk <- bsr_best_median_slope_all_mk <- bsr_best_median_intercept_all_mk <- bsr_best_median_sigma_all_mk <- bsr_best_min_us_all_mk <- rep(NA, n_mk)
-  bsr_best_rhat_myu_all_mk <- bsr_best_rhat_slope_all_mk <- bsr_best_rhat_intercept_all_mk <- bsr_best_rhat_sigma_all_mk <- rep(NA, n_mk)
-  bsr_best_trace_all_mk <- as.list(rep(NA, n_mk))
+  bsr_best_rhat_myu_all_mk <- bsr_best_rhat_slope_all_mk <- bsr_best_rhat_intercept_all_mk <- bsr_best_rhat_sigma_all_mk <- bsr_best_rhat_lp_all_mk <- rep(NA, n_mk)
+  bsr_best_trace_all_mk <- vector(mode = "list", length = n_mk)
 
   ## BSR: locus-specific
   index_mk_specific_bsr <- which(model_bsr_all_mk == "Locus-specific")
@@ -148,7 +149,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       bsr_allele_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
       bsr_allele_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
       bsr_allele_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
-      bsr_allele_trace[[id_mk]] <- tmp$traceplot
+      bsr_allele_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
+      bsr_allele_trace_all_mk[[id_mk]] <- tmp$traceplot
 
       # LUS model
       if(consider_lus){
@@ -162,7 +164,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         bsr_lus_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
         bsr_lus_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
         bsr_lus_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
-        bsr_lus_trace[[id_mk]] <- tmp$traceplot
+        bsr_lus_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
+        bsr_lus_trace_all_mk[[id_mk]] <- tmp$traceplot
       }
 
       # Multi-sequence model
@@ -190,7 +193,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         bsr_multi_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
         bsr_multi_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
         bsr_multi_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
-        bsr_multi_trace[[id_mk]] <- tmp$traceplot
+        bsr_multi_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
+        bsr_multi_trace_all_mk[[id_mk]] <- tmp$traceplot
       }
 
       # Best model
@@ -209,7 +213,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         bsr_best_rhat_slope_all_mk[id_mk] <- bsr_allele_rhat_slope_all_mk[id_mk]
         bsr_best_rhat_intercept_all_mk[id_mk] <- bsr_allele_rhat_intercept_all_mk[id_mk]
         bsr_best_rhat_sigma_all_mk[id_mk] <- bsr_allele_rhat_sigma_all_mk[id_mk]
-        bsr_best_trace_all_mk[[id_mk]] <- bsr_allele_trace[[id_mk]]
+        bsr_best_rhat_lp_all_mk[id_mk] <- bsr_allele_rhat_lp_all_mk[id_mk]
+        bsr_best_trace_all_mk[[id_mk]] <- bsr_allele_trace_all_mk[[id_mk]]
       }else if(index_best_model == 2){
         bsr_best_model_all_mk[id_mk] <- "LUS"
         bsr_best_median_slope_all_mk[id_mk] <- bsr_lus_median_slope_all_mk[id_mk]
@@ -218,7 +223,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         bsr_best_rhat_slope_all_mk[id_mk] <- bsr_lus_rhat_slope_all_mk[id_mk]
         bsr_best_rhat_intercept_all_mk[id_mk] <- bsr_lus_rhat_intercept_all_mk[id_mk]
         bsr_best_rhat_sigma_all_mk[id_mk] <- bsr_lus_rhat_sigma_all_mk[id_mk]
-        bsr_best_trace_all_mk[[id_mk]] <- bsr_lus_trace[[id_mk]]
+        bsr_best_rhat_lp_all_mk[id_mk] <- bsr_lus_rhat_lp_all_mk[id_mk]
+        bsr_best_trace_all_mk[[id_mk]] <- bsr_lus_trace_all_mk[[id_mk]]
       }else{
         bsr_best_model_all_mk[id_mk] <- "Multi-sequence"
         bsr_best_median_slope_all_mk[id_mk] <- bsr_multi_median_slope_all_mk[id_mk]
@@ -228,7 +234,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         bsr_best_rhat_slope_all_mk[id_mk] <- bsr_multi_rhat_slope_all_mk[id_mk]
         bsr_best_rhat_intercept_all_mk[id_mk] <- bsr_multi_rhat_intercept_all_mk[id_mk]
         bsr_best_rhat_sigma_all_mk[id_mk] <- bsr_multi_rhat_sigma_all_mk[id_mk]
-        bsr_best_trace_all_mk[[id_mk]] <- bsr_multi_trace[[id_mk]]
+        bsr_best_rhat_lp_all_mk[id_mk] <- bsr_multi_rhat_lp_all_mk[id_mk]
+        bsr_best_trace_all_mk[[id_mk]] <- bsr_multi_trace_all_mk[[id_mk]]
       }
 
       # Assign data
@@ -286,6 +293,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
     bsr_best_median_sigma_all_mk[index_mk_together_bsr] <- tmp$median_sigma
     bsr_best_rhat_myu_all_mk[index_mk_together_bsr] <- tmp$rhat_myus
     bsr_best_rhat_sigma_all_mk[index_mk_together_bsr] <- tmp$rhat_sigma
+    bsr_best_rhat_lp_all_mk[index_mk_together_bsr] <- tmp$rhat_lp
     bsr_best_trace_all_mk[index_mk_together_bsr] <- tmp$traceplot
   }
 
@@ -303,18 +311,18 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   aics_fsr_all_mk <- vector(mode = "list", length = n_mk)
   names(aics_fsr_all_mk) <- markers_par
   fsr_allele_median_slope_all_mk <- fsr_allele_median_intercept_all_mk <- fsr_allele_median_sigma_all_mk <- rep(NA, n_mk)
-  fsr_allele_rhat_slope_all_mk <- fsr_allele_rhat_intercept_all_mk <- fsr_allele_rhat_sigma_all_mk <- rep(NA, n_mk)
-  fsr_allele_trace <- as.list(rep(NA, n_mk))
+  fsr_allele_rhat_slope_all_mk <- fsr_allele_rhat_intercept_all_mk <- fsr_allele_rhat_sigma_all_mk <- fsr_allele_rhat_lp_all_mk <- rep(NA, n_mk)
+  fsr_allele_trace_all_mk <- vector(mode = "list", length = n_mk)
   fsr_lus_median_slope_all_mk <- fsr_lus_median_intercept_all_mk <- fsr_lus_median_sigma_all_mk <- rep(NA, n_mk)
-  fsr_lus_rhat_slope_all_mk <- fsr_lus_rhat_intercept_all_mk <- fsr_lus_rhat_sigma_all_mk <- rep(NA, n_mk)
-  fsr_lus_trace <- as.list(rep(NA, n_mk))
+  fsr_lus_rhat_slope_all_mk <- fsr_lus_rhat_intercept_all_mk <- fsr_lus_rhat_sigma_all_mk <- fsr_lus_rhat_lp_all_mk <- rep(NA, n_mk)
+  fsr_lus_trace_all_mk <- vector(mode = "list", length = n_mk)
   fsr_multi_median_slope_all_mk <- fsr_multi_median_intercept_all_mk <- fsr_multi_median_sigma_all_mk <- fsr_multi_min_us_all_mk <- rep(NA, n_mk)
-  fsr_multi_rhat_slope_all_mk <- fsr_multi_rhat_intercept_all_mk <- fsr_multi_rhat_sigma_all_mk <- rep(NA, n_mk)
-  fsr_multi_trace <- as.list(rep(NA, n_mk))
+  fsr_multi_rhat_slope_all_mk <- fsr_multi_rhat_intercept_all_mk <- fsr_multi_rhat_sigma_all_mk <- fsr_multi_rhat_lp_all_mk <- rep(NA, n_mk)
+  fsr_multi_trace_all_mk <- vector(mode = "list", length = n_mk)
   fsr_best_model_all_mk <- rep(NA, n_mk)
   fsr_best_median_myu_all_mk <- fsr_best_median_slope_all_mk <- fsr_best_median_intercept_all_mk <- fsr_best_median_sigma_all_mk <- fsr_best_min_us_all_mk <- rep(NA, n_mk)
-  fsr_best_rhat_myu_all_mk <- fsr_best_rhat_slope_all_mk <- fsr_best_rhat_intercept_all_mk <- fsr_best_rhat_sigma_all_mk <- rep(NA, n_mk)
-  fsr_best_trace_all_mk <- as.list(rep(NA, n_mk))
+  fsr_best_rhat_myu_all_mk <- fsr_best_rhat_slope_all_mk <- fsr_best_rhat_intercept_all_mk <- fsr_best_rhat_sigma_all_mk <- fsr_best_rhat_lp_all_mk <- rep(NA, n_mk)
+  fsr_best_trace_all_mk <- vector(mode = "list", length = n_mk)
 
   ## FSR: locus-specific
   index_mk_specific_fsr <- which(model_fsr_all_mk == "Locus-specific")
@@ -358,7 +366,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       fsr_allele_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
       fsr_allele_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
       fsr_allele_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
-      fsr_allele_trace[[id_mk]] <- tmp$traceplot
+      fsr_allele_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
+      fsr_allele_trace_all_mk[[id_mk]] <- tmp$traceplot
 
       # LUS model
       if(consider_lus){
@@ -372,7 +381,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         fsr_lus_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
         fsr_lus_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
         fsr_lus_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
-        fsr_lus_trace[[id_mk]] <- tmp$traceplot
+        fsr_lus_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
+        fsr_lus_trace_all_mk[[id_mk]] <- tmp$traceplot
       }
 
       # Multi-sequence model
@@ -400,7 +410,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         fsr_multi_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
         fsr_multi_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
         fsr_multi_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
-        fsr_multi_trace[[id_mk]] <- tmp$traceplot
+        fsr_multi_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
+        fsr_multi_trace_all_mk[[id_mk]] <- tmp$traceplot
       }
 
       # Best model
@@ -419,7 +430,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         fsr_best_rhat_slope_all_mk[id_mk] <- fsr_allele_rhat_slope_all_mk[id_mk]
         fsr_best_rhat_intercept_all_mk[id_mk] <- fsr_allele_rhat_intercept_all_mk[id_mk]
         fsr_best_rhat_sigma_all_mk[id_mk] <- fsr_allele_rhat_sigma_all_mk[id_mk]
-        fsr_best_trace_all_mk[[id_mk]] <- fsr_allele_trace[[id_mk]]
+        fsr_best_rhat_lp_all_mk[id_mk] <- fsr_allele_rhat_lp_all_mk[id_mk]
+        fsr_best_trace_all_mk[[id_mk]] <- fsr_allele_trace_all_mk[[id_mk]]
       }else if(index_best_model == 2){
         fsr_best_model_all_mk[id_mk] <- "LUS"
         fsr_best_median_slope_all_mk[id_mk] <- fsr_lus_median_slope_all_mk[id_mk]
@@ -428,7 +440,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         fsr_best_rhat_slope_all_mk[id_mk] <- fsr_lus_rhat_slope_all_mk[id_mk]
         fsr_best_rhat_intercept_all_mk[id_mk] <- fsr_lus_rhat_intercept_all_mk[id_mk]
         fsr_best_rhat_sigma_all_mk[id_mk] <- fsr_lus_rhat_sigma_all_mk[id_mk]
-        fsr_best_trace_all_mk[[id_mk]] <- fsr_lus_trace[[id_mk]]
+        fsr_best_rhat_lp_all_mk[id_mk] <- fsr_lus_rhat_lp_all_mk[id_mk]
+        fsr_best_trace_all_mk[[id_mk]] <- fsr_lus_trace_all_mk[[id_mk]]
       }else{
         fsr_best_model_all_mk[id_mk] <- "Multi-sequence"
         fsr_best_median_slope_all_mk[id_mk] <- fsr_multi_median_slope_all_mk[id_mk]
@@ -438,7 +451,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         fsr_best_rhat_slope_all_mk[id_mk] <- fsr_multi_rhat_slope_all_mk[id_mk]
         fsr_best_rhat_intercept_all_mk[id_mk] <- fsr_multi_rhat_intercept_all_mk[id_mk]
         fsr_best_rhat_sigma_all_mk[id_mk] <- fsr_multi_rhat_sigma_all_mk[id_mk]
-        fsr_best_trace_all_mk[[id_mk]] <- fsr_multi_trace[[id_mk]]
+        fsr_best_rhat_lp_all_mk[id_mk] <- fsr_multi_rhat_lp_all_mk[id_mk]
+        fsr_best_trace_all_mk[[id_mk]] <- fsr_multi_trace_all_mk[[id_mk]]
       }
 
       # Assign data
@@ -496,6 +510,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
     fsr_best_median_sigma_all_mk[index_mk_together_fsr] <- tmp$median_sigma
     fsr_best_rhat_myu_all_mk[index_mk_together_fsr] <- tmp$rhat_myus
     fsr_best_rhat_sigma_all_mk[index_mk_together_fsr] <- tmp$rhat_sigma
+    fsr_best_rhat_lp_all_mk[index_mk_together_fsr] <- tmp$rhat_lp
     fsr_best_trace_all_mk[index_mk_together_fsr] <- tmp$traceplot
   }
 
@@ -513,18 +528,18 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   aics_dsr_all_mk <- vector(mode = "list", length = n_mk)
   names(aics_dsr_all_mk) <- markers_par
   dsr_allele_median_slope_all_mk <- dsr_allele_median_intercept_all_mk <- dsr_allele_median_sigma_all_mk <- rep(NA, n_mk)
-  dsr_allele_rhat_slope_all_mk <- dsr_allele_rhat_intercept_all_mk <- dsr_allele_rhat_sigma_all_mk <- rep(NA, n_mk)
-  dsr_allele_trace <- as.list(rep(NA, n_mk))
+  dsr_allele_rhat_slope_all_mk <- dsr_allele_rhat_intercept_all_mk <- dsr_allele_rhat_sigma_all_mk <- dsr_allele_rhat_lp_all_mk <- rep(NA, n_mk)
+  dsr_allele_trace_all_mk <- vector(mode = "list", length = n_mk)
   dsr_lus_median_slope_all_mk <- dsr_lus_median_intercept_all_mk <- dsr_lus_median_sigma_all_mk <- rep(NA, n_mk)
-  dsr_lus_rhat_slope_all_mk <- dsr_lus_rhat_intercept_all_mk <- dsr_lus_rhat_sigma_all_mk <- rep(NA, n_mk)
-  dsr_lus_trace <- as.list(rep(NA, n_mk))
+  dsr_lus_rhat_slope_all_mk <- dsr_lus_rhat_intercept_all_mk <- dsr_lus_rhat_sigma_all_mk <- dsr_lus_rhat_lp_all_mk <- rep(NA, n_mk)
+  dsr_lus_trace_all_mk <- vector(mode = "list", length = n_mk)
   dsr_multi_median_slope_all_mk <- dsr_multi_median_intercept_all_mk <- dsr_multi_median_sigma_all_mk <- dsr_multi_min_us_all_mk <- rep(NA, n_mk)
-  dsr_multi_rhat_slope_all_mk <- dsr_multi_rhat_intercept_all_mk <- dsr_multi_rhat_sigma_all_mk <- rep(NA, n_mk)
-  dsr_multi_trace <- as.list(rep(NA, n_mk))
+  dsr_multi_rhat_slope_all_mk <- dsr_multi_rhat_intercept_all_mk <- dsr_multi_rhat_sigma_all_mk <- dsr_multi_rhat_lp_all_mk <- rep(NA, n_mk)
+  dsr_multi_trace_all_mk <- vector(mode = "list", length = n_mk)
   dsr_best_model_all_mk <- rep(NA, n_mk)
   dsr_best_median_myu_all_mk <- dsr_best_median_slope_all_mk <- dsr_best_median_intercept_all_mk <- dsr_best_median_sigma_all_mk <- dsr_best_min_us_all_mk <- rep(NA, n_mk)
-  dsr_best_rhat_myu_all_mk <- dsr_best_rhat_slope_all_mk <- dsr_best_rhat_intercept_all_mk <- dsr_best_rhat_sigma_all_mk <- rep(NA, n_mk)
-  dsr_best_trace_all_mk <- as.list(rep(NA, n_mk))
+  dsr_best_rhat_myu_all_mk <- dsr_best_rhat_slope_all_mk <- dsr_best_rhat_intercept_all_mk <- dsr_best_rhat_sigma_all_mk <- dsr_best_rhat_lp_all_mk <- rep(NA, n_mk)
+  dsr_best_trace_all_mk <- vector(mode = "list", length = n_mk)
 
   ## DSR: locus-specific
   index_mk_specific_dsr <- which(model_dsr_all_mk == "Locus-specific")
@@ -568,7 +583,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       dsr_allele_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
       dsr_allele_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
       dsr_allele_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
-      dsr_allele_trace[[id_mk]] <- tmp$traceplot
+      dsr_allele_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
+      dsr_allele_trace_all_mk[[id_mk]] <- tmp$traceplot
 
       # LUS model
       if(consider_lus){
@@ -582,7 +598,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         dsr_lus_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
         dsr_lus_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
         dsr_lus_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
-        dsr_lus_trace[[id_mk]] <- tmp$traceplot
+        dsr_lus_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
+        dsr_lus_trace_all_mk[[id_mk]] <- tmp$traceplot
       }
 
       # Multi-sequence model
@@ -610,7 +627,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         dsr_multi_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
         dsr_multi_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
         dsr_multi_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
-        dsr_multi_trace[[id_mk]] <- tmp$traceplot
+        dsr_multi_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
+        dsr_multi_trace_all_mk[[id_mk]] <- tmp$traceplot
       }
 
       # Best model
@@ -629,7 +647,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         dsr_best_rhat_slope_all_mk[id_mk] <- dsr_allele_rhat_slope_all_mk[id_mk]
         dsr_best_rhat_intercept_all_mk[id_mk] <- dsr_allele_rhat_intercept_all_mk[id_mk]
         dsr_best_rhat_sigma_all_mk[id_mk] <- dsr_allele_rhat_sigma_all_mk[id_mk]
-        dsr_best_trace_all_mk[[id_mk]] <- dsr_allele_trace[[id_mk]]
+        dsr_best_rhat_lp_all_mk[id_mk] <- dsr_allele_rhat_lp_all_mk[id_mk]
+        dsr_best_trace_all_mk[[id_mk]] <- dsr_allele_trace_all_mk[[id_mk]]
       }else if(index_best_model == 2){
         dsr_best_model_all_mk[id_mk] <- "LUS"
         dsr_best_median_slope_all_mk[id_mk] <- dsr_lus_median_slope_all_mk[id_mk]
@@ -638,7 +657,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         dsr_best_rhat_slope_all_mk[id_mk] <- dsr_lus_rhat_slope_all_mk[id_mk]
         dsr_best_rhat_intercept_all_mk[id_mk] <- dsr_lus_rhat_intercept_all_mk[id_mk]
         dsr_best_rhat_sigma_all_mk[id_mk] <- dsr_lus_rhat_sigma_all_mk[id_mk]
-        dsr_best_trace_all_mk[[id_mk]] <- dsr_lus_trace[[id_mk]]
+        dsr_best_rhat_lp_all_mk[id_mk] <- dsr_lus_rhat_lp_all_mk[id_mk]
+        dsr_best_trace_all_mk[[id_mk]] <- dsr_lus_trace_all_mk[[id_mk]]
       }else{
         dsr_best_model_all_mk[id_mk] <- "Multi-sequence"
         dsr_best_median_slope_all_mk[id_mk] <- dsr_multi_median_slope_all_mk[id_mk]
@@ -648,7 +668,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
         dsr_best_rhat_slope_all_mk[id_mk] <- dsr_multi_rhat_slope_all_mk[id_mk]
         dsr_best_rhat_intercept_all_mk[id_mk] <- dsr_multi_rhat_intercept_all_mk[id_mk]
         dsr_best_rhat_sigma_all_mk[id_mk] <- dsr_multi_rhat_sigma_all_mk[id_mk]
-        dsr_best_trace_all_mk[[id_mk]] <- dsr_multi_trace[[id_mk]]
+        dsr_best_rhat_lp_all_mk[id_mk] <- dsr_multi_rhat_lp_all_mk[id_mk]
+        dsr_best_trace_all_mk[[id_mk]] <- dsr_multi_trace_all_mk[[id_mk]]
       }
 
       # Assign data
@@ -706,6 +727,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
     dsr_best_median_sigma_all_mk[index_mk_together_dsr] <- tmp$median_sigma
     dsr_best_rhat_myu_all_mk[index_mk_together_dsr] <- tmp$rhat_myus
     dsr_best_rhat_sigma_all_mk[index_mk_together_dsr] <- tmp$rhat_sigma
+    dsr_best_rhat_lp_all_mk[index_mk_together_dsr] <- tmp$rhat_lp
     dsr_best_trace_all_mk[index_mk_together_dsr] <- tmp$traceplot
   }
 
@@ -720,8 +742,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   ## Define objects
   m2sr_best_model_all_mk <- rep(NA, n_mk)
   m2sr_best_median_myu_all_mk <- m2sr_best_median_sigma_all_mk <- rep(NA, n_mk)
-  m2sr_best_rhat_myu_all_mk <- m2sr_best_rhat_sigma_all_mk <- rep(NA, n_mk)
-  m2sr_best_trace_all_mk <- as.list(rep(NA, n_mk))
+  m2sr_best_rhat_myu_all_mk <- m2sr_best_rhat_sigma_all_mk <- m2sr_best_rhat_lp_all_mk <- rep(NA, n_mk)
+  m2sr_best_trace_all_mk <- vector(mode = "list", length = n_mk)
 
   ## M2SR: locus-specific
   m2sr_data_all_mk <- vector(mode = "list", length = n_mk)
@@ -746,6 +768,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       m2sr_best_median_sigma_all_mk[id_mk] <- tmp$median_sigma
       m2sr_best_rhat_myu_all_mk[id_mk] <- tmp$rhat_myu
       m2sr_best_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
+      m2sr_best_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
       m2sr_best_trace_all_mk[[id_mk]] <- tmp$traceplot
 
       # Assign data
@@ -796,6 +819,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
     m2sr_best_median_sigma_all_mk[index_mk_together_m2sr] <- tmp$median_sigma
     m2sr_best_rhat_myu_all_mk[index_mk_together_m2sr] <- tmp$rhat_myus
     m2sr_best_rhat_sigma_all_mk[index_mk_together_m2sr] <- tmp$rhat_sigma
+    m2sr_best_rhat_lp_all_mk[index_mk_together_m2sr] <- tmp$rhat_lp
     m2sr_best_trace_all_mk[index_mk_together_m2sr] <- tmp$traceplot
   }
 
@@ -811,6 +835,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "ae_median_sigma_all_mk" = ae_median_sigma_all_mk,
               "ae_rhat_myu_all_mk" = ae_rhat_myu_all_mk,
               "ae_rhat_sigma_all_mk" = ae_rhat_sigma_all_mk,
+              "ae_rhat_lp_all_mk" = ae_rhat_lp_all_mk,
               "ae_trace_all_mk" = ae_trace_all_mk,
               "bsr_data_all_mk" = bsr_data_all_mk,
               "aics_bsr_all_mk" = aics_bsr_all_mk,
@@ -820,14 +845,16 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "bsr_allele_rhat_slope_all_mk" = bsr_allele_rhat_slope_all_mk,
               "bsr_allele_rhat_intercept_all_mk" = bsr_allele_rhat_intercept_all_mk,
               "bsr_allele_rhat_sigma_all_mk" = bsr_allele_rhat_sigma_all_mk,
-              "bsr_allele_trace" = bsr_allele_trace,
+              "bsr_allele_rhat_lp_all_mk" = bsr_allele_rhat_lp_all_mk,
+              "bsr_allele_trace_all_mk" = bsr_allele_trace_all_mk,
               "bsr_lus_median_slope_all_mk" = bsr_lus_median_slope_all_mk,
               "bsr_lus_median_intercept_all_mk" = bsr_lus_median_intercept_all_mk,
               "bsr_lus_median_sigma_all_mk" = bsr_lus_median_sigma_all_mk,
               "bsr_lus_rhat_slope_all_mk" = bsr_lus_rhat_slope_all_mk,
               "bsr_lus_rhat_intercept_all_mk" = bsr_lus_rhat_intercept_all_mk,
               "bsr_lus_rhat_sigma_all_mk" = bsr_lus_rhat_sigma_all_mk,
-              "bsr_lus_trace" = bsr_lus_trace,
+              "bsr_lus_rhat_lp_all_mk" = bsr_lus_rhat_lp_all_mk,
+              "bsr_lus_trace_all_mk" = bsr_lus_trace_all_mk,
               "bsr_multi_median_slope_all_mk" = bsr_multi_median_slope_all_mk,
               "bsr_multi_median_intercept_all_mk" = bsr_multi_median_intercept_all_mk,
               "bsr_multi_median_sigma_all_mk" = bsr_multi_median_sigma_all_mk,
@@ -835,7 +862,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "bsr_multi_rhat_slope_all_mk" = bsr_multi_rhat_slope_all_mk,
               "bsr_multi_rhat_intercept_all_mk" = bsr_multi_rhat_intercept_all_mk,
               "bsr_multi_rhat_sigma_all_mk" = bsr_multi_rhat_sigma_all_mk,
-              "bsr_multi_trace" = bsr_multi_trace,
+              "bsr_multi_rhat_lp_all_mk" = bsr_multi_rhat_lp_all_mk,
+              "bsr_multi_trace_all_mk" = bsr_multi_trace_all_mk,
               "bsr_best_model_all_mk" = bsr_best_model_all_mk,
               "bsr_best_median_myu_all_mk" = bsr_best_median_myu_all_mk,
               "bsr_best_median_slope_all_mk" = bsr_best_median_slope_all_mk,
@@ -846,6 +874,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "bsr_best_rhat_slope_all_mk" = bsr_best_rhat_slope_all_mk,
               "bsr_best_rhat_intercept_all_mk" = bsr_best_rhat_intercept_all_mk,
               "bsr_best_rhat_sigma_all_mk" = bsr_best_rhat_sigma_all_mk,
+              "bsr_best_rhat_lp_all_mk" = bsr_best_rhat_lp_all_mk,
               "bsr_best_trace_all_mk" = bsr_best_trace_all_mk,
               "fsr_data_all_mk" = fsr_data_all_mk,
               "aics_fsr_all_mk" = aics_fsr_all_mk,
@@ -855,14 +884,16 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "fsr_allele_rhat_slope_all_mk" = fsr_allele_rhat_slope_all_mk,
               "fsr_allele_rhat_intercept_all_mk" = fsr_allele_rhat_intercept_all_mk,
               "fsr_allele_rhat_sigma_all_mk" = fsr_allele_rhat_sigma_all_mk,
-              "fsr_allele_trace" = fsr_allele_trace,
+              "fsr_allele_rhat_lp_all_mk" = fsr_allele_rhat_lp_all_mk,
+              "fsr_allele_trace_all_mk" = fsr_allele_trace_all_mk,
               "fsr_lus_median_slope_all_mk" = fsr_lus_median_slope_all_mk,
               "fsr_lus_median_intercept_all_mk" = fsr_lus_median_intercept_all_mk,
               "fsr_lus_median_sigma_all_mk" = fsr_lus_median_sigma_all_mk,
               "fsr_lus_rhat_slope_all_mk" = fsr_lus_rhat_slope_all_mk,
               "fsr_lus_rhat_intercept_all_mk" = fsr_lus_rhat_intercept_all_mk,
               "fsr_lus_rhat_sigma_all_mk" = fsr_lus_rhat_sigma_all_mk,
-              "fsr_lus_trace" = fsr_lus_trace,
+              "fsr_lus_rhat_lp_all_mk" = fsr_lus_rhat_lp_all_mk,
+              "fsr_lus_trace_all_mk" = fsr_lus_trace_all_mk,
               "fsr_multi_median_slope_all_mk" = fsr_multi_median_slope_all_mk,
               "fsr_multi_median_intercept_all_mk" = fsr_multi_median_intercept_all_mk,
               "fsr_multi_median_sigma_all_mk" = fsr_multi_median_sigma_all_mk,
@@ -870,7 +901,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "fsr_multi_rhat_slope_all_mk" = fsr_multi_rhat_slope_all_mk,
               "fsr_multi_rhat_intercept_all_mk" = fsr_multi_rhat_intercept_all_mk,
               "fsr_multi_rhat_sigma_all_mk" = fsr_multi_rhat_sigma_all_mk,
-              "fsr_multi_trace" = fsr_multi_trace,
+              "fsr_multi_rhat_lp_all_mk" = fsr_multi_rhat_lp_all_mk,
+              "fsr_multi_trace_all_mk" = fsr_multi_trace_all_mk,
               "fsr_best_model_all_mk" = fsr_best_model_all_mk,
               "fsr_best_median_myu_all_mk" = fsr_best_median_myu_all_mk,
               "fsr_best_median_slope_all_mk" = fsr_best_median_slope_all_mk,
@@ -881,6 +913,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "fsr_best_rhat_slope_all_mk" = fsr_best_rhat_slope_all_mk,
               "fsr_best_rhat_intercept_all_mk" = fsr_best_rhat_intercept_all_mk,
               "fsr_best_rhat_sigma_all_mk" = fsr_best_rhat_sigma_all_mk,
+              "fsr_best_rhat_lp_all_mk" = fsr_best_rhat_lp_all_mk,
               "fsr_best_trace_all_mk" = fsr_best_trace_all_mk,
               "dsr_data_all_mk" = dsr_data_all_mk,
               "aics_dsr_all_mk" = aics_dsr_all_mk,
@@ -890,14 +923,16 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "dsr_allele_rhat_slope_all_mk" = dsr_allele_rhat_slope_all_mk,
               "dsr_allele_rhat_intercept_all_mk" = dsr_allele_rhat_intercept_all_mk,
               "dsr_allele_rhat_sigma_all_mk" = dsr_allele_rhat_sigma_all_mk,
-              "dsr_allele_trace" = dsr_allele_trace,
+              "dsr_allele_rhat_lp_all_mk" = dsr_allele_rhat_lp_all_mk,
+              "dsr_allele_trace_all_mk" = dsr_allele_trace_all_mk,
               "dsr_lus_median_slope_all_mk" = dsr_lus_median_slope_all_mk,
               "dsr_lus_median_intercept_all_mk" = dsr_lus_median_intercept_all_mk,
               "dsr_lus_median_sigma_all_mk" = dsr_lus_median_sigma_all_mk,
               "dsr_lus_rhat_slope_all_mk" = dsr_lus_rhat_slope_all_mk,
               "dsr_lus_rhat_intercept_all_mk" = dsr_lus_rhat_intercept_all_mk,
               "dsr_lus_rhat_sigma_all_mk" = dsr_lus_rhat_sigma_all_mk,
-              "dsr_lus_trace" = dsr_lus_trace,
+              "dsr_lus_rhat_lp_all_mk" = dsr_lus_rhat_lp_all_mk,
+              "dsr_lus_trace_all_mk" = dsr_lus_trace_all_mk,
               "dsr_multi_median_slope_all_mk" = dsr_multi_median_slope_all_mk,
               "dsr_multi_median_intercept_all_mk" = dsr_multi_median_intercept_all_mk,
               "dsr_multi_median_sigma_all_mk" = dsr_multi_median_sigma_all_mk,
@@ -905,7 +940,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "dsr_multi_rhat_slope_all_mk" = dsr_multi_rhat_slope_all_mk,
               "dsr_multi_rhat_intercept_all_mk" = dsr_multi_rhat_intercept_all_mk,
               "dsr_multi_rhat_sigma_all_mk" = dsr_multi_rhat_sigma_all_mk,
-              "dsr_multi_trace" = dsr_multi_trace,
+              "dsr_multi_rhat_lp_all_mk" = dsr_multi_rhat_lp_all_mk,
+              "dsr_multi_trace_all_mk" = dsr_multi_trace_all_mk,
               "dsr_best_model_all_mk" = dsr_best_model_all_mk,
               "dsr_best_median_myu_all_mk" = dsr_best_median_myu_all_mk,
               "dsr_best_median_slope_all_mk" = dsr_best_median_slope_all_mk,
@@ -916,6 +952,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "dsr_best_rhat_slope_all_mk" = dsr_best_rhat_slope_all_mk,
               "dsr_best_rhat_intercept_all_mk" = dsr_best_rhat_intercept_all_mk,
               "dsr_best_rhat_sigma_all_mk" = dsr_best_rhat_sigma_all_mk,
+              "dsr_best_rhat_lp_all_mk" = dsr_best_rhat_lp_all_mk,
               "dsr_best_trace_all_mk" = dsr_best_trace_all_mk,
               "m2sr_data_all_mk" = m2sr_data_all_mk,
               "m2sr_best_model_all_mk" = m2sr_best_model_all_mk,
@@ -923,5 +960,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "m2sr_best_median_sigma_all_mk" = m2sr_best_median_sigma_all_mk,
               "m2sr_best_rhat_myu_all_mk" = m2sr_best_rhat_myu_all_mk,
               "m2sr_best_rhat_sigma_all_mk" = m2sr_best_rhat_sigma_all_mk,
+              "m2sr_best_rhat_lp_all_mk" = m2sr_best_rhat_lp_all_mk,
               "m2sr_best_trace_all_mk" = m2sr_best_trace_all_mk))
 }

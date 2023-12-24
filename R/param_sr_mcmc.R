@@ -32,13 +32,14 @@ run_mcmc_sr_gen <- function(model_sr_gen, data_list_sr, n_warmup, n_sampling, n_
   rhat_slope <- fit_sr_summary$rhat[which(fit_sr_summary$variable == "slope")]
   rhat_intercept <- fit_sr_summary$rhat[which(fit_sr_summary$variable == "intercept")]
   rhat_sigma <- fit_sr_summary$rhat[which(fit_sr_summary$variable == "sigma")]
+  rhat_lp <- fit_sr_summary$rhat[which(fit_sr_summary$variable == "lp__")]
 
   # Trace plot
   fit_sr$draws() %>% mcmc_trace(pars = c("slope", "intercept", "sigma")) -> traceplot
 
   return(list("median_loglike" = median_loglike,
               "median_slope" = median_slope, "median_intercept" = median_intercept, "median_sigma" = median_sigma,
-              "rhat_slope" = rhat_slope, "rhat_intercept" = rhat_intercept, "rhat_sigma" = rhat_sigma,
+              "rhat_slope" = rhat_slope, "rhat_intercept" = rhat_intercept, "rhat_sigma" = rhat_sigma, "rhat_lp" = rhat_lp,
               "traceplot" = traceplot))
 }
 
@@ -81,13 +82,14 @@ run_mcmc_sr_together <- function(model_sr_together, data_list_sr, n_warmup, n_sa
     rhat_myus[i] <- fit_sr_summary$rhat[which(fit_sr_summary$variable == paste0("myu[", i, "]"))]
   }
   rhat_sigma <- fit_sr_summary$rhat[which(fit_sr_summary$variable == "sigma")]
+  rhat_lp <- fit_sr_summary$rhat[which(fit_sr_summary$variable == "lp__")]
 
   # Trace plot
   fit_sr$draws() %>% mcmc_trace(pars = c(paste0("myu[", 1:n_mk_together, "]"), "sigma")) -> traceplot
 
   return(list("median_loglike" = median_loglike,
               "median_myus" = median_myus, "median_sigma" = median_sigma,
-              "rhat_myus" = rhat_myus, "rhat_sigma" = rhat_sigma,
+              "rhat_myus" = rhat_myus, "rhat_sigma" = rhat_sigma, "rhat_lp" = rhat_lp,
               "traceplot" = traceplot))
 }
 
@@ -123,12 +125,13 @@ run_mcmc_sr_uni <- function(model_sr_uni, data_list_sr, n_warmup, n_sampling, n_
   # rhat of each parameter
   rhat_myu <- fit_sr_summary$rhat[which(fit_sr_summary$variable == "myu")]
   rhat_sigma <- fit_sr_summary$rhat[which(fit_sr_summary$variable == "sigma")]
+  rhat_lp <- fit_sr_summary$rhat[which(fit_sr_summary$variable == "lp__")]
 
   # Trace plot
   fit_sr$draws() %>% mcmc_trace(pars = c("myu", "sigma")) -> traceplot
 
   return(list("median_loglike" = median_loglike,
               "median_myu" = median_myu, "median_sigma" = median_sigma,
-              "rhat_myu" = rhat_myu, "rhat_sigma" = rhat_sigma,
+              "rhat_myu" = rhat_myu, "rhat_sigma" = rhat_sigma, "rhat_lp" = rhat_lp,
               "traceplot" = traceplot))
 }

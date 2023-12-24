@@ -30,12 +30,13 @@ run_mcmc_ae <- function(model_ae, data_list_ae, n_warmup, n_sampling, n_chains, 
   # rhat of each parameter
   rhat_myu <- fit_ae_summary$rhat[which(fit_ae_summary$variable == "myu")]
   rhat_sigma <- fit_ae_summary$rhat[which(fit_ae_summary$variable == "sigma")]
+  rhat_lp <- fit_ae_summary$rhat[which(fit_ae_summary$variable == "lp__")]
 
   # Trace plot
   fit_ae$draws() %>% mcmc_trace(pars = c("myu", "sigma")) -> traceplot
 
   return(list("median_loglike" = median_loglike,
               "median_myu" = median_myu, "median_sigma" = median_sigma,
-              "rhat_myu" = rhat_myu, "rhat_sigma" = rhat_sigma,
+              "rhat_myu" = rhat_myu, "rhat_sigma" = rhat_sigma, "rhat_lp" = rhat_lp,
               "traceplot" = traceplot))
 }
