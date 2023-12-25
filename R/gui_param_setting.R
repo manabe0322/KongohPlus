@@ -53,7 +53,8 @@ est_par_setting_ui <- function(id){
                           actionButton(ns("act_analyze_est_par"), label = "Analyze", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 9,
-                       dataTableOutput(ns("dt_kit_set"))
+                       dataTableOutput(ns("dt_kit_set")),
+                       br()
              )
            )
   )
@@ -241,13 +242,14 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       # Output data.table
       observeEvent(input$kit_par, ignoreInit = TRUE, {
         rv_output$dt_kit_set <- react_dt_kit_set1()
+        dt_kit_set2 <- react_dt_kit_set2()
 
         output$dt_kit_set <- renderDataTable(server = FALSE, {
           datatable(
-            isolate(react_dt_kit_set2()),
+            dt_kit_set2,
             colnames = c("Marker", "Dye", "AT", "BSR model", "FSR model", "DSR model", "M2SR model"),
             selection = "none",
-            options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+            options = list(dom = "t", iDisplayLength = nrow(dt_kit_set2), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE,
             escape = FALSE,
             callback = JS(js("dt_kit_set", 3, c(4, 5, 6, 7)))
@@ -427,9 +429,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           model_sr_gen <- readRDS(paste0(path_pack, "/model/model_sr_gen.rds"))
           model_sr_together <- readRDS(paste0(path_pack, "/model/model_sr_together.rds"))
           model_sr_uni <- readRDS(paste0(path_pack, "/model/model_sr_uni.rds"))
+          model_gamma <- readRDS(paste0(path_pack, "/model/model_gamma.rds"))
 
           results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set,
-                                                 model_ae, model_sr_gen, model_sr_together, model_sr_uni,
+                                                 model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
                                                  n_warmup, n_sampling, n_chains,
                                                  motif_lus, motif_multi)
           rv_output$results_est_par <- results_est_par

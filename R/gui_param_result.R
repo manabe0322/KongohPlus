@@ -13,7 +13,8 @@ est_par_result_ui <- function(id){
                           br(),
                           br(),
                           br(),
-                          actionButton(ns("act_al_rep_cor"), label = "Corrected allele"),
+                          disabled(actionButton(ns("act_alcor"), label = "Corrected allele")),
+                          bsModal(ns("modal_alcor"), title = "Corrected allele", trigger = "act_alcor", size = "large", dataTableOutput(ns("dt_alcor"))),
                           br(),
                           br(),
                           br(),
@@ -28,23 +29,33 @@ est_par_result_ui <- function(id){
                                    type = "tabs",
                                    tabPanel("AE",
                                             br(),
-                                            dataTableOutput(ns("dt_result_ae"))
+                                            dataTableOutput(ns("dt_result_ae")),
+                                            br()
                                    ),
                                    tabPanel("BSR",
                                             br(),
-                                            dataTableOutput(ns("dt_result_bsr"))
+                                            dataTableOutput(ns("dt_result_bsr")),
+                                            br()
                                    ),
                                    tabPanel("FSR",
                                             br(),
-                                            dataTableOutput(ns("dt_result_fsr"))
+                                            dataTableOutput(ns("dt_result_fsr")),
+                                            br()
                                    ),
                                    tabPanel("DSR",
                                             br(),
-                                            dataTableOutput(ns("dt_result_dsr"))
+                                            dataTableOutput(ns("dt_result_dsr")),
+                                            br()
                                    ),
                                    tabPanel("M2SR",
                                             br(),
-                                            dataTableOutput(ns("dt_result_m2sr"))
+                                            dataTableOutput(ns("dt_result_m2sr")),
+                                            br()
+                                   ),
+                                   tabPanel("Gamma",
+                                            br(),
+                                            dataTableOutput(ns("dt_result_gamma")),
+                                            br()
                                    )
                        )
              )
@@ -71,8 +82,10 @@ est_par_result_server <- function(id, rv_output){
         ae_rhat_sigma_all_mk <- NULL
         ae_rhat_lp_all_mk <- NULL
         ae_trace_all_mk <- NULL
+        dt_result_ae <- NULL
 
         bsr_data_all_mk <- NULL
+        bsr_alcor_all_mk <- NULL
         aics_bsr_all_mk <- NULL
         bsr_allele_median_slope_all_mk <- NULL
         bsr_allele_median_intercept_all_mk <- NULL
@@ -108,8 +121,10 @@ est_par_result_server <- function(id, rv_output){
         bsr_best_rhat_sigma_all_mk <- NULL
         bsr_best_rhat_lp_all_mk <- NULL
         bsr_best_trace_all_mk <- NULL
+        dt_result_bsr <- NULL
 
         fsr_data_all_mk <- NULL
+        fsr_alcor_all_mk <- NULL
         aics_fsr_all_mk <- NULL
         fsr_allele_median_slope_all_mk <- NULL
         fsr_allele_median_intercept_all_mk <- NULL
@@ -145,8 +160,10 @@ est_par_result_server <- function(id, rv_output){
         fsr_best_rhat_sigma_all_mk <- NULL
         fsr_best_rhat_lp_all_mk <- NULL
         fsr_best_trace_all_mk <- NULL
+        dt_result_fsr <- NULL
 
         dsr_data_all_mk <- NULL
+        dsr_alcor_all_mk <- NULL
         aics_dsr_all_mk <- NULL
         dsr_allele_median_slope_all_mk <- NULL
         dsr_allele_median_intercept_all_mk <- NULL
@@ -182,6 +199,7 @@ est_par_result_server <- function(id, rv_output){
         dsr_best_rhat_sigma_all_mk <- NULL
         dsr_best_rhat_lp_all_mk <- NULL
         dsr_best_trace_all_mk <- NULL
+        dt_result_dsr <- NULL
 
         m2sr_data_all_mk <- NULL
         m2sr_best_model_all_mk <- NULL
@@ -191,6 +209,13 @@ est_par_result_server <- function(id, rv_output){
         m2sr_best_rhat_sigma_all_mk <- NULL
         m2sr_best_rhat_lp_all_mk <- NULL
         m2sr_best_trace_all_mk <- NULL
+        dt_result_m2sr <- NULL
+
+        gamma_median_beta <- NULL
+        gamma_rhat_beta <- NULL
+        gamma_rhat_lp <- NULL
+        gamma_traceplot <- NULL
+        dt_result_gamma <- NULL
       }else{
         markers_par <- results_est_par$markers_par
         model_bsr_all_mk <- results_est_par$model_bsr_all_mk
@@ -213,6 +238,7 @@ est_par_result_server <- function(id, rv_output){
         )
 
         bsr_data_all_mk <- results_est_par$bsr_data_all_mk
+        bsr_alcor_all_mk <- results_est_par$bsr_alcor_all_mk
         aics_bsr_all_mk <- results_est_par$aics_bsr_all_mk
         bsr_allele_median_slope_all_mk <- results_est_par$bsr_allele_median_slope_all_mk
         bsr_allele_median_intercept_all_mk <- results_est_par$bsr_allele_median_intercept_all_mk
@@ -263,6 +289,7 @@ est_par_result_server <- function(id, rv_output){
         )
 
         fsr_data_all_mk <- results_est_par$fsr_data_all_mk
+        fsr_alcor_all_mk <- results_est_par$fsr_alcor_all_mk
         aics_fsr_all_mk <- results_est_par$aics_fsr_all_mk
         fsr_allele_median_slope_all_mk <- results_est_par$fsr_allele_median_slope_all_mk
         fsr_allele_median_intercept_all_mk <- results_est_par$fsr_allele_median_intercept_all_mk
@@ -313,6 +340,7 @@ est_par_result_server <- function(id, rv_output){
         )
 
         dsr_data_all_mk <- results_est_par$dsr_data_all_mk
+        dsr_alcor_all_mk <- results_est_par$dsr_alcor_all_mk
         aics_dsr_all_mk <- results_est_par$aics_dsr_all_mk
         dsr_allele_median_slope_all_mk <- results_est_par$dsr_allele_median_slope_all_mk
         dsr_allele_median_intercept_all_mk <- results_est_par$dsr_allele_median_intercept_all_mk
@@ -376,6 +404,15 @@ est_par_result_server <- function(id, rv_output){
                                      Rhat_Myu = signif(m2sr_best_rhat_myu_all_mk, 3),
                                      Rhat_Sigma = signif(m2sr_best_rhat_sigma_all_mk, 3),
                                      Rhat_Likelihood = signif(m2sr_best_rhat_lp_all_mk, 3)
+        )
+
+        gamma_median_beta <- results_est_par$gamma_median_beta
+        gamma_rhat_beta <- results_est_par$gamma_rhat_beta
+        gamma_rhat_lp <- results_est_par$gamma_rhat_lp
+        gamma_traceplot <- results_est_par$gamma_traceplot
+        dt_result_gamma <- data.table(Beta = signif(gamma_median_beta, 3),
+                                      Rhat_Beta = signif(gamma_rhat_beta, 3),
+                                      Rhat_Likelihood = signif(gamma_rhat_lp, 3)
         )
       }
 
@@ -514,6 +551,20 @@ est_par_result_server <- function(id, rv_output){
             }
           }
         }
+
+        # Gamma
+        else if(tabset_est_par_result == "Gamma"){
+          if(!is.null(gamma_traceplot)){
+            showModal(modalDialog(
+              title = "Trace plot",
+              plotOutput(session$ns("traceplot_gamma")),
+              footer = tagList(
+                modalButton("Close")
+              ),
+              size = "l"
+            ))
+          }
+        }
       })
 
       # Display the trace plot for AE
@@ -539,6 +590,11 @@ est_par_result_server <- function(id, rv_output){
       # Display the trace plot for M2SR
       output$traceplot_m2sr <- renderPlot({
         rv_traceplot$m2sr
+      })
+
+      # Display the trace plot for the gamma parameter
+      output$traceplot_gamma <- renderPlot({
+        gamma_traceplot
       })
 
       #### Data plot ####
@@ -728,6 +784,151 @@ est_par_result_server <- function(id, rv_output){
         plot(rv_dataplot$m2sr_xval, rv_dataplot$m2sr_yval)
       })
 
+      #### Show allele repeat corrections ####
+
+      rv_alcor <- reactiveValues()
+      rv_alcor$alleles <- NULL
+      rv_alcor$alcors <- NULL
+
+      # Change the status of the 'Corrected allele' button
+      observeEvent(input$tabset_est_par_result, {
+        if(is.element(input$tabset_est_par_result, c("AE", "M2SR", "Gamma"))){
+          disable("act_alcor")
+        }else{
+          enable("act_alcor")
+        }
+      })
+
+      observeEvent(input$dt_result_bsr_rows_selected, {
+        adopt_model_bsr <- dt_result_bsr$Model[row_index_select]
+        if(is.element(adopt_model_bsr, c("LUS", "Multi-sequence"))){
+          enable("act_alcor")
+        }else{
+          disable("act_alcor")
+        }
+      })
+
+      observeEvent(input$dt_result_fsr_rows_selected, {
+        adopt_model_fsr <- dt_result_fsr$Model[row_index_select]
+        if(is.element(adopt_model_fsr, c("LUS", "Multi-sequence"))){
+          enable("act_alcor")
+        }else{
+          disable("act_alcor")
+        }
+      })
+
+      observeEvent(input$dt_result_dsr_rows_selected, {
+        adopt_model_dsr <- dt_result_dsr$Model[row_index_select]
+        if(is.element(adopt_model_dsr, c("LUS", "Multi-sequence"))){
+          enable("act_alcor")
+        }else{
+          disable("act_alcor")
+        }
+      })
+
+      observeEvent(input$act_alcor, {
+        tabset_est_par_result <- input$tabset_est_par_result
+
+        # BSR
+        if(tabset_est_par_result == "BSR"){
+          if(!is.null(bsr_alcor_all_mk)){
+            row_index_select <- input$dt_result_bsr_rows_selected
+            if(isTruthy(row_index_select)){
+              adopt_model_bsr <- dt_result_bsr$Model[row_index_select]
+              if(is.element(adopt_model_bsr, c("LUS", "Multi-sequence"))){
+                bsr_alcor_selected <- bsr_alcor_all_mk[[row_index_select]]
+                rv_alcor$alleles <- bsr_alcor_selected$info_al
+                if(adopt_model_bsr == "LUS"){
+                  rv_alcor$alcors <- bsr_alcor_selected$info_lus
+                }else{
+                  rv_alcor$alcors <- bsr_alcor_selected$info_ca
+                }
+              }else{
+                rv_alcor$alleles <- NULL
+                rv_alcor$alcors <- NULL
+              }
+            }else{
+              rv_alcor$alleles <- NULL
+              rv_alcor$alcors <- NULL
+            }
+          }else{
+            rv_alcor$alleles <- NULL
+            rv_alcor$alcors <- NULL
+          }
+        }
+
+        # FSR
+        if(tabset_est_par_result == "fsr"){
+          if(!is.null(fsr_alcor_all_mk)){
+            row_index_select <- input$dt_result_fsr_rows_selected
+            if(isTruthy(row_index_select)){
+              adopt_model_fsr <- dt_result_fsr$Model[row_index_select]
+              if(is.element(adopt_model_fsr, c("LUS", "Multi-sequence"))){
+                fsr_alcor_selected <- fsr_alcor_all_mk[[row_index_select]]
+                rv_alcor$alleles <- fsr_alcor_selected$info_al
+                if(adopt_model_fsr == "LUS"){
+                  rv_alcor$alcors <- fsr_alcor_selected$info_lus
+                }else{
+                  rv_alcor$alcors <- fsr_alcor_selected$info_ca
+                }
+              }else{
+                rv_alcor$alleles <- NULL
+                rv_alcor$alcors <- NULL
+              }
+            }else{
+              rv_alcor$alleles <- NULL
+              rv_alcor$alcors <- NULL
+            }
+          }else{
+            rv_alcor$alleles <- NULL
+            rv_alcor$alcors <- NULL
+          }
+        }
+
+        # DSR
+        if(tabset_est_par_result == "dsr"){
+          if(!is.null(dsr_alcor_all_mk)){
+            row_index_select <- input$dt_result_dsr_rows_selected
+            if(isTruthy(row_index_select)){
+              adopt_model_dsr <- dt_result_dsr$Model[row_index_select]
+              if(is.element(adopt_model_dsr, c("LUS", "Multi-sequence"))){
+                dsr_alcor_selected <- dsr_alcor_all_mk[[row_index_select]]
+                rv_alcor$alleles <- dsr_alcor_selected$info_al
+                if(adopt_model_dsr == "LUS"){
+                  rv_alcor$alcors <- dsr_alcor_selected$info_lus
+                }else{
+                  rv_alcor$alcors <- dsr_alcor_selected$info_ca
+                }
+              }else{
+                rv_alcor$alleles <- NULL
+                rv_alcor$alcors <- NULL
+              }
+            }else{
+              rv_alcor$alleles <- NULL
+              rv_alcor$alcors <- NULL
+            }
+          }else{
+            rv_alcor$alleles <- NULL
+            rv_alcor$alcors <- NULL
+          }
+        }
+      })
+
+      output$dt_alcor <- renderDataTable(server = FALSE, {
+        alleles <- rv_alcor$alleles
+        alcors <- rv_alcor$alcors
+        if(!is.null(alleles) && !is.null(alcors)){
+          dt_alcor <- data.table(Allele = alleles,
+                                 Corrected = alcors)
+          datatable(
+            dt_alcor,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_alcor), ordering = FALSE, autowidth = TRUE),
+            rownames = FALSE
+          )
+        }
+      })
+
       #### Show AIC values and parameters ####
 
       # Define reactive values for displaying AIC values and parameters of each candidate model
@@ -736,9 +937,9 @@ est_par_result_server <- function(id, rv_output){
       rv_dt_aic$fsr <- NULL
       rv_dt_aic$dsr <- NULL
 
-      # Change the status of the "Change model" button
+      # Change the status of the 'AIC' button
       observeEvent(input$tabset_est_par_result, {
-        if(is.element(input$tabset_est_par_result, c("AE", "M2SR"))){
+        if(is.element(input$tabset_est_par_result, c("AE", "M2SR", "Gamma"))){
           disable("act_aic_model")
         }else{
           enable("act_aic_model")
@@ -760,7 +961,7 @@ est_par_result_server <- function(id, rv_output){
               if(model_bsr == "Best"){
                 models_cand <- names(aics)
 
-                if(is.element("Allele", model_cand)){
+                if(is.element("Allele", models_cand)){
                   bsr_slopes <- bsr_allele_median_slope_all_mk[row_index_select]
                   bsr_intercepts <- bsr_allele_median_intercept_all_mk[row_index_select]
                   bsr_sigmas <- bsr_allele_median_sigma_all_mk[row_index_select]
@@ -871,15 +1072,15 @@ est_par_result_server <- function(id, rv_output){
                 }
 
                 rv_dt_aic$fsr <- data.table(Model = models_cand,
-                                                     AIC = signif(aics, 3),
-                                                     Slope = signif(fsr_slopes, 3),
-                                                     Intercept = signif(fsr_intercepts, 3),
-                                                     Sigma = signif(fsr_sigmas, 3),
-                                                     MinUS = fsr_min_us,
-                                                     Rhat_Slope = signif(fsr_rhat_slopes, 3),
-                                                     Rhat_Intercept = signif(fsr_rhat_intercepts, 3),
-                                                     Rhat_Sigma = signif(fsr_rhat_sigmas, 3),
-                                                     Rhat_Likelihood = signif(fsr_rhat_lps, 3)
+                                            AIC = signif(aics, 3),
+                                            Slope = signif(fsr_slopes, 3),
+                                            Intercept = signif(fsr_intercepts, 3),
+                                            Sigma = signif(fsr_sigmas, 3),
+                                            MinUS = fsr_min_us,
+                                            Rhat_Slope = signif(fsr_rhat_slopes, 3),
+                                            Rhat_Intercept = signif(fsr_rhat_intercepts, 3),
+                                            Rhat_Sigma = signif(fsr_rhat_sigmas, 3),
+                                            Rhat_Likelihood = signif(fsr_rhat_lps, 3)
                 )
 
                 showModal(modalDialog(
@@ -948,15 +1149,15 @@ est_par_result_server <- function(id, rv_output){
                 }
 
                 rv_dt_aic$dsr <- data.table(Model = models_cand,
-                                                     AIC = signif(aics, 3),
-                                                     Slope = signif(dsr_slopes, 3),
-                                                     Intercept = signif(dsr_intercepts, 3),
-                                                     Sigma = signif(dsr_sigmas, 3),
-                                                     MinUS = dsr_min_us,
-                                                     Rhat_Slope = signif(dsr_rhat_slopes, 3),
-                                                     Rhat_Intercept = signif(dsr_rhat_intercepts, 3),
-                                                     Rhat_Sigma = signif(dsr_rhat_sigmas, 3),
-                                                     Rhat_Likelihood = signif(dsr_rhat_lps, 3)
+                                            AIC = signif(aics, 3),
+                                            Slope = signif(dsr_slopes, 3),
+                                            Intercept = signif(dsr_intercepts, 3),
+                                            Sigma = signif(dsr_sigmas, 3),
+                                            MinUS = dsr_min_us,
+                                            Rhat_Slope = signif(dsr_rhat_slopes, 3),
+                                            Rhat_Intercept = signif(dsr_rhat_intercepts, 3),
+                                            Rhat_Sigma = signif(dsr_rhat_sigmas, 3),
+                                            Rhat_Likelihood = signif(dsr_rhat_lps, 3)
                 )
 
                 showModal(modalDialog(
@@ -1021,7 +1222,7 @@ est_par_result_server <- function(id, rv_output){
         datatable(
           dt_result_ae,
           selection = list(mode = "single", target = "row"),
-          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          options = list(dom = "t", iDisplayLength = nrow(dt_result_ae), ordering = FALSE, autowidth = TRUE),
           rownames = FALSE
         )
       })
@@ -1031,7 +1232,7 @@ est_par_result_server <- function(id, rv_output){
         datatable(
           dt_result_bsr,
           selection = list(mode = "single", target = "row"),
-          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          options = list(dom = "t", iDisplayLength = nrow(dt_result_bsr), ordering = FALSE, autowidth = TRUE),
           rownames = FALSE
         )
       })
@@ -1041,7 +1242,7 @@ est_par_result_server <- function(id, rv_output){
         datatable(
           dt_result_fsr,
           selection = list(mode = "single", target = "row"),
-          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          options = list(dom = "t", iDisplayLength = nrow(dt_result_fsr), ordering = FALSE, autowidth = TRUE),
           rownames = FALSE
         )
       })
@@ -1051,7 +1252,7 @@ est_par_result_server <- function(id, rv_output){
         datatable(
           dt_result_dsr,
           selection = list(mode = "single", target = "row"),
-          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          options = list(dom = "t", iDisplayLength = nrow(dt_result_dsr), ordering = FALSE, autowidth = TRUE),
           rownames = FALSE
         )
       })
@@ -1061,7 +1262,17 @@ est_par_result_server <- function(id, rv_output){
         datatable(
           dt_result_m2sr,
           selection = list(mode = "single", target = "row"),
-          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          options = list(dom = "t", iDisplayLength = nrow(dt_result_m2sr), ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        )
+      })
+
+      # Display the result for the gamma parameter
+      output$dt_result_gamma <- renderDataTable(server = FALSE, {
+        datatable(
+          dt_result_gamma,
+          selection = list(mode = "single", target = "row"),
+          options = list(dom = "t", iDisplayLength = nrow(dt_result_gamma), ordering = FALSE, autowidth = TRUE),
           rownames = FALSE
         )
       })

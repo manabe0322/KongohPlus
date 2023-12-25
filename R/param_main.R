@@ -48,13 +48,14 @@ calc_aic <- function(log_like, n_par){
 #' @param model_sr_gen The stan model for the general stutter ratio
 #' @param model_sr_together The stan model for the stutter ratio when considering multiple loci together
 #' @param model_sr_uni The stan model for the uniform stutter ratio
+#' @param model_gamma The stan model for gamma distribution
 #' @param n_warmup The number of simulations for warm-up
 #' @param n_sampling The number of simulations for sampling
 #' @param n_chains The number of chains
 #' @param motif_lus The minimum number of repeat motifs for considering the LUS model
 #' @param motif_multi The minimum number of repeat motifs for considering the multi-sequence model
 estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
-                                model_ae, model_sr_gen, model_sr_together, model_sr_uni,
+                                model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
                                 n_warmup, n_sampling, n_chains,
                                 motif_lus, motif_multi, max_cand_us = 10,
                                 n_parallel_chains = detectCores()){
@@ -131,6 +132,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
   ## Define objects
   bsr_data_all_mk <- vector(mode = "list", length = n_mk)
   names(bsr_data_all_mk) <- markers_par
+  bsr_alcor_all_mk <- vector(mode = "list", length = n_mk)
+  names(bsr_alcor_all_mk) <- markers_par
   aics_bsr_all_mk <- vector(mode = "list", length = n_mk)
   names(aics_bsr_all_mk) <- markers_par
   bsr_allele_median_slope_all_mk <- bsr_allele_median_intercept_all_mk <- bsr_allele_median_sigma_all_mk <- rep(NA, n_mk)
@@ -156,7 +159,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       cat(paste0("MCMC for the back stutter ratio of the ", markers_par[id_mk], "\n"))
 
       # Extract data of one marker
-      tmp <- extract_sr_use(bsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
+      info_lus_one_mk <- lus_all_mk[[id_mk]]
+      tmp <- extract_sr_use(bsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], info_lus_one_mk)
       bsr_one_mk <- tmp[[1]]
       bsr_al_one_mk <- tmp[[2]]
       bsr_h_one_mk <- tmp[[3]]
@@ -279,15 +283,28 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       bsr_data_one_mk <- vector(mode = "list", length = 4)
       names(bsr_data_one_mk) <- c("bsr", "bsr_al", "bsr_lus", "bsr_ca")
       bsr_data_one_mk[[1]] <- bsr_one_mk
-      bsr_data_one_mk[[2]] <- bsr_al_one_mk
-      if(consider_lus){
+      if(consider_bsr["Allele"]){
+        bsr_data_one_mk[[2]] <- bsr_al_one_mk
+      }
+      if(consider_bsr["LUS"]){
         bsr_data_one_mk[[3]] <- bsr_lus_one_mk
       }
-      if(consider_multi){
+      if(consider_bsr["Multi-sequence"]){
         bsr_data_one_mk[[4]] <- bsr_ca_one_mk
       }
       bsr_data_all_mk[[id_mk]] <- bsr_data_one_mk
       aics_bsr_all_mk[[id_mk]] <- aics
+
+      # Allele repeat correction
+      info_al_one_mk <- as.numeric(names(info_lus_one_mk))
+      if(consider_bsr["Multi-sequence"]){
+        info_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[index_max_like_multi], reps_one_mk, seq_al_one_mk, seq_count_one_mk, info_al_one_mk)
+      }else{
+        info_ca_one_mk <- NULL
+      }
+      bsr_alcor_all_mk[[id_mk]] <- list(info_al = info_al_one_mk,
+                                        info_lus = info_lus_one_mk,
+                                        info_ca = info_ca_one_mk)
     }
   }
 
@@ -345,6 +362,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
   ## Define objects
   fsr_data_all_mk <- vector(mode = "list", length = n_mk)
   names(fsr_data_all_mk) <- markers_par
+  fsr_alcor_all_mk <- vector(mode = "list", length = n_mk)
+  names(fsr_alcor_all_mk) <- markers_par
   aics_fsr_all_mk <- vector(mode = "list", length = n_mk)
   names(aics_fsr_all_mk) <- markers_par
   fsr_allele_median_slope_all_mk <- fsr_allele_median_intercept_all_mk <- fsr_allele_median_sigma_all_mk <- rep(NA, n_mk)
@@ -370,7 +389,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       cat(paste0("MCMC for the forward stutter ratio of the ", markers_par[id_mk], "\n"))
 
       # Extract data of one marker
-      tmp <- extract_sr_use(fsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
+      info_lus_one_mk <- lus_all_mk[[id_mk]]
+      tmp <- extract_sr_use(fsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], info_lus_one_mk)
       fsr_one_mk <- tmp[[1]]
       fsr_al_one_mk <- tmp[[2]]
       fsr_h_one_mk <- tmp[[3]]
@@ -493,15 +513,28 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       fsr_data_one_mk <- vector(mode = "list", length = 4)
       names(fsr_data_one_mk) <- c("fsr", "fsr_al", "fsr_lus", "fsr_ca")
       fsr_data_one_mk[[1]] <- fsr_one_mk
-      fsr_data_one_mk[[2]] <- fsr_al_one_mk
-      if(consider_lus){
+      if(consider_fsr["Allele"]){
+        fsr_data_one_mk[[2]] <- fsr_al_one_mk
+      }
+      if(consider_fsr["LUS"]){
         fsr_data_one_mk[[3]] <- fsr_lus_one_mk
       }
-      if(consider_multi){
+      if(consider_fsr["Multi-sequence"]){
         fsr_data_one_mk[[4]] <- fsr_ca_one_mk
       }
       fsr_data_all_mk[[id_mk]] <- fsr_data_one_mk
       aics_fsr_all_mk[[id_mk]] <- aics
+
+      # Allele repeat correction
+      info_al_one_mk <- as.numeric(names(info_lus_one_mk))
+      if(consider_fsr["Multi-sequence"]){
+        info_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[index_max_like_multi], reps_one_mk, seq_al_one_mk, seq_count_one_mk, info_al_one_mk)
+      }else{
+        info_ca_one_mk <- NULL
+      }
+      fsr_alcor_all_mk[[id_mk]] <- list(info_al = info_al_one_mk,
+                                        info_lus = info_lus_one_mk,
+                                        info_ca = info_ca_one_mk)
     }
   }
 
@@ -559,6 +592,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
   ## Define objects
   dsr_data_all_mk <- vector(mode = "list", length = n_mk)
   names(dsr_data_all_mk) <- markers_par
+  dsr_alcor_all_mk <- vector(mode = "list", length = n_mk)
+  names(dsr_alcor_all_mk) <- markers_par
   aics_dsr_all_mk <- vector(mode = "list", length = n_mk)
   names(aics_dsr_all_mk) <- markers_par
   dsr_allele_median_slope_all_mk <- dsr_allele_median_intercept_all_mk <- dsr_allele_median_sigma_all_mk <- rep(NA, n_mk)
@@ -584,7 +619,8 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       cat(paste0("MCMC for the double-back stutter ratio of the ", markers_par[id_mk], "\n"))
 
       # Extract data of one marker
-      tmp <- extract_sr_use(dsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
+      info_lus_one_mk <- lus_all_mk[[id_mk]]
+      tmp <- extract_sr_use(dsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], info_lus_one_mk)
       dsr_one_mk <- tmp[[1]]
       dsr_al_one_mk <- tmp[[2]]
       dsr_h_one_mk <- tmp[[3]]
@@ -707,15 +743,28 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       dsr_data_one_mk <- vector(mode = "list", length = 4)
       names(dsr_data_one_mk) <- c("dsr", "dsr_al", "dsr_lus", "dsr_ca")
       dsr_data_one_mk[[1]] <- dsr_one_mk
-      dsr_data_one_mk[[2]] <- dsr_al_one_mk
-      if(consider_lus){
+      if(consider_dsr["Allele"]){
+        dsr_data_one_mk[[2]] <- dsr_al_one_mk
+      }
+      if(consider_dsr["LUS"]){
         dsr_data_one_mk[[3]] <- dsr_lus_one_mk
       }
-      if(consider_multi){
+      if(consider_dsr["Multi-sequence"]){
         dsr_data_one_mk[[4]] <- dsr_ca_one_mk
       }
       dsr_data_all_mk[[id_mk]] <- dsr_data_one_mk
       aics_dsr_all_mk[[id_mk]] <- aics
+
+      # Allele repeat correction
+      info_al_one_mk <- as.numeric(names(info_lus_one_mk))
+      if(consider_dsr["Multi-sequence"]){
+        info_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[index_max_like_multi], reps_one_mk, seq_al_one_mk, seq_count_one_mk, info_al_one_mk)
+      }else{
+        info_ca_one_mk <- NULL
+      }
+      dsr_alcor_all_mk[[id_mk]] <- list(info_al = info_al_one_mk,
+                                        info_lus = info_lus_one_mk,
+                                        info_ca = info_ca_one_mk)
     }
   }
 
@@ -860,6 +909,31 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
     m2sr_best_model_all_mk[index_mk_not_consider_m2sr] <- "Not consider"
   }
 
+  #### Gamma parameter ####
+
+  cat("MCMC for the gamma parameter\n")
+
+  # Calculate expected peak heights
+  eph_all_data <- calc_eph_all_data(n_oph, tph_all_data, gt_list, peak_list,
+                                    ae_median_myu_all_mk,
+                                    bsr_alcor_all_mk, bsr_best_model_all_mk, bsr_best_median_myu_all_mk, bsr_best_median_slope_all_mk, bsr_best_median_intercept_all_mk, bsr_best_min_us_all_mk,
+                                    fsr_alcor_all_mk, fsr_best_model_all_mk, fsr_best_median_myu_all_mk, fsr_best_median_slope_all_mk, fsr_best_median_intercept_all_mk, fsr_best_min_us_all_mk,
+                                    dsr_alcor_all_mk, dsr_best_model_all_mk, dsr_best_median_myu_all_mk, dsr_best_median_slope_all_mk, dsr_best_median_intercept_all_mk, dsr_best_min_us_all_mk,
+                                    m2sr_best_model_all_mk, m2sr_best_median_myu_all_mk)
+
+  # Remove data without sequence information (i.e., NA data)
+  index_adopt <- which(!is.na(eph_all_data))
+  oph_all_data <- oph_all_data[index_adopt]
+  eph_all_data <- eph_all_data[index_adopt]
+
+  # Perform MCMC
+  data_list_gamma <- list(N = length(oph_all_data), OPH = oph_all_data, EPH = eph_all_data)
+  tmp <- run_mcmc_gamma(model_gamma, data_list_gamma, n_warmup, n_sampling, n_chains, n_parallel_chains)
+  gamma_median_beta <- tmp$median_beta
+  gamma_rhat_beta <- tmp$rhat_beta
+  gamma_rhat_lp <- tmp$rhat_lp
+  gamma_traceplot <- tmp$traceplot
+
   return(list("markers_par" = markers_par,
               "model_bsr_all_mk" = model_bsr_all_mk,
               "model_fsr_all_mk" = model_fsr_all_mk,
@@ -872,6 +946,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
               "ae_rhat_lp_all_mk" = ae_rhat_lp_all_mk,
               "ae_trace_all_mk" = ae_trace_all_mk,
               "bsr_data_all_mk" = bsr_data_all_mk,
+              "bsr_alcor_all_mk" = bsr_alcor_all_mk,
               "aics_bsr_all_mk" = aics_bsr_all_mk,
               "bsr_allele_median_slope_all_mk" = bsr_allele_median_slope_all_mk,
               "bsr_allele_median_intercept_all_mk" = bsr_allele_median_intercept_all_mk,
@@ -908,6 +983,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
               "bsr_best_rhat_lp_all_mk" = bsr_best_rhat_lp_all_mk,
               "bsr_best_trace_all_mk" = bsr_best_trace_all_mk,
               "fsr_data_all_mk" = fsr_data_all_mk,
+              "fsr_alcor_all_mk" = fsr_alcor_all_mk,
               "aics_fsr_all_mk" = aics_fsr_all_mk,
               "fsr_allele_median_slope_all_mk" = fsr_allele_median_slope_all_mk,
               "fsr_allele_median_intercept_all_mk" = fsr_allele_median_intercept_all_mk,
@@ -944,6 +1020,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
               "fsr_best_rhat_lp_all_mk" = fsr_best_rhat_lp_all_mk,
               "fsr_best_trace_all_mk" = fsr_best_trace_all_mk,
               "dsr_data_all_mk" = dsr_data_all_mk,
+              "dsr_alcor_all_mk" = dsr_alcor_all_mk,
               "aics_dsr_all_mk" = aics_dsr_all_mk,
               "dsr_allele_median_slope_all_mk" = dsr_allele_median_slope_all_mk,
               "dsr_allele_median_intercept_all_mk" = dsr_allele_median_intercept_all_mk,
@@ -986,5 +1063,9 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
               "m2sr_best_rhat_myu_all_mk" = m2sr_best_rhat_myu_all_mk,
               "m2sr_best_rhat_sigma_all_mk" = m2sr_best_rhat_sigma_all_mk,
               "m2sr_best_rhat_lp_all_mk" = m2sr_best_rhat_lp_all_mk,
-              "m2sr_best_trace_all_mk" = m2sr_best_trace_all_mk))
+              "m2sr_best_trace_all_mk" = m2sr_best_trace_all_mk,
+              "gamma_median_beta" = gamma_median_beta,
+              "gamma_rhat_beta" = gamma_rhat_beta,
+              "gamma_rhat_lp" = gamma_rhat_lp,
+              "gamma_traceplot" = gamma_traceplot))
 }
