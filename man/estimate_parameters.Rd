@@ -13,11 +13,14 @@ estimate_parameters(
   model_sr_gen,
   model_sr_together,
   model_sr_uni,
+  model_gamma,
   n_warmup,
   n_sampling,
   n_chains,
-  n_parallel_chains = detectCores(),
-  max_cand_us = 10
+  motif_lus,
+  motif_multi,
+  max_cand_us = 10,
+  n_parallel_chains = detectCores()
 )
 }
 \arguments{
@@ -37,11 +40,17 @@ estimate_parameters(
 
 \item{model_sr_uni}{The stan model for the uniform stutter ratio}
 
+\item{model_gamma}{The stan model for gamma distribution}
+
 \item{n_warmup}{The number of simulations for warm-up}
 
 \item{n_sampling}{The number of simulations for sampling}
 
 \item{n_chains}{The number of chains}
+
+\item{motif_lus}{The minimum number of repeat motifs for considering the LUS model}
+
+\item{motif_multi}{The minimum number of repeat motifs for considering the multi-sequence model}
 
 \item{n_parallel_chains}{The number of parallel chains}
 }
