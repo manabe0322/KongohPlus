@@ -5,12 +5,12 @@ data{
 }
 
 parameters{
-  real myu;
+  real<lower = 0> myu;
   real<lower = 0> sigma;
 }
 
 model{
   for(i in 1:N){
-    SR[i] ~ lognormal(myu, sqrt(sigma / Height[i]));
+    SR[i] ~ lognormal(log(myu), sqrt(sigma / Height[i]));
   }
 }
