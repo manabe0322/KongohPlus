@@ -212,7 +212,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       react_dt_kit_set1 <- reactive({
         dt_kit_set1 <- react_dt_kit_set0()
         dt_kit_set1$AT <- 50
-        dt_kit_set1$Model_BSR <- "Locus-specific"
+        dt_kit_set1$Model_BSR <- "Best"
         dt_kit_set1$Model_FSR <- "Multiple loci together"
         dt_kit_set1$Model_DSR <- "Multiple loci together"
         dt_kit_set1$Model_M2SR <- "Not consider"
@@ -224,10 +224,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         dt_kit_set2 <- react_dt_kit_set0()
         n_mk <- nrow(dt_kit_set2)
         dt_kit_set2$numeric_at <- numericColumn(n_mk, 3, value = 50, width = "75%")
-        dt_kit_set2$select_bsr <- selectColumn(n_mk, 4, choices = c("Not consider", "Locus-specific", "Multiple loci together"), select_default = rep("Locus-specific", n_mk), width = "90%")
-        dt_kit_set2$select_fsr <- selectColumn(n_mk, 5, choices = c("Not consider", "Locus-specific", "Multiple loci together"), select_default = rep("Multiple loci together", n_mk), width = "90%")
-        dt_kit_set2$select_dsr <- selectColumn(n_mk, 6, choices = c("Not consider", "Locus-specific", "Multiple loci together"), select_default = rep("Multiple loci together", n_mk), width = "90%")
-        dt_kit_set2$select_m2sr <- selectColumn(n_mk, 7, choices = c("Not consider", "Locus-specific", "Multiple loci together"), select_default = rep("Not consider", n_mk), width = "90%")
+        dt_kit_set2$select_bsr <- selectColumn(n_mk, 4, choices = c("Best", "Allele", "LUS", "Multi-sequence",  "Multiple loci together", "Not consider"), select_default = rep("Best", n_mk), width = "90%")
+        dt_kit_set2$select_fsr <- selectColumn(n_mk, 5, choices = c("Best", "Allele", "LUS", "Multi-sequence",  "Multiple loci together", "Not consider"), select_default = rep("Multiple loci together", n_mk), width = "90%")
+        dt_kit_set2$select_dsr <- selectColumn(n_mk, 6, choices = c("Best", "Allele", "LUS", "Multi-sequence",  "Multiple loci together", "Not consider"), select_default = rep("Multiple loci together", n_mk), width = "90%")
+        dt_kit_set2$select_m2sr <- selectColumn(n_mk, 7, choices = c("Uniform", "Multiple loci together", "Not consider"), select_default = rep("Not consider", n_mk), width = "90%")
         return(dt_kit_set2)
       })
 
@@ -428,7 +428,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           model_sr_together <- readRDS(paste0(path_pack, "/model/model_sr_together.rds"))
           model_sr_uni <- readRDS(paste0(path_pack, "/model/model_sr_uni.rds"))
 
-          results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, model_sr_gen, model_sr_together, model_sr_uni, n_warmup, n_sampling, n_chains)
+          results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set,
+                                                 model_ae, model_sr_gen, model_sr_together, model_sr_uni,
+                                                 n_warmup, n_sampling, n_chains,
+                                                 motif_lus, motif_multi)
           rv_output$results_est_par <- results_est_par
 
           updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result")

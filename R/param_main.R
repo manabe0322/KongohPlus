@@ -1,3 +1,32 @@
+#' set_consider_sr_model
+#'
+#' @description The function to set consideration of each stutter ratio model
+#' @param model_sr The stutter model
+#' @param reps_one_mk Repeat motifs of one marker
+#' @param motif_lus The minimum number of repeat motifs for considering the LUS model
+#' @param motif_multi The minimum number of repeat motifs for considering the multi-sequence model
+set_consider_sr_model <- function(model_sr, reps_one_mk, motif_lus, motif_multi){
+  consider_sr_model <- rep(FALSE, 3)
+  names(consider_sr_model) <- c("Allele", "LUS", "Multi-sequence")
+  if(model_sr == "Allele"){
+    consider_sr_model["Allele"] <- TRUE
+  }else if(model_sr == "LUS"){
+    consider_sr_model["LUS"] <- TRUE
+  }else if(model_sr == "Multi-sequence"){
+    consider_sr_model["Multi-sequence"] <- TRUE
+  }else{
+    consider_sr_model["Allele"] <- TRUE
+    max_motif <- max(sapply(reps_one_mk, length))
+    if(max_motif >= motif_lus){
+      consider_sr_model["LUS"] <- TRUE
+    }
+    if(max_motif >= motif_multi){
+      consider_sr_model["Multi-sequence"] <- TRUE
+    }
+  }
+  return(consider_sr_model)
+}
+
 #' calc_aic
 #'
 #' @description The function to calculate the AIC
@@ -22,7 +51,13 @@ calc_aic <- function(log_like, n_par){
 #' @param n_warmup The number of simulations for warm-up
 #' @param n_sampling The number of simulations for sampling
 #' @param n_chains The number of chains
-estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, model_sr_gen, model_sr_together, model_sr_uni, n_warmup, n_sampling, n_chains, n_parallel_chains = detectCores(), max_cand_us = 10){
+#' @param motif_lus The minimum number of repeat motifs for considering the LUS model
+#' @param motif_multi The minimum number of repeat motifs for considering the multi-sequence model
+estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
+                                model_ae, model_sr_gen, model_sr_together, model_sr_uni,
+                                n_warmup, n_sampling, n_chains,
+                                motif_lus, motif_multi, max_cand_us = 10,
+                                n_parallel_chains = detectCores()){
   # Extract information on setting
   markers_par <- dt_kit_set[, Marker]
   n_mk <- length(markers_par)
@@ -70,6 +105,11 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   seq_al_all_mk <- tmp[[3]]
   seq_count_all_mk <- tmp[[4]]
 
+  # Prepare data for the gamma distribution
+  tph_all_data <- calc_tph_all_data(height_list)
+  oph_all_data <- unlist(height_list)
+  n_oph <- length(oph_all_data)
+
   # Perform the MCMC for the locus-specific amplification efficiency
   n_ae_data <- nrow(ae_data)
   ae_median_myu_all_mk <- ae_median_sigma_all_mk <- ae_rhat_myu_all_mk <- ae_rhat_sigma_all_mk <- ae_rhat_lp_all_mk <- rep(NA, n_mk)
@@ -108,7 +148,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   bsr_best_trace_all_mk <- vector(mode = "list", length = n_mk)
 
   ## BSR: locus-specific
-  index_mk_specific_bsr <- which(model_bsr_all_mk == "Locus-specific")
+  index_mk_specific_bsr <- which(is.element(model_bsr_all_mk, c("Best", "Allele", "LUS", "Multi-sequence")))
   n_mk_specific_bsr <- length(index_mk_specific_bsr)
   if(n_mk_specific_bsr > 0){
     for(i in 1:n_mk_specific_bsr){
@@ -125,35 +165,32 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       seq_al_one_mk <- seq_al_all_mk[[id_mk]]
       seq_count_one_mk <- seq_count_all_mk[[id_mk]]
 
-      # Set consideration of the LUS model and the multi-sequence model
-      consider_lus <- consider_multi <- TRUE
-      max_motif <- max(sapply(reps_one_mk, length))
-      if(max_motif < 3){
-        consider_multi <- FALSE
-      }
-      if(max_motif < 2){
-        consider_lus <- FALSE
-      }
+      # Set consideration of each model
+      model_bsr <- model_bsr_all_mk[id_mk]
+      consider_bsr <- set_consider_sr_model(model_bsr, reps_one_mk, motif_lus, motif_multi)
 
+      # Define an object to assign log-likelihoods of each model
       log_likes <- rep(NA, 3)
       names(log_likes) <- c("Allele", "LUS", "Multi-sequence")
 
       # Allele model
-      cat("Allele model\n")
-      data_list_bsr_allele <- list(N = length(bsr_one_mk), SR = bsr_one_mk, XVal = bsr_al_one_mk, Height = bsr_h_one_mk)
-      tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_bsr_allele, n_warmup, n_sampling, n_chains, n_parallel_chains)
-      log_likes[1] <- tmp$median_loglike
-      bsr_allele_median_slope_all_mk[id_mk] <- tmp$median_slope
-      bsr_allele_median_intercept_all_mk[id_mk] <- tmp$median_intercept
-      bsr_allele_median_sigma_all_mk[id_mk] <- tmp$median_sigma
-      bsr_allele_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
-      bsr_allele_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
-      bsr_allele_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
-      bsr_allele_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
-      bsr_allele_trace_all_mk[[id_mk]] <- tmp$traceplot
+      if(consider_bsr["Allele"]){
+        cat("Allele model\n")
+        data_list_bsr_allele <- list(N = length(bsr_one_mk), SR = bsr_one_mk, XVal = bsr_al_one_mk, Height = bsr_h_one_mk)
+        tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_bsr_allele, n_warmup, n_sampling, n_chains, n_parallel_chains)
+        log_likes[1] <- tmp$median_loglike
+        bsr_allele_median_slope_all_mk[id_mk] <- tmp$median_slope
+        bsr_allele_median_intercept_all_mk[id_mk] <- tmp$median_intercept
+        bsr_allele_median_sigma_all_mk[id_mk] <- tmp$median_sigma
+        bsr_allele_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
+        bsr_allele_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
+        bsr_allele_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
+        bsr_allele_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
+        bsr_allele_trace_all_mk[[id_mk]] <- tmp$traceplot
+      }
 
       # LUS model
-      if(consider_lus){
+      if(consider_bsr["LUS"]){
         cat("LUS model\n")
         data_list_bsr_lus <- list(N = length(bsr_one_mk), SR = bsr_one_mk, XVal = bsr_lus_one_mk, Height = bsr_h_one_mk)
         tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_bsr_lus, n_warmup, n_sampling, n_chains, n_parallel_chains)
@@ -169,7 +206,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       }
 
       # Multi-sequence model
-      if(consider_multi){
+      if(consider_bsr["Multi-sequence"]){
         cat("Multi-sequence model\n")
         cand_min_us <- sort(unique(unlist(reps_one_mk)))
         cand_min_us <- cand_min_us[cand_min_us <= max_cand_us]
@@ -325,7 +362,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   fsr_best_trace_all_mk <- vector(mode = "list", length = n_mk)
 
   ## FSR: locus-specific
-  index_mk_specific_fsr <- which(model_fsr_all_mk == "Locus-specific")
+  index_mk_specific_fsr <- which(is.element(model_fsr_all_mk, c("Best", "Allele", "LUS", "Multi-sequence")))
   n_mk_specific_fsr <- length(index_mk_specific_fsr)
   if(n_mk_specific_fsr > 0){
     for(i in 1:n_mk_specific_fsr){
@@ -342,35 +379,32 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       seq_al_one_mk <- seq_al_all_mk[[id_mk]]
       seq_count_one_mk <- seq_count_all_mk[[id_mk]]
 
-      # Set consideration of the LUS model and the multi-sequence model
-      consider_lus <- consider_multi <- TRUE
-      max_motif <- max(sapply(reps_one_mk, length))
-      if(max_motif < 3){
-        consider_multi <- FALSE
-      }
-      if(max_motif < 2){
-        consider_lus <- FALSE
-      }
+      # Set consideration of each model
+      model_fsr <- model_fsr_all_mk[id_mk]
+      consider_fsr <- set_consider_sr_model(model_fsr, reps_one_mk, motif_lus, motif_multi)
 
+      # Define an object to assign log-likelihoods of each model
       log_likes <- rep(NA, 3)
       names(log_likes) <- c("Allele", "LUS", "Multi-sequence")
 
       # Allele model
-      cat("Allele model\n")
-      data_list_fsr_allele <- list(N = length(fsr_one_mk), SR = fsr_one_mk, XVal = fsr_al_one_mk, Height = fsr_h_one_mk)
-      tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_fsr_allele, n_warmup, n_sampling, n_chains, n_parallel_chains)
-      log_likes[1] <- tmp$median_loglike
-      fsr_allele_median_slope_all_mk[id_mk] <- tmp$median_slope
-      fsr_allele_median_intercept_all_mk[id_mk] <- tmp$median_intercept
-      fsr_allele_median_sigma_all_mk[id_mk] <- tmp$median_sigma
-      fsr_allele_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
-      fsr_allele_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
-      fsr_allele_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
-      fsr_allele_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
-      fsr_allele_trace_all_mk[[id_mk]] <- tmp$traceplot
+      if(consider_fsr["Allele"]){
+        cat("Allele model\n")
+        data_list_fsr_allele <- list(N = length(fsr_one_mk), SR = fsr_one_mk, XVal = fsr_al_one_mk, Height = fsr_h_one_mk)
+        tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_fsr_allele, n_warmup, n_sampling, n_chains, n_parallel_chains)
+        log_likes[1] <- tmp$median_loglike
+        fsr_allele_median_slope_all_mk[id_mk] <- tmp$median_slope
+        fsr_allele_median_intercept_all_mk[id_mk] <- tmp$median_intercept
+        fsr_allele_median_sigma_all_mk[id_mk] <- tmp$median_sigma
+        fsr_allele_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
+        fsr_allele_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
+        fsr_allele_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
+        fsr_allele_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
+        fsr_allele_trace_all_mk[[id_mk]] <- tmp$traceplot
+      }
 
       # LUS model
-      if(consider_lus){
+      if(consider_fsr["LUS"]){
         cat("LUS model\n")
         data_list_fsr_lus <- list(N = length(fsr_one_mk), SR = fsr_one_mk, XVal = fsr_lus_one_mk, Height = fsr_h_one_mk)
         tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_fsr_lus, n_warmup, n_sampling, n_chains, n_parallel_chains)
@@ -386,7 +420,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       }
 
       # Multi-sequence model
-      if(consider_multi){
+      if(consider_fsr["Multi-sequence"]){
         cat("Multi-sequence model\n")
         cand_min_us <- sort(unique(unlist(reps_one_mk)))
         cand_min_us <- cand_min_us[cand_min_us <= max_cand_us]
@@ -542,7 +576,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   dsr_best_trace_all_mk <- vector(mode = "list", length = n_mk)
 
   ## DSR: locus-specific
-  index_mk_specific_dsr <- which(model_dsr_all_mk == "Locus-specific")
+  index_mk_specific_dsr <- which(is.element(model_dsr_all_mk, c("Best", "Allele", "LUS", "Multi-sequence")))
   n_mk_specific_dsr <- length(index_mk_specific_dsr)
   if(n_mk_specific_dsr > 0){
     for(i in 1:n_mk_specific_dsr){
@@ -559,35 +593,32 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       seq_al_one_mk <- seq_al_all_mk[[id_mk]]
       seq_count_one_mk <- seq_count_all_mk[[id_mk]]
 
-      # Set consideration of the LUS model and the multi-sequence model
-      consider_lus <- consider_multi <- TRUE
-      max_motif <- max(sapply(reps_one_mk, length))
-      if(max_motif < 3){
-        consider_multi <- FALSE
-      }
-      if(max_motif < 2){
-        consider_lus <- FALSE
-      }
+      # Set consideration of each model
+      model_dsr <- model_dsr_all_mk[id_mk]
+      consider_dsr <- set_consider_sr_model(model_dsr, reps_one_mk, motif_lus, motif_multi)
 
+      # Define an object to assign log-likelihoods of each model
       log_likes <- rep(NA, 3)
       names(log_likes) <- c("Allele", "LUS", "Multi-sequence")
 
       # Allele model
-      cat("Allele model\n")
-      data_list_dsr_allele <- list(N = length(dsr_one_mk), SR = dsr_one_mk, XVal = dsr_al_one_mk, Height = dsr_h_one_mk)
-      tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_dsr_allele, n_warmup, n_sampling, n_chains, n_parallel_chains)
-      log_likes[1] <- tmp$median_loglike
-      dsr_allele_median_slope_all_mk[id_mk] <- tmp$median_slope
-      dsr_allele_median_intercept_all_mk[id_mk] <- tmp$median_intercept
-      dsr_allele_median_sigma_all_mk[id_mk] <- tmp$median_sigma
-      dsr_allele_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
-      dsr_allele_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
-      dsr_allele_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
-      dsr_allele_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
-      dsr_allele_trace_all_mk[[id_mk]] <- tmp$traceplot
+      if(model_dsr["Allele"]){
+        cat("Allele model\n")
+        data_list_dsr_allele <- list(N = length(dsr_one_mk), SR = dsr_one_mk, XVal = dsr_al_one_mk, Height = dsr_h_one_mk)
+        tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_dsr_allele, n_warmup, n_sampling, n_chains, n_parallel_chains)
+        log_likes[1] <- tmp$median_loglike
+        dsr_allele_median_slope_all_mk[id_mk] <- tmp$median_slope
+        dsr_allele_median_intercept_all_mk[id_mk] <- tmp$median_intercept
+        dsr_allele_median_sigma_all_mk[id_mk] <- tmp$median_sigma
+        dsr_allele_rhat_slope_all_mk[id_mk] <- tmp$rhat_slope
+        dsr_allele_rhat_intercept_all_mk[id_mk] <- tmp$rhat_intercept
+        dsr_allele_rhat_sigma_all_mk[id_mk] <- tmp$rhat_sigma
+        dsr_allele_rhat_lp_all_mk[id_mk] <- tmp$rhat_lp
+        dsr_allele_trace_all_mk[[id_mk]] <- tmp$traceplot
+      }
 
       # LUS model
-      if(consider_lus){
+      if(model_dsr["LUS"]){
         cat("LUS model\n")
         data_list_dsr_lus <- list(N = length(dsr_one_mk), SR = dsr_one_mk, XVal = dsr_lus_one_mk, Height = dsr_h_one_mk)
         tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_dsr_lus, n_warmup, n_sampling, n_chains, n_parallel_chains)
@@ -603,7 +634,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
       }
 
       # Multi-sequence model
-      if(consider_multi){
+      if(model_dsr["Multi-sequence"]){
         cat("Multi-sequence model\n")
         cand_min_us <- sort(unique(unlist(reps_one_mk)))
         cand_min_us <- cand_min_us[cand_min_us <= max_cand_us]
@@ -748,7 +779,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   ## M2SR: locus-specific
   m2sr_data_all_mk <- vector(mode = "list", length = n_mk)
   names(m2sr_data_all_mk) <- markers_par
-  index_mk_specific_m2sr <- which(model_m2sr_all_mk == "Locus-specific")
+  index_mk_specific_m2sr <- which(model_m2sr_all_mk == "Uniform")
   n_mk_specific_m2sr <- length(index_mk_specific_m2sr)
   if(n_mk_specific_m2sr > 0){
     for(i in 1:n_mk_specific_m2sr){
@@ -830,6 +861,9 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
   }
 
   return(list("markers_par" = markers_par,
+              "model_bsr_all_mk" = model_bsr_all_mk,
+              "model_fsr_all_mk" = model_fsr_all_mk,
+              "model_dsr_all_mk" = model_dsr_all_mk,
               "ae_data" = ae_data,
               "ae_median_myu_all_mk" = ae_median_myu_all_mk,
               "ae_median_sigma_all_mk" = ae_median_sigma_all_mk,
@@ -846,7 +880,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "bsr_allele_rhat_intercept_all_mk" = bsr_allele_rhat_intercept_all_mk,
               "bsr_allele_rhat_sigma_all_mk" = bsr_allele_rhat_sigma_all_mk,
               "bsr_allele_rhat_lp_all_mk" = bsr_allele_rhat_lp_all_mk,
-              "bsr_allele_trace_all_mk" = bsr_allele_trace_all_mk,
               "bsr_lus_median_slope_all_mk" = bsr_lus_median_slope_all_mk,
               "bsr_lus_median_intercept_all_mk" = bsr_lus_median_intercept_all_mk,
               "bsr_lus_median_sigma_all_mk" = bsr_lus_median_sigma_all_mk,
@@ -854,7 +887,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "bsr_lus_rhat_intercept_all_mk" = bsr_lus_rhat_intercept_all_mk,
               "bsr_lus_rhat_sigma_all_mk" = bsr_lus_rhat_sigma_all_mk,
               "bsr_lus_rhat_lp_all_mk" = bsr_lus_rhat_lp_all_mk,
-              "bsr_lus_trace_all_mk" = bsr_lus_trace_all_mk,
               "bsr_multi_median_slope_all_mk" = bsr_multi_median_slope_all_mk,
               "bsr_multi_median_intercept_all_mk" = bsr_multi_median_intercept_all_mk,
               "bsr_multi_median_sigma_all_mk" = bsr_multi_median_sigma_all_mk,
@@ -863,7 +895,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "bsr_multi_rhat_intercept_all_mk" = bsr_multi_rhat_intercept_all_mk,
               "bsr_multi_rhat_sigma_all_mk" = bsr_multi_rhat_sigma_all_mk,
               "bsr_multi_rhat_lp_all_mk" = bsr_multi_rhat_lp_all_mk,
-              "bsr_multi_trace_all_mk" = bsr_multi_trace_all_mk,
               "bsr_best_model_all_mk" = bsr_best_model_all_mk,
               "bsr_best_median_myu_all_mk" = bsr_best_median_myu_all_mk,
               "bsr_best_median_slope_all_mk" = bsr_best_median_slope_all_mk,
@@ -885,7 +916,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "fsr_allele_rhat_intercept_all_mk" = fsr_allele_rhat_intercept_all_mk,
               "fsr_allele_rhat_sigma_all_mk" = fsr_allele_rhat_sigma_all_mk,
               "fsr_allele_rhat_lp_all_mk" = fsr_allele_rhat_lp_all_mk,
-              "fsr_allele_trace_all_mk" = fsr_allele_trace_all_mk,
               "fsr_lus_median_slope_all_mk" = fsr_lus_median_slope_all_mk,
               "fsr_lus_median_intercept_all_mk" = fsr_lus_median_intercept_all_mk,
               "fsr_lus_median_sigma_all_mk" = fsr_lus_median_sigma_all_mk,
@@ -893,7 +923,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "fsr_lus_rhat_intercept_all_mk" = fsr_lus_rhat_intercept_all_mk,
               "fsr_lus_rhat_sigma_all_mk" = fsr_lus_rhat_sigma_all_mk,
               "fsr_lus_rhat_lp_all_mk" = fsr_lus_rhat_lp_all_mk,
-              "fsr_lus_trace_all_mk" = fsr_lus_trace_all_mk,
               "fsr_multi_median_slope_all_mk" = fsr_multi_median_slope_all_mk,
               "fsr_multi_median_intercept_all_mk" = fsr_multi_median_intercept_all_mk,
               "fsr_multi_median_sigma_all_mk" = fsr_multi_median_sigma_all_mk,
@@ -902,7 +931,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "fsr_multi_rhat_intercept_all_mk" = fsr_multi_rhat_intercept_all_mk,
               "fsr_multi_rhat_sigma_all_mk" = fsr_multi_rhat_sigma_all_mk,
               "fsr_multi_rhat_lp_all_mk" = fsr_multi_rhat_lp_all_mk,
-              "fsr_multi_trace_all_mk" = fsr_multi_trace_all_mk,
               "fsr_best_model_all_mk" = fsr_best_model_all_mk,
               "fsr_best_median_myu_all_mk" = fsr_best_median_myu_all_mk,
               "fsr_best_median_slope_all_mk" = fsr_best_median_slope_all_mk,
@@ -924,7 +952,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "dsr_allele_rhat_intercept_all_mk" = dsr_allele_rhat_intercept_all_mk,
               "dsr_allele_rhat_sigma_all_mk" = dsr_allele_rhat_sigma_all_mk,
               "dsr_allele_rhat_lp_all_mk" = dsr_allele_rhat_lp_all_mk,
-              "dsr_allele_trace_all_mk" = dsr_allele_trace_all_mk,
               "dsr_lus_median_slope_all_mk" = dsr_lus_median_slope_all_mk,
               "dsr_lus_median_intercept_all_mk" = dsr_lus_median_intercept_all_mk,
               "dsr_lus_median_sigma_all_mk" = dsr_lus_median_sigma_all_mk,
@@ -932,7 +959,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "dsr_lus_rhat_intercept_all_mk" = dsr_lus_rhat_intercept_all_mk,
               "dsr_lus_rhat_sigma_all_mk" = dsr_lus_rhat_sigma_all_mk,
               "dsr_lus_rhat_lp_all_mk" = dsr_lus_rhat_lp_all_mk,
-              "dsr_lus_trace_all_mk" = dsr_lus_trace_all_mk,
               "dsr_multi_median_slope_all_mk" = dsr_multi_median_slope_all_mk,
               "dsr_multi_median_intercept_all_mk" = dsr_multi_median_intercept_all_mk,
               "dsr_multi_median_sigma_all_mk" = dsr_multi_median_sigma_all_mk,
@@ -941,7 +967,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set, model_ae, mod
               "dsr_multi_rhat_intercept_all_mk" = dsr_multi_rhat_intercept_all_mk,
               "dsr_multi_rhat_sigma_all_mk" = dsr_multi_rhat_sigma_all_mk,
               "dsr_multi_rhat_lp_all_mk" = dsr_multi_rhat_lp_all_mk,
-              "dsr_multi_trace_all_mk" = dsr_multi_trace_all_mk,
               "dsr_best_model_all_mk" = dsr_best_model_all_mk,
               "dsr_best_median_myu_all_mk" = dsr_best_median_myu_all_mk,
               "dsr_best_median_slope_all_mk" = dsr_best_median_slope_all_mk,
