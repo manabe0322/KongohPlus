@@ -159,8 +159,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       cat(paste0("MCMC for the back stutter ratio of the ", markers_par[id_mk], "\n"))
 
       # Extract data of one marker
-      info_lus_one_mk <- lus_all_mk[[id_mk]]
-      tmp <- extract_sr_use(bsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], info_lus_one_mk)
+      tmp <- extract_sr_use(bsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
       bsr_one_mk <- tmp[[1]]
       bsr_al_one_mk <- tmp[[2]]
       bsr_h_one_mk <- tmp[[3]]
@@ -296,14 +295,15 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       aics_bsr_all_mk[[id_mk]] <- aics
 
       # Allele repeat correction
-      info_al_one_mk <- as.numeric(names(info_lus_one_mk))
-      if(consider_bsr["Multi-sequence"]){
+      info_al_one_mk <- as.numeric(names(lus_all_mk[[id_mk]]))
+      if(bsr_best_model_all_mk[id_mk] == "LUS"){
+        info_ca_one_mk <- lus_all_mk[[id_mk]]
+      }else if(bsr_best_model_all_mk[id_mk] == "Multi-sequence"){
         info_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[index_max_like_multi], reps_one_mk, seq_al_one_mk, seq_count_one_mk, info_al_one_mk)
       }else{
-        info_ca_one_mk <- NULL
+        info_ca_one_mk <- rep(NA, length(info_al_one_mk))
       }
       bsr_alcor_all_mk[[id_mk]] <- list(info_al = info_al_one_mk,
-                                        info_lus = info_lus_one_mk,
                                         info_ca = info_ca_one_mk)
     }
   }
@@ -339,6 +339,12 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       bsr_data_one_mk[[1]] <- bsr_one_mk
       bsr_data_one_mk[[2]] <- bsr_al_one_mk
       bsr_data_all_mk[[id_mk]] <- bsr_data_one_mk
+
+      # Allele repeat correction
+      info_al_one_mk <- as.numeric(names(lus_all_mk[[id_mk]]))
+      info_ca_one_mk <- rep(NA, length(info_al_one_mk))
+      bsr_alcor_all_mk[[id_mk]] <- list(info_al = info_al_one_mk,
+                                        info_ca = info_ca_one_mk)
     }
     data_list_bsr_together <- list(N = length(bsr_together), NMk = n_mk_together_bsr, SR = bsr_together, Height = bsr_h_together, IndexMk = id_mk_together)
     tmp <- run_mcmc_sr_together(model_sr_together, data_list_bsr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
@@ -356,6 +362,9 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
   if(length(index_mk_not_consider_bsr) > 0){
     bsr_best_model_all_mk[index_mk_not_consider_bsr] <- "Not consider"
   }
+
+  ## BSR: Make a data.table for corrected alleles
+  dt_alcor_bsr <- make_dt_alcor(markers_par, bsr_best_model_all_mk, bsr_alcor_all_mk)
 
   # Perform the MCMC for the forward stutter ratio
 
@@ -389,8 +398,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       cat(paste0("MCMC for the forward stutter ratio of the ", markers_par[id_mk], "\n"))
 
       # Extract data of one marker
-      info_lus_one_mk <- lus_all_mk[[id_mk]]
-      tmp <- extract_sr_use(fsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], info_lus_one_mk)
+      tmp <- extract_sr_use(fsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
       fsr_one_mk <- tmp[[1]]
       fsr_al_one_mk <- tmp[[2]]
       fsr_h_one_mk <- tmp[[3]]
@@ -526,14 +534,15 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       aics_fsr_all_mk[[id_mk]] <- aics
 
       # Allele repeat correction
-      info_al_one_mk <- as.numeric(names(info_lus_one_mk))
-      if(consider_fsr["Multi-sequence"]){
+      info_al_one_mk <- as.numeric(names(lus_all_mk[[id_mk]]))
+      if(fsr_best_model_all_mk[id_mk] == "LUS"){
+        info_ca_one_mk <- lus_all_mk[[id_mk]]
+      }else if(fsr_best_model_all_mk[id_mk] == "Multi-sequence"){
         info_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[index_max_like_multi], reps_one_mk, seq_al_one_mk, seq_count_one_mk, info_al_one_mk)
       }else{
-        info_ca_one_mk <- NULL
+        info_ca_one_mk <- rep(NA, length(info_al_one_mk))
       }
       fsr_alcor_all_mk[[id_mk]] <- list(info_al = info_al_one_mk,
-                                        info_lus = info_lus_one_mk,
                                         info_ca = info_ca_one_mk)
     }
   }
@@ -569,6 +578,12 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       fsr_data_one_mk[[1]] <- fsr_one_mk
       fsr_data_one_mk[[2]] <- fsr_al_one_mk
       fsr_data_all_mk[[id_mk]] <- fsr_data_one_mk
+
+      # Allele repeat correction
+      info_al_one_mk <- as.numeric(names(lus_all_mk[[id_mk]]))
+      info_ca_one_mk <- rep(NA, length(info_al_one_mk))
+      fsr_alcor_all_mk[[id_mk]] <- list(info_al = info_al_one_mk,
+                                        info_ca = info_ca_one_mk)
     }
     data_list_fsr_together <- list(N = length(fsr_together), NMk = n_mk_together_fsr, SR = fsr_together, Height = fsr_h_together, IndexMk = id_mk_together)
     tmp <- run_mcmc_sr_together(model_sr_together, data_list_fsr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
@@ -586,6 +601,9 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
   if(length(index_mk_not_consider_fsr) > 0){
     fsr_best_model_all_mk[index_mk_not_consider_fsr] <- "Not consider"
   }
+
+  ## FSR: Make a data.table for corrected alleles
+  dt_alcor_fsr <- make_dt_alcor(markers_par, fsr_best_model_all_mk, fsr_alcor_all_mk)
 
   # Perform the MCMC for the double-back stutter ratio
 
@@ -619,8 +637,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       cat(paste0("MCMC for the double-back stutter ratio of the ", markers_par[id_mk], "\n"))
 
       # Extract data of one marker
-      info_lus_one_mk <- lus_all_mk[[id_mk]]
-      tmp <- extract_sr_use(dsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], info_lus_one_mk)
+      tmp <- extract_sr_use(dsr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
       dsr_one_mk <- tmp[[1]]
       dsr_al_one_mk <- tmp[[2]]
       dsr_h_one_mk <- tmp[[3]]
@@ -756,14 +773,15 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       aics_dsr_all_mk[[id_mk]] <- aics
 
       # Allele repeat correction
-      info_al_one_mk <- as.numeric(names(info_lus_one_mk))
-      if(consider_dsr["Multi-sequence"]){
+      info_al_one_mk <- as.numeric(names(lus_all_mk[[id_mk]]))
+      if(dsr_best_model_all_mk[id_mk] == "LUS"){
+        info_ca_one_mk <- lus_all_mk[[id_mk]]
+      }else if(dsr_best_model_all_mk[id_mk] == "Multi-sequence"){
         info_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[index_max_like_multi], reps_one_mk, seq_al_one_mk, seq_count_one_mk, info_al_one_mk)
       }else{
-        info_ca_one_mk <- NULL
+        info_ca_one_mk <- rep(NA, length(info_al_one_mk))
       }
       dsr_alcor_all_mk[[id_mk]] <- list(info_al = info_al_one_mk,
-                                        info_lus = info_lus_one_mk,
                                         info_ca = info_ca_one_mk)
     }
   }
@@ -799,6 +817,12 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
       dsr_data_one_mk[[1]] <- dsr_one_mk
       dsr_data_one_mk[[2]] <- dsr_al_one_mk
       dsr_data_all_mk[[id_mk]] <- dsr_data_one_mk
+
+      # Allele repeat correction
+      info_al_one_mk <- as.numeric(names(lus_all_mk[[id_mk]]))
+      info_ca_one_mk <- rep(NA, length(info_al_one_mk))
+      dsr_alcor_all_mk[[id_mk]] <- list(info_al = info_al_one_mk,
+                                        info_ca = info_ca_one_mk)
     }
     data_list_dsr_together <- list(N = length(dsr_together), NMk = n_mk_together_dsr, SR = dsr_together, Height = dsr_h_together, IndexMk = id_mk_together)
     tmp <- run_mcmc_sr_together(model_sr_together, data_list_dsr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
@@ -816,6 +840,9 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
   if(length(index_mk_not_consider_dsr) > 0){
     dsr_best_model_all_mk[index_mk_not_consider_dsr] <- "Not consider"
   }
+
+  ## DSR: Make a data.table for corrected alleles
+  dt_alcor_dsr <- make_dt_alcor(markers_par, dsr_best_model_all_mk, dsr_alcor_all_mk)
 
   # Perform the MCMC for the minus 2-nt stutter ratio
 
@@ -946,7 +973,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
               "ae_rhat_lp_all_mk" = ae_rhat_lp_all_mk,
               "ae_trace_all_mk" = ae_trace_all_mk,
               "bsr_data_all_mk" = bsr_data_all_mk,
-              "bsr_alcor_all_mk" = bsr_alcor_all_mk,
+              "dt_alcor_bsr" = dt_alcor_bsr,
               "aics_bsr_all_mk" = aics_bsr_all_mk,
               "bsr_allele_median_slope_all_mk" = bsr_allele_median_slope_all_mk,
               "bsr_allele_median_intercept_all_mk" = bsr_allele_median_intercept_all_mk,
@@ -983,7 +1010,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
               "bsr_best_rhat_lp_all_mk" = bsr_best_rhat_lp_all_mk,
               "bsr_best_trace_all_mk" = bsr_best_trace_all_mk,
               "fsr_data_all_mk" = fsr_data_all_mk,
-              "fsr_alcor_all_mk" = fsr_alcor_all_mk,
+              "dt_alcor_fsr" = dt_alcor_fsr,
               "aics_fsr_all_mk" = aics_fsr_all_mk,
               "fsr_allele_median_slope_all_mk" = fsr_allele_median_slope_all_mk,
               "fsr_allele_median_intercept_all_mk" = fsr_allele_median_intercept_all_mk,
@@ -1020,7 +1047,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
               "fsr_best_rhat_lp_all_mk" = fsr_best_rhat_lp_all_mk,
               "fsr_best_trace_all_mk" = fsr_best_trace_all_mk,
               "dsr_data_all_mk" = dsr_data_all_mk,
-              "dsr_alcor_all_mk" = dsr_alcor_all_mk,
+              "dt_alcor_dsr" = dt_alcor_dsr,
               "aics_dsr_all_mk" = aics_dsr_all_mk,
               "dsr_allele_median_slope_all_mk" = dsr_allele_median_slope_all_mk,
               "dsr_allele_median_intercept_all_mk" = dsr_allele_median_intercept_all_mk,

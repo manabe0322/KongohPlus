@@ -25,7 +25,8 @@ est_par_server <- function(id, path_pack){
       rv_output <- est_par_setting_server("est_par_setting", path_pack, session)
 
       observe({
-        est_par_result_server("est_par_result", rv_output)
+        req(rv_output)
+        est_par_result_server("est_par_result", path_pack, rv_output)
       })
     }
   )

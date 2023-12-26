@@ -14,7 +14,6 @@ est_par_result_ui <- function(id){
                           br(),
                           br(),
                           disabled(actionButton(ns("act_alcor"), label = "Corrected allele")),
-                          bsModal(ns("modal_alcor"), title = "Corrected allele", trigger = "act_alcor", size = "large", dataTableOutput(ns("dt_alcor"))),
                           br(),
                           br(),
                           br(),
@@ -22,7 +21,7 @@ est_par_result_ui <- function(id){
                           br(),
                           br(),
                           br(),
-                          actionButton(ns("act_save_par"), label = "Save")
+                          actionButton(ns("act_save_par"), label = "Save", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 10,
                        tabsetPanel(id = ns("tabset_est_par_result"),
@@ -63,7 +62,7 @@ est_par_result_ui <- function(id){
   )
 }
 
-est_par_result_server <- function(id, rv_output){
+est_par_result_server <- function(id, path_pack, rv_output){
   moduleServer(
     id,
     function(input, output, session){
@@ -85,7 +84,7 @@ est_par_result_server <- function(id, rv_output){
         dt_result_ae <- NULL
 
         bsr_data_all_mk <- NULL
-        bsr_alcor_all_mk <- NULL
+        dt_alcor_bsr <- NULL
         aics_bsr_all_mk <- NULL
         bsr_allele_median_slope_all_mk <- NULL
         bsr_allele_median_intercept_all_mk <- NULL
@@ -124,7 +123,7 @@ est_par_result_server <- function(id, rv_output){
         dt_result_bsr <- NULL
 
         fsr_data_all_mk <- NULL
-        fsr_alcor_all_mk <- NULL
+        dt_alcor_fsr <- NULL
         aics_fsr_all_mk <- NULL
         fsr_allele_median_slope_all_mk <- NULL
         fsr_allele_median_intercept_all_mk <- NULL
@@ -163,7 +162,7 @@ est_par_result_server <- function(id, rv_output){
         dt_result_fsr <- NULL
 
         dsr_data_all_mk <- NULL
-        dsr_alcor_all_mk <- NULL
+        dt_alcor_dsr <- NULL
         aics_dsr_all_mk <- NULL
         dsr_allele_median_slope_all_mk <- NULL
         dsr_allele_median_intercept_all_mk <- NULL
@@ -216,6 +215,8 @@ est_par_result_server <- function(id, rv_output){
         gamma_rhat_lp <- NULL
         gamma_traceplot <- NULL
         dt_result_gamma <- NULL
+
+        dt_par <- NULL
       }else{
         markers_par <- results_est_par$markers_par
         model_bsr_all_mk <- results_est_par$model_bsr_all_mk
@@ -238,7 +239,7 @@ est_par_result_server <- function(id, rv_output){
         )
 
         bsr_data_all_mk <- results_est_par$bsr_data_all_mk
-        bsr_alcor_all_mk <- results_est_par$bsr_alcor_all_mk
+        dt_alcor_bsr <- results_est_par$dt_alcor_bsr
         aics_bsr_all_mk <- results_est_par$aics_bsr_all_mk
         bsr_allele_median_slope_all_mk <- results_est_par$bsr_allele_median_slope_all_mk
         bsr_allele_median_intercept_all_mk <- results_est_par$bsr_allele_median_intercept_all_mk
@@ -289,7 +290,7 @@ est_par_result_server <- function(id, rv_output){
         )
 
         fsr_data_all_mk <- results_est_par$fsr_data_all_mk
-        fsr_alcor_all_mk <- results_est_par$fsr_alcor_all_mk
+        dt_alcor_fsr <- results_est_par$dt_alcor_fsr
         aics_fsr_all_mk <- results_est_par$aics_fsr_all_mk
         fsr_allele_median_slope_all_mk <- results_est_par$fsr_allele_median_slope_all_mk
         fsr_allele_median_intercept_all_mk <- results_est_par$fsr_allele_median_intercept_all_mk
@@ -340,7 +341,7 @@ est_par_result_server <- function(id, rv_output){
         )
 
         dsr_data_all_mk <- results_est_par$dsr_data_all_mk
-        dsr_alcor_all_mk <- results_est_par$dsr_alcor_all_mk
+        dt_alcor_dsr <- results_est_par$dt_alcor_dsr
         aics_dsr_all_mk <- results_est_par$aics_dsr_all_mk
         dsr_allele_median_slope_all_mk <- results_est_par$dsr_allele_median_slope_all_mk
         dsr_allele_median_intercept_all_mk <- results_est_par$dsr_allele_median_intercept_all_mk
@@ -413,6 +414,24 @@ est_par_result_server <- function(id, rv_output){
         dt_result_gamma <- data.table(Beta = signif(gamma_median_beta, 3),
                                       Rhat_Beta = signif(gamma_rhat_beta, 3),
                                       Rhat_Likelihood = signif(gamma_rhat_lp, 3)
+        )
+
+        n_mk <- length(markers_par)
+        dt_par <- data.table(Marker = c(rep(markers_par, 5), NA),
+                             Parameter = c(rep("AE", n_mk), rep("BSR", n_mk), rep("FSR", n_mk), rep("DSR", n_mk), rep("M2SR", n_mk), "Gamma"),
+                             Model = c(rep("Log-normal", n_mk), bsr_best_model_all_mk, fsr_best_model_all_mk, dsr_best_model_all_mk, m2sr_best_model_all_mk, "Gamma"),
+                             Myu = c(ae_median_myu_all_mk, bsr_best_median_myu_all_mk, fsr_best_median_myu_all_mk, dsr_best_median_myu_all_mk, m2sr_best_median_myu_all_mk, NA),
+                             Slope = c(rep(NA, n_mk), bsr_best_median_slope_all_mk, fsr_best_median_slope_all_mk, dsr_best_median_slope_all_mk, rep(NA, n_mk), NA),
+                             Intercept = c(rep(NA, n_mk), bsr_best_median_intercept_all_mk, fsr_best_median_intercept_all_mk, dsr_best_median_intercept_all_mk, rep(NA, n_mk), NA),
+                             Sigma = c(ae_median_sigma_all_mk, bsr_best_median_sigma_all_mk, fsr_best_median_sigma_all_mk, dsr_best_median_sigma_all_mk, m2sr_best_median_sigma_all_mk, NA),
+                             MinUS = c(rep(NA, n_mk), bsr_best_min_us_all_mk, fsr_best_min_us_all_mk, dsr_best_min_us_all_mk, rep(NA, n_mk), NA),
+                             Beta = c(rep(NA, 5 * n_mk), gamma_median_beta),
+                             Rhat_Myu = c(ae_rhat_myu_all_mk, bsr_best_rhat_myu_all_mk, fsr_best_rhat_myu_all_mk, dsr_best_rhat_myu_all_mk, m2sr_best_rhat_myu_all_mk, NA),
+                             Rhat_Slope = c(rep(NA, n_mk), bsr_best_rhat_slope_all_mk, fsr_best_rhat_slope_all_mk, dsr_best_rhat_slope_all_mk, rep(NA, n_mk), NA),
+                             Rhat_Intercept = c(rep(NA, n_mk), bsr_best_median_intercept_all_mk, fsr_best_median_intercept_all_mk, dsr_best_median_intercept_all_mk, rep(NA, n_mk), NA),
+                             Rhat_Sigma = c(ae_rhat_sigma_all_mk, bsr_best_median_sigma_all_mk, fsr_best_median_sigma_all_mk, dsr_best_median_sigma_all_mk, m2sr_best_median_sigma_all_mk, NA),
+                             Rhat_Beta = c(rep(NA, 5 * n_mk), gamma_rhat_beta),
+                             Rhat_Likelihood = c(ae_rhat_lp_all_mk, bsr_best_rhat_lp_all_mk, fsr_best_rhat_lp_all_mk, dsr_best_rhat_lp_all_mk, m2sr_best_rhat_lp_all_mk, gamma_rhat_lp)
         )
       }
 
@@ -786,9 +805,7 @@ est_par_result_server <- function(id, rv_output){
 
       #### Show allele repeat corrections ####
 
-      rv_alcor <- reactiveValues()
-      rv_alcor$alleles <- NULL
-      rv_alcor$alcors <- NULL
+      rv_dt_alcor <- reactiveVal(NULL)
 
       # Change the status of the 'Corrected allele' button
       observeEvent(input$tabset_est_par_result, {
@@ -799,134 +816,98 @@ est_par_result_server <- function(id, rv_output){
         }
       })
 
-      observeEvent(input$dt_result_bsr_rows_selected, {
-        adopt_model_bsr <- dt_result_bsr$Model[row_index_select]
-        if(is.element(adopt_model_bsr, c("LUS", "Multi-sequence"))){
-          enable("act_alcor")
-        }else{
-          disable("act_alcor")
-        }
-      })
-
-      observeEvent(input$dt_result_fsr_rows_selected, {
-        adopt_model_fsr <- dt_result_fsr$Model[row_index_select]
-        if(is.element(adopt_model_fsr, c("LUS", "Multi-sequence"))){
-          enable("act_alcor")
-        }else{
-          disable("act_alcor")
-        }
-      })
-
-      observeEvent(input$dt_result_dsr_rows_selected, {
-        adopt_model_dsr <- dt_result_dsr$Model[row_index_select]
-        if(is.element(adopt_model_dsr, c("LUS", "Multi-sequence"))){
-          enable("act_alcor")
-        }else{
-          disable("act_alcor")
-        }
-      })
-
       observeEvent(input$act_alcor, {
+        bool_make_dt <- FALSE
         tabset_est_par_result <- input$tabset_est_par_result
 
         # BSR
         if(tabset_est_par_result == "BSR"){
-          if(!is.null(bsr_alcor_all_mk)){
+          if(!is.null(dt_alcor_bsr)){
             row_index_select <- input$dt_result_bsr_rows_selected
             if(isTruthy(row_index_select)){
               adopt_model_bsr <- dt_result_bsr$Model[row_index_select]
               if(is.element(adopt_model_bsr, c("LUS", "Multi-sequence"))){
-                bsr_alcor_selected <- bsr_alcor_all_mk[[row_index_select]]
-                rv_alcor$alleles <- bsr_alcor_selected$info_al
-                if(adopt_model_bsr == "LUS"){
-                  rv_alcor$alcors <- bsr_alcor_selected$info_lus
-                }else{
-                  rv_alcor$alcors <- bsr_alcor_selected$info_ca
-                }
+                bool_make_dt <- TRUE
+                mk <- markers_par[row_index_select]
+                setkey(dt_alcor_bsr, Marker)
+                dt_alcor_bsr_mk <- dt_alcor_bsr[mk]
+                alleles <- dt_alcor_bsr_mk[, Allele]
+                alcors <- dt_alcor_bsr_mk[, Corrected]
               }else{
-                rv_alcor$alleles <- NULL
-                rv_alcor$alcors <- NULL
+                showModal(modalDialog(title = "Information", "Information on corrected alleles are shown only when the adopted model is 'LUS' or 'Multi-sequence'.", easyClose = TRUE, footer = NULL))
               }
             }else{
-              rv_alcor$alleles <- NULL
-              rv_alcor$alcors <- NULL
+              showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
             }
-          }else{
-            rv_alcor$alleles <- NULL
-            rv_alcor$alcors <- NULL
           }
         }
 
         # FSR
-        if(tabset_est_par_result == "fsr"){
-          if(!is.null(fsr_alcor_all_mk)){
+        else if(tabset_est_par_result == "fsr"){
+          if(!is.null(dt_alcor_fsr)){
             row_index_select <- input$dt_result_fsr_rows_selected
             if(isTruthy(row_index_select)){
               adopt_model_fsr <- dt_result_fsr$Model[row_index_select]
               if(is.element(adopt_model_fsr, c("LUS", "Multi-sequence"))){
-                fsr_alcor_selected <- fsr_alcor_all_mk[[row_index_select]]
-                rv_alcor$alleles <- fsr_alcor_selected$info_al
-                if(adopt_model_fsr == "LUS"){
-                  rv_alcor$alcors <- fsr_alcor_selected$info_lus
-                }else{
-                  rv_alcor$alcors <- fsr_alcor_selected$info_ca
-                }
+                bool_make_dt <- TRUE
+                mk <- markers_par[row_index_select]
+                setkey(dt_alcor_fsr, Marker)
+                dt_alcor_fsr_mk <- dt_alcor_fsr[mk]
+                alleles <- dt_alcor_fsr_mk[, Allele]
+                alcors <- dt_alcor_fsr_mk[, Corrected]
               }else{
-                rv_alcor$alleles <- NULL
-                rv_alcor$alcors <- NULL
+                showModal(modalDialog(title = "Information", "Information on corrected alleles are shown only when the adopted model is 'LUS' or 'Multi-sequence'.", easyClose = TRUE, footer = NULL))
               }
             }else{
-              rv_alcor$alleles <- NULL
-              rv_alcor$alcors <- NULL
+              showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
             }
-          }else{
-            rv_alcor$alleles <- NULL
-            rv_alcor$alcors <- NULL
           }
         }
 
         # DSR
-        if(tabset_est_par_result == "dsr"){
-          if(!is.null(dsr_alcor_all_mk)){
+        else if(tabset_est_par_result == "dsr"){
+          if(!is.null(dt_alcor_dsr)){
             row_index_select <- input$dt_result_dsr_rows_selected
             if(isTruthy(row_index_select)){
               adopt_model_dsr <- dt_result_dsr$Model[row_index_select]
               if(is.element(adopt_model_dsr, c("LUS", "Multi-sequence"))){
-                dsr_alcor_selected <- dsr_alcor_all_mk[[row_index_select]]
-                rv_alcor$alleles <- dsr_alcor_selected$info_al
-                if(adopt_model_dsr == "LUS"){
-                  rv_alcor$alcors <- dsr_alcor_selected$info_lus
-                }else{
-                  rv_alcor$alcors <- dsr_alcor_selected$info_ca
-                }
+                bool_make_dt <- TRUE
+                mk <- markers_par[row_index_select]
+                setkey(dt_alcor_dsr, Marker)
+                dt_alcor_dsr_mk <- dt_alcor_dsr[mk]
+                alleles <- dt_alcor_dsr_mk[, Allele]
+                alcors <- dt_alcor_dsr_mk[, Corrected]
               }else{
-                rv_alcor$alleles <- NULL
-                rv_alcor$alcors <- NULL
+                showModal(modalDialog(title = "Information", "Information on corrected alleles are shown only when the adopted model is 'LUS' or 'Multi-sequence'.", easyClose = TRUE, footer = NULL))
               }
             }else{
-              rv_alcor$alleles <- NULL
-              rv_alcor$alcors <- NULL
+              showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
             }
-          }else{
-            rv_alcor$alleles <- NULL
-            rv_alcor$alcors <- NULL
           }
+        }
+
+        if(bool_make_dt){
+          dt_alcor <- data.table(Allele = alleles,
+                                 Corrected = signif(alcors, 3))
+          rv_dt_alcor(dt_alcor)
+
+          showModal(modalDialog(
+            title = "Corrected allele",
+            dataTableOutput(session$ns("dt_alcor"))
+          ))
+        }else{
+          rv_dt_alcor(NULL)
         }
       })
 
       output$dt_alcor <- renderDataTable(server = FALSE, {
-        alleles <- rv_alcor$alleles
-        alcors <- rv_alcor$alcors
-        if(!is.null(alleles) && !is.null(alcors)){
-          dt_alcor <- data.table(Allele = alleles,
-                                 Corrected = alcors)
-          datatable(
-            dt_alcor,
-            selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_alcor), ordering = FALSE, autowidth = TRUE),
-            rownames = FALSE
-          )
-        }
+        dt_alcor <- rv_dt_alcor()
+        datatable(
+          dt_alcor,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_alcor), ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        )
       })
 
       #### Show AIC values and parameters ####
@@ -1213,6 +1194,44 @@ est_par_result_server <- function(id, rv_output){
           options = list(dom = "t", iDisplayLength = nrow(dt_aic_dsr), ordering = FALSE, autowidth = TRUE),
           rownames = FALSE
         )
+      })
+
+      #### Save parameters ####
+
+      rv_par_names <- reactiveVal(NULL)
+
+      observeEvent(input$act_save_par, {
+        par_names <- list.files(paste0(path_pack, "/extdata/parameter"))
+        rv_par_names(gsub(".{4}$", "", par_names))
+
+        showModal(modalDialog(
+          title = "Save parameters",
+          textInput(session$ns("proj_par"), label = "Enter the project name"),
+          footer = tagList(
+            disabled(actionButton(session$ns("act_save_par_2"), "Save")),
+            modalButton("Close")
+          )
+        ))
+      })
+
+      observeEvent(input$proj_par, {
+        isolate(proj_par <- input$proj_par)
+        if(nchar(proj_par) == 0){
+          showFeedbackDanger(inputId = "proj_par", text = "Required")
+          disable("act_save_par_2")
+        }else if(is.element(proj_par, rv_par_names())){
+          showFeedbackDanger(inputId = "proj_par", text = "This name is already registered.")
+          disable("act_save_par_2")
+        }else{
+          hideFeedback("proj_par")
+          enable("act_save_par_2")
+        }
+      })
+
+      observeEvent(input$act_save_par_2, {
+        isolate(proj_par <- input$proj_par)
+        write.csv(dt_par, paste0(path_pack, "/extdata/parameter/", proj_par, ".csv"), row.names = FALSE)
+        removeModal()
       })
 
       #### Result table ####

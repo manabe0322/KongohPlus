@@ -220,9 +220,7 @@ calc_eph_all_data <- function(n_oph, tph_all_data, gt_list, peak_list,
         bsr_alcor_one_mk <- bsr_alcor_all_mk[[j]]
         if(adopt_model_bsr == "Allele"){
           alcor_bsr <- bsr_alcor_one_mk$info_al
-        }else if(adopt_model_bsr == "LUS"){
-          alcor_bsr <- bsr_alcor_one_mk$info_lus
-        }else if(adopt_model_bsr == "Multi-sequence"){
+        }else if(is.element(adopt_model_bsr, c("LUS", "Multi-sequence"))){
           alcor_bsr <- bsr_alcor_one_mk$info_ca
         }else{
           alcor_bsr <- NULL
@@ -232,9 +230,7 @@ calc_eph_all_data <- function(n_oph, tph_all_data, gt_list, peak_list,
         fsr_alcor_one_mk <- fsr_alcor_all_mk[[j]]
         if(adopt_model_fsr == "Allele"){
           alcor_fsr <- fsr_alcor_one_mk$info_al
-        }else if(adopt_model_fsr == "LUS"){
-          alcor_fsr <- fsr_alcor_one_mk$info_lus
-        }else if(adopt_model_fsr == "Multi-sequence"){
+        }else if(is.element(adopt_model_fsr, c("LUS", "Multi-sequence"))){
           alcor_fsr <- fsr_alcor_one_mk$info_ca
         }else{
           alcor_fsr <- NULL
@@ -244,9 +240,7 @@ calc_eph_all_data <- function(n_oph, tph_all_data, gt_list, peak_list,
         dsr_alcor_one_mk <- dsr_alcor_all_mk[[j]]
         if(adopt_model_dsr == "Allele"){
           alcor_dsr <- dsr_alcor_one_mk$info_al
-        }else if(adopt_model_dsr == "LUS"){
-          alcor_dsr <- dsr_alcor_one_mk$info_lus
-        }else if(adopt_model_dsr == "Multi-sequence"){
+        }else if(is.element(adopt_model_dsr, c("LUS", "Multi-sequence"))){
           alcor_dsr <- dsr_alcor_one_mk$info_ca
         }else{
           alcor_dsr <- NULL
