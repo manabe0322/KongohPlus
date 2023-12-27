@@ -164,15 +164,39 @@ calc_eph_base <- function(gt_comb, peaks, tph,
 #'
 #' @description The function to calculate the expected peak heights of all data
 #' @param tph_all_data The average total peak heights of all data
-calc_eph_all_data <- function(n_oph, tph_all_data, gt_list, peak_list,
-                              ae_median_myu_all_mk,
-                              bsr_alcor_all_mk, bsr_best_model_all_mk, bsr_best_median_myu_all_mk, bsr_best_median_slope_all_mk, bsr_best_median_intercept_all_mk, bsr_best_min_us_all_mk,
-                              fsr_alcor_all_mk, fsr_best_model_all_mk, fsr_best_median_myu_all_mk, fsr_best_median_slope_all_mk, fsr_best_median_intercept_all_mk, fsr_best_min_us_all_mk,
-                              dsr_alcor_all_mk, dsr_best_model_all_mk, dsr_best_median_myu_all_mk, dsr_best_median_slope_all_mk, dsr_best_median_intercept_all_mk, dsr_best_min_us_all_mk,
-                              m2sr_best_model_all_mk, m2sr_best_median_myu_all_mk){
+calc_eph_all_data <- function(markers_par, n_oph, tph_all_data, gt_list, peak_list,
+                              dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr,
+                              dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr){
   n_gt <- length(gt_list)
-  n_mk <- length(ae_median_myu_all_mk)
+  n_mk <- length(markers_par)
   eph_all_data <- rep(0, n_oph)
+
+  setkey(dt_alcor_bsr, Marker)
+  setkey(dt_alcor_fsr, Marker)
+  setkey(dt_alcor_dsr, Marker)
+
+  ae_myu_all_mk <- dt_result_ae[, Myu]
+
+  bsr_model_all_mk <- dt_result_bsr[, Model]
+  bsr_myu_all_mk <- dt_result_bsr[, Myu]
+  bsr_slope_all_mk <- dt_result_bsr[, Slope]
+  bsr_intercept_all_mk <- dt_result_bsr[, Intercept]
+  bsr_min_us_all_mk <- dt_result_bsr[, MinUS]
+
+  fsr_model_all_mk <- dt_result_fsr[, Model]
+  fsr_myu_all_mk <- dt_result_fsr[, Myu]
+  fsr_slope_all_mk <- dt_result_fsr[, Slope]
+  fsr_intercept_all_mk <- dt_result_fsr[, Intercept]
+  fsr_min_us_all_mk <- dt_result_fsr[, MinUS]
+
+  dsr_model_all_mk <- dt_result_dsr[, Model]
+  dsr_myu_all_mk <- dt_result_dsr[, Myu]
+  dsr_slope_all_mk <- dt_result_dsr[, Slope]
+  dsr_intercept_all_mk <- dt_result_dsr[, Intercept]
+  dsr_min_us_all_mk <- dt_result_dsr[, MinUS]
+
+  m2sr_model_all_mk <- dt_result_m2sr[, Model]
+  m2sr_myu_all_mk <- dt_result_m2sr[, Myu]
 
   # Define the initial index of peaks
   index_current <- 1
@@ -183,65 +207,66 @@ calc_eph_all_data <- function(n_oph, tph_all_data, gt_list, peak_list,
     tph <- tph_all_data[i]
 
     for(j in 1:n_mk){
+      mk <- markers_par[j]
       gt <- gt_one_data[j, ]
       peaks <- peaks_one_data[[j]]
       n_peak <- length(peaks)
 
       if(n_peak > 0){
         # Extract parameters of AE
-        myu_ae <- ae_median_myu_all_mk[j]
+        myu_ae <- ae_myu_all_mk[j]
 
         # Extract parameters of BSR
-        adopt_model_bsr <- bsr_best_model_all_mk[j]
-        myu_bsr <- bsr_best_median_myu_all_mk[j]
-        slope_bsr <- bsr_best_median_slope_all_mk[j]
-        intercept_bsr <- bsr_best_median_intercept_all_mk[j]
-        min_us_bsr <- bsr_best_min_us_all_mk[j]
+        adopt_model_bsr <- bsr_model_all_mk[j]
+        myu_bsr <- bsr_myu_all_mk[j]
+        slope_bsr <- bsr_slope_all_mk[j]
+        intercept_bsr <- bsr_intercept_all_mk[j]
+        min_us_bsr <- bsr_min_us_all_mk[j]
 
         # Extract parameters of FSR
-        adopt_model_fsr <- fsr_best_model_all_mk[j]
-        myu_fsr <- fsr_best_median_myu_all_mk[j]
-        slope_fsr <- fsr_best_median_slope_all_mk[j]
-        intercept_fsr <- fsr_best_median_intercept_all_mk[j]
-        min_us_fsr <- fsr_best_min_us_all_mk[j]
+        adopt_model_fsr <- fsr_model_all_mk[j]
+        myu_fsr <- fsr_myu_all_mk[j]
+        slope_fsr <- fsr_slope_all_mk[j]
+        intercept_fsr <- fsr_intercept_all_mk[j]
+        min_us_fsr <- fsr_min_us_all_mk[j]
 
         # Extract parameters of DSR
-        adopt_model_dsr <- dsr_best_model_all_mk[j]
-        myu_dsr <- dsr_best_median_myu_all_mk[j]
-        slope_dsr <- dsr_best_median_slope_all_mk[j]
-        intercept_dsr <- dsr_best_median_intercept_all_mk[j]
-        min_us_dsr <- dsr_best_min_us_all_mk[j]
+        adopt_model_dsr <- dsr_model_all_mk[j]
+        myu_dsr <- dsr_myu_all_mk[j]
+        slope_dsr <- dsr_slope_all_mk[j]
+        intercept_dsr <- dsr_intercept_all_mk[j]
+        min_us_dsr <- dsr_min_us_all_mk[j]
 
         # Extract parameters of M2SR
-        adopt_model_m2sr <- m2sr_best_model_all_mk[j]
-        myu_m2sr <- m2sr_best_median_myu_all_mk[j]
+        adopt_model_m2sr <- m2sr_model_all_mk[j]
+        myu_m2sr <- m2sr_myu_all_mk[j]
 
         # Assign information on allele repeat correction for BSR
-        bsr_alcor_one_mk <- bsr_alcor_all_mk[[j]]
+        dt_alcor_bsr_mk <- dt_alcor_bsr[mk]
         if(adopt_model_bsr == "Allele"){
-          alcor_bsr <- bsr_alcor_one_mk$info_al
+          alcor_bsr <- dt_alcor_bsr_mk[, Allele]
         }else if(is.element(adopt_model_bsr, c("LUS", "Multi-sequence"))){
-          alcor_bsr <- bsr_alcor_one_mk$info_ca
+          alcor_bsr <- dt_alcor_bsr_mk[, Corrected]
         }else{
           alcor_bsr <- NULL
         }
 
         # Assign information on allele repeat correction for FSR
-        fsr_alcor_one_mk <- fsr_alcor_all_mk[[j]]
+        dt_alcor_fsr_mk <- dt_alcor_fsr[mk]
         if(adopt_model_fsr == "Allele"){
-          alcor_fsr <- fsr_alcor_one_mk$info_al
+          alcor_fsr <- dt_alcor_fsr_mk[, Allele]
         }else if(is.element(adopt_model_fsr, c("LUS", "Multi-sequence"))){
-          alcor_fsr <- fsr_alcor_one_mk$info_ca
+          alcor_fsr <- dt_alcor_fsr_mk[, Corrected]
         }else{
           alcor_fsr <- NULL
         }
 
         # Assign information on allele repeat correction for DSR
-        dsr_alcor_one_mk <- dsr_alcor_all_mk[[j]]
+        dt_alcor_dsr_mk <- dt_alcor_dsr[mk]
         if(adopt_model_dsr == "Allele"){
-          alcor_dsr <- dsr_alcor_one_mk$info_al
+          alcor_dsr <- dt_alcor_dsr_mk[, Allele]
         }else if(is.element(adopt_model_dsr, c("LUS", "Multi-sequence"))){
-          alcor_dsr <- dsr_alcor_one_mk$info_ca
+          alcor_dsr <- dt_alcor_dsr_mk[, Corrected]
         }else{
           alcor_dsr <- NULL
         }

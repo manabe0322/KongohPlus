@@ -274,8 +274,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       rv_advanced$chains <- 4
       rv_advanced$pu_auto <- TRUE
       rv_advanced$pu_dist <- 1
-      rv_advanced$motif_lus <- 2
-      rv_advanced$motif_multi <- 3
+      rv_advanced$min_n_motif_lus <- 2
+      rv_advanced$min_n_motif_multi <- 3
 
       # Make the setting pop-up window
       observeEvent(input$act_advanced, {
@@ -294,8 +294,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
                    numericInput(session$ns("pu_dist"), label = "Maximum pull-up distance (bp)", value = rv_advanced$pu_dist),
                    br(),
                    h4("Stutter model"),
-                   numericInput(session$ns("motif_lus"), label = "Minimum number of repeat motifs for considering the LUS model", value = rv_advanced$motif_lus),
-                   numericInput(session$ns("motif_multi"), label = "Minimum number of repeat motifs for considering the multi-sequence model", value = rv_advanced$motif_multi)
+                   numericInput(session$ns("min_n_motif_lus"), label = "Minimum number of repeat motifs for considering the LUS model", value = rv_advanced$min_n_motif_lus),
+                   numericInput(session$ns("min_n_motif_multi"), label = "Minimum number of repeat motifs for considering the multi-sequence model", value = rv_advanced$min_n_motif_multi)
             )
           ),
           footer = tagList(
@@ -349,25 +349,25 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           }
         })
 
-        observeEvent(input$motif_lus, {
-          motif_lus <- input$motif_lus
-          if(!is.integer(motif_lus)){
-            showFeedbackDanger(inputId = "motif_lus", text = "A positive integer is required!")
-          }else if(motif_lus <= 0){
-            showFeedbackDanger(inputId = "motif_lus", text = "A positive integer is required!")
+        observeEvent(input$min_n_motif_lus, {
+          min_n_motif_lus <- input$min_n_motif_lus
+          if(!is.integer(min_n_motif_lus)){
+            showFeedbackDanger(inputId = "min_n_motif_lus", text = "A positive integer is required!")
+          }else if(min_n_motif_lus <= 0){
+            showFeedbackDanger(inputId = "min_n_motif_lus", text = "A positive integer is required!")
           }else{
-            hideFeedback("motif_lus")
+            hideFeedback("min_n_motif_lus")
           }
         })
 
-        observeEvent(input$motif_multi, {
-          motif_multi <- input$motif_multi
-          if(!is.integer(motif_multi)){
-            showFeedbackDanger(inputId = "motif_multi", text = "A positive integer is required!")
-          }else if(motif_multi <= 0){
-            showFeedbackDanger(inputId = "motif_multi", text = "A positive integer is required!")
+        observeEvent(input$min_n_motif_multi, {
+          min_n_motif_multi <- input$min_n_motif_multi
+          if(!is.integer(min_n_motif_multi)){
+            showFeedbackDanger(inputId = "min_n_motif_multi", text = "A positive integer is required!")
+          }else if(min_n_motif_multi <= 0){
+            showFeedbackDanger(inputId = "min_n_motif_multi", text = "A positive integer is required!")
           }else{
-            hideFeedback("motif_multi")
+            hideFeedback("min_n_motif_multi")
           }
         })
       })
@@ -378,25 +378,25 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         req(input$sampling)
         req(input$chains)
         req(input$pu_dist)
-        req(input$motif_lus)
-        req(input$motif_multi)
+        req(input$min_n_motif_lus)
+        req(input$min_n_motif_multi)
 
         isolate(warmup <- input$warmup)
         isolate(sampling <- input$sampling)
         isolate(chains <- input$chains)
         isolate(pu_auto <- input$pu_auto)
         isolate(pu_dist <- input$pu_dist)
-        isolate(motif_lus <- input$motif_lus)
-        isolate(motif_multi <- input$motif_multi)
+        isolate(min_n_motif_lus <- input$min_n_motif_lus)
+        isolate(min_n_motif_multi <- input$min_n_motif_multi)
 
-        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains), is.numeric(pu_dist), is.integer(motif_lus), is.integer(motif_multi))){
+        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains), is.numeric(pu_dist), is.integer(min_n_motif_lus), is.integer(min_n_motif_multi))){
           rv_advanced$warmup <- warmup
           rv_advanced$sampling <- sampling
           rv_advanced$chains <- chains
           rv_advanced$pu_auto <- pu_auto
           rv_advanced$pu_dist <- pu_dist
-          rv_advanced$motif_lus <- motif_lus
-          rv_advanced$motif_multi <- motif_multi
+          rv_advanced$min_n_motif_lus <- min_n_motif_lus
+          rv_advanced$min_n_motif_multi <- min_n_motif_multi
 
           removeModal()
         }
@@ -416,8 +416,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         n_sampling <- rv_advanced$sampling
         n_chains <- rv_advanced$chains
         pu_dist <- rv_advanced$pu_dist
-        motif_lus <- rv_advanced$motif_lus
-        motif_multi <- rv_advanced$motif_multi
+        min_n_motif_lus <- rv_advanced$min_n_motif_lus
+        min_n_motif_multi <- rv_advanced$min_n_motif_multi
 
         # Check input files and setting
         error_message <- check_est_par(dt_exp, dt_gt, dt_seq, dt_kit_set)
@@ -434,7 +434,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set,
                                                  model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
                                                  n_warmup, n_sampling, n_chains,
-                                                 motif_lus, motif_multi)
+                                                 min_n_motif_lus, min_n_motif_multi)
           rv_output$results_est_par <- results_est_par
 
           updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result")

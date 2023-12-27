@@ -5,31 +5,19 @@
 \title{calc_eph_all_data}
 \usage{
 calc_eph_all_data(
+  markers_par,
   n_oph,
   tph_all_data,
   gt_list,
   peak_list,
-  ae_median_myu_all_mk,
-  bsr_alcor_all_mk,
-  bsr_best_model_all_mk,
-  bsr_best_median_myu_all_mk,
-  bsr_best_median_slope_all_mk,
-  bsr_best_median_intercept_all_mk,
-  bsr_best_min_us_all_mk,
-  fsr_alcor_all_mk,
-  fsr_best_model_all_mk,
-  fsr_best_median_myu_all_mk,
-  fsr_best_median_slope_all_mk,
-  fsr_best_median_intercept_all_mk,
-  fsr_best_min_us_all_mk,
-  dsr_alcor_all_mk,
-  dsr_best_model_all_mk,
-  dsr_best_median_myu_all_mk,
-  dsr_best_median_slope_all_mk,
-  dsr_best_median_intercept_all_mk,
-  dsr_best_min_us_all_mk,
-  m2sr_best_model_all_mk,
-  m2sr_best_median_myu_all_mk
+  dt_result_ae,
+  dt_result_bsr,
+  dt_result_fsr,
+  dt_result_dsr,
+  dt_result_m2sr,
+  dt_alcor_bsr,
+  dt_alcor_fsr,
+  dt_alcor_dsr
 )
 }
 \arguments{

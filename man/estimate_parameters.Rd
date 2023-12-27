@@ -17,9 +17,9 @@ estimate_parameters(
   n_warmup,
   n_sampling,
   n_chains,
-  motif_lus,
-  motif_multi,
-  max_cand_us = 10,
+  min_n_motif_lus,
+  min_n_motif_multi,
+  max_n_motif_multi = 10,
   n_parallel_chains = detectCores()
 )
 }
@@ -48,9 +48,9 @@ estimate_parameters(
 
 \item{n_chains}{The number of chains}
 
-\item{motif_lus}{The minimum number of repeat motifs for considering the LUS model}
+\item{min_n_motif_lus}{The minimum number of repeat motifs for considering the LUS model}
 
-\item{motif_multi}{The minimum number of repeat motifs for considering the multi-sequence model}
+\item{min_n_motif_multi}{The minimum number of repeat motifs for considering the multi-sequence model}
 
 \item{n_parallel_chains}{The number of parallel chains}
 }
