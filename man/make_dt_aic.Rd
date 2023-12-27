@@ -25,6 +25,7 @@ make_dt_aic(
   sr_multi_median_slope_all_mk,
   sr_multi_median_intercept_all_mk,
   sr_multi_median_sigma_all_mk,
+  sr_multi_min_us_all_mk,
   sr_multi_rhat_slope_all_mk,
   sr_multi_rhat_intercept_all_mk,
   sr_multi_rhat_sigma_all_mk,
@@ -71,6 +72,8 @@ make_dt_aic(
 \item{sr_multi_median_intercept_all_mk}{The intercept parameters of all markers under the Multi-sequence model}
 
 \item{sr_multi_median_sigma_all_mk}{The sigma parameters of all markers under the Multi-sequence model}
+
+\item{sr_multi_min_us_all_mk}{The MinUS parameters of all markers under the Multi-sequence model}
 
 \item{sr_multi_rhat_slope_all_mk}{The Rhat values for the slope parameters of all markers under the Multi-sequence model}
 

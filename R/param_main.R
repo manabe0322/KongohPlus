@@ -130,7 +130,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
                                          n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
 
   # Perform the MCMC for the minus 2-nt stutter ratio
-  m2sr_result_list <- analyze_m2sr_main(markers_par, model_m2sr_all_mk,
+  m2sr_result_list <- analyze_m2sr_main(markers_par, model_m2sr_all_mk, model_sr_uni, model_sr_together,
                                         m2sr_data, allele_sr_data, height_sr_data,
                                         lus_all_mk,
                                         n_warmup, n_sampling, n_chains, n_parallel_chains)
@@ -148,7 +148,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
   dt_alcor_bsr <- bsr_result_list$dt_alcor
   dt_alcor_fsr <- fsr_result_list$dt_alcor
   dt_alcor_dsr <- dsr_result_list$dt_alcor
-  eph_all_data <- calc_eph_all_data(n_oph, tph_all_data, gt_list, peak_list,
+  eph_all_data <- calc_eph_all_data(markers_par, n_oph, tph_all_data, gt_list, peak_list,
                                     dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr,
                                     dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr)
 

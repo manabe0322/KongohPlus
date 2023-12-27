@@ -455,7 +455,7 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
                         sr_multi_median_slope_all_mk, sr_multi_median_intercept_all_mk, sr_multi_median_sigma_all_mk, sr_multi_min_us_all_mk,
                         sr_multi_rhat_slope_all_mk, sr_multi_rhat_intercept_all_mk, sr_multi_rhat_sigma_all_mk, sr_multi_rhat_lp_all_mk)
 
-  return(list(dt_result = dt_result_sr,
+  return(list(dt_result = dt_result,
               dt_alcor = dt_alcor,
               dt_aic = dt_aic,
               traceplot = sr_best_trace_all_mk,
@@ -468,6 +468,7 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
 #' @param markers_par The vector of markers for parameters
 #' @param model_sr_all_mk The vector of model settings of all markers
 #' @param model_sr_uni The stan model for the uniform model
+#' @param model_sr_together The stan model for multiple loci together
 #' @param sr_data The minus 2-nt stutter ratios of all markers
 #' @param allele_sr_data The parent alleles for each stutter ratios of all markers
 #' @param height_sr_data The total allelic products of all markers
@@ -476,7 +477,7 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
 #' @param n_sampling The number of simulations for sampling
 #' @param n_chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
-analyze_m2sr_main <- function(markers_par, model_sr_all_mk, model_sr_uni,
+analyze_m2sr_main <- function(markers_par, model_sr_all_mk, model_sr_uni, model_sr_together,
                               sr_data, allele_sr_data, height_sr_data,
                               lus_all_mk,
                               n_warmup, n_sampling, n_chains, n_parallel_chains){
