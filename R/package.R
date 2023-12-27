@@ -8,7 +8,6 @@
 #' @importFrom magrittr "%>%"
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
-#' @importFrom shinyBS bsModal
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
 #' @importFrom shinyjs disable disabled enable useShinyjs
 #' @importFrom shinythemes shinytheme
