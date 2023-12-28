@@ -166,6 +166,10 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
   gamma_result_list <- list(dt_result = dt_result_gamma,
                             traceplot = tmp$traceplot)
 
+  #### Combine corrected alleles ####
+
+  dt_alcor_combined <- make_dt_alcor_combined(dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr)
+
   #### Results of estimated parameters ####
 
   dt_par <- make_dt_par(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr, dt_result_gamma)
@@ -177,5 +181,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
               "dsr_result_list" = dsr_result_list,
               "m2sr_result_list" = m2sr_result_list,
               "gamma_result_list" = gamma_result_list,
+              "dt_alcor_combined" = dt_alcor_combined,
               "dt_par" = dt_par))
 }

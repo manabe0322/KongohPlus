@@ -8,6 +8,7 @@ analyze_m2sr_main(
   markers_par,
   model_sr_all_mk,
   model_sr_uni,
+  model_sr_together,
   sr_data,
   allele_sr_data,
   height_sr_data,
@@ -24,6 +25,8 @@ analyze_m2sr_main(
 \item{model_sr_all_mk}{The vector of model settings of all markers}
 
 \item{model_sr_uni}{The stan model for the uniform model}
+
+\item{model_sr_together}{The stan model for multiple loci together}
 
 \item{sr_data}{The minus 2-nt stutter ratios of all markers}
 

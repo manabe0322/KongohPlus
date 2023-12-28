@@ -84,5 +84,5 @@ make_dt_aic(
 \item{sr_multi_rhat_lp_all_mk}{The Rhat values for the likelihoods of all markers under the Multi-sequence model}
 }
 \description{
-The function to make a data.tabel for information on AIC values and parameters of the candidate models
+The function to make a data.table for information on AIC values and parameters of the candidate models
 }

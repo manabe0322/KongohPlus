@@ -41,8 +41,9 @@ make_dt_alcor <- function(markers_par, sr_best_model_all_mk, sr_alcor_all_mk){
   for(i in 1:n_mk){
     mk <- markers_par[i]
     model <- sr_best_model_all_mk[i]
-    info_al <- sr_alcor_all_mk$info_al
-    info_ca <- sr_alcor_all_mk$info_ca
+    sr_alcor_one_mk <- sr_alcor_all_mk[[i]]
+    info_al <- sr_alcor_one_mk$info_al
+    info_ca <- sr_alcor_one_mk$info_ca
 
     n_al <- length(info_al)
     vec_mk <- c(vec_mk, rep(mk, n_al))
@@ -58,9 +59,25 @@ make_dt_alcor <- function(markers_par, sr_best_model_all_mk, sr_alcor_all_mk){
   return(dt_alcor)
 }
 
+#' make_dt_alcor_combined
+#'
+#' @description The function to combine each dt_alcor
+#' @param dt_alcor_bsr The data.table of corrected alleles for BSR
+#' @param dt_alcor_fsr The data.table of corrected alleles for FSR
+#' @param dt_alcor_dsr The data.table of corrected alleles for DSR
+make_dt_alcor_combined <- function(dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr){
+  names(dt_alcor_bsr) <- c("Marker", "Model_BSR", "Allele", "Corrected_BSR")
+  names(dt_alcor_fsr) <- c("Marker", "Model_FSR", "Allele", "Corrected_FSR")
+  names(dt_alcor_dsr) <- c("Marker", "Model_DSR", "Allele", "Corrected_DSR")
+  dt_alcor_combined <- copy(dt_alcor_bsr)
+  dt_alcor_combined <- full_join(dt_alcor_combined, dt_alcor_fsr, by = c("Marker", "Allele"))
+  dt_alcor_combined <- full_join(dt_alcor_combined, dt_alcor_dsr, by = c("Marker", "Allele"))
+  return(dt_alcor_combined)
+}
+
 #' make_dt_aic
 #'
-#' @description The function to make a data.tabel for information on AIC values and parameters of the candidate models
+#' @description The function to make a data.table for information on AIC values and parameters of the candidate models
 #' @param markers_par The vector of markers for parameters
 #' @param model_sr_all_mk The vector of model settings of all markers
 #' @param aics_sr_all_mk The list of AIC values of all markers
@@ -373,7 +390,7 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
   sr_together <- sr_h_together <- id_mk_together <- numeric(0)
   id_mk_count <- 0
   if(n_mk_together_sr > 0){
-    cat(paste0("MCMC for the ", sr_type, ": multiple loci together\n"))
+    cat(paste0("MCMC for the ", sr_type, ": Multiple loci together\n"))
 
     # Prepare data of the target loci
     for(i in 1:n_mk_together_sr){

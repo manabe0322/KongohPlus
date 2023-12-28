@@ -62,6 +62,7 @@ calc_eph_base <- function(gt_comb, peaks, tph,
       index_alcor <- match(al, info_al_alcor)
       bool_not_na_alcor <- !is.na(index_alcor)
     }else{
+      bool_not_na_alcor <- FALSE
       index_alcor <- NA
     }
 
@@ -273,7 +274,7 @@ calc_eph_all_data <- function(markers_par, n_oph, tph_all_data, gt_list, peak_li
 
         # Information on alleles for allele repeat corrections
         if(is.element(adopt_model_bsr, c("Allele", "LUS", "Multi-sequence"))){
-          info_al_one_mk <- bsr_alcor_one_mk$info_al
+          info_al_one_mk <- dt_alcor_bsr_mk[, Allele]
         }else{
           info_al_one_mk <- NULL
         }
