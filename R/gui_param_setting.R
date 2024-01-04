@@ -131,17 +131,6 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         }
       })
 
-#      react_dt_exp <- reactive({
-#        file_input <- input$exp_data
-#        if(is.null(file_input)){
-#          return(NULL)
-#        }else{
-#          dt_exp <- fread(file_input$datapath)
-#          dt_exp <- change_data_type_exp(dt_exp)
-#          return(dt_exp)
-#        }
-#      })
-
       #### Genotype data ####
 
       observeEvent(input$gt_data, {
@@ -152,17 +141,6 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           rv_output$dt_gt <- dt_gt
         }
       })
-
-#      react_dt_gt <- reactive({
-#        file_input <- input$gt_data
-#        if(is.null(file_input)){
-#          return(NULL)
-#        }else{
-#          dt_gt <- fread(file_input$datapath)
-#          dt_gt <- change_data_type_gt(dt_gt)
-#          return(dt_gt)
-#        }
-#      })
 
       #### Sequence data ####
 
@@ -180,17 +158,6 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           rv_output$dt_seq <- dt_seq
         }
       })
-
-#      react_dt_seq <- reactive({
-#        file_input <- input$seq_data
-#        if(is.null(file_input)){
-#          return(NULL)
-#        }else{
-#          dt_seq <- fread(paste0(path_pack, "/extdata/sequence_data/", file_input))
-#          dt_seq <- change_data_type_seq(dt_seq)
-#          return(dt_seq)
-#        }
-#      })
 
       #### Kit-setting ####
 
