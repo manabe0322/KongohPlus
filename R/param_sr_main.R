@@ -27,20 +27,38 @@ set_consider_sr_model <- function(model_sr, reps_one_mk, min_n_motif_lus, min_n_
   return(consider_sr_model)
 }
 
+#' calc_average_sr
+#'
+#' @description The function to calculate the average stutter ratio
+#' @param allele A vector of alleles or corrected alleles
+#' @param slope The slope parameter
+#' @param intercept The intercept parameter
+calc_average_sr <- function(allele, slope, intercept){
+  return(allele * slope + intercept)
+}
+
 #' make_dt_alcor
 #'
 #' @description The function to make a data.table for corrected alleles
 #' @param markers_par The vector of markers for parameters
 #' @param sr_best_model_all_mk The vector of the best SR model for all markers
+#' @param sr_best_median_myu_all_mk The vector of the myu values for all markers under the best SR model
+#' @param sr_best_median_slope_all_mk The vector of the slope values for all markers under the best SR model
+#' @param sr_best_median_intercept_all_mk The vector of the intercept values for all markers under the best SR model
 #' @param sr_alcor_all_mk The list of the information on corrected alleles of all markers
-make_dt_alcor <- function(markers_par, sr_best_model_all_mk, sr_alcor_all_mk){
+make_dt_alcor <- function(markers_par, sr_best_model_all_mk,
+                          sr_best_median_myu_all_mk, sr_best_median_slope_all_mk, sr_best_median_intercept_all_mk,
+                          sr_alcor_all_mk){
   vec_mk <- vec_model <- character(0)
-  vec_info_al <- vec_info_ca <- numeric(0)
+  vec_info_al <- vec_info_ca <- vec_average_sr <- numeric(0)
 
   n_mk <- length(markers_par)
   for(i in 1:n_mk){
     mk <- markers_par[i]
     model <- sr_best_model_all_mk[i]
+    myu <- sr_best_median_myu_all_mk[i]
+    slope <- sr_best_median_slope_all_mk[i]
+    intercept <- sr_best_median_intercept_all_mk[i]
     sr_alcor_one_mk <- sr_alcor_all_mk[[i]]
     info_al <- sr_alcor_one_mk$info_al
     info_ca <- sr_alcor_one_mk$info_ca
@@ -50,12 +68,20 @@ make_dt_alcor <- function(markers_par, sr_best_model_all_mk, sr_alcor_all_mk){
     vec_model <- c(vec_model, rep(model, n_al))
     vec_info_al <- c(vec_info_al, info_al)
     vec_info_ca <- c(vec_info_ca, info_ca)
+
+    if(is.element(model, c("Allele", "LUS", "Multi-sequence"))){
+      average_sr <- calc_average_sr(info_ca, slope, intercept)
+      vec_average_sr <- c(vec_average_sr, average_sr)
+    }else{
+      vec_average_sr <- c(vec_average_sr, rep(myu, n_al))
+    }
   }
 
   dt_alcor <- data.table(Marker = vec_mk,
                          Model = vec_model,
                          Allele = vec_info_al,
-                         Corrected = vec_info_ca)
+                         Corrected = vec_info_ca,
+                         Average_SR = vec_average_sr)
   return(dt_alcor)
 }
 
@@ -66,9 +92,9 @@ make_dt_alcor <- function(markers_par, sr_best_model_all_mk, sr_alcor_all_mk){
 #' @param dt_alcor_fsr The data.table of corrected alleles for FSR
 #' @param dt_alcor_dsr The data.table of corrected alleles for DSR
 make_dt_alcor_combined <- function(dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr){
-  names(dt_alcor_bsr) <- c("Marker", "Model_BSR", "Allele", "Corrected_BSR")
-  names(dt_alcor_fsr) <- c("Marker", "Model_FSR", "Allele", "Corrected_FSR")
-  names(dt_alcor_dsr) <- c("Marker", "Model_DSR", "Allele", "Corrected_DSR")
+  names(dt_alcor_bsr) <- c("Marker", "Model_BSR", "Allele", "Corrected_BSR", "Average_BSR")
+  names(dt_alcor_fsr) <- c("Marker", "Model_FSR", "Allele", "Corrected_FSR", "Average_FSR")
+  names(dt_alcor_dsr) <- c("Marker", "Model_DSR", "Allele", "Corrected_DSR", "Average_DSR")
   dt_alcor_combined <- copy(dt_alcor_bsr)
   dt_alcor_combined <- full_join(dt_alcor_combined, dt_alcor_fsr, by = c("Marker", "Allele"))
   dt_alcor_combined <- full_join(dt_alcor_combined, dt_alcor_dsr, by = c("Marker", "Allele"))
@@ -372,7 +398,9 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
 
       # Allele repeat correction
       info_al_one_mk <- as.numeric(names(lus_all_mk[[id_mk]]))
-      if(sr_best_model_all_mk[id_mk] == "LUS"){
+      if(sr_best_model_all_mk[id_mk] == "Allele"){
+        info_ca_one_mk <- info_al_one_mk
+      }else if(sr_best_model_all_mk[id_mk] == "LUS"){
         info_ca_one_mk <- lus_all_mk[[id_mk]]
       }else if(sr_best_model_all_mk[id_mk] == "Multi-sequence"){
         info_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[index_max_like_multi], reps_one_mk, seq_al_one_mk, seq_count_one_mk, info_al_one_mk)
@@ -461,7 +489,9 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
                           Rhat_Likelihood = sr_best_rhat_lp_all_mk)
 
   ## sr: Make a data.table for corrected alleles
-  dt_alcor <- make_dt_alcor(markers_par, sr_best_model_all_mk, sr_alcor_all_mk)
+  dt_alcor <- make_dt_alcor(markers_par, sr_best_model_all_mk,
+                            sr_best_median_myu_all_mk, sr_best_median_slope_all_mk, sr_best_median_intercept_all_mk,
+                            sr_alcor_all_mk)
 
   # Make a data.table for AIC
   dt_aic <- make_dt_aic(markers_par, model_sr_all_mk, aics_sr_all_mk,

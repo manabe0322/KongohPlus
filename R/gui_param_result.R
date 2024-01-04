@@ -497,15 +497,16 @@ est_par_result_server <- function(id, path_pack, rv_output){
             if(isTruthy(row_index_select)){
               adopt_model_bsr_all_mk <- dt_result_bsr[, Model]
               adopt_model_bsr <- adopt_model_bsr_all_mk[row_index_select]
-              if(is.element(adopt_model_bsr, c("LUS", "Multi-sequence"))){
+              if(is.element(adopt_model_bsr, c("Allele", "LUS", "Multi-sequence"))){
                 bool_make_dt <- TRUE
                 mk <- markers_par[row_index_select]
                 setkey(dt_alcor_bsr, Marker)
                 dt_alcor_bsr_mk <- dt_alcor_bsr[mk]
                 alleles <- dt_alcor_bsr_mk[, Allele]
                 alcors <- dt_alcor_bsr_mk[, Corrected]
+                average_srs <- dt_alcor_bsr_mk[, Average_SR]
               }else{
-                showModal(modalDialog(title = "Information", "Information on corrected alleles are shown only when the adopted model is 'LUS' or 'Multi-sequence'.", easyClose = TRUE, footer = NULL))
+                showModal(modalDialog(title = "Information", "Information on corrected alleles are shown only when the adopted model is 'Allele', 'LUS', or 'Multi-sequence'.", easyClose = TRUE, footer = NULL))
               }
             }else{
               showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
@@ -518,15 +519,16 @@ est_par_result_server <- function(id, path_pack, rv_output){
             if(isTruthy(row_index_select)){
               adopt_model_fsr_all_mk <- dt_result_fsr[, Model]
               adopt_model_fsr <- adopt_model_fsr_all_mk[row_index_select]
-              if(is.element(adopt_model_fsr, c("LUS", "Multi-sequence"))){
+              if(is.element(adopt_model_fsr, c("Allele", "LUS", "Multi-sequence"))){
                 bool_make_dt <- TRUE
                 mk <- markers_par[row_index_select]
                 setkey(dt_alcor_fsr, Marker)
                 dt_alcor_fsr_mk <- dt_alcor_fsr[mk]
                 alleles <- dt_alcor_fsr_mk[, Allele]
                 alcors <- dt_alcor_fsr_mk[, Corrected]
+                average_srs <- dt_alcor_fsr_mk[, Average_SR]
               }else{
-                showModal(modalDialog(title = "Information", "Information on corrected alleles are shown only when the adopted model is 'LUS' or 'Multi-sequence'.", easyClose = TRUE, footer = NULL))
+                showModal(modalDialog(title = "Information", "Information on corrected alleles are shown only when the adopted model is 'Allele', 'LUS', or 'Multi-sequence'.", easyClose = TRUE, footer = NULL))
               }
             }else{
               showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
@@ -539,15 +541,16 @@ est_par_result_server <- function(id, path_pack, rv_output){
             if(isTruthy(row_index_select)){
               adopt_model_dsr_all_mk <- dt_result_dsr[, Model]
               adopt_model_dsr <- adopt_model_dsr_all_mk[row_index_select]
-              if(is.element(adopt_model_dsr, c("LUS", "Multi-sequence"))){
+              if(is.element(adopt_model_dsr, c("Allele", "LUS", "Multi-sequence"))){
                 bool_make_dt <- TRUE
                 mk <- markers_par[row_index_select]
                 setkey(dt_alcor_dsr, Marker)
                 dt_alcor_dsr_mk <- dt_alcor_dsr[mk]
                 alleles <- dt_alcor_dsr_mk[, Allele]
                 alcors <- dt_alcor_dsr_mk[, Corrected]
+                average_srs <- dt_alcor_dsr_mk[, Average_SR]
               }else{
-                showModal(modalDialog(title = "Information", "Information on corrected alleles are shown only when the adopted model is 'LUS' or 'Multi-sequence'.", easyClose = TRUE, footer = NULL))
+                showModal(modalDialog(title = "Information", "Information on corrected alleles are shown only when the adopted model is 'Allele', 'LUS', or 'Multi-sequence'.", easyClose = TRUE, footer = NULL))
               }
             }else{
               showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
@@ -556,7 +559,8 @@ est_par_result_server <- function(id, path_pack, rv_output){
 
           if(bool_make_dt){
             dt_alcor <- data.table(Allele = alleles,
-                                   Corrected = signif(alcors, 3))
+                                   Corrected = signif(alcors, 3),
+                                   Average_SR = signif(average_srs, 3))
             rv_dt_alcor(dt_alcor)
 
             showModal(modalDialog(
@@ -575,6 +579,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
           dt_alcor <- rv_dt_alcor()
           datatable(
             dt_alcor,
+            colnames = c("Allele", "Corrected allele", "Average stutter ratio"),
             selection = "none",
             options = list(dom = "t", iDisplayLength = nrow(dt_alcor), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
