@@ -3,8 +3,8 @@ Kit,GlobalFiler
 Allele probability,Dirichlet
 Minimum allele frequency,
 Theta,0
-Parameters,param_GF_default
-Allele repeat correction,alcor_GF_default
+Parameter,param_GF_default
+Corrected allele,alcor_GF_default
 AT_D3S1358,100
 AT_vWA,100
 AT_D16S539,100
