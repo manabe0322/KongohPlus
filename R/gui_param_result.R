@@ -767,11 +767,8 @@ est_par_result_server <- function(id, path_pack, rv_output){
 
         observeEvent(input$act_download_par, {
           proj_par <- input$proj_par
-          write.csv(dt_par, paste0(path_pack, "/extdata/parameter/", proj_par, ".csv"), row.names = FALSE)
+          write.csv(dt_par, paste0(path_pack, "/extdata/parameter/param_", proj_par, ".csv"), row.names = FALSE)
           write.csv(dt_alcor_combined, paste0(path_pack, "/extdata/corrected_allele/alcor_", proj_par, ".csv"), row.names = FALSE)
-
-          save(results_est_par, file = paste0(path_pack, "/extdata/parameter/proj_", proj_par, ".Rdata"))
-
           removeModal()
         })
 
