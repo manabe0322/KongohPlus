@@ -19,13 +19,13 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
                        Myu = c(dt_result_ae[, Myu], dt_result_bsr[, Myu], dt_result_fsr[, Myu], dt_result_dsr[, Myu], dt_result_m2sr[, Myu], NA),
                        Slope = c(rep(NA, n_mk), dt_result_bsr[, Slope], dt_result_fsr[, Slope], dt_result_dsr[, Slope], rep(NA, n_mk), NA),
                        Intercept = c(rep(NA, n_mk), dt_result_bsr[, Intercept], dt_result_fsr[, Intercept], dt_result_dsr[, Intercept], rep(NA, n_mk), NA),
-                       Sigma = c(dt_result_ae[, Sigma], dt_result_bsr[, Sigma], dt_result_fsr[, Sigma], dt_result_dsr[, Sigma], rep(NA, n_mk), NA),
+                       Sigma = c(dt_result_ae[, Sigma], dt_result_bsr[, Sigma], dt_result_fsr[, Sigma], dt_result_dsr[, Sigma], dt_result_m2sr[, Sigma], NA),
                        MinUS = c(rep(NA, n_mk), dt_result_bsr[, MinUS], dt_result_fsr[, MinUS], dt_result_dsr[, MinUS], rep(NA, n_mk), NA),
                        Beta = c(rep(NA, 5 * n_mk), dt_result_gamma[, Beta]),
                        Rhat_Myu = c(dt_result_ae[, Rhat_Myu], dt_result_bsr[, Rhat_Myu], dt_result_fsr[, Rhat_Myu], dt_result_dsr[, Rhat_Myu], dt_result_m2sr[, Rhat_Myu], NA),
                        Rhat_Slope = c(rep(NA, n_mk), dt_result_bsr[, Rhat_Slope], dt_result_fsr[, Rhat_Slope], dt_result_dsr[, Rhat_Slope], rep(NA, n_mk), NA),
                        Rhat_Intercept = c(rep(NA, n_mk), dt_result_bsr[, Rhat_Intercept], dt_result_fsr[, Rhat_Intercept], dt_result_dsr[, Rhat_Intercept], rep(NA, n_mk), NA),
-                       Rhat_Sigma = c(dt_result_ae[, Rhat_Sigma], dt_result_bsr[, Rhat_Sigma], dt_result_fsr[, Rhat_Sigma], dt_result_dsr[, Rhat_Sigma], rep(NA, n_mk), NA),
+                       Rhat_Sigma = c(dt_result_ae[, Rhat_Sigma], dt_result_bsr[, Rhat_Sigma], dt_result_fsr[, Rhat_Sigma], dt_result_dsr[, Rhat_Sigma], dt_result_m2sr[, Rhat_Sigma], NA),
                        Rhat_Beta = c(rep(NA, 5 * n_mk), dt_result_gamma[, Rhat_Beta]),
                        Rhat_Likelihood = c(dt_result_ae[, Rhat_Likelihood], dt_result_bsr[, Rhat_Likelihood], dt_result_fsr[, Rhat_Likelihood], dt_result_dsr[, Rhat_Likelihood], dt_result_m2sr[, Rhat_Likelihood], dt_result_gamma[, Rhat_Likelihood]))
   return(dt_par)
