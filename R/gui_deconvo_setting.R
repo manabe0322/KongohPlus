@@ -111,9 +111,8 @@ deconvo_setting_server <- function(id, path_pack){
         showModal(modalDialog(
           title = "Locus-specific amplification efficiency",
           dataTableOutput(session$ns("dt_ae")),
-          footer = tagList(
-            modalButton("Close")
-          )
+          easyClose = TRUE,
+          footer = NULL
         ))
       })
 
@@ -125,7 +124,9 @@ deconvo_setting_server <- function(id, path_pack){
           options = list(dom = "t", iDisplayLength = nrow(dt_ae), ordering = FALSE, autoWidth = TRUE,
                          columnDefs = list(list(targets = c(1, 2, 4, 5, 7:14), visible = FALSE))),
           rownames = FALSE
-        )
+        ) %>%
+          formatRound(columns = c("Myu"), digits = 3) %>%
+          formatRound(columns = c("Sigma"), digits = 0)
       })
 
       observeEvent(input$act_bsr, {
@@ -138,11 +139,13 @@ deconvo_setting_server <- function(id, path_pack){
         showModal(modalDialog(
           title = "Back stutter ratio",
           selectInput(session$ns("mk_bsr"), label = h4("Marker"), choices = markers, selected = markers[1]),
+          h4("Parameter"),
           dataTableOutput(session$ns("dt_param_bsr")),
+          br(),
+          h4("Corrected alleles and average back stutter ratios"),
           dataTableOutput(session$ns("dt_alcor_bsr")),
-          footer = tagList(
-            modalButton("Close")
-          )
+          easyClose = TRUE,
+          footer = NULL
         ))
       })
 
@@ -170,7 +173,9 @@ deconvo_setting_server <- function(id, path_pack){
             options = list(dom = "t", iDisplayLength = nrow(dt_bsr_select), ordering = FALSE, autoWidth = TRUE,
                            columnDefs = list(list(targets = c(0, 1, 8:14), visible = FALSE))),
             rownames = FALSE
-          )
+          ) %>%
+            formatRound(columns = c("Myu", "Slope", "Intercept"), digits = 3) %>%
+            formatRound(columns = c("Sigma", "MinUS"), digits = 0)
         })
 
         output$dt_alcor_bsr <- renderDataTable(server = FALSE, {
@@ -184,7 +189,8 @@ deconvo_setting_server <- function(id, path_pack){
             options = list(dom = "t", iDisplayLength = nrow(dt_alcor_select), ordering = FALSE, autoWidth = TRUE,
                            columnDefs = list(list(targets = c(0, 1, 5:10), visible = FALSE))),
             rownames = FALSE
-          )
+          ) %>%
+            formatRound(columns = c("Corrected_BSR", "Average_BSR"), digits = 3)
         })
       })
 
@@ -198,11 +204,13 @@ deconvo_setting_server <- function(id, path_pack){
         showModal(modalDialog(
           title = "Forward stutter ratio",
           selectInput(session$ns("mk_fsr"), label = h4("Marker"), choices = markers, selected = markers[1]),
+          h4("Parameter"),
           dataTableOutput(session$ns("dt_param_fsr")),
+          br(),
+          h4("Corrected alleles and average forward stutter ratios"),
           dataTableOutput(session$ns("dt_alcor_fsr")),
-          footer = tagList(
-            modalButton("Close")
-          )
+          easyClose = TRUE,
+          footer = NULL
         ))
       })
 
@@ -230,7 +238,9 @@ deconvo_setting_server <- function(id, path_pack){
             options = list(dom = "t", iDisplayLength = nrow(dt_fsr_select), ordering = FALSE, autoWidth = TRUE,
                            columnDefs = list(list(targets = c(0, 1, 8:14), visible = FALSE))),
             rownames = FALSE
-          )
+          ) %>%
+            formatRound(columns = c("Myu", "Slope", "Intercept"), digits = 3) %>%
+            formatRound(columns = c("Sigma", "MinUS"), digits = 0)
         })
 
         output$dt_alcor_fsr <- renderDataTable(server = FALSE, {
@@ -244,7 +254,8 @@ deconvo_setting_server <- function(id, path_pack){
             options = list(dom = "t", iDisplayLength = nrow(dt_alcor_select), ordering = FALSE, autoWidth = TRUE,
                            columnDefs = list(list(targets = c(0, 1, 3:5, 8:10), visible = FALSE))),
             rownames = FALSE
-          )
+          ) %>%
+            formatRound(columns = c("Corrected_FSR", "Average_FSR"), digits = 3)
         })
       })
 
@@ -258,11 +269,13 @@ deconvo_setting_server <- function(id, path_pack){
         showModal(modalDialog(
           title = "Double-back stutter ratio",
           selectInput(session$ns("mk_dsr"), label = h4("Marker"), choices = markers, selected = markers[1]),
+          h4("Parameter"),
           dataTableOutput(session$ns("dt_param_dsr")),
+          br(),
+          h4("Corrected alleles and average double-back stutter ratios"),
           dataTableOutput(session$ns("dt_alcor_dsr")),
-          footer = tagList(
-            modalButton("Close")
-          )
+          easyClose = TRUE,
+          footer = NULL
         ))
       })
 
@@ -290,7 +303,9 @@ deconvo_setting_server <- function(id, path_pack){
             options = list(dom = "t", iDisplayLength = nrow(dt_dsr_select), ordering = FALSE, autoWidth = TRUE,
                            columnDefs = list(list(targets = c(0, 1, 8:14), visible = FALSE))),
             rownames = FALSE
-          )
+          ) %>%
+            formatRound(columns = c("Myu", "Slope", "Intercept"), digits = 3) %>%
+            formatRound(columns = c("Sigma", "MinUS"), digits = 0)
         })
 
         output$dt_alcor_dsr <- renderDataTable(server = FALSE, {
@@ -304,7 +319,8 @@ deconvo_setting_server <- function(id, path_pack){
             options = list(dom = "t", iDisplayLength = nrow(dt_alcor_select), ordering = FALSE, autoWidth = TRUE,
                            columnDefs = list(list(targets = c(0, 1, 3:8), visible = FALSE))),
             rownames = FALSE
-          )
+          ) %>%
+            formatRound(columns = c("Corrected_DSR", "Average_DSR"), digits = 3)
         })
       })
 
@@ -319,9 +335,8 @@ deconvo_setting_server <- function(id, path_pack){
           title = "Minus 2-nt stutter ratio",
           selectInput(session$ns("mk_m2sr"), label = h4("Marker"), choices = markers, selected = markers[1]),
           dataTableOutput(session$ns("dt_param_m2sr")),
-          footer = tagList(
-            modalButton("Close")
-          )
+          easyClose = TRUE,
+          footer = NULL
         ))
       })
 
@@ -340,8 +355,35 @@ deconvo_setting_server <- function(id, path_pack){
             options = list(dom = "t", iDisplayLength = nrow(dt_m2sr_select), ordering = FALSE, autoWidth = TRUE,
                            columnDefs = list(list(targets = c(0, 1, 4, 5, 7:14), visible = FALSE))),
             rownames = FALSE
-          )
+          ) %>%
+            formatRound(columns = c("Myu"), digits = 3) %>%
+            formatRound(columns = c("Sigma"), digits = 0)
         })
+      })
+
+      observeEvent(input$act_gamma, {
+        dt_parameter <- rv_deconvo_setting$dt_parameter
+        setkey(dt_parameter, Parameter)
+        rv_deconvo_setting$dt_gamma <- dt_parameter["Gamma"]
+
+        showModal(modalDialog(
+          title = "Gamma distribution",
+          dataTableOutput(session$ns("dt_gamma")),
+          easyClose = TRUE,
+          footer = NULL
+        ))
+      })
+
+      output$dt_gamma <- renderDataTable(server = FALSE, {
+        isolate(dt_gamma <- rv_deconvo_setting$dt_gamma)
+        datatable(
+          dt_gamma,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_gamma), ordering = FALSE, autoWidth = TRUE,
+                         columnDefs = list(list(targets = c(0:7, 9:14), visible = FALSE))),
+          rownames = FALSE
+        ) %>%
+          formatRound(columns = c("Beta"), digits = 3)
       })
     }
   )

@@ -1,10 +1,11 @@
-#' lr_ui
+#' lr_setting_ui
 #'
-#' @description The function to create the ui module for the likelihood ratio
-lr_ui <- function(id){
+#' @description The function to create the ui module for setting conditions of the likelihood ratio
+lr_setting_ui <- function(id){
   ns <- NS(id)
 
   tabPanel("Likelihood ratio",
+           br(),
            sidebarLayout(
              sidebarPanel(width = 3,
                           numericInput(ns("noc_lr"), label = h4("Number of contributors"), value = NULL),
@@ -20,10 +21,10 @@ lr_ui <- function(id){
   )
 }
 
-#' lr_server
+#' lr_setting_server
 #'
-#' @description The function to create the server module for the likelihood ratio
-lr_server <- function(id, path_pack, rv_file){
+#' @description The function to create the server module for setting conditions of the likelihood ratio
+lr_setting_server <- function(id, path_pack, rv_file){
   moduleServer(
     id,
     function(input, output, session){

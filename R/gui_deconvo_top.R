@@ -18,7 +18,7 @@ deconvo_ui <- function(id){
 #' deconvo_server
 #'
 #' @description The function to create the server module for deconvolution
-deconvo_server <- function(id, path_pack){
+deconvo_server <- function(id, path_pack, rv_file){
   moduleServer(
     id,
     function(input, output, session){
