@@ -8,7 +8,7 @@ deconvo_setting_ui <- function(id){
            br(),
            sidebarLayout(
              sidebarPanel(width = 3,
-                          numericInput(ns("noc_deconvo"), label = h4("Number of contributors"), value = NULL),
+                          numericInput(ns("noc_deconvo"), label = h4("Number of contributors"), value = 1),
                           br(),
                           uiOutput(ns("analysis_method_deconvo")),
                           br(),
@@ -50,7 +50,7 @@ deconvo_setting_ui <- function(id){
 #' deconvo_setting_server
 #'
 #' @description The function to create the server module for setting conditions of deconvolution
-deconvo_setting_server <- function(id, path_pack){
+deconvo_setting_server <- function(id, path_pack, rv_file){
   moduleServer(
     id,
     function(input, output, session){
@@ -58,12 +58,35 @@ deconvo_setting_server <- function(id, path_pack){
       rv_deconvo_setting$dt_analysis_method <- NULL
       rv_deconvo_setting$dt_parameter <- NULL
       rv_deconvo_setting$dt_alcor <- NULL
+      rv_deconvo_setting$dt_kit <- NULL
       rv_deconvo_setting$dt_ae <- NULL
       rv_deconvo_setting$dt_bsr <- NULL
       rv_deconvo_setting$dt_fsr <- NULL
       rv_deconvo_setting$dt_dsr <- NULL
       rv_deconvo_setting$dt_m2sr <- NULL
       rv_deconvo_setting$dt_gamma <- NULL
+
+      rv_deconvo_setting$dt_csp <- NULL
+      rv_deconvo_setting$dt_ref <- NULL
+      rv_deconvo_setting$dt_af <- NULL
+
+      observe({
+        req(rv_file)
+        rv_deconvo_setting$dt_csp <- rv_file$dt_csp
+        rv_deconvo_setting$dt_ref <- rv_file$dt_ref
+        rv_deconvo_setting$dt_af <- rv_file$dt_af
+      })
+
+      observeEvent(input$noc_deconvo, {
+        noc_deconvo <- input$noc_deconvo
+        if(!is.integer(noc_deconvo) || noc_deconvo < 1 || noc_deconvo > 4){
+          showFeedbackDanger(inputId = "noc_deconvo", text = "Only 1, 2, 3, and 4 is allowed.")
+          disable("act_analyze_deconvo")
+        }else{
+          hideFeedback("noc_deconvo")
+          enable("act_analyze_deconvo")
+        }
+      })
 
       output$analysis_method_deconvo <- renderUI({
         analysis_methods <- list.files(paste0(path_pack, "/extdata/analysis_method"))
@@ -73,16 +96,17 @@ deconvo_setting_server <- function(id, path_pack){
 
       observeEvent(input$analysis_method_deconvo, {
         # Load the selected analysis method
-        isolate(analysis_method <- input$analysis_method_deconvo)
+        analysis_method <- input$analysis_method_deconvo
         rv_deconvo_setting$dt_analysis_method <- dt_analysis_method <- fread(paste0(path_pack, "/extdata/analysis_method/", analysis_method, ".csv"))
 
         # Extract data per column
         names <- dt_analysis_method[, Name]
         values <- dt_analysis_method[, Value]
 
-        # Load the parameters and the corrected alleles
+        # Load the parameters, the corrected alleles, and the kit information
         rv_deconvo_setting$dt_parameter <- fread(paste0(path_pack, "/extdata/parameter/", values[names == "Parameter"], ".csv"))
         rv_deconvo_setting$dt_alcor <- fread(paste0(path_pack, "/extdata/corrected_allele/", values[names == "Corrected allele"], ".csv"))
+        rv_deconvo_setting$dt_kit <- fread(paste0(path_pack, "/extdata/kit/", values[names == "Kit"], ".csv"))
 
         # Extract analytical thresholds
         index_at <- grep("AT_", names)
@@ -117,7 +141,7 @@ deconvo_setting_server <- function(id, path_pack){
       })
 
       output$dt_ae <- renderDataTable(server = FALSE, {
-        isolate(dt_ae <- rv_deconvo_setting$dt_ae)
+        dt_ae <- rv_deconvo_setting$dt_ae
         datatable(
           dt_ae,
           selection = "none",
@@ -130,6 +154,8 @@ deconvo_setting_server <- function(id, path_pack){
       })
 
       observeEvent(input$act_bsr, {
+        print(input$act_bsr)
+
         # Extract parameters for BSR
         dt_parameter <- rv_deconvo_setting$dt_parameter
         setkey(dt_parameter, Parameter)
@@ -151,15 +177,15 @@ deconvo_setting_server <- function(id, path_pack){
 
       observeEvent(input$mk_bsr, {
         # Extract parameters
-        isolate(dt_bsr <- rv_deconvo_setting$dt_bsr)
-        isolate(mk_bsr <- input$mk_bsr)
+        dt_bsr <- rv_deconvo_setting$dt_bsr
+        mk_bsr <- input$mk_bsr
         setkey(dt_bsr, Marker)
         dt_bsr_select <- dt_bsr[mk_bsr]
         model_bsr_select <- dt_bsr_select[, Model]
 
         if(model_bsr_select != "Not consider"){
           # Extract corrected alleles
-          isolate(dt_alcor <- rv_deconvo_setting$dt_alcor)
+          dt_alcor <- rv_deconvo_setting$dt_alcor
           setkey(dt_alcor, Marker)
           dt_alcor_select <- dt_alcor[mk_bsr]
         }else{
@@ -216,15 +242,15 @@ deconvo_setting_server <- function(id, path_pack){
 
       observeEvent(input$mk_fsr, {
         # Extract parameters
-        isolate(dt_fsr <- rv_deconvo_setting$dt_fsr)
-        isolate(mk_fsr <- input$mk_fsr)
+        dt_fsr <- rv_deconvo_setting$dt_fsr
+        mk_fsr <- input$mk_fsr
         setkey(dt_fsr, Marker)
         dt_fsr_select <- dt_fsr[mk_fsr]
         model_fsr_select <- dt_fsr_select[, Model]
 
         if(model_fsr_select != "Not consider"){
           # Extract corrected alleles
-          isolate(dt_alcor <- rv_deconvo_setting$dt_alcor)
+          dt_alcor <- rv_deconvo_setting$dt_alcor
           setkey(dt_alcor, Marker)
           dt_alcor_select <- dt_alcor[mk_fsr]
         }else{
@@ -281,15 +307,15 @@ deconvo_setting_server <- function(id, path_pack){
 
       observeEvent(input$mk_dsr, {
         # Extract parameters
-        isolate(dt_dsr <- rv_deconvo_setting$dt_dsr)
-        isolate(mk_dsr <- input$mk_dsr)
+        dt_dsr <- rv_deconvo_setting$dt_dsr
+        mk_dsr <- input$mk_dsr
         setkey(dt_dsr, Marker)
         dt_dsr_select <- dt_dsr[mk_dsr]
         model_dsr_select <- dt_dsr_select[, Model]
 
         if(model_dsr_select != "Not consider"){
           # Extract corrected alleles
-          isolate(dt_alcor <- rv_deconvo_setting$dt_alcor)
+          dt_alcor <- rv_deconvo_setting$dt_alcor
           setkey(dt_alcor, Marker)
           dt_alcor_select <- dt_alcor[mk_dsr]
         }else{
@@ -342,8 +368,8 @@ deconvo_setting_server <- function(id, path_pack){
 
       observeEvent(input$mk_m2sr, {
         # Extract parameters
-        isolate(dt_m2sr <- rv_deconvo_setting$dt_m2sr)
-        isolate(mk_m2sr <- input$mk_m2sr)
+        dt_m2sr <- rv_deconvo_setting$dt_m2sr
+        mk_m2sr <- input$mk_m2sr
         setkey(dt_m2sr, Marker)
         dt_m2sr_select <- dt_m2sr[mk_m2sr]
         model_m2sr_select <- dt_m2sr_select[, Model]
@@ -375,7 +401,7 @@ deconvo_setting_server <- function(id, path_pack){
       })
 
       output$dt_gamma <- renderDataTable(server = FALSE, {
-        isolate(dt_gamma <- rv_deconvo_setting$dt_gamma)
+        dt_gamma <- rv_deconvo_setting$dt_gamma
         datatable(
           dt_gamma,
           selection = "none",
@@ -384,6 +410,28 @@ deconvo_setting_server <- function(id, path_pack){
           rownames = FALSE
         ) %>%
           formatRound(columns = c("Beta"), digits = 3)
+      })
+
+      observeEvent(input$act_analyze_deconvo, {
+        # Fix setting
+        noc_deconvo <- input$noc_deconvo
+
+        # Fix data.table
+        dt_csp <- rv_deconvo_setting$dt_csp
+        dt_ref <- rv_deconvo_setting$dt_ref
+        dt_af <- rv_deconvo_setting$dt_af
+        dt_analysis_method <- rv_deconvo_setting$dt_analysis_method
+        dt_parameter <- rv_deconvo_setting$dt_parameter
+        dt_alcor <- rv_deconvo_setting$dt_alcor
+        dt_kit <- rv_deconvo_setting$dt_kit
+
+        # Check input files and setting
+        error_message <- check_main_file(dt_csp, dt_ref, dt_af, dt_kit, method = "deconvo")
+        if(error_message != ""){
+          showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
+        }else{
+          # perform_deconvo(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_alcor, dt_kit, noc_deconvo)
+        }
       })
     }
   )

@@ -22,7 +22,7 @@ lr_server <- function(id, path_pack, rv_file){
   moduleServer(
     id,
     function(input, output, session){
-      lr_setting_server("lr", path_pack, rv_file)
+      lr_setting_server("lr_setting", path_pack, rv_file)
     }
   )
 }

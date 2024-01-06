@@ -8,7 +8,7 @@ lr_setting_ui <- function(id){
            br(),
            sidebarLayout(
              sidebarPanel(width = 3,
-                          numericInput(ns("noc_lr"), label = h4("Number of contributors"), value = NULL),
+                          numericInput(ns("noc_lr"), label = h4("Number of contributors"), value = 1),
                           uiOutput(ns("hp")),
                           uiOutput(ns("hd")),
                           br(),
