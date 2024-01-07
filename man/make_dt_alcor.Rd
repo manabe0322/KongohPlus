@@ -4,12 +4,25 @@
 \alias{make_dt_alcor}
 \title{make_dt_alcor}
 \usage{
-make_dt_alcor(markers_par, sr_best_model_all_mk, sr_alcor_all_mk)
+make_dt_alcor(
+  markers_par,
+  sr_best_model_all_mk,
+  sr_best_median_myu_all_mk,
+  sr_best_median_slope_all_mk,
+  sr_best_median_intercept_all_mk,
+  sr_alcor_all_mk
+)
 }
 \arguments{
 \item{markers_par}{The vector of markers for parameters}
 
 \item{sr_best_model_all_mk}{The vector of the best SR model for all markers}
+
+\item{sr_best_median_myu_all_mk}{The vector of the myu values for all markers under the best SR model}
+
+\item{sr_best_median_slope_all_mk}{The vector of the slope values for all markers under the best SR model}
+
+\item{sr_best_median_intercept_all_mk}{The vector of the intercept values for all markers under the best SR model}
 
 \item{sr_alcor_all_mk}{The list of the information on corrected alleles of all markers}
 }
