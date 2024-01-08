@@ -4,10 +4,12 @@
 \alias{extract_peak_data}
 \title{extract_peak_data}
 \usage{
-extract_peak_data(dt_csp, markers_auto)
+extract_peak_data(dt_csp, dt_at, markers_auto)
 }
 \arguments{
 \item{dt_csp}{The data.table of the crime stain profiles}
+
+\item{dt_at}{The data.table of the analytical thresholds}
 
 \item{markers_auto}{A vector of the autosomal markers}
 }

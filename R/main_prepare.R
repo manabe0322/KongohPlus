@@ -173,26 +173,105 @@ make_gt_comb_all <- function(hnc, peaks_list, sr_consider_all_mk){
   return(gt_comb_all)
 }
 
-calc_eph_base_tmp <- function(gt_comb, peaks){
-  # Define an output object
-  n_peak <- length(peaks)
-  hnc <- length(gt_comb) / 2
-  eph_base <- matrix(0, hnc, n_peak)
-  rownames(eph_base) <- paste0("Contributor", 1:hnc)
-  colnames(eph_base) <- peaks
-  for(i in 1:hnc){
-    # Extract the genotype of one contributor
-    gt <- gt_comb[c(2 * i - 1, 2 * i)]
-    al <- unique(gt)
-    n_al <- length(al)
+#' calc_m2s
+#'
+#' @description The function to calculate the allele call of the minus 2-nt stutter
+#' @param al The parent allele of the minus 2-nt stutter
+calc_m2s <- function(al){
+  if(al %% 1 < 0.15){
+    m2s <- round(al - 0.8, 1)
+  }else{
+    m2s <- round(al - 0.2, 1)
+  }
+  return(m2s)
+}
 
-    # Indices of allele repeat correction
-    if(!is.null(info_al_alcor)){
-      index_alcor <- match(al, info_al_alcor)
-      bool_not_na_alcor <- !is.na(index_alcor)
+calc_eph_base_tmp <- function(gt_comb, peaks, dt_alcor_mk1, model_m2sr, myu_m2sr, tph){
+  n_peak <- length(peaks)
+  n_al <- length(gt_comb)
+  eph_base <- matrix(0, n_al, n_peak + 1)
+  colnames(eph_base) <- c(peaks, 99)
+
+  alleles <- dt_alcor_mk1[, Allele]
+  model_bsr <- unique(dt_alcor_mk1[, Model_BSR])
+  model_fsr <- unique(dt_alcor_mk1[, Model_FSR])
+  model_dsr <- unique(dt_alcor_mk1[, Model_DSR])
+  ave_bsrs <- dt_alcor_mk1[, Average_BSR]
+  ave_fsrs <- dt_alcor_mk1[, Average_FSR]
+  ave_dsrs <- dt_alcor_mk1[, Average_DSR]
+
+  ph_base <- 0.5 * tph
+  for(i in 1:n_al){
+    al <- gt_comb[i]
+
+    if(al != 99){
+      index_al <- which(alleles == al)
+
+      # No sequence data (only for parameter estimation)
+      if(length(index_al) == 0){
+        eph_base[i, n_peak + 1] <- NA
+      }else{
+        # Back stutter
+        if(model_bsr == "Not consider"){
+          bs <- bsr <- 0
+        }else{
+          bs <- round(al - 1, 1)
+          bsr <- ave_bsrs[index_al]
+        }
+
+        # Forward stutter
+        if(model_fsr == "Not consider"){
+          fs <- fsr <- 0
+        }else{
+          fs <- round(al + 1, 1)
+          fsr <- ave_fsrs[index_al]
+        }
+
+        # Double-back stutter
+        if(model_dsr == "Not consider"){
+          ds <- dsr <- 0
+        }else{
+          ds <- round(al - 2, 1)
+          dsr <- ave_dsrs[index_al]
+        }
+
+        # Minus 2-nt stutter
+        if(model_m2sr == "Not consider"){
+          m2s <- m2sr <- 0
+        }else{
+          m2s <- calc_m2s(al)
+          m2sr <- myu_m2sr
+        }
+
+        # Indices of each allele and stutter
+        index_al <- match(al, peaks)
+        index_bs <- match(bs, peaks)
+        index_fs <- match(fs, peaks)
+        index_ds <- match(ds, peaks)
+        index_m2s <- match(m2s, peaks)
+
+        # Calculate expected peak heights
+        ephs <- rep(0, n_peak + 1)
+        if(!is.na(index_al)){
+          ephs[index_al] <- ph_base / (1 + bsr + fsr + dsr + m2sr)
+        }
+        if(!is.na(index_bs)){
+          ephs[index_bs] <- ph_base * bsr / (1 + bsr + fsr + dsr + m2sr)
+        }
+        if(!is.na(index_fs)){
+          ephs[index_fs] <- ph_base * fsr / (1 + bsr + fsr + dsr + m2sr)
+        }
+        if(!is.na(index_ds)){
+          ephs[index_ds] <- ph_base * dsr / (1 + bsr + fsr + dsr + m2sr)
+        }
+        if(!is.na(index_m2s)){
+          ephs[index_m2s] <- ph_base * m2sr / (1 + bsr + fsr + dsr + m2sr)
+        }
+        eph_base[i, ] <- ephs
+      }
     }else{
-      bool_not_na_alcor <- FALSE
-      index_alcor <- NA
+      eph_base[i, n_peak + 1] <- ph_base
     }
   }
+  return(eph_base)
 }

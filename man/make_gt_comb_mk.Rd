@@ -11,7 +11,7 @@ make_gt_comb_mk(hnc, peaks, sr_consider)
 
 \item{peaks}{A vector of peaks in one marker}
 
-\item{sr_consider}{Information on consideration of back, forward, double-back, and minus 2-nt stutters}
+\item{sr_consider}{Information on consideration of back, forward, double-back, and minus 2-nt stutters in one marker}
 }
 \description{
 The function to make genotype combinations of one marker
