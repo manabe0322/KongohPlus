@@ -12,14 +12,15 @@ extract_auto_mk <- function(dt_kit){
 #'
 #' @description The function to extract peak data
 #' @param dt_csp The data.table of the crime stain profiles
+#' @param dt_at The data.table of the analytical thresholds
 #' @param markers_auto A vector of the autosomal markers
-extract_peak_data <- function(dt_csp, markers_auto){
+extract_peak_data <- function(dt_csp, dt_at, markers_auto){
+  # Define output objects
   peaks_list <- list()
   sizes_list <- list()
   heights_list <- list()
 
-  n_mk <- length(markers_auto)
-
+  # Column indices for alleles, sizes, and heights
   names_csp <- names(dt_csp)
   index_allele <- grep("Allele", names_csp)
   index_size <- grep("Size", names_csp)
@@ -27,6 +28,8 @@ extract_peak_data <- function(dt_csp, markers_auto){
 
   sn_all_csp <- unique(dt_csp[, SampleName])
   setkey(dt_csp, SampleName)
+  setkey(dt_at, Marker)
+  n_mk <- length(markers_auto)
   for(i in 1:length(sn_all_csp)){
     peaks_list_s1 <- list()
     sizes_list_s1 <- list()
@@ -35,10 +38,22 @@ extract_peak_data <- function(dt_csp, markers_auto){
     dt_csp_s1 <- dt_csp[sn_all_csp[i]]
     setkey(dt_csp_s1, Marker)
     for(j in 1:n_mk){
-      dt_csp_s1_mk1 <- dt_csp_s1[markers_auto[j]]
-      peaks_list_s1[[j]] <- as.numeric(dt_csp_s1_mk1[, index_allele, with = FALSE])
-      sizes_list_s1[[j]] <- as.numeric(dt_csp_s1_mk1[, index_size, with = FALSE])
-      heights_list_s1[[j]] <- as.numeric(dt_csp_s1_mk1[, index_height, with = FALSE])
+      mk <- markers_auto[j]
+      dt_csp_s1_mk1 <- dt_csp_s1[mk]
+      peaks <- as.numeric(dt_csp_s1_mk1[, index_allele, with = FALSE])
+      peaks <- peaks[!is.na(peaks)]
+      sizes <- as.numeric(dt_csp_s1_mk1[, index_size, with = FALSE])
+      sizes <- sizes[!is.na(sizes)]
+      heights <- as.numeric(dt_csp_s1_mk1[, index_height, with = FALSE])
+      heights <- heights[!is.na(heights)]
+
+      dt_at_mk1 <- dt_at[mk]
+      at <- as.numeric(dt_at_mk1[, AT])
+      index_above_at <- which(heights >= at)
+
+      peaks_list_s1[[j]] <- peaks[index_above_at]
+      sizes_list_s1[[j]] <- sizes[index_above_at]
+      heights_list_s1[[j]] <- heights[[index_above_at]]
     }
 
     names(peaks_list_s1) <- markers_auto
@@ -58,6 +73,11 @@ extract_peak_data <- function(dt_csp, markers_auto){
          "heights_list" = heights_list)
 }
 
+#' make_sr_consider_all_mk
+#'
+#' @description The function to make information on consideration of each stutter
+#' @param markers_auto A vector of the autosomal markers
+#' @param dt_parameter The data.table of the parameters
 make_sr_consider_all_mk <- function(markers_auto, dt_parameter){
   setkey(dt_parameter, Parameter)
   dt_parameter_bsr <- dt_parameter["BSR"]
@@ -108,7 +128,7 @@ judge_gt_comb <- function(gt_comb, peaks, sr_consider){
 #' @description The function to make genotype combinations of one marker
 #' @param hnc The hypothesized number of contributors
 #' @param peaks A vector of peaks in one marker
-#' @param sr_consider Information on consideration of back, forward, double-back, and minus 2-nt stutters
+#' @param sr_consider Information on consideration of back, forward, double-back, and minus 2-nt stutters in one marker
 make_gt_comb_mk <- function(hnc, peaks, sr_consider){
   # Add drop-out
   peaks <- c(peaks, 99)
@@ -132,6 +152,12 @@ make_gt_comb_mk <- function(hnc, peaks, sr_consider){
   return(gt_comb_mk)
 }
 
+#' make_gt_comb_all
+#'
+#' @description The function to make all genotype combinations
+#' @param hnc The hypothesized number of contributors
+#' @param peaks_list The list of peaks of all crime stain profiles
+#' @param sr_consider_all_mk Information on consideration of back, forward, double-back, and minus 2-nt stutters in all markers
 make_gt_comb_all <- function(hnc, peaks_list, sr_consider_all_mk){
   gt_comb_all <- list()
   for(i in 1:length(peaks_list)){
@@ -145,4 +171,28 @@ make_gt_comb_all <- function(hnc, peaks_list, sr_consider_all_mk){
   }
   names(gt_comb_all) <- names(peaks_list)
   return(gt_comb_all)
+}
+
+calc_eph_base_tmp <- function(gt_comb, peaks){
+  # Define an output object
+  n_peak <- length(peaks)
+  hnc <- length(gt_comb) / 2
+  eph_base <- matrix(0, hnc, n_peak)
+  rownames(eph_base) <- paste0("Contributor", 1:hnc)
+  colnames(eph_base) <- peaks
+  for(i in 1:hnc){
+    # Extract the genotype of one contributor
+    gt <- gt_comb[c(2 * i - 1, 2 * i)]
+    al <- unique(gt)
+    n_al <- length(al)
+
+    # Indices of allele repeat correction
+    if(!is.null(info_al_alcor)){
+      index_alcor <- match(al, info_al_alcor)
+      bool_not_na_alcor <- !is.na(index_alcor)
+    }else{
+      bool_not_na_alcor <- FALSE
+      index_alcor <- NA
+    }
+  }
 }

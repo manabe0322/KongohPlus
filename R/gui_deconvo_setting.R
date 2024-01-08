@@ -59,6 +59,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       rv_deconvo_setting$dt_parameter <- NULL
       rv_deconvo_setting$dt_alcor <- NULL
       rv_deconvo_setting$dt_kit <- NULL
+      rv_deconvo_setting$dt_at <- NULL
       rv_deconvo_setting$dt_ae <- NULL
       rv_deconvo_setting$dt_bsr <- NULL
       rv_deconvo_setting$dt_fsr <- NULL
@@ -110,8 +111,8 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
 
         # Extract analytical thresholds
         index_at <- grep("AT_", names)
-        dt_at <- data.table(Marker = gsub("AT_", "", names[index_at]),
-                            AT = values[index_at])
+        rv_deconvo_setting$dt_at <- dt_at <- data.table(Marker = gsub("AT_", "", names[index_at]),
+                                                        AT = values[index_at])
 
         output$dt_at <- renderDataTable(server = FALSE, {
           datatable(
@@ -424,13 +425,14 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         dt_parameter <- rv_deconvo_setting$dt_parameter
         dt_alcor <- rv_deconvo_setting$dt_alcor
         dt_kit <- rv_deconvo_setting$dt_kit
+        dt_at <- rv_deconvo_setting$dt_at
 
         # Check input files and setting
-        error_message <- check_main_file(dt_csp, dt_ref, dt_af, dt_kit, method = "deconvo")
+        error_message <- check_main_file(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor, method = "deconvo")
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          # perform_deconvo(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_alcor, dt_kit, noc_deconvo)
+          # perform_deconvo(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_alcor, dt_kit, dt_at, noc_deconvo)
         }
       })
     }
