@@ -186,7 +186,7 @@ calc_m2s <- function(al){
   return(m2s)
 }
 
-calc_eph_base_tmp <- function(gt_comb, peaks, dt_alcor_mk1, model_m2sr, myu_m2sr, tph){
+calc_eph_base_main <- function(gt_comb, peaks, dt_alcor_mk1, model_m2sr, myu_m2sr, tph){
   n_peak <- length(peaks)
   n_al <- length(gt_comb)
   eph_base <- matrix(0, n_al, n_peak + 1)
@@ -274,4 +274,8 @@ calc_eph_base_tmp <- function(gt_comb, peaks, dt_alcor_mk1, model_m2sr, myu_m2sr
     }
   }
   return(eph_base)
+}
+
+calc_eph_base_all <- function(gt_comb_all, peaks_list, dt_alcor, model_m2sr_all_mk, myu_m2sr_all_mk, tph_all_sn){
+
 }
