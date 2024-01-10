@@ -23,13 +23,13 @@ check_csp_alcor <- function(dt_csp, dt_at, dt_alcor, markers_auto){
   for(i in 1:length(sn_all_csp)){
     sn1 <- sn_all_csp[i]
     dt_csp_sn1 <- dt_csp[sn1]
-    setkey(dt_csp_sn1, markers_auto)
+    setkey(dt_csp_sn1, Marker)
     for(j in 1:n_mk){
       mk <- markers_auto[j]
       dt_csp_sn1_mk1 <- dt_csp_sn1[mk]
-      peaks <- as.numeric(dt_csp_s1_mk1[, index_allele, with = FALSE])
+      peaks <- as.numeric(dt_csp_sn1_mk1[, index_allele, with = FALSE])
       peaks <- peaks[!is.na(peaks)]
-      heights <- as.numeric(dt_csp_s1_mk1[, index_height, with = FALSE])
+      heights <- as.numeric(dt_csp_sn1_mk1[, index_height, with = FALSE])
       heights <- heights[!is.na(heights)]
 
       dt_at_mk1 <- dt_at[mk]
@@ -42,7 +42,7 @@ check_csp_alcor <- function(dt_csp, dt_at, dt_alcor, markers_auto){
         alleles <- as.numeric(dt_alcor_mk1[, Allele])
         bool_not_register <- !is.element(peaks, alleles)
         if(any(bool_not_register)){
-          error_message_alcor <- c(error_message_alcor, paste0("  - ", mk, ": ", paste(peaks[bool_not_register], collapse = ", "), "<br>"))
+          error_message_alcor <- paste0(error_message_alcor, "  - ", mk, ": ", paste(peaks[bool_not_register], collapse = ", "), "<br>")
         }
       }
     }

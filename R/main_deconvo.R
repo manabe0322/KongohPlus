@@ -1,5 +1,6 @@
 perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_alcor, dt_kit, dt_at, hnc){
-  markers_auto <- extract_auto_mk(dt_kit)
+  dt_kit_auto <- extract_kit_auto(dt_kit)
+  markers_auto <- unique(dt_kit_auto[, Marker])
 
   tmp <- make_peak_data(dt_csp, dt_at, dt_kit, markers_auto)
   peaks_list <- tmp$peaks_list

@@ -72,9 +72,9 @@ make_peak_data <- function(dt_csp, dt_at, dt_kit, markers_auto){
   names(peaks_list) <- sn_all_csp
   names(sizes_list) <- sn_all_csp
   names(heights_list) <- sn_all_csp
-  return("peaks_list" = peaks_list,
-         "sizes_list" = sizes_list,
-         "heights_list" = heights_list)
+  return(list("peaks_list" = peaks_list,
+              "sizes_list" = sizes_list,
+              "heights_list" = heights_list))
 }
 
 #' make_sr_consider_all_mk
