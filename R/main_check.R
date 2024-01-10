@@ -81,8 +81,9 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor, meth
   }
 
   if(bool_load_all){
-    # Extract markers
-    markers_auto <- extract_auto_mk(dt_kit)
+    # Extract autosomal markers
+    dt_kit_auto <- extract_kit_auto(dt_kit)
+    markers_auto <- unique(dt_kit_auto[, Marker])
 
     setkey(dt_csp, SampleName)
     sn_all_csp <- unique(dt_csp[, SampleName])

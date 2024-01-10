@@ -166,10 +166,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         # Extract autosomal markers
         kit <- input$kit_par
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", kit, ".csv"))
-        setkey(dt_kit, Sex_Chr)
-        dt_kit_auto <- dt_kit[""]
-        markers_par <- dt_kit_auto[, Marker]
-        dyes_par <- dt_kit_auto[, Dye]
+        dt_kit_auto <- extract_kit_auto(dt_kit)
+        markers_par <- unique(dt_kit_auto[, Marker])
+        dyes_par <- extract_dye(dt_kit_auto, markers_par)
 
         # Make a data.table for kit-setting
         dt_kit_set0 <- data.table(Marker = markers_par, Dye = dyes_par)

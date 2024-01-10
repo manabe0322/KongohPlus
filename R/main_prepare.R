@@ -1,20 +1,11 @@
-#' extract_auto_mk
-#'
-#' @description The function to extract autosomal markers from the data.table of the information on the kit
-#' @param dt_kit The data.table of the information on the kit
-extract_auto_mk <- function(dt_kit){
-  setkey(dt_kit, Sex_Chr)
-  dt_kit_auto <- dt_kit[""]
-  return(dt_kit_auto[, Marker])
-}
-
 #' make_peak_data
 #'
 #' @description The function to make peak data
 #' @param dt_csp The data.table of the crime stain profiles
 #' @param dt_at The data.table of the analytical thresholds
+#' @param dt_kit The data.table of the kit information
 #' @param markers_auto A vector of the autosomal markers
-make_peak_data <- function(dt_csp, dt_at, markers_auto){
+make_peak_data <- function(dt_csp, dt_at, dt_kit, markers_auto){
   # Define output objects
   peaks_list <- list()
   sizes_list <- list()
@@ -29,6 +20,7 @@ make_peak_data <- function(dt_csp, dt_at, markers_auto){
   sn_all_csp <- unique(dt_csp[, SampleName])
   setkey(dt_csp, SampleName)
   setkey(dt_at, Marker)
+  setkey(dt_kit, Marker)
   n_mk <- length(markers_auto)
   for(i in 1:length(sn_all_csp)){
     # Define objects for one sample
@@ -58,8 +50,9 @@ make_peak_data <- function(dt_csp, dt_at, markers_auto){
       heights <- heights[index_above_at]
 
       # Add information on the drop-out peak
+      dt_kit_mk1 <- dt_kit[mk]
       peaks <- c(peaks, 99)
-      sizes <- c(sizes)
+      sizes <- c(sizes, median(dt_kit_mk1[, Size]))
       heights <- c(heights, 0)
 
       peaks_list_sn1[[j]] <- peaks
@@ -141,9 +134,6 @@ judge_gt_comb <- function(gt_comb, peaks, sr_consider){
 #' @param peaks A vector of peaks in one marker
 #' @param sr_consider Information on consideration of back, forward, double-back, and minus 2-nt stutters in one marker
 make_gt_comb_mk <- function(hnc, peaks, sr_consider){
-  # Add drop-out
-  peaks <- c(peaks, 99)
-
   # Genotypes of one contributor
   gts <- combinations(n = length(peaks), r = 2, v = peaks, repeats.allowed = TRUE)
 
@@ -200,8 +190,8 @@ calc_m2s <- function(al){
 calc_eph_base_main <- function(gt_comb, peaks, dt_alcor_mk1, model_m2sr, myu_m2sr, tph){
   n_peak <- length(peaks)
   n_al <- length(gt_comb)
-  eph_base <- matrix(0, n_al, n_peak + 1)
-  colnames(eph_base) <- c(peaks, 99)
+  eph_base <- matrix(0, n_al, n_peak)
+  colnames(eph_base) <- peaks
 
   alleles <- dt_alcor_mk1[, Allele]
   model_bsr <- unique(dt_alcor_mk1[, Model_BSR])
@@ -281,7 +271,7 @@ calc_eph_base_main <- function(gt_comb, peaks, dt_alcor_mk1, model_m2sr, myu_m2s
         eph_base[i, ] <- ephs
       }
     }else{
-      eph_base[i, n_peak + 1] <- ph_base
+      eph_base[i, n_peak] <- ph_base
     }
   }
   return(eph_base)
