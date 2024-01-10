@@ -71,22 +71,22 @@ make_cand_peak <- function(alleles, sr_consider){
 
   # Whether back stutters are considered or not
   if(sr_consider[1]){
-    cand_peak <- c(cand_peak, round(alleles - 1, 1))
+    cand_peak <- c(cand_peak, calc_bs(alleles))
   }
 
   # Whether forward stutters are considered or not
   if(sr_consider[2]){
-    cand_peak <- c(cand_peak, round(alleles + 1, 1))
+    cand_peak <- c(cand_peak, calc_fs(alleles))
   }
 
   # whether double-back stutters are considered or not
   if(sr_consider[3]){
-    cand_peak <- c(cand_peak, round(alleles - 2, 1))
+    cand_peak <- c(cand_peak, calc_ds(alleles))
   }
 
   # Whether minus 2-nt stutters are considered or not
   if(sr_consider[4]){
-    cand_peak <- c(cand_peak, round(alleles[alleles %% 1 < 0.15] - 0.8, 1), round(alleles[alleles %% 1 >= 0.15] - 0.2, 1))
+    cand_peak <- c(cand_peak, calc_m2s(alleles))
   }
 
   # Return
