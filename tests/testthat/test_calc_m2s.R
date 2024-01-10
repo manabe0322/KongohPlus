@@ -1,43 +1,14 @@
-test_that("calc_m2s, integer", {
+test_that("calc_m2s", {
   # Condition
-  al <- 15
+  al <- c(15, 15.1, 15.2, 15.3)
 
   # Run
   m2s <- calc_m2s(al)
 
   # Test
-  expect_equal(m2s, 14.2)
-})
-
-test_that("calc_m2s, x.1", {
-  # Condition
-  al <- 15.1
-
-  # Run
-  m2s <- calc_m2s(al)
-
-  # Test
-  expect_equal(m2s, 14.3)
-})
-
-test_that("calc_m2s, x.2", {
-  # Condition
-  al <- 15.2
-
-  # Run
-  m2s <- calc_m2s(al)
-
-  # Test
-  expect_equal(m2s, 15)
-})
-
-test_that("calc_m2s, x.3", {
-  # Condition
-  al <- 15.3
-
-  # Run
-  m2s <- calc_m2s(al)
-
-  # Test
-  expect_equal(m2s, 15.1)
+  expect_equal(length(m2s), 4)
+  expect_equal(m2s[1], 14.2)
+  expect_equal(m2s[2], 14.3)
+  expect_equal(m2s[3], 15)
+  expect_equal(m2s[4], 15.1)
 })
