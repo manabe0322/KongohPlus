@@ -8,13 +8,13 @@ extract_auto_mk <- function(dt_kit){
   return(dt_kit_auto[, Marker])
 }
 
-#' extract_peak_data
+#' make_peak_data
 #'
-#' @description The function to extract peak data
+#' @description The function to make peak data
 #' @param dt_csp The data.table of the crime stain profiles
 #' @param dt_at The data.table of the analytical thresholds
 #' @param markers_auto A vector of the autosomal markers
-extract_peak_data <- function(dt_csp, dt_at, markers_auto){
+make_peak_data <- function(dt_csp, dt_at, markers_auto){
   # Define output objects
   peaks_list <- list()
   sizes_list <- list()
@@ -31,38 +31,49 @@ extract_peak_data <- function(dt_csp, dt_at, markers_auto){
   setkey(dt_at, Marker)
   n_mk <- length(markers_auto)
   for(i in 1:length(sn_all_csp)){
-    peaks_list_s1 <- list()
-    sizes_list_s1 <- list()
-    heights_list_s1 <- list()
+    # Define objects for one sample
+    peaks_list_sn1 <- list()
+    sizes_list_sn1 <- list()
+    heights_list_sn1 <- list()
 
-    dt_csp_s1 <- dt_csp[sn_all_csp[i]]
-    setkey(dt_csp_s1, Marker)
+    dt_csp_sn1 <- dt_csp[sn_all_csp[i]]
+    setkey(dt_csp_sn1, Marker)
     for(j in 1:n_mk){
+      # Extract data for one marker
       mk <- markers_auto[j]
-      dt_csp_s1_mk1 <- dt_csp_s1[mk]
-      peaks <- as.numeric(dt_csp_s1_mk1[, index_allele, with = FALSE])
+      dt_csp_sn1_mk1 <- dt_csp_sn1[mk]
+      peaks <- as.numeric(dt_csp_sn1_mk1[, index_allele, with = FALSE])
       peaks <- peaks[!is.na(peaks)]
-      sizes <- as.numeric(dt_csp_s1_mk1[, index_size, with = FALSE])
+      sizes <- as.numeric(dt_csp_sn1_mk1[, index_size, with = FALSE])
       sizes <- sizes[!is.na(sizes)]
-      heights <- as.numeric(dt_csp_s1_mk1[, index_height, with = FALSE])
+      heights <- as.numeric(dt_csp_sn1_mk1[, index_height, with = FALSE])
       heights <- heights[!is.na(heights)]
 
+      # Keep peaks above AT
       dt_at_mk1 <- dt_at[mk]
       at <- as.numeric(dt_at_mk1[, AT])
       index_above_at <- which(heights >= at)
+      peaks <- peaks[index_above_at]
+      sizes <- sizes[index_above_at]
+      heights <- heights[index_above_at]
 
-      peaks_list_s1[[j]] <- peaks[index_above_at]
-      sizes_list_s1[[j]] <- sizes[index_above_at]
-      heights_list_s1[[j]] <- heights[[index_above_at]]
+      # Add information on the drop-out peak
+      peaks <- c(peaks, 99)
+      sizes <- c(sizes)
+      heights <- c(heights, 0)
+
+      peaks_list_sn1[[j]] <- peaks
+      sizes_list_sn1[[j]] <- sizes
+      heights_list_sn1[[j]] <- heights
     }
 
-    names(peaks_list_s1) <- markers_auto
-    names(sizes_list_s1) <- markers_auto
-    names(heights_list_s1) <- markers_auto
+    names(peaks_list_sn1) <- markers_auto
+    names(sizes_list_sn1) <- markers_auto
+    names(heights_list_sn1) <- markers_auto
 
-    peaks_list[[i]] <- peaks_list_s1
-    sizes_list[[i]] <- sizes_list_s1
-    heights_list[[i]] <- heights_list_s1
+    peaks_list[[i]] <- peaks_list_sn1
+    sizes_list[[i]] <- sizes_list_sn1
+    heights_list[[i]] <- heights_list_sn1
   }
 
   names(peaks_list) <- sn_all_csp
@@ -161,13 +172,13 @@ make_gt_comb_mk <- function(hnc, peaks, sr_consider){
 make_gt_comb_all <- function(hnc, peaks_list, sr_consider_all_mk){
   gt_comb_all <- list()
   for(i in 1:length(peaks_list)){
-    peaks_list_s1 <- peaks_list[[i]]
-    gt_comb_s1 <- list()
-    for(j in 1:length(peaks_list_s1)){
-      gt_comb_s1[[j]] <- make_gt_comb_mk(hnc, peaks_list_s1[[j]], sr_consider_all_mk[j, ])
+    peaks_list_sn1 <- peaks_list[[i]]
+    gt_comb_sn1 <- list()
+    for(j in 1:length(peaks_list_sn1)){
+      gt_comb_sn1[[j]] <- make_gt_comb_mk(hnc, peaks_list_sn1[[j]], sr_consider_all_mk[j, ])
     }
-    names(gt_comb_s1) <- names(peaks_list_s1)
-    gt_comb_all[[i]] <- gt_comb_s1
+    names(gt_comb_sn1) <- names(peaks_list_sn1)
+    gt_comb_all[[i]] <- gt_comb_sn1
   }
   names(gt_comb_all) <- names(peaks_list)
   return(gt_comb_all)
