@@ -9,9 +9,10 @@ load_ui <- function(id){
            br(),
            sidebarLayout(
              sidebarPanel(width = 3,
-                          fileInput(ns("file_csp"), label = "Crime stain profile", accept = ".csv", buttonLabel = "Load"),
-                          fileInput(ns("file_ref"), label = "Reference profile", accept = ".csv", buttonLabel = "Load"),
-                          fileInput(ns("file_af"), label = "Allele frequency", accept = ".csv", buttonLabel = "Load"),
+                          fileInput(ns("file_csp"), label = h4("Crime stain profile"), accept = ".csv", buttonLabel = "Load"),
+                          fileInput(ns("file_ref"), label = h4("Reference profile"), accept = ".csv", buttonLabel = "Load"),
+                          fileInput(ns("file_ladder"), label = h4("Allelic ladder"), accept = ".csv", buttonLabel = "Load"),
+                          fileInput(ns("file_af"), label = h4("Allele frequency"), accept = ".csv", buttonLabel = "Load"),
                           br(),
                           actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg"),
                           br(),
@@ -27,6 +28,9 @@ load_ui <- function(id){
                                    ),
                                    tabPanel("Reference profile",
                                             dataTableOutput(ns("dt_ref"))
+                                   ),
+                                   tabPanel("Allelic ladder",
+                                            dataTableOutput(ns("dt_ladder"))
                                    ),
                                    tabPanel("Allele frequency",
                                             dataTableOutput(ns("dt_af"))
@@ -47,6 +51,7 @@ load_server <- function(id, session_top){
       rv_file <- reactiveValues()
       rv_file$dt_csp <- NULL
       rv_file$dt_ref <- NULL
+      rv_file$dt_ladder <- NULL
       rv_file$dt_af <- NULL
 
       # Load the crime stain profile
@@ -68,6 +73,17 @@ load_server <- function(id, session_top){
           dt_ref <- change_data_type_ref(dt_ref)
           rv_file$dt_ref <- dt_ref
           updateTabsetPanel(inputId = "tabset_load_file", selected = "Reference profile")
+        }
+      })
+
+      # Load the allelic ladder
+      observeEvent(input$file_ladder, {
+        file_input <- input$file_ladder
+        if(!is.null(file_input)){
+          dt_ladder <- fread(file_input$datapath)
+          dt_ladder <- change_data_type_csp(dt_ladder)
+          rv_file$dt_ladder <- dt_ladder
+          updateTabsetPanel(inputId = "tabset_load_file", selected = "Allelic ladder")
         }
       })
 
@@ -96,6 +112,16 @@ load_server <- function(id, session_top){
       output$dt_ref <- renderDataTable(server = FALSE, {
         datatable(
           rv_file$dt_ref,
+          selection = "none",
+          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        )
+      })
+
+      # Display the allelic ladder
+      output$dt_ladder <- renderDataTable(server = FALSE, {
+        datatable(
+          rv_file$dt_ladder,
           selection = "none",
           options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
           rownames = FALSE
