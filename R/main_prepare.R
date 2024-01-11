@@ -247,9 +247,7 @@ make_indicators_mk <- function(hnc, peaks, sr_consider){
 }
 
 calc_eph_base_mk <- function(ind_gt_al, ind_gt_bs, ind_gt_fs, ind_gt_ds, ind_gt_m2s,
-                             tph, peaks, dt_alcor_mk1, m2sr){
-
-  ph_base <- 0.5 * tph
+                             peaks, dt_alcor_mk1, m2sr){
 
   alleles <- dt_alcor_mk1[, Allele]
   ave_bsrs <- dt_alcor_mk1[, Average_BSR]
@@ -277,31 +275,31 @@ calc_eph_base_mk <- function(ind_gt_al, ind_gt_bs, ind_gt_fs, ind_gt_ds, ind_gt_
     fsr <- fsrs[i]
     dsr <- dsrs[i]
 
-    eph_al[, i] <- ind_gt_al[, i] * ph_base / (1 + bsr + fsr + dsr + m2sr)
+    eph_al[, i] <- ind_gt_al[, i] / (1 + bsr + fsr + dsr + m2sr)
 
     bs <- bs_all[i]
     index_bs <- match(bs, peaks)
     if(!is.na(index_bs)){
-      eph_bs[, index_bs] <- ind_gt_bs[, index_bs] * ph_base * bsr / (1 + bsr + fsr + dsr + m2sr)
+      eph_bs[, index_bs] <- ind_gt_bs[, index_bs] * bsr / (1 + bsr + fsr + dsr + m2sr)
     }
 
     fs <- fs_all[i]
     index_fs <- match(fs, peaks)
     if(!is.na(index_fs)){
-      eph_fs[, index_fs] <- ind_gt_fs[, index_fs] * ph_base * fsr / (1 + bsr + fsr + dsr + m2sr)
+      eph_fs[, index_fs] <- ind_gt_fs[, index_fs] * fsr / (1 + bsr + fsr + dsr + m2sr)
     }
 
     ds <- ds_all[i]
     index_ds <- match(ds, peaks)
     if(!is.na(index_ds)){
-      eph_ds[, index_ds] <- ind_gt_ds[, index_ds] * ph_base * dsr / (1 + bsr + fsr + dsr + m2sr)
+      eph_ds[, index_ds] <- ind_gt_ds[, index_ds] * dsr / (1 + bsr + fsr + dsr + m2sr)
     }
 
     if(m2sr > 0){
       m2s <- m2s_all[i]
       index_m2s <- match(m2s, peaks)
       if(!is.na(index_m2s)){
-        eph_m2s[, index_m2s] <- ind_gt_m2s[, index_m2s] * ph_base * m2sr / (1 + bsr + fsr + dsr + m2sr)
+        eph_m2s[, index_m2s] <- ind_gt_m2s[, index_m2s] * m2sr / (1 + bsr + fsr + dsr + m2sr)
       }
     }
   }
@@ -310,16 +308,26 @@ calc_eph_base_mk <- function(ind_gt_al, ind_gt_bs, ind_gt_fs, ind_gt_ds, ind_gt_
   return(eph_base_mk)
 }
 
-make_indicators_all <- function(hnc, peaks_list, sr_consider_all_mk){
+calc_eph_base_all <- function(hnc, markers_auto, peaks_list, sr_consider_all_mk, dt_alcor, m2sr_all_mk){
+  setkey(dt_alcor, Marker)
+  eph_base_all <- list()
   for(i in 1:length(peaks_list)){
     peaks_list_sn1 <- peaks_list[[i]]
+    eph_base_sn1 <- list()
     for(j in 1:length(peaks_list_sn1)){
-      tmp <- make_indicators_mk(hnc, peaks_list_sn1[[j]], sr_consider_all_mk[j, ])
+      peaks <- peaks_list_sn1[[j]]
+      tmp <- make_indicators_mk(hnc, peaks, sr_consider_all_mk[j, ])
       ind_gt_al <- tmp$ind_gt_al
       ind_gt_bs <- tmp$ind_gt_bs
       ind_gt_fs <- tmp$ind_gt_fs
       ind_gt_ds <- tmp$ind_gt_ds
       ind_gt_m2s <- tmp$ind_gt_m2s
+
+      dt_alcor_mk1 <- dt_alcor[markers_auto[j]]
+      eph_base_sn1[[j]] <- calc_eph_base_mk(ind_gt_al, ind_gt_bs, ind_gt_fs, ind_gt_ds, ind_gt_m2s,
+                                            peaks, dt_alcor_mk1, m2sr_all_mk[j])
     }
+    eph_base_all[[i]] <- eph_base_sn1
   }
+  return(eph_base_all)
 }
