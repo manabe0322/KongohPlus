@@ -116,7 +116,25 @@ make_sr_consider_all_mk <- function(markers_auto, dt_parameter){
   return(sr_consider_all_mk)
 }
 
+#' extract_m2sr_all_mk
+#'
+#' @description The function to extract minus 2-nt stutter ratios of all markers
+#' @param markers_auto A vector of the autosomal markers
+#' @param dt_parameter The data.table of the parameters
+extract_m2sr_all_mk <- function(markers_auto, dt_parameter){
+  setkey(dt_parameter, Parameter)
+  dt_parameter_m2sr <- dt_parameter["M2SR"]
+  m2sr_all_mk <- dt_parameter_m2sr[, Myu]
+  m2sr_all_mk <- m2sr_all_mk[match(markers_auto, dt_parameter_m2sr[, Marker])]
+  m2sr_all_mk[is.na(m2sr_all_mk)] <- 0
+  return(m2sr_all_mk)
+}
 
+#' indicate_gt_al
+#'
+#' @description The function to make indicators of alleles for genotype combinations
+#' @param hnc The hypothesized number of contributors
+#' @param peaks A vector of peaks
 indicate_gt_al <- function(hnc, peaks){
   # Indices of peaks for candidate genotypes of one contributor
   index_peak <- combinations(n = length(peaks), r = 2, repeats.allowed = TRUE)
@@ -129,6 +147,7 @@ indicate_gt_al <- function(hnc, peaks){
   index_peak_gt <- index_peak[index_gt , ]
   index_peak_gt <- as.vector(t(index_peak_gt))
 
+  # Indicators of alleles for genotype combinations
   n_index <- length(index_peak_gt)
   ind_gt_al <- matrix(0, n_index, length(peaks))
   colnames(ind_gt_al) <- peaks
@@ -137,6 +156,11 @@ indicate_gt_al <- function(hnc, peaks){
   return(ind_gt_al)
 }
 
+#' indicate_gt_bs
+#'
+#' @description The function to make indicators of back stutters for genotype combinations
+#' @param ind_gt_al The indicators of alleles for genotype combinations
+#' @param peaks A vector of peaks
 indicate_gt_bs <- function(ind_gt_al, peaks){
   ind_gt_bs <- ind_gt_al * 0
   bs_all <- calc_bs(peaks)
@@ -150,6 +174,11 @@ indicate_gt_bs <- function(ind_gt_al, peaks){
   return(ind_gt_bs)
 }
 
+#' indicate_gt_fs
+#'
+#' @description The function to make indicators of forward stutters for genotype combinations
+#' @param ind_gt_al The indicators of alleles for genotype combinations
+#' @param peaks A vector of peaks
 indicate_gt_fs <- function(ind_gt_al, peaks){
   ind_gt_fs <- ind_gt_al * 0
   fs_all <- calc_fs(peaks)
@@ -163,6 +192,11 @@ indicate_gt_fs <- function(ind_gt_al, peaks){
   return(ind_gt_fs)
 }
 
+#' indicate_gt_ds
+#'
+#' @description The function to make indicators of double-back stutters for genotype combinations
+#' @param ind_gt_al The indicators of alleles for genotype combinations
+#' @param peaks A vector of peaks
 indicate_gt_ds <- function(ind_gt_al, peaks){
   ind_gt_ds <- ind_gt_al * 0
   ds_all <- calc_ds(peaks)
@@ -176,6 +210,11 @@ indicate_gt_ds <- function(ind_gt_al, peaks){
   return(ind_gt_ds)
 }
 
+#' indicate_gt_m2s
+#'
+#' @description The function to make indicators of minus 2-nt stutters for genotype combinations
+#' @param ind_gt_al The indicators of alleles for genotype combinations
+#' @param peaks A vector of peaks
 indicate_gt_m2s <- function(ind_gt_al, peaks){
   ind_gt_m2s <- ind_gt_al * 0
   m2s_all <- calc_m2s(peaks)
@@ -189,6 +228,15 @@ indicate_gt_m2s <- function(ind_gt_al, peaks){
   return(ind_gt_m2s)
 }
 
+#' judge_ind_gt
+#'
+#' @description The function to judge genotype combinations
+#' @param hnc The hypothesized number of contributors
+#' @param ind_gt_al The indicators of alleles for genotype combinations
+#' @param ind_gt_bs The indicators of back stutters for genotype combinations
+#' @param ind_gt_fs The indicators of forward stutters for genotype combinations
+#' @param ind_gt_ds The indicators of double-back stutters for genotype combinations
+#' @param ind_gt_m2s The indicators of minus 2-nt stutters for genotype combinations
 judge_ind_gt <- function(hnc, ind_gt_al, ind_gt_bs, ind_gt_fs, ind_gt_ds, ind_gt_m2s){
   ind_gt_sum <- ind_gt_al + ind_gt_bs + ind_gt_fs + ind_gt_ds + ind_gt_m2s
   ind_gt_sum <- ind_gt_sum[, - ncol(ind_gt_sum), drop = FALSE]
@@ -205,6 +253,12 @@ judge_ind_gt <- function(hnc, ind_gt_al, ind_gt_bs, ind_gt_fs, ind_gt_ds, ind_gt
   return(adopt_index)
 }
 
+#' make_indicators_mk
+#'
+#' @description The function to make indicators in one marker
+#' @param hnc The hypothesized number of contributors
+#' @param peaks A vector of peaks
+#' @param sr_consider The information on consideration of each stutter
 make_indicators_mk <- function(hnc, peaks, sr_consider){
   ind_gt_al <- indicate_gt_al(hnc, peaks)
 
@@ -246,6 +300,17 @@ make_indicators_mk <- function(hnc, peaks, sr_consider){
               "ind_gt_m2s" = ind_gt_m2s))
 }
 
+#' calc_eph_base_mk
+#'
+#' @description The function to calculate the based expected peak heights in one marker
+#' @param ind_gt_al The indicators of alleles for genotype combinations
+#' @param ind_gt_bs The indicators of back stutters for genotype combinations
+#' @param ind_gt_fs The indicators of forward stutters for genotype combinations
+#' @param ind_gt_ds The indicators of double-back stutters for genotype combinations
+#' @param ind_gt_m2s The indicators of minus 2-nt stutters for genotype combinations
+#' @param peaks A vector of peaks
+#' @param dt_alcor_mk1 The data.table of corrected alleles in one marker
+#' @param m2sr The average minus 2-nt stutter ratio
 calc_eph_base_mk <- function(ind_gt_al, ind_gt_bs, ind_gt_fs, ind_gt_ds, ind_gt_m2s,
                              peaks, dt_alcor_mk1, m2sr){
 
@@ -308,6 +373,15 @@ calc_eph_base_mk <- function(ind_gt_al, ind_gt_bs, ind_gt_fs, ind_gt_ds, ind_gt_
   return(eph_base_mk)
 }
 
+#' calc_eph_base_all
+#'
+#' @description The function to calculate the based expected peak heights in all markers
+#' @param hnc The hypothesized number of contributors
+#' @param markers_auto A vector of the autosomal markers
+#' @param peaks_list The list of peaks of all crime stain profiles
+#' @param sr_consider_all_mk The information on consideration of each stutter in all markers
+#' @param dt_alcor The data.table of corrected alleles
+#' @param m2sr_all_mk The average minus 2-nt stutter ratios of all markers
 calc_eph_base_all <- function(hnc, markers_auto, peaks_list, sr_consider_all_mk, dt_alcor, m2sr_all_mk){
   setkey(dt_alcor, Marker)
   eph_base_all <- list()
