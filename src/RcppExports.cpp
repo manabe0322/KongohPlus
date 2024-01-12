@@ -54,12 +54,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// make_cand_peak
+std::vector<double> make_cand_peak(std::vector<double> alleles, std::vector<bool> sr_consider);
+RcppExport SEXP _KongohPlus_make_cand_peak(SEXP allelesSEXP, SEXP sr_considerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type alleles(allelesSEXP);
+    Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_cand_peak(alleles, sr_consider));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_bs", (DL_FUNC) &_KongohPlus_calc_bs, 1},
     {"_KongohPlus_calc_fs", (DL_FUNC) &_KongohPlus_calc_fs, 1},
     {"_KongohPlus_calc_ds", (DL_FUNC) &_KongohPlus_calc_ds, 1},
     {"_KongohPlus_calc_m2s", (DL_FUNC) &_KongohPlus_calc_m2s, 1},
+    {"_KongohPlus_make_cand_peak", (DL_FUNC) &_KongohPlus_make_cand_peak, 2},
     {NULL, NULL, 0}
 };
 

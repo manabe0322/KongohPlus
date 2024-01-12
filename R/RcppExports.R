@@ -17,3 +17,7 @@ calc_m2s <- function(alleles) {
     .Call(`_KongohPlus_calc_m2s`, alleles)
 }
 
+make_cand_peak <- function(alleles, sr_consider) {
+    .Call(`_KongohPlus_make_cand_peak`, alleles, sr_consider)
+}
+
