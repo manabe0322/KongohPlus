@@ -5,16 +5,6 @@ bool judge_gt_comb(){
 
 }*/
 
-// [[Rcpp::export]]
-std::vector<double> calc_bs_cpp(std::vector<double> al){
-  int n_al = al.size();
-  std::vector<double> bs = std::vector<double>(n_al);
-  for(int i = 0; i < n_al; ++i){
-    bs[i] = al[i] - 1;
-  }
-  return(bs);
-}
-
 /*
 std::vector<double> make_cand_peak_cpp(std::vector<double> alleles,
                                        std::vector<bool> sr_consider){

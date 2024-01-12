@@ -10,20 +10,56 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// calc_bs_cpp
-std::vector<double> calc_bs_cpp(std::vector<double> al);
-RcppExport SEXP _KongohPlus_calc_bs_cpp(SEXP alSEXP) {
+// calc_bs
+std::vector<double> calc_bs(std::vector<double> alleles);
+RcppExport SEXP _KongohPlus_calc_bs(SEXP allelesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type al(alSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_bs_cpp(al));
+    Rcpp::traits::input_parameter< std::vector<double> >::type alleles(allelesSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_bs(alleles));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calc_fs
+std::vector<double> calc_fs(std::vector<double> alleles);
+RcppExport SEXP _KongohPlus_calc_fs(SEXP allelesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type alleles(allelesSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_fs(alleles));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calc_ds
+std::vector<double> calc_ds(std::vector<double> alleles);
+RcppExport SEXP _KongohPlus_calc_ds(SEXP allelesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type alleles(allelesSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_ds(alleles));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calc_m2s
+std::vector<double> calc_m2s(std::vector<double> alleles);
+RcppExport SEXP _KongohPlus_calc_m2s(SEXP allelesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type alleles(allelesSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_m2s(alleles));
     return rcpp_result_gen;
 END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_KongohPlus_calc_bs_cpp", (DL_FUNC) &_KongohPlus_calc_bs_cpp, 1},
+    {"_KongohPlus_calc_bs", (DL_FUNC) &_KongohPlus_calc_bs, 1},
+    {"_KongohPlus_calc_fs", (DL_FUNC) &_KongohPlus_calc_fs, 1},
+    {"_KongohPlus_calc_ds", (DL_FUNC) &_KongohPlus_calc_ds, 1},
+    {"_KongohPlus_calc_m2s", (DL_FUNC) &_KongohPlus_calc_m2s, 1},
     {NULL, NULL, 0}
 };
 
