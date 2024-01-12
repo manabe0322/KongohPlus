@@ -13,3 +13,6 @@
 #' @importFrom shinyjs disable disabled enable useShinyjs
 #' @importFrom shinythemes shinytheme
 "_PACKAGE"
+
+#' @useDynLib KongohPlus, .registration = TRUE
+NULL
