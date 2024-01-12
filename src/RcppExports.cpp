@@ -10,6 +10,30 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// find_index_double
+int find_index_double(double element, std::vector<double> vec);
+RcppExport SEXP _KongohPlus_find_index_double(SEXP elementSEXP, SEXP vecSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type element(elementSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type vec(vecSEXP);
+    rcpp_result_gen = Rcpp::wrap(find_index_double(element, vec));
+    return rcpp_result_gen;
+END_RCPP
+}
+// is_element_all_vec_double
+bool is_element_all_vec_double(std::vector<double> vec_a, std::vector<double> vec_b);
+RcppExport SEXP _KongohPlus_is_element_all_vec_double(SEXP vec_aSEXP, SEXP vec_bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type vec_a(vec_aSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type vec_b(vec_bSEXP);
+    rcpp_result_gen = Rcpp::wrap(is_element_all_vec_double(vec_a, vec_b));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calc_bs
 std::vector<double> calc_bs(std::vector<double> alleles);
 RcppExport SEXP _KongohPlus_calc_bs(SEXP allelesSEXP) {
@@ -68,6 +92,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_KongohPlus_find_index_double", (DL_FUNC) &_KongohPlus_find_index_double, 2},
+    {"_KongohPlus_is_element_all_vec_double", (DL_FUNC) &_KongohPlus_is_element_all_vec_double, 2},
     {"_KongohPlus_calc_bs", (DL_FUNC) &_KongohPlus_calc_bs, 1},
     {"_KongohPlus_calc_fs", (DL_FUNC) &_KongohPlus_calc_fs, 1},
     {"_KongohPlus_calc_ds", (DL_FUNC) &_KongohPlus_calc_ds, 1},

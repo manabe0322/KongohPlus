@@ -140,9 +140,9 @@ indicate_gt_al <- function(hnc, peaks){
   cand_gts <- combinations(n = length(peaks), r = 2, v= peaks, repeats.allowed = TRUE)
 
   # Indices of genotypes for candidate genotype combinations of each contributor
-  index_gt <- permutations(n = nrow(cand_gts), r = hnc, repeats.allowed = TRUE)
+  index_gt_comb <- permutations(n = nrow(cand_gts), r = hnc, repeats.allowed = TRUE)
 
   # Judge genotype combinations
   #cand_gts <- asplit(cand_gts, 1)
-  #index_gt <- asplit(index_gt, 1)
+  #index_gt_comb <- asplit(index_gt_comb, 1)
 }
