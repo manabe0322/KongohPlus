@@ -130,6 +130,51 @@ extract_m2sr_all_mk <- function(markers_auto, dt_parameter){
   return(m2sr_all_mk)
 }
 
+#' set_mp
+#'
+#' @description The function to set mixture proportions
+#' @param hnc The hypothesized number of contributors
+#' @param mp_c1 A vector of mixture proportions per contributor
+set_mp <- function(hnc, mp_c1){
+  if(hnc == 1){
+    return(matrix(1, 1, 1))
+  }else{
+    mp_c1 <- round(mp_c1, 5)
+    n_mp_c1 <- length(mp_c1)
+
+    # Mixture proportions of the contributors 1 to N - 1
+    mp_other_cn <- combinations(n = n_mp_c1, r = hnc - 1, v = mp_c1, repeats.allowed = TRUE)
+    mp_other_cn <- mp_other_cn[which(apply(mp_other_cn, 1, sum) < 1), , drop = FALSE]
+
+    # Mixture proportions of the contributor N
+    mp_cn <- round(1 - apply(mp_other_cn, 1, sum), 5)
+
+    # Initial mixture proportions of all contributors
+    mp <- cbind(mp_other_cn, mp_cn)
+
+    # Cut overlapped mixture proportions
+    mp <- t(apply(mp, 1, sort))
+    mp_cut_count <- 1
+    repeat{
+      index_mp_cut <- setdiff(which(apply(mp, 1, setequal, mp[mp_cut_count, ])), mp_cut_count)
+      if(length(index_mp_cut) != 0){
+        mp <- mp[-index_mp_cut, , drop = FALSE]
+      }
+      mp_cut_count <- mp_cut_count + 1
+      if(nrow(mp) < mp_cut_count){
+        break
+      }
+    }
+
+    # Cut mixture proportions of the contributors 1 to N - 1 other than components of 'mp_c1'
+    for(i in 1:(hnc - 1)){
+      mp <- mp[is.element(mp[, i], mp_c1), , drop = FALSE]
+    }
+
+    return(mp)
+  }
+}
+
 #' indicate_gt_al
 #'
 #' @description The function to make indicators of alleles for genotype combinations
@@ -137,7 +182,7 @@ extract_m2sr_all_mk <- function(markers_auto, dt_parameter){
 #' @param peaks A vector of peaks
 indicate_gt_al <- function(hnc, peaks){
   # All candidate genotypes
-  cand_gts <- combinations(n = length(peaks), r = 2, v= peaks, repeats.allowed = TRUE)
+  cand_gts <- combinations(n = length(peaks), r = 2, v = peaks, repeats.allowed = TRUE)
 
   # Indices of genotypes for candidate genotype combinations of each contributor
   index_gt_comb <- permutations(n = nrow(cand_gts), r = hnc, repeats.allowed = TRUE)
