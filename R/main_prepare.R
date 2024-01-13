@@ -134,16 +134,16 @@ extract_m2sr_all_mk <- function(markers_auto, dt_parameter){
 #'
 #' @description The function to set mixture proportions
 #' @param hnc The hypothesized number of contributors
-#' @param mp_c1 A vector of mixture proportions per contributor
-set_mp <- function(hnc, mp_c1){
+#' @param mp_cand_c1 A vector of mixture proportions per contributor
+set_mp <- function(hnc, mp_cand_c1){
   if(hnc == 1){
     return(matrix(1, 1, 1))
   }else{
-    mp_c1 <- round(mp_c1, 5)
-    n_mp_c1 <- length(mp_c1)
+    mp_cand_c1 <- round(mp_cand_c1, 5)
+    n_mp_cand_c1 <- length(mp_cand_c1)
 
     # Mixture proportions of the contributors 1 to N - 1
-    mp_other_cn <- combinations(n = n_mp_c1, r = hnc - 1, v = mp_c1, repeats.allowed = TRUE)
+    mp_other_cn <- combinations(n = n_mp_cand_c1, r = hnc - 1, v = mp_cand_c1, repeats.allowed = TRUE)
     mp_other_cn <- mp_other_cn[which(apply(mp_other_cn, 1, sum) < 1), , drop = FALSE]
 
     # Mixture proportions of the contributor N
@@ -153,7 +153,7 @@ set_mp <- function(hnc, mp_c1){
     mp <- cbind(mp_other_cn, mp_cn)
 
     # Cut overlapped mixture proportions
-    mp <- t(apply(mp, 1, sort))
+    mp <- t(apply(mp, 1, sort, decreasing = TRUE))
     mp_cut_count <- 1
     repeat{
       index_mp_cut <- setdiff(which(apply(mp, 1, setequal, mp[mp_cut_count, ])), mp_cut_count)
@@ -166,9 +166,9 @@ set_mp <- function(hnc, mp_c1){
       }
     }
 
-    # Cut mixture proportions of the contributors 1 to N - 1 other than components of 'mp_c1'
-    for(i in 1:(hnc - 1)){
-      mp <- mp[is.element(mp[, i], mp_c1), , drop = FALSE]
+    # Cut mixture proportions of the contributors 1 to N - 1 other than components of 'mp_cand_c1'
+    for(i in 2:hnc){
+      mp <- mp[is.element(mp[, i], mp_cand_c1), , drop = FALSE]
     }
 
     return(mp)
@@ -186,6 +186,9 @@ indicate_gt_al <- function(hnc, peaks){
 
   # Indices of genotypes for candidate genotype combinations of each contributor
   index_gt_comb <- permutations(n = nrow(cand_gts), r = hnc, repeats.allowed = TRUE)
+
+  #mp_cand <- set_mp(hnc, mp_cand_c1)
+  #mp_cand <- asplit(mp_cand, 1)
 
   # Judge genotype combinations
   #cand_gts <- asplit(cand_gts, 1)

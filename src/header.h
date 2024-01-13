@@ -1,6 +1,7 @@
 #include <Rcpp.h>
 #include <iostream>   // push_back
 #include <math.h>     // fmod
+#include <numeric>    // accumulate
 #include <string>
 #include <vector>
 using namespace Rcpp;
