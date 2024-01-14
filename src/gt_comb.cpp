@@ -107,17 +107,45 @@ std::vector<double> calc_eph(std::vector<std::vector<double>> eph_base,
   return(eph);
 }
 
+double calc_product(std::vector<double> oph,
+                    std::vector<double> eph,
+                    double beta,
+                    int at){
+  double product = 1;
+  int n_peak = eph.size();
+  int j_max = at + 1;
+  for(int i = 0; i < n_peak; ++i){
+    double oph1 = oph[i];
+    double eph1 = eph[i];
+    if(oph1 == 0){ // drop-out
+      if(eph1 != 0){ // The peak height of '99' != 0
+        for(int j = 1; j < j_max; ++j){
+          double oph_drop = (double)j;
+          product *= gamma_pdf(oph_drop, beta * eph1, beta);
+        }
+      }
+    }else if(eph1 == 0){ // drop-in
+
+    }else{
+      product *= gamma_pdf(oph1, beta * eph1, beta);
+    }
+  }
+  return(product);
+}
+
 // [[Rcpp::export]]
-std::vector<std::vector<double>> tmp(std::vector<double> peaks,
-                                     std::vector<std::vector<double>> cand_gts,
-                                     std::vector<std::vector<int>> index_gt_comb,
-                                     std::vector<bool> sr_consider,
-                                     std::vector<double> bsrs,
-                                     std::vector<double> fsrs,
-                                     std::vector<double> dsrs,
-                                     double m2sr,
-                                     std::vector<std::vector<double>> mp_cand,
-                                     std::vector<double> oph){
+std::vector<std::vector<std::vector<double>>> perform_discrete_analysis(std::vector<double> peaks,
+                                                                        std::vector<std::vector<double>> cand_gts,
+                                                                        std::vector<std::vector<int>> index_gt_comb,
+                                                                        std::vector<bool> sr_consider,
+                                                                        std::vector<double> bsrs,
+                                                                        std::vector<double> fsrs,
+                                                                        std::vector<double> dsrs,
+                                                                        double m2sr,
+                                                                        std::vector<std::vector<double>> mp_cand,
+                                                                        std::vector<double> oph,
+                                                                        double beta,
+                                                                        int at){
   int n_gt_comb = index_gt_comb.size();
   int hnc = index_gt_comb.at(0).size();
   int n_mp_cand = mp_cand.size();
@@ -129,8 +157,10 @@ std::vector<std::vector<double>> tmp(std::vector<double> peaks,
 
   double ave_het_h = std::accumulate(oph.begin(), oph.end(), 0.0) / 2;
 
-  // std::vector<int> adopt_index;
-  // adopt_index.reserve(n_gt_comb);
+  std::vector<std::vector<std::vector<double>>> results;
+  std::vector<std::vector<double>> gtc_mk1;
+  std::vector<std::vector<double>> product_mk1;
+  int count = 0;
   for(int i = 0; i < n_gt_comb; ++i){
     std::vector<int> ind_gtc = index_gt_comb.at(i);
     std::vector<double> gtc(2 * hnc);
@@ -142,14 +172,22 @@ std::vector<std::vector<double>> tmp(std::vector<double> peaks,
 
     bool adopt_gtc = judge_gtc(peaks, gtc, sr_consider);
     if(adopt_gtc){
+      gtc_mk1.at(count) = gtc;
+
       std::vector<std::vector<double>> eph_base = calc_eph_base(gtc, peaks, bs_all, fs_all, ds_all, m2s_all, bsrs, fsrs, dsrs, m2sr, ave_het_h);
 
+      std::vector<double> product_gtc1(n_mp_cand);
       for(int k = 0; k < n_mp_cand; ++k){
         std::vector<double> mp = mp_cand.at(k);
         std::vector<double> eph = calc_eph(eph_base, mp);
+        product_gtc1[k] = calc_product(oph, eph, beta, at);
       }
-
-      // adopt_index.push_back(i);
+      product_mk1.at(count) = product_gtc1;
+      count += count;
     }
   }
+
+  results.at(0) = gtc_mk1;
+  results.at(1) = product_mk1;
+  return(results);
 }

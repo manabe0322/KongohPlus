@@ -10,6 +10,19 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
+// gamma_pdf
+double gamma_pdf(double value, double alpha, double beta);
+RcppExport SEXP _KongohPlus_gamma_pdf(SEXP valueSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type value(valueSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(gamma_pdf(value, alpha, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
 // find_index_double
 int find_index_double(double element, std::vector<double> vec);
 RcppExport SEXP _KongohPlus_find_index_double(SEXP elementSEXP, SEXP vecSEXP) {
@@ -92,6 +105,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
+    {"_KongohPlus_gamma_pdf", (DL_FUNC) &_KongohPlus_gamma_pdf, 3},
     {"_KongohPlus_find_index_double", (DL_FUNC) &_KongohPlus_find_index_double, 2},
     {"_KongohPlus_is_element_all_vec_double", (DL_FUNC) &_KongohPlus_is_element_all_vec_double, 2},
     {"_KongohPlus_calc_bs", (DL_FUNC) &_KongohPlus_calc_bs, 1},

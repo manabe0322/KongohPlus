@@ -1,6 +1,11 @@
 #include "header.h"
 
 // [[Rcpp::export]]
+double gamma_pdf(double value, double alpha, double beta){
+  return(std::pow(beta, alpha) * std::pow(value, (alpha - 1)) * std::pow(M_E, (-1 * beta * value))) / tgamma(alpha);
+}
+
+// [[Rcpp::export]]
 int find_index_double(double element, std::vector<double> vec){
   int index = -1;
   auto tmp = std::find(vec.begin(), vec.end(), element);
