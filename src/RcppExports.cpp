@@ -104,15 +104,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // judge_gtc
-bool judge_gtc(std::vector<double> peaks, std::vector<double> gtc, std::vector<bool> sr_consider);
-RcppExport SEXP _KongohPlus_judge_gtc(SEXP peaksSEXP, SEXP gtcSEXP, SEXP sr_considerSEXP) {
+bool judge_gtc(std::vector<double> peaks_rm99, std::vector<double> gtc, std::vector<bool> sr_consider);
+RcppExport SEXP _KongohPlus_judge_gtc(SEXP peaks_rm99SEXP, SEXP gtcSEXP, SEXP sr_considerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type peaks(peaksSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type peaks_rm99(peaks_rm99SEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type gtc(gtcSEXP);
     Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
-    rcpp_result_gen = Rcpp::wrap(judge_gtc(peaks, gtc, sr_consider));
+    rcpp_result_gen = Rcpp::wrap(judge_gtc(peaks_rm99, gtc, sr_consider));
     return rcpp_result_gen;
 END_RCPP
 }

@@ -68,5 +68,6 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
     gtc_list[[i]] <- gtc_list_sn1
     product_list[[i]] <- product_list_sn1
   }
-  save(list = c(gtc_list, product_list), file = "test.Rdata")
+
+  save(list = c("gtc_list", "product_list"), file = "test.Rdata")
 }

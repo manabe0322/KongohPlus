@@ -1,11 +1,11 @@
 #include "header.h"
 
 // [[Rcpp::export]]
-bool judge_gtc(std::vector<double> peaks,
+bool judge_gtc(std::vector<double> peaks_rm99,
                std::vector<double> gtc,
                std::vector<bool> sr_consider){
   std::vector<double> cand_peak = make_cand_peak(gtc, sr_consider);
-  bool adopt_gtc = is_element_all_vec_double(cand_peak, peaks);
+  bool adopt_gtc = is_element_all_vec_double(peaks_rm99, cand_peak);
 
   // Write other conditions
 
@@ -77,7 +77,7 @@ std::vector<std::vector<double>> calc_eph_base(std::vector<double> gtc,
                                                double m2sr,
                                                double ave_het_h){
   int hnc = gtc.size() / 2;
-  std::vector<std::vector<double>> eph_base;
+  std::vector<std::vector<double>> eph_base(2);
   for(int i = 0; i < hnc; ++i){
     std::vector<double> gt(2);
     gt[0] = gtc[2 * i];
@@ -149,6 +149,10 @@ std::vector<std::vector<std::vector<double>>> perform_discrete_analysis(std::vec
   int n_gt_comb = index_gt_comb.size();
   int hnc = index_gt_comb.at(0).size();
   int n_mp_cand = mp_cand.size();
+  int n_peak = peaks.size();
+
+  std::vector<double> peaks_rm99 = peaks;
+  peaks_rm99.erase(peaks_rm99.begin() + n_peak - 1);
 
   std::vector<double> bs_all = calc_bs(peaks);
   std::vector<double> fs_all = calc_fs(peaks);
@@ -157,7 +161,6 @@ std::vector<std::vector<std::vector<double>>> perform_discrete_analysis(std::vec
 
   double ave_het_h = std::accumulate(oph.begin(), oph.end(), 0.0) / 2;
 
-  std::vector<std::vector<std::vector<double>>> results;
   std::vector<std::vector<double>> gtc_mk1;
   std::vector<std::vector<double>> product_mk1;
   int count = 0;
@@ -170,28 +173,32 @@ std::vector<std::vector<std::vector<double>>> perform_discrete_analysis(std::vec
       gtc[2 * j + 1] = gt[1];
     }
 
-    bool adopt_gtc = judge_gtc(peaks, gtc, sr_consider);
-
-    Rcout << i << "\n";
-    Rcout << adopt_gtc << "\n";
+    bool adopt_gtc = judge_gtc(peaks_rm99, gtc, sr_consider);
 
     if(adopt_gtc){
-      gtc_mk1.at(count) = gtc;
+      gtc_mk1.push_back(std::vector<double>(2 * hnc));
+      for(int k = 0; k < hnc; ++k){
+        gtc_mk1[count][2 * k] = gtc[2 * k];
+        gtc_mk1[count][2 * k + 1] = gtc[2 * k + 1];
+      }
 
       std::vector<std::vector<double>> eph_base = calc_eph_base(gtc, peaks, bs_all, fs_all, ds_all, m2s_all, bsrs, fsrs, dsrs, m2sr, ave_het_h);
 
-      std::vector<double> product_gtc1(n_mp_cand);
+      product_mk1.push_back(std::vector<double>(n_mp_cand));
       for(int k = 0; k < n_mp_cand; ++k){
         std::vector<double> mp = mp_cand.at(k);
         std::vector<double> eph = calc_eph(eph_base, mp);
-        product_gtc1[k] = calc_product(oph, eph, beta, at);
+        product_mk1[count][k] = calc_product(oph, eph, beta, at);
       }
-      product_mk1.at(count) = product_gtc1;
+
       count += 1;
     }
   }
 
+  std::vector<std::vector<std::vector<double>>> results;
+  results.push_back(std::vector<std::vector<double>>());
   results.at(0) = gtc_mk1;
+  results.push_back(std::vector<std::vector<double>>());
   results.at(1) = product_mk1;
   return(results);
 }
