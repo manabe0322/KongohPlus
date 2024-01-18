@@ -171,6 +171,10 @@ std::vector<std::vector<std::vector<double>>> perform_discrete_analysis(std::vec
     }
 
     bool adopt_gtc = judge_gtc(peaks, gtc, sr_consider);
+
+    Rcout << i << "\n";
+    Rcout << adopt_gtc << "\n";
+
     if(adopt_gtc){
       gtc_mk1.at(count) = gtc;
 
@@ -183,7 +187,7 @@ std::vector<std::vector<std::vector<double>>> perform_discrete_analysis(std::vec
         product_gtc1[k] = calc_product(oph, eph, beta, at);
       }
       product_mk1.at(count) = product_gtc1;
-      count += count;
+      count += 1;
     }
   }
 

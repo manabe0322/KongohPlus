@@ -127,7 +127,18 @@ extract_m2sr_all_mk <- function(markers_auto, dt_parameter){
   m2sr_all_mk <- dt_parameter_m2sr[, Myu]
   m2sr_all_mk <- m2sr_all_mk[match(markers_auto, dt_parameter_m2sr[, Marker])]
   m2sr_all_mk[is.na(m2sr_all_mk)] <- 0
+  names(m2sr_all_mk) <- markers_auto
   return(m2sr_all_mk)
+}
+
+#' extract_gamma_beta
+#'
+#' @description The function to extract the 'beta' parameter of the gamma distribution
+#' @param dt_parameter The data.table of the parameters
+extract_gamma_beta <- function(dt_parameter){
+  setkey(dt_parameter, Parameter)
+  dt_parameter_gamma <- dt_parameter["Gamma"]
+  return(as.numeric(dt_parameter_gamma[, Beta]))
 }
 
 #' set_mp
@@ -173,24 +184,4 @@ set_mp <- function(hnc, mp_cand_c1){
 
     return(mp)
   }
-}
-
-#' indicate_gt_al
-#'
-#' @description The function to make indicators of alleles for genotype combinations
-#' @param hnc The hypothesized number of contributors
-#' @param peaks A vector of peaks
-indicate_gt_al <- function(hnc, peaks){
-  # All candidate genotypes
-  cand_gts <- combinations(n = length(peaks), r = 2, v = peaks, repeats.allowed = TRUE)
-
-  # Indices of genotypes for candidate genotype combinations of each contributor
-  index_gt_comb <- permutations(n = nrow(cand_gts), r = hnc, repeats.allowed = TRUE)
-
-  #mp_cand <- set_mp(hnc, mp_cand_c1)
-  #mp_cand <- asplit(mp_cand, 1)
-
-  # Judge genotype combinations
-  #cand_gts <- asplit(cand_gts, 1)
-  #index_gt_comb <- asplit(index_gt_comb, 1)
 }

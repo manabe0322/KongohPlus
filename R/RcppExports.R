@@ -33,3 +33,11 @@ make_cand_peak <- function(alleles, sr_consider) {
     .Call(`_KongohPlus_make_cand_peak`, alleles, sr_consider)
 }
 
+judge_gtc <- function(peaks, gtc, sr_consider) {
+    .Call(`_KongohPlus_judge_gtc`, peaks, gtc, sr_consider)
+}
+
+perform_discrete_analysis <- function(peaks, cand_gts, index_gt_comb, sr_consider, bsrs, fsrs, dsrs, m2sr, mp_cand, oph, beta, at) {
+    .Call(`_KongohPlus_perform_discrete_analysis`, peaks, cand_gts, index_gt_comb, sr_consider, bsrs, fsrs, dsrs, m2sr, mp_cand, oph, beta, at)
+}
+
