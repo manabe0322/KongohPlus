@@ -185,3 +185,24 @@ set_mp <- function(hnc, mp_cand_c1){
     return(mp)
   }
 }
+
+# #' set_pop_prob
+# #'
+# #' @description The function to set allele probabilities
+# #' @param meth The method to correct allele frequencies
+# #' @param markers_auto A vector of the autosomal markers
+# #' @param dt_csp The data.table of the crime stain profiles
+# #' @param dt_ref The data.table of the reference profiles
+# #' @param dt_af The data.table of the allele frequencies
+#set_pop_prob <- function(meth = "Dirichlet", markers_auto, dt_csp, dt_ref = NULL, dt_af){
+#  n_mk <- length(markers_auto)
+#  pop_al_all <- dt_af[, Allele]
+
+#  pop_al_list <- pop_prob_list <- vector(mode = "list", length = n_mk)
+#  for(i in 1:n_mk){
+#    mk <- markers_auto[i]
+#    pop_freq <- as.numeric(unlist(dt_af[, mk, with = FALSE]))
+#    pop_al <- pop_al_all[!is.na(pop_freq)]
+#    pop_freq <- pop_freq[!is.na(pop_freq)]
+#  }
+#}
