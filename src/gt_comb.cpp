@@ -133,7 +133,6 @@ double calc_product(std::vector<double> oph,
   return(product);
 }
 
-/*
 // [[Rcpp::export]]
 double calc_gtc_prob_hwe(std::vector<double> gtc,
                          std::vector<double> pop_al,
@@ -157,7 +156,6 @@ double calc_gtc_prob_hwe(std::vector<double> gtc,
   }
   return(gtc_prob);
 }
-*/
 
 // [[Rcpp::export]]
 std::vector<std::vector<std::vector<double>>> perform_discrete_analysis(std::vector<double> peaks,
@@ -190,7 +188,7 @@ std::vector<std::vector<std::vector<double>>> perform_discrete_analysis(std::vec
   double ave_het_h = std::accumulate(oph.begin(), oph.end(), 0.0) / 2;
 
   std::vector<std::vector<double>> gtc_mk1;
-  //std::vector<std::vector<double>> gtc_prob_mk1;
+  std::vector<std::vector<double>> gtc_prob_mk1;
   std::vector<std::vector<double>> product_mk1;
   int count = 0;
   for(int i = 0; i < n_gt_comb; ++i){
@@ -211,8 +209,8 @@ std::vector<std::vector<std::vector<double>>> perform_discrete_analysis(std::vec
         gtc_mk1[count][2 * k + 1] = gtc[2 * k + 1];
       }
 
-      //gtc_prob_mk1.push_back(std::vector<double>(1));
-      //gtc_prob_mk1[count][0] = calc_gtc_prob_hwe(gtc, pop_al, pop_prob);
+      gtc_prob_mk1.push_back(std::vector<double>(1));
+      gtc_prob_mk1[count][0] = calc_gtc_prob_hwe(gtc, pop_al, pop_prob);
 
       std::vector<std::vector<double>> eph_base = calc_eph_base(gtc, peaks, bs_all, fs_all, ds_all, m2s_all, bsrs, fsrs, dsrs, m2sr, ave_het_h);
 
@@ -230,9 +228,9 @@ std::vector<std::vector<std::vector<double>>> perform_discrete_analysis(std::vec
   std::vector<std::vector<std::vector<double>>> results;
   results.push_back(std::vector<std::vector<double>>());
   results.at(0) = gtc_mk1;
-  //results.push_back(std::vector<std::vector<double>>());
-  //results.at(1) = gtc_prob_mk1;
   results.push_back(std::vector<std::vector<double>>());
-  results.at(1) = product_mk1;
+  results.at(1) = gtc_prob_mk1;
+  results.push_back(std::vector<std::vector<double>>());
+  results.at(2) = product_mk1;
   return(results);
 }

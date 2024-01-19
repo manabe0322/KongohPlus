@@ -10,6 +10,10 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
   heights_list <- tmp$heights_list
   n_sn <- length(peaks_list)
 
+  tmp <- set_pop_prob(markers_auto, dt_af, peaks_list)
+  pop_al_list <- tmp$pop_al_list
+  pop_prob_list <- tmp$pop_prob_list
+
   sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_parameter)
 
   m2sr_all_mk <- extract_m2sr_all_mk(markers_auto, dt_parameter)
@@ -21,12 +25,12 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
   setkey(dt_alcor, Marker)
   setkey(dt_at, Marker)
 
-  gtc_list <- product_list <- list()
+  gtc_list <- gtc_prob_list <- product_list <- list()
   for(i in 1:n_sn){
     peaks_list_sn1 <- peaks_list[[i]]
     heights_list_sn1 <- heights_list[[i]]
 
-    gtc_list_sn1 <- product_list_sn1 <- list()
+    gtc_list_sn1 <- gtc_prob_list_sn1 <- product_list_sn1 <- list()
     for(j in 1:n_mk){
       mk <- markers_auto[j]
       dt_alcor_mk <- dt_alcor[mk]
@@ -35,6 +39,9 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
 
       peaks <- peaks_list_sn1[[mk]]
       oph <- heights_list_sn1[[mk]]
+
+      pop_al <- pop_al_list[[mk]]
+      pop_prob <- pop_prob_list[[mk]]
 
       sr_consider <- sr_consider_all_mk[mk, ]
 
@@ -61,13 +68,15 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
       index_gt_comb <- index_gt_comb - 1 # for C++ index
       index_gt_comb <- asplit(index_gt_comb, 1)
 
-      tmp <- perform_discrete_analysis(peaks, cand_gts, index_gt_comb, sr_consider, bsrs, fsrs, dsrs, m2sr, mp_cand, oph, beta, at)
+      tmp <- perform_discrete_analysis(peaks, cand_gts, index_gt_comb, pop_al, pop_prob, sr_consider, bsrs, fsrs, dsrs, m2sr, mp_cand, oph, beta, at)
       gtc_list_sn1[[j]] <- tmp[[1]]
-      product_list_sn1[[j]] <- tmp[[2]]
+      gtc_prob_list_sn1[[j]] <- tmp[[2]]
+      product_list_sn1[[j]] <- tmp[[3]]
     }
     gtc_list[[i]] <- gtc_list_sn1
+    gtc_prob_list[[i]] <- gtc_prob_list_sn1
     product_list[[i]] <- product_list_sn1
   }
 
-  save(list = c("gtc_list", "product_list"), file = "test.Rdata")
+  save(list = c("gtc_list", "gtc_prob_list", "product_list", "pop_al_list", "pop_prob_list"), file = "test.Rdata")
 }

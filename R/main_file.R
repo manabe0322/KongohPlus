@@ -39,10 +39,10 @@ change_data_type_ref <- function(dt_ref){
 change_data_type_af <- function(dt_af){
   names(dt_af) <- gsub(" ", "", names(dt_af))
 
-  name_dt_af <- names(dt_af)
-  col_char <- c("Allele")
-  dt_af[, (col_char) := lapply(.SD, as.character), .SDcols = col_char]
-  col_numeric <- setdiff(name_dt_af, "Allele")
+  #name_dt_af <- names(dt_af)
+  #col_char <- c("Allele")
+  #dt_af[, (col_char) := lapply(.SD, as.character), .SDcols = col_char]
+  col_numeric <- names(dt_af)
   dt_af[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
 
   dt_af[which(dt_af == "", arr.ind = TRUE)] <- NA

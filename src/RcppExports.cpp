@@ -116,6 +116,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// calc_gtc_prob_hwe
+double calc_gtc_prob_hwe(std::vector<double> gtc, std::vector<double> pop_al, std::vector<double> pop_prob);
+RcppExport SEXP _KongohPlus_calc_gtc_prob_hwe(SEXP gtcSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type gtc(gtcSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type pop_al(pop_alSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type pop_prob(pop_probSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_gtc_prob_hwe(gtc, pop_al, pop_prob));
+    return rcpp_result_gen;
+END_RCPP
+}
 // perform_discrete_analysis
 std::vector<std::vector<std::vector<double>>> perform_discrete_analysis(std::vector<double> peaks, std::vector<std::vector<double>> cand_gts, std::vector<std::vector<int>> index_gt_comb, std::vector<double> pop_al, std::vector<double> pop_prob, std::vector<bool> sr_consider, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, double m2sr, std::vector<std::vector<double>> mp_cand, std::vector<double> oph, double beta, int at);
 RcppExport SEXP _KongohPlus_perform_discrete_analysis(SEXP peaksSEXP, SEXP cand_gtsSEXP, SEXP index_gt_combSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP sr_considerSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srSEXP, SEXP mp_candSEXP, SEXP ophSEXP, SEXP betaSEXP, SEXP atSEXP) {
@@ -151,6 +164,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_m2s", (DL_FUNC) &_KongohPlus_calc_m2s, 1},
     {"_KongohPlus_make_cand_peak", (DL_FUNC) &_KongohPlus_make_cand_peak, 2},
     {"_KongohPlus_judge_gtc", (DL_FUNC) &_KongohPlus_judge_gtc, 3},
+    {"_KongohPlus_calc_gtc_prob_hwe", (DL_FUNC) &_KongohPlus_calc_gtc_prob_hwe, 3},
     {"_KongohPlus_perform_discrete_analysis", (DL_FUNC) &_KongohPlus_perform_discrete_analysis, 14},
     {NULL, NULL, 0}
 };
