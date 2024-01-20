@@ -10,16 +10,20 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// gamma_pdf
-double gamma_pdf(double value, double alpha, double beta);
-RcppExport SEXP _KongohPlus_gamma_pdf(SEXP valueSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+// make_eph_base
+std::vector<std::vector<double>> make_eph_base(std::vector<double> peaks, std::vector<std::vector<double>> cand_gts, std::vector<bool> sr_consider, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, double m2sr);
+RcppExport SEXP _KongohPlus_make_eph_base(SEXP peaksSEXP, SEXP cand_gtsSEXP, SEXP sr_considerSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type value(valueSEXP);
-    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
-    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
-    rcpp_result_gen = Rcpp::wrap(gamma_pdf(value, alpha, beta));
+    Rcpp::traits::input_parameter< std::vector<double> >::type peaks(peaksSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::vector<double>> >::type cand_gts(cand_gtsSEXP);
+    Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type bsrs(bsrsSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type fsrs(fsrsSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type dsrs(dsrsSEXP);
+    Rcpp::traits::input_parameter< double >::type m2sr(m2srSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_eph_base(peaks, cand_gts, sr_consider, bsrs, fsrs, dsrs, m2sr));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -32,18 +36,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type element(elementSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type vec(vecSEXP);
     rcpp_result_gen = Rcpp::wrap(find_index_double(element, vec));
-    return rcpp_result_gen;
-END_RCPP
-}
-// is_element_all_vec_double
-bool is_element_all_vec_double(std::vector<double> vec_a, std::vector<double> vec_b);
-RcppExport SEXP _KongohPlus_is_element_all_vec_double(SEXP vec_aSEXP, SEXP vec_bSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type vec_a(vec_aSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type vec_b(vec_bSEXP);
-    rcpp_result_gen = Rcpp::wrap(is_element_all_vec_double(vec_a, vec_b));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -103,69 +95,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// judge_gtc
-bool judge_gtc(std::vector<double> peaks_rm99, std::vector<double> gtc, std::vector<bool> sr_consider);
-RcppExport SEXP _KongohPlus_judge_gtc(SEXP peaks_rm99SEXP, SEXP gtcSEXP, SEXP sr_considerSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type peaks_rm99(peaks_rm99SEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type gtc(gtcSEXP);
-    Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
-    rcpp_result_gen = Rcpp::wrap(judge_gtc(peaks_rm99, gtc, sr_consider));
-    return rcpp_result_gen;
-END_RCPP
-}
-// calc_gtc_prob_hwe
-double calc_gtc_prob_hwe(std::vector<double> gtc, std::vector<double> pop_al, std::vector<double> pop_prob);
-RcppExport SEXP _KongohPlus_calc_gtc_prob_hwe(SEXP gtcSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type gtc(gtcSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type pop_al(pop_alSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type pop_prob(pop_probSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_gtc_prob_hwe(gtc, pop_al, pop_prob));
-    return rcpp_result_gen;
-END_RCPP
-}
-// perform_discrete_analysis
-std::vector<std::vector<std::vector<double>>> perform_discrete_analysis(std::vector<double> peaks, std::vector<std::vector<double>> cand_gts, std::vector<std::vector<int>> index_gt_comb, std::vector<double> pop_al, std::vector<double> pop_prob, std::vector<bool> sr_consider, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, double m2sr, std::vector<std::vector<double>> mp_cand, std::vector<double> oph, double beta, int at);
-RcppExport SEXP _KongohPlus_perform_discrete_analysis(SEXP peaksSEXP, SEXP cand_gtsSEXP, SEXP index_gt_combSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP sr_considerSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srSEXP, SEXP mp_candSEXP, SEXP ophSEXP, SEXP betaSEXP, SEXP atSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type peaks(peaksSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::vector<double>> >::type cand_gts(cand_gtsSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::vector<int>> >::type index_gt_comb(index_gt_combSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type pop_al(pop_alSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type pop_prob(pop_probSEXP);
-    Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type bsrs(bsrsSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type fsrs(fsrsSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type dsrs(dsrsSEXP);
-    Rcpp::traits::input_parameter< double >::type m2sr(m2srSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::vector<double>> >::type mp_cand(mp_candSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type oph(ophSEXP);
-    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< int >::type at(atSEXP);
-    rcpp_result_gen = Rcpp::wrap(perform_discrete_analysis(peaks, cand_gts, index_gt_comb, pop_al, pop_prob, sr_consider, bsrs, fsrs, dsrs, m2sr, mp_cand, oph, beta, at));
-    return rcpp_result_gen;
-END_RCPP
-}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_KongohPlus_gamma_pdf", (DL_FUNC) &_KongohPlus_gamma_pdf, 3},
+    {"_KongohPlus_make_eph_base", (DL_FUNC) &_KongohPlus_make_eph_base, 7},
     {"_KongohPlus_find_index_double", (DL_FUNC) &_KongohPlus_find_index_double, 2},
-    {"_KongohPlus_is_element_all_vec_double", (DL_FUNC) &_KongohPlus_is_element_all_vec_double, 2},
     {"_KongohPlus_calc_bs", (DL_FUNC) &_KongohPlus_calc_bs, 1},
     {"_KongohPlus_calc_fs", (DL_FUNC) &_KongohPlus_calc_fs, 1},
     {"_KongohPlus_calc_ds", (DL_FUNC) &_KongohPlus_calc_ds, 1},
     {"_KongohPlus_calc_m2s", (DL_FUNC) &_KongohPlus_calc_m2s, 1},
     {"_KongohPlus_make_cand_peak", (DL_FUNC) &_KongohPlus_make_cand_peak, 2},
-    {"_KongohPlus_judge_gtc", (DL_FUNC) &_KongohPlus_judge_gtc, 3},
-    {"_KongohPlus_calc_gtc_prob_hwe", (DL_FUNC) &_KongohPlus_calc_gtc_prob_hwe, 3},
-    {"_KongohPlus_perform_discrete_analysis", (DL_FUNC) &_KongohPlus_perform_discrete_analysis, 14},
     {NULL, NULL, 0}
 };
 

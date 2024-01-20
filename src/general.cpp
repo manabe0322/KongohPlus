@@ -1,11 +1,6 @@
 #include "header.h"
 
 // [[Rcpp::export]]
-double gamma_pdf(double value, double alpha, double beta){
-  return(std::pow(beta, alpha) * std::pow(value, (alpha - 1)) * std::pow(M_E, (-1 * beta * value))) / tgamma(alpha);
-}
-
-// [[Rcpp::export]]
 int find_index_double(double element, std::vector<double> vec){
   int index = -1;
   auto tmp = std::find(vec.begin(), vec.end(), element);
@@ -13,21 +8,6 @@ int find_index_double(double element, std::vector<double> vec){
     index = tmp - vec.begin();
   }
   return(index);
-}
-
-// [[Rcpp::export]]
-bool is_element_all_vec_double(std::vector<double> vec_a, std::vector<double> vec_b){
-  bool ans = true;
-  int n_vec_a = vec_a.size();
-  for(int i = 0; i < n_vec_a; ++i){
-    double element = vec_a[i];
-    auto index = std::find(vec_b.begin(), vec_b.end(), element);
-    ans = index != vec_b.end();
-    if(!ans){
-      break;
-    }
-  }
-  return(ans);
 }
 
 // [[Rcpp::export]]

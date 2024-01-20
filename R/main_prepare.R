@@ -158,61 +158,6 @@ extract_m2sr_all_mk <- function(markers_auto, dt_parameter){
   return(m2sr_all_mk)
 }
 
-#' extract_gamma_beta
-#'
-#' @description The function to extract the 'beta' parameter of the gamma distribution
-#' @param dt_parameter The data.table of the parameters
-extract_gamma_beta <- function(dt_parameter){
-  setkey(dt_parameter, Parameter)
-  dt_parameter_gamma <- dt_parameter["Gamma"]
-  return(as.numeric(dt_parameter_gamma[, Beta]))
-}
-
-#' set_mp
-#'
-#' @description The function to set mixture proportions
-#' @param hnc The hypothesized number of contributors
-#' @param mp_cand_c1 A vector of mixture proportions per contributor
-set_mp <- function(hnc, mp_cand_c1){
-  if(hnc == 1){
-    return(matrix(1, 1, 1))
-  }else{
-    mp_cand_c1 <- round(mp_cand_c1, 5)
-    n_mp_cand_c1 <- length(mp_cand_c1)
-
-    # Mixture proportions of the contributors 1 to N - 1
-    mp_other_cn <- combinations(n = n_mp_cand_c1, r = hnc - 1, v = mp_cand_c1, repeats.allowed = TRUE)
-    mp_other_cn <- mp_other_cn[which(apply(mp_other_cn, 1, sum) < 1), , drop = FALSE]
-
-    # Mixture proportions of the contributor N
-    mp_cn <- round(1 - apply(mp_other_cn, 1, sum), 5)
-
-    # Initial mixture proportions of all contributors
-    mp <- cbind(mp_other_cn, mp_cn)
-
-    # Cut overlapped mixture proportions
-    mp <- t(apply(mp, 1, sort, decreasing = TRUE))
-    mp_cut_count <- 1
-    repeat{
-      index_mp_cut <- setdiff(which(apply(mp, 1, setequal, mp[mp_cut_count, ])), mp_cut_count)
-      if(length(index_mp_cut) != 0){
-        mp <- mp[-index_mp_cut, , drop = FALSE]
-      }
-      mp_cut_count <- mp_cut_count + 1
-      if(nrow(mp) < mp_cut_count){
-        break
-      }
-    }
-
-    # Cut mixture proportions of the contributors 1 to N - 1 other than components of 'mp_cand_c1'
-    for(i in 2:hnc){
-      mp <- mp[is.element(mp[, i], mp_cand_c1), , drop = FALSE]
-    }
-
-    return(mp)
-  }
-}
-
 #' correct_af_dirichlet
 #'
 #' @description The function to correct allele frequencies based on the Dirichlet distribution
