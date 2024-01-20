@@ -19,11 +19,13 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
   eph_base_all <- size_eph_all <- numeric(0)
   index_sn <- index_mk <- index_gt <- index_peak <- integer(0)
   n_gt_all <- n_peak_all <- rep(0, n_sn * n_mk)
+  index_gt_comb_all_sn <- list()
   for(i in 1:n_sn){
     peaks_list_sn1 <- peaks_list[[i]]
     sizes_list_sn1 <- sizes_list[[i]]
 
     n_gt_mk <- n_peak_mk <- rep(0, n_mk)
+    index_gt_comb_all_mk <- list()
     for(j in 1:n_mk){
       mk <- markers_auto[j]
 
@@ -68,8 +70,19 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
       n_peak_all[n_mk * (i - 1) + j] <- n_peak
 
       size_eph_all <- c(size_eph_all, rep(sizes, n_gt))
+
+
+      # Indices of genotypes for candidate genotype combinations of each contributor
+      index_gt_comb <- permutations(n = length(cand_gts), r = hnc, repeats.allowed = TRUE)
+      index_gt_comb <- index_gt_comb - 1 # for C++ index
+      index_gt_comb <- asplit(index_gt_comb, 1)
+
+      index_gt_comb_adopt <- judge_gt_comb_mk(peaks, cand_gts, index_gt_comb, sr_consider)
+      index_gt_comb_adopt <- unlist(index_gt_comb_adopt)
+      index_gt_comb_all_mk[[j]] <- matrix(index_gt_comb_adopt, nrow = hnc)
     }
+    index_gt_comb_all_sn[[i]] <- index_gt_comb_all_mk
   }
 
-  save(list = c("eph_base_all", "size_eph_all", "index_sn", "index_mk", "index_gt", "index_peak", "n_gt_all", "n_peak_all"), file = "test.Rdata")
+  save(list = c("eph_base_all", "size_eph_all", "index_sn", "index_mk", "index_gt", "index_peak", "n_gt_all", "n_peak_all", "index_gt_comb_all_sn"), file = "test.Rdata")
 }
