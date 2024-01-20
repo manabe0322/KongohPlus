@@ -143,19 +143,20 @@ make_sr_consider_all_mk <- function(markers_auto, dt_parameter){
   return(sr_consider_all_mk)
 }
 
-#' extract_m2sr_all_mk
+#' extract_myu_all_mk
 #'
 #' @description The function to extract minus 2-nt stutter ratios of all markers
+#' @param param_name A parameter name
 #' @param markers_auto A vector of the autosomal markers
 #' @param dt_parameter The data.table of the parameters
-extract_m2sr_all_mk <- function(markers_auto, dt_parameter){
+extract_myu_all_mk <- function(param_name, markers_auto, dt_parameter){
   setkey(dt_parameter, Parameter)
-  dt_parameter_m2sr <- dt_parameter["M2SR"]
-  m2sr_all_mk <- dt_parameter_m2sr[, Myu]
-  m2sr_all_mk <- m2sr_all_mk[match(markers_auto, dt_parameter_m2sr[, Marker])]
-  m2sr_all_mk[is.na(m2sr_all_mk)] <- 0
-  names(m2sr_all_mk) <- markers_auto
-  return(m2sr_all_mk)
+  dt_parameter_target <- dt_parameter[param_name]
+  myu_all_mk <- dt_parameter_target[, Myu]
+  myu_all_mk <- myu_all_mk[match(markers_auto, dt_parameter_target[, Marker])]
+  myu_all_mk[is.na(myu_all_mk)] <- 0
+  names(myu_all_mk) <- markers_auto
+  return(myu_all_mk)
 }
 
 #' correct_af_dirichlet

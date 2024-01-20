@@ -11,7 +11,8 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
 
   sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_parameter)
 
-  m2sr_all_mk <- extract_m2sr_all_mk(markers_auto, dt_parameter)
+  ae_all_mk <- extract_myu_all_mk("AE", markers_auto, dt_parameter)
+  m2sr_all_mk <- extract_myu_all_mk("M2SR", markers_auto, dt_parameter)
 
   setkey(dt_alcor, Marker)
 
@@ -46,8 +47,9 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
       dsrs[is.na(dsrs)] <- 0
       m2sr <- m2sr_all_mk[mk]
 
+      ae <- ae_all_mk[mk]
 
-      eph_base_list_sn1[[j]] <- make_eph_base(peaks, cand_gts, sr_consider, bsrs, fsrs, dsrs, m2sr)
+      eph_base_list_sn1[[j]] <- make_eph_base(peaks, cand_gts, sr_consider, bsrs, fsrs, dsrs, m2sr, ae)
     }
     eph_base_list[[i]] <- eph_base_list_sn1
   }
