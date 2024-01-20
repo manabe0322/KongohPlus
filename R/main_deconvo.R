@@ -16,16 +16,18 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
 
   setkey(dt_alcor, Marker)
 
-  eph_base_list <- list()
+  eph_base_all <- size_eph_all <- numeric(0)
+  index_sn <- index_mk <- index_gt <- index_peak <- integer(0)
   for(i in 1:n_sn){
     peaks_list_sn1 <- peaks_list[[i]]
-    heights_list_sn1 <- heights_list[[i]]
+    sizes_list_sn1 <- sizes_list[[i]]
 
-    eph_base_list_sn1 <- list()
+    n_gt_mk <- n_peak_mk <- rep(0, n_mk)
     for(j in 1:n_mk){
       mk <- markers_auto[j]
 
       peaks <- peaks_list_sn1[[mk]]
+      sizes <- sizes_list_sn1[[mk]]
 
       # All candidate genotypes in each contributor
       cand_gts <- combinations(n = length(peaks), r = 2, v = peaks, repeats.allowed = TRUE)
@@ -49,10 +51,24 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
 
       ae <- ae_all_mk[mk]
 
-      eph_base_list_sn1[[j]] <- make_eph_base(peaks, cand_gts, sr_consider, bsrs, fsrs, dsrs, m2sr, ae)
+      eph_base <- make_eph_base(peaks, cand_gts, sr_consider, bsrs, fsrs, dsrs, m2sr, ae)
+      eph_base <- unlist(eph_base)
+      eph_base_all <- c(eph_base_all, eph_base)
+
+      n_eph_base <- length(eph_base)
+      n_gt <- length(cand_gts)
+      n_peak <- length(peaks)
+      index_sn <- c(index_sn, rep(i, n_eph_base))
+      index_mk <- c(index_mk, rep(j, n_eph_base))
+      index_gt <- c(index_gt, as.vector(sapply(1:n_gt, rep, n_peak)))
+      index_peak <- c(index_peak, rep(1:n_peak, n_gt))
+
+      n_gt_mk[j] <- n_gt
+      n_peak_mk[j] <- n_peak
+
+      size_eph_all <- c(size_eph_all, rep(sizes, n_gt))
     }
-    eph_base_list[[i]] <- eph_base_list_sn1
   }
 
-  save(list = c("eph_base_list"), file = "test.Rdata")
+  save(list = c("eph_base_all", "size_eph_all", "index_sn", "index_mk", "index_gt", "index_peak"), file = "test.Rdata")
 }

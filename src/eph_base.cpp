@@ -1,16 +1,16 @@
 #include "header.h"
 
 std::vector<double> calc_eph_base_gt1(std::vector<double> gt,
-                                     std::vector<double> peaks,
-                                     std::vector<double> bs_all,
-                                     std::vector<double> fs_all,
-                                     std::vector<double> ds_all,
-                                     std::vector<double> m2s_all,
-                                     std::vector<double> bsrs,
-                                     std::vector<double> fsrs,
-                                     std::vector<double> dsrs,
-                                     double m2sr,
-                                     double ae){
+                                      std::vector<double> peaks,
+                                      std::vector<double> bs_all,
+                                      std::vector<double> fs_all,
+                                      std::vector<double> ds_all,
+                                      std::vector<double> m2s_all,
+                                      std::vector<double> bsrs,
+                                      std::vector<double> fsrs,
+                                      std::vector<double> dsrs,
+                                      double m2sr,
+                                      double ae){
 
   int n_peak = peaks.size();
   int n_al = gt.size();
