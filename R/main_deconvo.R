@@ -18,6 +18,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
 
   eph_base_all <- size_eph_all <- numeric(0)
   index_sn <- index_mk <- index_gt <- index_peak <- integer(0)
+  n_gt_all <- n_peak_all <- rep(0, n_sn * n_mk)
   for(i in 1:n_sn){
     peaks_list_sn1 <- peaks_list[[i]]
     sizes_list_sn1 <- sizes_list[[i]]
@@ -63,12 +64,12 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
       index_gt <- c(index_gt, as.vector(sapply(1:n_gt, rep, n_peak)))
       index_peak <- c(index_peak, rep(1:n_peak, n_gt))
 
-      n_gt_mk[j] <- n_gt
-      n_peak_mk[j] <- n_peak
+      n_gt_all[n_mk * (i - 1) + j] <- n_gt
+      n_peak_all[n_mk * (i - 1) + j] <- n_peak
 
       size_eph_all <- c(size_eph_all, rep(sizes, n_gt))
     }
   }
 
-  save(list = c("eph_base_all", "size_eph_all", "index_sn", "index_mk", "index_gt", "index_peak"), file = "test.Rdata")
+  save(list = c("eph_base_all", "size_eph_all", "index_sn", "index_mk", "index_gt", "index_peak", "n_gt_all", "n_peak_all"), file = "test.Rdata")
 }
