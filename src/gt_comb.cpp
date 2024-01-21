@@ -42,6 +42,7 @@ std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<double> peaks,
       for(int k = 0; k < hnc; ++k){
         index_gt_comb_adopt[count][k] = ind_gtc[k];
       }
+      count += 1;
     }
   }
 
