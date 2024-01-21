@@ -21,8 +21,8 @@ check_csp_alcor <- function(dt_csp, dt_at, dt_alcor, markers_auto){
   setkey(dt_alcor, Marker)
 
   for(i in 1:length(sn_all_csp)){
-    sn1 <- sn_all_csp[i]
-    dt_csp_sn1 <- dt_csp[sn1]
+    sn1_csp <- sn_all_csp[i]
+    dt_csp_sn1 <- dt_csp[sn1_csp]
     setkey(dt_csp_sn1, Marker)
     for(j in 1:n_mk){
       mk <- markers_auto[j]
@@ -88,10 +88,10 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor, meth
     setkey(dt_csp, SampleName)
     sn_all_csp <- unique(dt_csp[, SampleName])
     for(i in 1:length(sn_all_csp)){
-      sn1 <- sn_all_csp[i]
-      dt_csp_sn1 <- dt_csp[sn1]
+      sn1_csp <- sn_all_csp[i]
+      dt_csp_sn1 <- dt_csp[sn1_csp]
       if(!all(is.element(markers_auto, dt_csp_sn1[, Marker]))){
-        error_message <- paste0(error_message, "Marker set of the crime stain profile '", sn1, "' is not correct!<br>")
+        error_message <- paste0(error_message, "Marker set of the crime stain profile '", sn1_csp, "' is not correct!<br>")
       }
     }
 
@@ -99,10 +99,10 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor, meth
       setkey(dt_ref, SampleName)
       sn_all_ref <- unique(dt_ref[, SampleName])
       for(i in 1:length(sn_all_ref)){
-        sn1 <- sn_all_ref[i]
-        dt_ref_sn1 <- dt_ref[sn1]
+        sn1_ref <- sn_all_ref[i]
+        dt_ref_sn1 <- dt_ref[sn1_ref]
         if(!all(is.element(markers_auto, dt_ref_sn1[, Marker]))){
-          error_message <- paste0(error_message, "Marker set of the reference profile '", sn1, "' is not correct!<br>")
+          error_message <- paste0(error_message, "Marker set of the reference profile '", sn1_ref, "' is not correct!<br>")
         }
       }
     }

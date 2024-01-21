@@ -159,17 +159,16 @@ extract_myu_all_mk <- function(param_name, markers_auto, dt_parameter){
   return(myu_all_mk)
 }
 
-tmp_func <- function(eph_base_list){
-  n_sn <- length(eph_base_list)
-  n_mk <- length(eph_base_list[[1]])
-
-  for(i in 1:n_sn){
-    eph_base_list_sn1 <- eph_base_list[[i]]
-    for(j in 1:n_mk){
-      eph_base_list_sn1_mk1 <- eph_base_list_sn1[[j]]
-      unlist(eph_base_list_sn1_mk1)
-
-      n_peaks <- length(eph_base_list_sn1_mk1[[1]])
-    }
-  }
+#' make_at_all_snmk
+#'
+#' @description The function to make a vector of ATs of all samples and all markers
+#' @param n_csp The number of crime stain profiles
+#' @param markers_auto A vector of the autosomal markers
+#' @param dt_at The data.table of the analytical thresholds
+make_at_all_snmk <- function(n_csp, markers_auto, dt_at){
+  markers_at <- dt_at[, Marker]
+  ats <- dt_at[, AT]
+  at_all_mk <- ats[match(markers_auto, markers_at)]
+  at_all_snmk <- rep(at_all_mk, n_csp)
+  return(at_all_snmk)
 }

@@ -7,7 +7,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
   peaks_list <- tmp$peaks_list
   sizes_list <- tmp$sizes_list
   heights_list <- tmp$heights_list
-  n_sn <- length(peaks_list)
+  n_csp <- length(peaks_list)
 
   sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_parameter)
 
@@ -17,15 +17,14 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
   setkey(dt_alcor, Marker)
 
   eph_base_all <- size_eph_all <- numeric(0)
-  index_sn <- index_mk <- index_gt <- index_peak <- integer(0)
-  n_gt_all <- n_peak_all <- rep(0, n_sn * n_mk)
-  index_gt_comb_all_sn <- list()
-  for(i in 1:n_sn){
+  index_csp <- index_mk <- index_gt <- index_peak <- integer(0)
+  n_csp_mk <- n_csp * n_mk
+  n_gt_all <- n_peak_all <- n_gt_comb_all <- rep(0, n_csp_mk)
+  index_gt_comb_all <- NULL
+  for(i in 1:n_csp){
     peaks_list_sn1 <- peaks_list[[i]]
     sizes_list_sn1 <- sizes_list[[i]]
 
-    n_gt_mk <- n_peak_mk <- rep(0, n_mk)
-    index_gt_comb_all_mk <- list()
     for(j in 1:n_mk){
       mk <- markers_auto[j]
 
@@ -61,7 +60,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
       n_eph_base <- length(eph_base)
       n_gt <- length(cand_gts)
       n_peak <- length(peaks)
-      index_sn <- c(index_sn, rep(i, n_eph_base))
+      index_csp <- c(index_csp, rep(i, n_eph_base))
       index_mk <- c(index_mk, rep(j, n_eph_base))
       index_gt <- c(index_gt, as.vector(sapply(1:n_gt, rep, n_peak)))
       index_peak <- c(index_peak, rep(1:n_peak, n_gt))
@@ -78,11 +77,19 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
       index_gt_comb <- asplit(index_gt_comb, 1)
 
       index_gt_comb_adopt <- judge_gt_comb_mk(peaks, cand_gts, index_gt_comb, sr_consider)
+      n_gt_comb_all[n_mk * (i - 1) + j] <- length(index_gt_comb_adopt)
       index_gt_comb_adopt <- unlist(index_gt_comb_adopt)
-      index_gt_comb_all_mk[[j]] <- matrix(index_gt_comb_adopt, nrow = hnc)
+      index_gt_comb_all <- cbind(index_gt_comb_all, matrix(index_gt_comb_adopt, nrow = hnc))
     }
-    index_gt_comb_all_sn[[i]] <- index_gt_comb_all_mk
   }
 
-  save(list = c("eph_base_all", "size_eph_all", "index_sn", "index_mk", "index_gt", "index_peak", "n_gt_all", "n_peak_all", "index_gt_comb_all_sn"), file = "test.Rdata")
+  n_eph_base_all <- n_gt_all * n_peak_all
+
+  at_all_snmk <- make_at_all_snmk(n_csp, markers_auto, dt_at)
+
+  ## check n_gt_comb_all == 0
+
+  save(list = c("hnc", "n_csp_mk", "n_peak_all", "n_eph_base_all", "eph_base_all", "size_eph_all", "n_gt_comb_all", "index_gt_comb_all", "at_all_snmk",
+                "peaks_list", "heights_list",
+                "n_gt_all", "index_csp", "index_mk", "index_gt", "index_peak"), file = "test.Rdata")
 }

@@ -21,7 +21,11 @@ compile_stan_code <- function(path_pack){
     saveRDS(model_sr_uni, paste0(path_pack, "/model/model_sr_uni.rds"))
   }
   if(!is.element("model_gamma.rds", stan_models)){
-    model_sr_gamma <- cmdstan_model(paste0(path_pack, "/stan/model_gamma.stan"))
-    saveRDS(model_sr_gamma, paste0(path_pack, "/model/model_gamma.rds"))
+    model_gamma <- cmdstan_model(paste0(path_pack, "/stan/model_gamma.stan"))
+    saveRDS(model_gamma, paste0(path_pack, "/model/model_gamma.rds"))
+  }
+  if(!is.element("model_main.rds", stan_models)){
+    model_main <- cmdstan_model(paste0(path_pack, "/stan/model_main.stan"))
+    saveRDS(model_main, paste0(path_pack, "/model/model_main.rds"))
   }
 }
