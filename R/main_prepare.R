@@ -159,6 +159,16 @@ extract_myu_all_mk <- function(param_name, markers_auto, dt_parameter){
   return(myu_all_mk)
 }
 
+#' extract_beta
+#'
+#' @description The function to extract the beta
+#' @param dt_parameter The data.table of the parameters
+extract_beta <- function(dt_parameter){
+  setkey(dt_parameter, Parameter)
+  dt_gamma <- dt_parameter["Gamma"]
+  return(as.numeric(dt_gamma[, Beta]))
+}
+
 #' make_at_all_snmk
 #'
 #' @description The function to make a vector of ATs of all samples and all markers

@@ -432,7 +432,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          perform_deconvo(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_alcor, dt_kit, dt_at, noc_deconvo)
+          perform_deconvo(path_pack, dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_alcor, dt_kit, dt_at, noc_deconvo)
         }
       })
     }
