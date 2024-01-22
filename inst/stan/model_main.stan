@@ -1,5 +1,5 @@
 functions{
-  real calc_density(int n_peak, vector oph, vector eph, int AT, real Beta){
+  real calc_density(int n_peak, vector oph, vector eph, int at, real Beta){
     real dens;
     real oph_one;
     real eph_one;
@@ -7,10 +7,10 @@ functions{
     for(i in 1:n_peak){
       oph_one = oph[i];
       eph_one = eph[i];
-      if(oph_one >= AT){
+      if(oph_one >= at){
         dens += gamma_lpdf(oph_one | eph_one * Beta, Beta);
       }else{
-        for(j in 1:(AT - 1)){
+        for(j in 1:(at - 1)){
           dens += gamma_lpdf(j | eph_one * Beta, Beta);
         }
       }
@@ -18,7 +18,7 @@ functions{
     return dens;
   }
 
-  real calc_likelihood(int Hnc, int N_Csp_Mk, int N_Peak_All, array[] int N_Eph_Base_All, array[] int N_Gt_Comb_All, vector Oph_All, int AT, real Beta){
+  real calc_likelihood(int Hnc, int N_Csp_Mk, int N_Peak_All, array[] int N_Eph_Base_All, array[] int N_Gt_Comb_All, vector Oph_All, int AT_All, real Beta){
     index_eph_start = 1;
     index_gtc_start = 1;
     index_peak_start = 1;
@@ -34,6 +34,9 @@ functions{
       vector[n_peak] oph = Oph_All[index_peak_start:(index_peak_start + n_peak - 1)];
 
       vector[n_gt_comb] density;
+
+      int at = AT_All[i];
+
       for(j in 1:n_gt_comb){
         array[Hnc] int index_gtc1 = index_gt_comb_cspmk1[, j];
 
@@ -44,7 +47,7 @@ functions{
         }
 
         // vs oph
-        density[j] = calc_density(n_peak, oph, eph, AT, Beta);
+        density[j] = calc_density(n_peak, oph, eph, at, Beta);
       }
 
       loglike_all[i] = log_sum_exp(density);
@@ -71,9 +74,8 @@ data{
   array[N_Csp_Mk] int N_Gt_Comb_All;
   array[Hnc, sum(N_Gt_Comb_All)] int Index_Gt_Comb_All;
 
-  int N_Oph_All;
-  vector[N_Oph_All] Oph_All;
-  int AT;
+  vector[N_Peak_All] Oph_All;
+  array[N_Csp_Mk] int AT_All;
   real Beta;
 }
 
@@ -92,5 +94,5 @@ transformed parameters{
 }
 
 model{
-  target += calc_likelihood(Hnc, N_Csp_Mk, N_Peak_All, N_Eph_Base_All, N_Gt_Comb_All, Oph_All, AT, Beta);
+  target += calc_likelihood(Hnc, N_Csp_Mk, N_Peak_All, N_Eph_Base_All, N_Gt_Comb_All, Oph_All, AT_All, Beta);
 }

@@ -112,7 +112,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         # Extract analytical thresholds
         index_at <- grep("AT_", names)
         rv_deconvo_setting$dt_at <- dt_at <- data.table(Marker = gsub("AT_", "", names[index_at]),
-                                                        AT = values[index_at])
+                                                        AT = as.numeric(values[index_at]))
 
         output$dt_at <- renderDataTable(server = FALSE, {
           datatable(

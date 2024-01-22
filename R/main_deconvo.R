@@ -89,7 +89,21 @@ perform_deconvo <- function(dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_
 
   ## check n_gt_comb_all == 0
 
+  data_list_main <- list(Hnc = hnc, N_Peak_All = n_peak_all, N_Eph_Base_All = n_eph_base_all, Eph_Base_All = eph_base_all, Size_Eph_All = size_eph_all,
+                         N_Gt_Comb_All = n_gt_comb_all, Index_Gt_Comb_All = index_gt_comb_all,
+                         Oph_All = unlist(heights_list), AT_All = at_all_snmk)
+
+  model_main <- readRDS(paste0(path_pack, "/model/model_main.rds"))
+  fit_main <- model_main$sample(
+    data_list_main,
+    iter_warmup = 1000,
+    iter_sampling = 1000,
+    chains = 4,
+    parallel_chains = detectCores()
+  )
+
   save(list = c("hnc", "n_csp_mk", "n_peak_all", "n_eph_base_all", "eph_base_all", "size_eph_all", "n_gt_comb_all", "index_gt_comb_all", "at_all_snmk",
                 "peaks_list", "heights_list",
+                "fit_main",
                 "n_gt_all", "index_csp", "index_mk", "index_gt", "index_peak"), file = "test.Rdata")
 }
