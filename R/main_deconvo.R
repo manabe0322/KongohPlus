@@ -1,4 +1,4 @@
-perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_alcor, dt_kit, dt_at, hnc){
+perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt_kit, dt_at, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, hnc){
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers_auto <- unique(dt_kit_auto[, Marker])
   n_mk <- length(markers_auto)
@@ -25,12 +25,14 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_analysis_method, dt_par
   for(i in 1:n_csp){
     peaks_list_sn1 <- peaks_list[[i]]
     sizes_list_sn1 <- sizes_list[[i]]
+    heights_list_sn1 <- heights_list[[i]]
 
     for(j in 1:n_mk){
       mk <- markers_auto[j]
 
       peaks <- peaks_list_sn1[[mk]]
       sizes <- sizes_list_sn1[[mk]]
+      heights <- heights_list_sn1[[mk]]
 
       # All candidate genotypes in each contributor
       cand_gts <- combinations(n = length(peaks), r = 2, v = peaks, repeats.allowed = TRUE)
@@ -78,7 +80,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_analysis_method, dt_par
       index_gt_comb <- index_gt_comb - 1 # for C++ index
       index_gt_comb <- asplit(index_gt_comb, 1)
 
-      index_gt_comb_adopt <- judge_gt_comb_mk(peaks, cand_gts, index_gt_comb, sr_consider)
+      index_gt_comb_adopt <- judge_gt_comb_mk(cand_gts, index_gt_comb, peaks, heights, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, sr_consider)
       n_gt_comb_all[n_mk * (i - 1) + j] <- length(index_gt_comb_adopt)
       index_gt_comb_adopt <- unlist(index_gt_comb_adopt) + 1 # for R and stan index
       index_gt_comb_all <- rbind(index_gt_comb_all, matrix(index_gt_comb_adopt, ncol = hnc, byrow = TRUE))
@@ -93,21 +95,20 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_analysis_method, dt_par
 
   ## check n_gt_comb_all == 0
 
-  data_list_main <- list(Hnc = hnc, N_Csp_Mk = n_csp_mk, N_Peak_All = n_peak_all, N_Eph_Base_All = n_eph_base_all, Eph_Base_All = eph_base_all, Size_Eph_All = size_eph_all,
-                         N_Gt_Comb_All = n_gt_comb_all, Index_Gt_Comb_All = index_gt_comb_all,
-                         Oph_All = unlist(heights_list), AT_All = at_all_snmk, Beta = gamma_beta)
+#  data_list_main <- list(Hnc = hnc, N_Csp_Mk = n_csp_mk, N_Peak_All = n_peak_all, N_Eph_Base_All = n_eph_base_all, Eph_Base_All = eph_base_all, Size_Eph_All = size_eph_all,
+#                         N_Gt_Comb_All = n_gt_comb_all, Index_Gt_Comb_All = index_gt_comb_all,
+#                         Oph_All = unlist(heights_list), AT_All = at_all_snmk, Beta = gamma_beta)
 
-  model_main <- readRDS(paste0(path_pack, "/model/model_main.rds"))
-  fit_main <- model_main$sample(
-    data_list_main,
-    iter_warmup = 1000,
-    iter_sampling = 1000,
-    chains = 4,
-    parallel_chains = detectCores()
-  )
+#  model_main <- readRDS(paste0(path_pack, "/model/model_main.rds"))
+#  fit_main <- model_main$sample(
+#    data_list_main,
+#    iter_warmup = 1000,
+#    iter_sampling = 1000,
+#    chains = 4,
+#    parallel_chains = detectCores()
+#  )
 
   save(list = c("hnc", "n_csp_mk", "n_peak_all", "n_eph_base_all", "eph_base_all", "size_eph_all", "n_gt_comb_all", "index_gt_comb_all", "at_all_snmk", "gamma_beta",
                 "peaks_list", "heights_list", "cand_gts_all",
-                "fit_main",
                 "n_gt_all", "index_csp", "index_mk", "index_gt", "index_peak"), file = "test.Rdata")
 }

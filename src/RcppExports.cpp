@@ -121,29 +121,39 @@ BEGIN_RCPP
 END_RCPP
 }
 // judge_gtc
-bool judge_gtc(std::vector<double> gtc, std::vector<double> peaks_rm99, std::vector<bool> sr_consider);
-RcppExport SEXP _KongohPlus_judge_gtc(SEXP gtcSEXP, SEXP peaks_rm99SEXP, SEXP sr_considerSEXP) {
+bool judge_gtc(std::vector<double> gtc, std::vector<double> peaks_rm99, std::vector<double> heights_rm99, double bsr_fltr, double fsr_fltr, double dsr_fltr, double m2sr_fltr, std::vector<bool> sr_consider);
+RcppExport SEXP _KongohPlus_judge_gtc(SEXP gtcSEXP, SEXP peaks_rm99SEXP, SEXP heights_rm99SEXP, SEXP bsr_fltrSEXP, SEXP fsr_fltrSEXP, SEXP dsr_fltrSEXP, SEXP m2sr_fltrSEXP, SEXP sr_considerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::vector<double> >::type gtc(gtcSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type peaks_rm99(peaks_rm99SEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type heights_rm99(heights_rm99SEXP);
+    Rcpp::traits::input_parameter< double >::type bsr_fltr(bsr_fltrSEXP);
+    Rcpp::traits::input_parameter< double >::type fsr_fltr(fsr_fltrSEXP);
+    Rcpp::traits::input_parameter< double >::type dsr_fltr(dsr_fltrSEXP);
+    Rcpp::traits::input_parameter< double >::type m2sr_fltr(m2sr_fltrSEXP);
     Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
-    rcpp_result_gen = Rcpp::wrap(judge_gtc(gtc, peaks_rm99, sr_consider));
+    rcpp_result_gen = Rcpp::wrap(judge_gtc(gtc, peaks_rm99, heights_rm99, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, sr_consider));
     return rcpp_result_gen;
 END_RCPP
 }
 // judge_gt_comb_mk
-std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<double> peaks, std::vector<std::vector<double>> cand_gts, std::vector<std::vector<int>> index_gt_comb, std::vector<bool> sr_consider);
-RcppExport SEXP _KongohPlus_judge_gt_comb_mk(SEXP peaksSEXP, SEXP cand_gtsSEXP, SEXP index_gt_combSEXP, SEXP sr_considerSEXP) {
+std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<std::vector<double>> cand_gts, std::vector<std::vector<int>> index_gt_comb, std::vector<double> peaks, std::vector<double> heights, double bsr_fltr, double fsr_fltr, double dsr_fltr, double m2sr_fltr, std::vector<bool> sr_consider);
+RcppExport SEXP _KongohPlus_judge_gt_comb_mk(SEXP cand_gtsSEXP, SEXP index_gt_combSEXP, SEXP peaksSEXP, SEXP heightsSEXP, SEXP bsr_fltrSEXP, SEXP fsr_fltrSEXP, SEXP dsr_fltrSEXP, SEXP m2sr_fltrSEXP, SEXP sr_considerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type peaks(peaksSEXP);
     Rcpp::traits::input_parameter< std::vector<std::vector<double>> >::type cand_gts(cand_gtsSEXP);
     Rcpp::traits::input_parameter< std::vector<std::vector<int>> >::type index_gt_comb(index_gt_combSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type peaks(peaksSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type heights(heightsSEXP);
+    Rcpp::traits::input_parameter< double >::type bsr_fltr(bsr_fltrSEXP);
+    Rcpp::traits::input_parameter< double >::type fsr_fltr(fsr_fltrSEXP);
+    Rcpp::traits::input_parameter< double >::type dsr_fltr(dsr_fltrSEXP);
+    Rcpp::traits::input_parameter< double >::type m2sr_fltr(m2sr_fltrSEXP);
     Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
-    rcpp_result_gen = Rcpp::wrap(judge_gt_comb_mk(peaks, cand_gts, index_gt_comb, sr_consider));
+    rcpp_result_gen = Rcpp::wrap(judge_gt_comb_mk(cand_gts, index_gt_comb, peaks, heights, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, sr_consider));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -158,8 +168,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_ds", (DL_FUNC) &_KongohPlus_calc_ds, 1},
     {"_KongohPlus_calc_m2s", (DL_FUNC) &_KongohPlus_calc_m2s, 1},
     {"_KongohPlus_make_cand_peak", (DL_FUNC) &_KongohPlus_make_cand_peak, 2},
-    {"_KongohPlus_judge_gtc", (DL_FUNC) &_KongohPlus_judge_gtc, 3},
-    {"_KongohPlus_judge_gt_comb_mk", (DL_FUNC) &_KongohPlus_judge_gt_comb_mk, 4},
+    {"_KongohPlus_judge_gtc", (DL_FUNC) &_KongohPlus_judge_gtc, 8},
+    {"_KongohPlus_judge_gt_comb_mk", (DL_FUNC) &_KongohPlus_judge_gt_comb_mk, 9},
     {NULL, NULL, 0}
 };
 

@@ -25,10 +25,10 @@ bool judge_gtc_sr(std::vector<double> gtc,
         int index_cand_stutter = find_index_double(cand_stutter, peaks_rm99);
         double height_stutter = heights_rm99[index_cand_stutter];
 
-        bool satisfy_bsr = false;
-        bool satisfy_fsr = false;
-        bool satisfy_dsr = false;
-        bool satisfy_m2sr = false;
+        bool over_bsr = true;
+        bool over_fsr = true;
+        bool over_dsr = true;
+        bool over_m2sr = true;
 
         double parent_allele;
         int index_parent_allele;
@@ -39,31 +39,31 @@ bool judge_gtc_sr(std::vector<double> gtc,
           index_parent_allele = find_index_double(parent_allele, peaks_rm99);
           if(index_parent_allele != -1){
             height_allele = heights_rm99[index_parent_allele];
-            satisfy_bsr = height_stutter / height_allele <= bsr_fltr;
+            over_bsr = height_stutter / height_allele > bsr_fltr;
           }
         }
 
-        if(!satisfy_bsr){
+        if(over_bsr){
           if(fsr_consider){
             parent_allele = cand_stutter - 1;
             index_parent_allele = find_index_double(parent_allele, peaks_rm99);
             if(index_parent_allele != -1){
               height_allele = heights_rm99[index_parent_allele];
-              satisfy_fsr = height_stutter / height_allele <= fsr_fltr;
+              over_fsr = height_stutter / height_allele > fsr_fltr;
             }
           }
 
-          if(!satisfy_fsr){
+          if(over_fsr){
             if(dsr_consider){
               parent_allele = cand_stutter + 2;
               index_parent_allele = find_index_double(parent_allele, peaks_rm99);
               if(index_parent_allele != -1){
                 height_allele = heights_rm99[index_parent_allele];
-                satisfy_dsr = height_stutter / height_allele <= dsr_fltr;
+                over_dsr = height_stutter / height_allele > dsr_fltr;
               }
             }
 
-            if(!satisfy_dsr){
+            if(over_dsr){
               if(m2sr_consider){
                 double residual = fmod(cand_stutter, 1);
                 if(residual < 0.15){
@@ -74,41 +74,52 @@ bool judge_gtc_sr(std::vector<double> gtc,
                 index_parent_allele = find_index_double(parent_allele, peaks_rm99);
                 if(index_parent_allele != -1){
                   height_allele = heights_rm99[index_parent_allele];
-                  satisfy_m2sr = height_stutter / height_allele <= m2sr_fltr;
+                  over_m2sr = height_stutter / height_allele > m2sr_fltr;
                 }
               }
             }
           }
         }
 
-        if()
-
-
-
-
-
-
+        if(over_bsr && over_fsr && over_dsr && over_m2sr){
+          adopt_gtc = false;
+          break;
+        }
       }
     }
   }
+  return(adopt_gtc);
 }
 
 // [[Rcpp::export]]
 bool judge_gtc(std::vector<double> gtc,
                std::vector<double> peaks_rm99,
+               std::vector<double> heights_rm99,
+               double bsr_fltr,
+               double fsr_fltr,
+               double dsr_fltr,
+               double m2sr_fltr,
                std::vector<bool> sr_consider){
   std::vector<double> cand_peak = make_cand_peak(gtc, sr_consider);
   bool adopt_gtc = is_element_all_vec_double(peaks_rm99, cand_peak);
 
   // Write other conditions
+  if(adopt_gtc){
+    adopt_gtc = judge_gtc_sr(gtc, peaks_rm99, heights_rm99, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, sr_consider);
+  }
 
   return(adopt_gtc);
 }
 
 // [[Rcpp::export]]
-std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<double> peaks,
-                                               std::vector<std::vector<double>> cand_gts,
+std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<std::vector<double>> cand_gts,
                                                std::vector<std::vector<int>> index_gt_comb,
+                                               std::vector<double> peaks,
+                                               std::vector<double> heights,
+                                               double bsr_fltr,
+                                               double fsr_fltr,
+                                               double dsr_fltr,
+                                               double m2sr_fltr,
                                                std::vector<bool> sr_consider){
   int n_gt_comb = index_gt_comb.size();
   int hnc = index_gt_comb.at(0).size();
@@ -116,6 +127,9 @@ std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<double> peaks,
 
   std::vector<double> peaks_rm99 = peaks;
   peaks_rm99.erase(peaks_rm99.begin() + n_peak - 1);
+
+  std::vector<double> heights_rm99 = heights;
+  heights_rm99.erase(heights_rm99.begin() + n_peak - 1);
 
   std::vector<std::vector<int>> index_gt_comb_adopt;
 
@@ -129,7 +143,7 @@ std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<double> peaks,
       gtc[2 * j + 1] = gt[1];
     }
 
-    bool adopt_gtc = judge_gtc(gtc, peaks_rm99, sr_consider);
+    bool adopt_gtc = judge_gtc(gtc, peaks_rm99, heights_rm99, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, sr_consider);
     if(adopt_gtc){
       index_gt_comb_adopt.push_back(std::vector<int>(hnc));
       for(int k = 0; k < hnc; ++k){

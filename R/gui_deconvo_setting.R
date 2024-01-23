@@ -39,7 +39,11 @@ deconvo_setting_ui <- function(id){
                                 actionButton(ns("act_gamma"), label = "Gamma"),
                                 br(),
                                 br(),
-                                h4("Conditions to remove unrealistic genotype combinations")
+                                h4("Conditions to remove unrealistic genotype combinations"),
+                                textOutput(ns("bsr_fltr")),
+                                textOutput(ns("fsr_fltr")),
+                                textOutput(ns("dsr_fltr")),
+                                textOutput(ns("m2sr_fltr"))
                          )
                        )
              )
@@ -66,6 +70,10 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       rv_deconvo_setting$dt_dsr <- NULL
       rv_deconvo_setting$dt_m2sr <- NULL
       rv_deconvo_setting$dt_gamma <- NULL
+      rv_deconvo_setting$bsr_fltr <- NULL
+      rv_deconvo_setting$fsr_fltr <- NULL
+      rv_deconvo_setting$dsr_fltr <- NULL
+      rv_deconvo_setting$m2sr_fltr <- NULL
 
       rv_deconvo_setting$dt_csp <- NULL
       rv_deconvo_setting$dt_ref <- NULL
@@ -123,9 +131,18 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
           )
         })
 
+        rv_deconvo_setting$bsr_fltr <- bsr_fltr <- as.numeric(values[names == "Filter of back stutter ratio"])
+        rv_deconvo_setting$fsr_fltr <- fsr_fltr <- as.numeric(values[names == "Filter of forward stutter ratio"])
+        rv_deconvo_setting$dsr_fltr <- dsr_fltr <- as.numeric(values[names == "Filter of double-back stutter ratio"])
+        rv_deconvo_setting$m2sr_fltr <- m2sr_fltr <- as.numeric(values[names == "Filter of minus 2-nt stutter ratio"])
+
         output$kit <- renderText({values[names == "Kit"]})
         output$alprob <- renderText({values[names == "Allele probability"]})
         output$theta <- renderText({values[names == "Theta"]})
+        output$bsr_fltr <- renderText({paste0("Filter of back stutter ratio: ", bsr_fltr)})
+        output$fsr_fltr <- renderText({paste0("Filter of forward stutter ratio: ", fsr_fltr)})
+        output$dsr_fltr <- renderText({paste0("Filter of double-back stutter ratio: ", dsr_fltr)})
+        output$m2sr_fltr <- renderText({paste0("Filter of minus 2-nt stutter ratio: ", m2sr_fltr)})
       })
 
       observeEvent(input$act_ae, {
@@ -421,18 +438,22 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         dt_csp <- rv_deconvo_setting$dt_csp
         dt_ref <- rv_deconvo_setting$dt_ref
         dt_af <- rv_deconvo_setting$dt_af
-        dt_analysis_method <- rv_deconvo_setting$dt_analysis_method
+        #dt_analysis_method <- rv_deconvo_setting$dt_analysis_method
         dt_parameter <- rv_deconvo_setting$dt_parameter
         dt_alcor <- rv_deconvo_setting$dt_alcor
         dt_kit <- rv_deconvo_setting$dt_kit
         dt_at <- rv_deconvo_setting$dt_at
+        bsr_fltr <- rv_deconvo_setting$bsr_fltr
+        fsr_fltr <- rv_deconvo_setting$fsr_fltr
+        dsr_fltr <- rv_deconvo_setting$dsr_fltr
+        m2sr_fltr <- rv_deconvo_setting$m2sr_fltr
 
         # Check input files and setting
         error_message <- check_main_file(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor, method = "deconvo")
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          perform_deconvo(path_pack, dt_csp, dt_af, dt_analysis_method, dt_parameter, dt_alcor, dt_kit, dt_at, noc_deconvo)
+          perform_deconvo(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt_kit, dt_at, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, noc_deconvo)
         }
       })
     }
