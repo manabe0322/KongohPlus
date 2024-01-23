@@ -2,7 +2,6 @@
 % Please edit documentation in R/package.R
 \docType{package}
 \name{KongohPlus-package}
-\alias{KongohPlus}
 \alias{KongohPlus-package}
 \title{KongohPlus: Probabilistic genotyping software based on a quantitative continuous model}
 \description{

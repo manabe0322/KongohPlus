@@ -6,7 +6,7 @@
 #' @importFrom dplyr full_join
 #' @importFrom DT datatable dataTableOutput formatRound JS renderDataTable
 #' @importFrom gtools combinations permutations
-#' @importFrom magrittr "%>%"
+#' @importFrom magrittr %>%
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
