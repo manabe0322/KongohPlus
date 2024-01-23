@@ -26,6 +26,28 @@ bool is_element_all_vec_double(std::vector<double> vec_a, std::vector<double> ve
 }
 
 // [[Rcpp::export]]
+std::vector<double> setdiff_double(std::vector<double> vec_num1, std::vector<double> vec_num2){
+  std::vector<double> only_vec_num1;
+  int n_str1 = vec_num1.size();
+  int n_str2 = vec_num2.size();
+  for(int i = 0; i < n_str1; ++i){
+    double str1_1 = vec_num1[i];
+    bool only = true;
+    for(int j = 0; j < n_str2; ++j){
+      double str2_1 = vec_num2[j];
+      if(str1_1 == str2_1){
+        only = false;
+        break;
+      }
+    }
+    if(only){
+      only_vec_num1.push_back(str1_1);
+    }
+  }
+  return(only_vec_num1);
+}
+
+// [[Rcpp::export]]
 std::vector<double> calc_bs(std::vector<double> alleles){
   int n_al = alleles.size();
   std::vector<double> bs = std::vector<double>(n_al);

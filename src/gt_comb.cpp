@@ -1,8 +1,23 @@
 #include "header.h"
 
+/*
+bool judge_gtc_sr(std::vector<double> gtc,
+                  std::vector<double> peaks_rm99,
+                  std::vector<double> heights_rm99,
+                  double bsr_fltr,
+                  double fsr_fltr,
+                  double dsr_fltr,
+                  double m2sr_fltr,
+                  std::vector<bool> sr_consider){
+  bool adopt_gtc = true;
+  std::vector<double> cand_stutters = setdiff_double(peaks_rm99, gtc);
+  int n_cand_stutters = cand_stutters.size();
+}
+*/
+
 // [[Rcpp::export]]
-bool judge_gtc(std::vector<double> peaks_rm99,
-               std::vector<double> gtc,
+bool judge_gtc(std::vector<double> gtc,
+               std::vector<double> peaks_rm99,
                std::vector<bool> sr_consider){
   std::vector<double> cand_peak = make_cand_peak(gtc, sr_consider);
   bool adopt_gtc = is_element_all_vec_double(peaks_rm99, cand_peak);
@@ -36,7 +51,7 @@ std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<double> peaks,
       gtc[2 * j + 1] = gt[1];
     }
 
-    bool adopt_gtc = judge_gtc(peaks_rm99, gtc, sr_consider);
+    bool adopt_gtc = judge_gtc(gtc, peaks_rm99, sr_consider);
     if(adopt_gtc){
       index_gt_comb_adopt.push_back(std::vector<int>(hnc));
       for(int k = 0; k < hnc; ++k){

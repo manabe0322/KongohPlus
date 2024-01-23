@@ -52,6 +52,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// setdiff_double
+std::vector<double> setdiff_double(std::vector<double> vec_num1, std::vector<double> vec_num2);
+RcppExport SEXP _KongohPlus_setdiff_double(SEXP vec_num1SEXP, SEXP vec_num2SEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type vec_num1(vec_num1SEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type vec_num2(vec_num2SEXP);
+    rcpp_result_gen = Rcpp::wrap(setdiff_double(vec_num1, vec_num2));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calc_bs
 std::vector<double> calc_bs(std::vector<double> alleles);
 RcppExport SEXP _KongohPlus_calc_bs(SEXP allelesSEXP) {
@@ -109,15 +121,15 @@ BEGIN_RCPP
 END_RCPP
 }
 // judge_gtc
-bool judge_gtc(std::vector<double> peaks_rm99, std::vector<double> gtc, std::vector<bool> sr_consider);
-RcppExport SEXP _KongohPlus_judge_gtc(SEXP peaks_rm99SEXP, SEXP gtcSEXP, SEXP sr_considerSEXP) {
+bool judge_gtc(std::vector<double> gtc, std::vector<double> peaks_rm99, std::vector<bool> sr_consider);
+RcppExport SEXP _KongohPlus_judge_gtc(SEXP gtcSEXP, SEXP peaks_rm99SEXP, SEXP sr_considerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type peaks_rm99(peaks_rm99SEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type gtc(gtcSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type peaks_rm99(peaks_rm99SEXP);
     Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
-    rcpp_result_gen = Rcpp::wrap(judge_gtc(peaks_rm99, gtc, sr_consider));
+    rcpp_result_gen = Rcpp::wrap(judge_gtc(gtc, peaks_rm99, sr_consider));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -140,6 +152,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_make_eph_base", (DL_FUNC) &_KongohPlus_make_eph_base, 8},
     {"_KongohPlus_find_index_double", (DL_FUNC) &_KongohPlus_find_index_double, 2},
     {"_KongohPlus_is_element_all_vec_double", (DL_FUNC) &_KongohPlus_is_element_all_vec_double, 2},
+    {"_KongohPlus_setdiff_double", (DL_FUNC) &_KongohPlus_setdiff_double, 2},
     {"_KongohPlus_calc_bs", (DL_FUNC) &_KongohPlus_calc_bs, 1},
     {"_KongohPlus_calc_fs", (DL_FUNC) &_KongohPlus_calc_fs, 1},
     {"_KongohPlus_calc_ds", (DL_FUNC) &_KongohPlus_calc_ds, 1},

@@ -13,6 +13,10 @@ is_element_all_vec_double <- function(vec_a, vec_b) {
     .Call(`_KongohPlus_is_element_all_vec_double`, vec_a, vec_b)
 }
 
+setdiff_double <- function(vec_num1, vec_num2) {
+    .Call(`_KongohPlus_setdiff_double`, vec_num1, vec_num2)
+}
+
 calc_bs <- function(alleles) {
     .Call(`_KongohPlus_calc_bs`, alleles)
 }
@@ -33,8 +37,8 @@ make_cand_peak <- function(alleles, sr_consider) {
     .Call(`_KongohPlus_make_cand_peak`, alleles, sr_consider)
 }
 
-judge_gtc <- function(peaks_rm99, gtc, sr_consider) {
-    .Call(`_KongohPlus_judge_gtc`, peaks_rm99, gtc, sr_consider)
+judge_gtc <- function(gtc, peaks_rm99, sr_consider) {
+    .Call(`_KongohPlus_judge_gtc`, gtc, peaks_rm99, sr_consider)
 }
 
 judge_gt_comb_mk <- function(peaks, cand_gts, index_gt_comb, sr_consider) {

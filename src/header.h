@@ -6,6 +6,8 @@ using namespace Rcpp;
 
 int find_index_double(double element, std::vector<double> vec);
 bool is_element_all_vec_double(std::vector<double> vec_a, std::vector<double> vec_b);
+std::vector<double> setdiff_double(std::vector<double> vec_num1, std::vector<double> vec_num2);
+
 std::vector<double> calc_bs(std::vector<double> alleles);
 std::vector<double> calc_fs(std::vector<double> alleles);
 std::vector<double> calc_ds(std::vector<double> alleles);
