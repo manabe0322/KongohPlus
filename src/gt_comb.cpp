@@ -1,6 +1,5 @@
 #include "header.h"
 
-/*
 bool judge_gtc_sr(std::vector<double> gtc,
                   std::vector<double> peaks_rm99,
                   std::vector<double> heights_rm99,
@@ -10,10 +9,89 @@ bool judge_gtc_sr(std::vector<double> gtc,
                   double m2sr_fltr,
                   std::vector<bool> sr_consider){
   bool adopt_gtc = true;
-  std::vector<double> cand_stutters = setdiff_double(peaks_rm99, gtc);
-  int n_cand_stutters = cand_stutters.size();
+
+  bool bsr_consider = sr_consider[0];
+  bool fsr_consider = sr_consider[1];
+  bool dsr_consider = sr_consider[2];
+  bool m2sr_consider = sr_consider[3];
+
+  if(bsr_consider || fsr_consider || dsr_consider || m2sr_consider){
+    std::vector<double> cand_stutters = setdiff_double(peaks_rm99, gtc);
+    int n_cand_stutters = cand_stutters.size();
+
+    if(n_cand_stutters != 0){
+      for(int i = 0; i < n_cand_stutters; ++i){
+        double cand_stutter = cand_stutters[i];
+        int index_cand_stutter = find_index_double(cand_stutter, peaks_rm99);
+        double height_stutter = heights_rm99[index_cand_stutter];
+
+        bool satisfy_bsr = false;
+        bool satisfy_fsr = false;
+        bool satisfy_dsr = false;
+        bool satisfy_m2sr = false;
+
+        double parent_allele;
+        int index_parent_allele;
+        double height_allele;
+
+        if(bsr_consider){
+          parent_allele = cand_stutter + 1;
+          index_parent_allele = find_index_double(parent_allele, peaks_rm99);
+          if(index_parent_allele != -1){
+            height_allele = heights_rm99[index_parent_allele];
+            satisfy_bsr = height_stutter / height_allele <= bsr_fltr;
+          }
+        }
+
+        if(!satisfy_bsr){
+          if(fsr_consider){
+            parent_allele = cand_stutter - 1;
+            index_parent_allele = find_index_double(parent_allele, peaks_rm99);
+            if(index_parent_allele != -1){
+              height_allele = heights_rm99[index_parent_allele];
+              satisfy_fsr = height_stutter / height_allele <= fsr_fltr;
+            }
+          }
+
+          if(!satisfy_fsr){
+            if(dsr_consider){
+              parent_allele = cand_stutter + 2;
+              index_parent_allele = find_index_double(parent_allele, peaks_rm99);
+              if(index_parent_allele != -1){
+                height_allele = heights_rm99[index_parent_allele];
+                satisfy_dsr = height_stutter / height_allele <= dsr_fltr;
+              }
+            }
+
+            if(!satisfy_dsr){
+              if(m2sr_consider){
+                double residual = fmod(cand_stutter, 1);
+                if(residual < 0.15){
+                  parent_allele = cand_stutter + 0.2;
+                }else{
+                  parent_allele = cand_stutter + 0.8;
+                }
+                index_parent_allele = find_index_double(parent_allele, peaks_rm99);
+                if(index_parent_allele != -1){
+                  height_allele = heights_rm99[index_parent_allele];
+                  satisfy_m2sr = height_stutter / height_allele <= m2sr_fltr;
+                }
+              }
+            }
+          }
+        }
+
+        if()
+
+
+
+
+
+
+      }
+    }
+  }
 }
-*/
 
 // [[Rcpp::export]]
 bool judge_gtc(std::vector<double> gtc,
