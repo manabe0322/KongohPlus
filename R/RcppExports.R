@@ -17,6 +17,10 @@ setdiff_double <- function(vec_num1, vec_num2) {
     .Call(`_KongohPlus_setdiff_double`, vec_num1, vec_num2)
 }
 
+setdiff_int <- function(vec_int1, vec_int2) {
+    .Call(`_KongohPlus_setdiff_int`, vec_int1, vec_int2)
+}
+
 calc_bs <- function(alleles) {
     .Call(`_KongohPlus_calc_bs`, alleles)
 }
@@ -37,11 +41,11 @@ make_cand_peak <- function(alleles, sr_consider) {
     .Call(`_KongohPlus_make_cand_peak`, alleles, sr_consider)
 }
 
-judge_gtc <- function(gtc, peaks_rm99, heights_rm99, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, sr_consider) {
-    .Call(`_KongohPlus_judge_gtc`, gtc, peaks_rm99, heights_rm99, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, sr_consider)
+judge_gtc <- function(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st) {
+    .Call(`_KongohPlus_judge_gtc`, gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
 }
 
-judge_gt_comb_mk <- function(cand_gts, index_gt_comb, peaks, heights, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, sr_consider) {
-    .Call(`_KongohPlus_judge_gt_comb_mk`, cand_gts, index_gt_comb, peaks, heights, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, sr_consider)
+judge_gt_comb_mk <- function(cand_gts, index_gt_comb, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st) {
+    .Call(`_KongohPlus_judge_gt_comb_mk`, cand_gts, index_gt_comb, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
 }
 

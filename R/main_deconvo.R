@@ -1,4 +1,4 @@
-perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt_kit, dt_at, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, hnc){
+perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt_kit, dt_at, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st, hnc){
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers_auto <- unique(dt_kit_auto[, Marker])
   n_mk <- length(markers_auto)
@@ -80,7 +80,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
       index_gt_comb <- index_gt_comb - 1 # for C++ index
       index_gt_comb <- asplit(index_gt_comb, 1)
 
-      index_gt_comb_adopt <- judge_gt_comb_mk(cand_gts, index_gt_comb, peaks, heights, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, sr_consider)
+      index_gt_comb_adopt <- judge_gt_comb_mk(cand_gts, index_gt_comb, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
       n_gt_comb_all[n_mk * (i - 1) + j] <- length(index_gt_comb_adopt)
       index_gt_comb_adopt <- unlist(index_gt_comb_adopt) + 1 # for R and stan index
       index_gt_comb_all <- rbind(index_gt_comb_all, matrix(index_gt_comb_adopt, ncol = hnc, byrow = TRUE))

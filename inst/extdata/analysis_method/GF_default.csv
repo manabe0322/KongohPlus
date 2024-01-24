@@ -30,3 +30,5 @@ Filter of back stutter ratio,0.7
 Filter of forward stutter ratio,0.35
 Filter of double-back stutter ratio,0.13
 Filter of minus 2-nt stutter ratio,0.12
+Filter of peak height ratio,0.1
+Stochastic threshold,500

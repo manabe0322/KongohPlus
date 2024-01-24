@@ -28,23 +28,45 @@ bool is_element_all_vec_double(std::vector<double> vec_a, std::vector<double> ve
 // [[Rcpp::export]]
 std::vector<double> setdiff_double(std::vector<double> vec_num1, std::vector<double> vec_num2){
   std::vector<double> only_vec_num1;
-  int n_str1 = vec_num1.size();
-  int n_str2 = vec_num2.size();
-  for(int i = 0; i < n_str1; ++i){
-    double str1_1 = vec_num1[i];
+  int n_vec1 = vec_num1.size();
+  int n_vec2 = vec_num2.size();
+  for(int i = 0; i < n_vec1; ++i){
+    double vec1_1 = vec_num1[i];
     bool only = true;
-    for(int j = 0; j < n_str2; ++j){
-      double str2_1 = vec_num2[j];
-      if(str1_1 == str2_1){
+    for(int j = 0; j < n_vec2; ++j){
+      double vec2_1 = vec_num2[j];
+      if(vec1_1 == vec2_1){
         only = false;
         break;
       }
     }
     if(only){
-      only_vec_num1.push_back(str1_1);
+      only_vec_num1.push_back(vec1_1);
     }
   }
   return(only_vec_num1);
+}
+
+// [[Rcpp::export]]
+std::vector<int> setdiff_int(std::vector<int> vec_int1, std::vector<int> vec_int2){
+  std::vector<int> only_vec_int1;
+  int n_vec1 = vec_int1.size();
+  int n_vec2 = vec_int2.size();
+  for(int i = 0; i < n_vec1; ++i){
+    int vec1_1 = vec_int1[i];
+    bool only = true;
+    for(int j = 0; j < n_vec2; ++j){
+      int vec2_1 = vec_int2[j];
+      if(vec1_1 == vec2_1){
+        only = false;
+        break;
+      }
+    }
+    if(only){
+      only_vec_int1.push_back(vec1_1);
+    }
+  }
+  return(only_vec_int1);
 }
 
 // [[Rcpp::export]]

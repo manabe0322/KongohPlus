@@ -43,7 +43,9 @@ deconvo_setting_ui <- function(id){
                                 textOutput(ns("bsr_fltr")),
                                 textOutput(ns("fsr_fltr")),
                                 textOutput(ns("dsr_fltr")),
-                                textOutput(ns("m2sr_fltr"))
+                                textOutput(ns("m2sr_fltr")),
+                                textOutput(ns("phr_fltr")),
+                                textOutput(ns("st"))
                          )
                        )
              )
@@ -74,6 +76,8 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       rv_deconvo_setting$fsr_fltr <- NULL
       rv_deconvo_setting$dsr_fltr <- NULL
       rv_deconvo_setting$m2sr_fltr <- NULL
+      rv_deconvo_setting$phr_fltr <- NULL
+      rv_deconvo_setting$st <- NULL
 
       rv_deconvo_setting$dt_csp <- NULL
       rv_deconvo_setting$dt_ref <- NULL
@@ -135,6 +139,8 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         rv_deconvo_setting$fsr_fltr <- fsr_fltr <- as.numeric(values[names == "Filter of forward stutter ratio"])
         rv_deconvo_setting$dsr_fltr <- dsr_fltr <- as.numeric(values[names == "Filter of double-back stutter ratio"])
         rv_deconvo_setting$m2sr_fltr <- m2sr_fltr <- as.numeric(values[names == "Filter of minus 2-nt stutter ratio"])
+        rv_deconvo_setting$phr_fltr <- phr_fltr <- as.numeric(values[names == "Filter of peak height ratio"])
+        rv_deconvo_setting$st <- st <- as.numeric(values[names == "Stochastic threshold"])
 
         output$kit <- renderText({values[names == "Kit"]})
         output$alprob <- renderText({values[names == "Allele probability"]})
@@ -143,6 +149,8 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         output$fsr_fltr <- renderText({paste0("Filter of forward stutter ratio: ", fsr_fltr)})
         output$dsr_fltr <- renderText({paste0("Filter of double-back stutter ratio: ", dsr_fltr)})
         output$m2sr_fltr <- renderText({paste0("Filter of minus 2-nt stutter ratio: ", m2sr_fltr)})
+        output$phr_fltr <- renderText({paste0("Filter of peak height ratio: ", phr_fltr)})
+        output$st <- renderText({paste0("Stochastic threshold: ", st)})
       })
 
       observeEvent(input$act_ae, {
@@ -447,13 +455,15 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         fsr_fltr <- rv_deconvo_setting$fsr_fltr
         dsr_fltr <- rv_deconvo_setting$dsr_fltr
         m2sr_fltr <- rv_deconvo_setting$m2sr_fltr
+        phr_fltr <- rv_deconvo_setting$phr_fltr
+        st <- rv_deconvo_setting$st
 
         # Check input files and setting
         error_message <- check_main_file(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor, method = "deconvo")
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          perform_deconvo(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt_kit, dt_at, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, noc_deconvo)
+          perform_deconvo(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt_kit, dt_at, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st, noc_deconvo)
         }
       })
     }

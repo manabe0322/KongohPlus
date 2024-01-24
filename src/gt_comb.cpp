@@ -3,11 +3,11 @@
 bool judge_gtc_sr(std::vector<double> gtc,
                   std::vector<double> peaks_rm99,
                   std::vector<double> heights_rm99,
+                  std::vector<bool> sr_consider,
                   double bsr_fltr,
                   double fsr_fltr,
                   double dsr_fltr,
-                  double m2sr_fltr,
-                  std::vector<bool> sr_consider){
+                  double m2sr_fltr){
   bool adopt_gtc = true;
 
   bool bsr_consider = sr_consider[0];
@@ -91,21 +91,75 @@ bool judge_gtc_sr(std::vector<double> gtc,
   return(adopt_gtc);
 }
 
+bool judge_gtc_phr(std::vector<double> gtc,
+                   std::vector<double> peaks,
+                   std::vector<double> heights,
+                   double phr_fltr,
+                   double st){
+  bool adopt_gtc = true;
+  int hnc = gtc.size() / 2;
+  std::vector<int> index_gtc_all(2 * hnc);
+  std::iota(index_gtc_all.begin(), index_gtc_all.end(), 0);
+
+  for(int i = 0; i < hnc; ++i){
+    double al_1 = gtc[2 * i];
+    double al_2 = gtc[2 * i + 1];
+
+    if(al_1 != al_2){
+      std::vector<int> index_gtc_current(2);
+      index_gtc_current[0] = 2 * i;
+      index_gtc_current[1] = 2 * i + 1;
+      std::vector<int> index_gtc_other = setdiff_int(index_gtc_all, index_gtc_current);
+
+      int n_gtc_other = 2 * hnc - 2;
+      std::vector<double> gtc_other(n_gtc_other);
+      for(int j = 0; j < n_gtc_other; ++j){
+        gtc_other[j] = gtc[index_gtc_other[j]];
+      }
+
+      int index_gtc_other_1 = find_index_double(al_1, gtc_other);
+      int index_gtc_other_2 = find_index_double(al_2, gtc_other);
+      if(index_gtc_other_1 == -1 && index_gtc_other_2 == -1){
+        int index_peak_1 = find_index_double(al_1, peaks);
+        int index_peak_2 = find_index_double(al_2, peaks);
+
+        double h1 = heights[index_peak_1];
+        double h2 = heights[index_peak_2];
+        if(h1 >= st && h2 >= st){
+          double phr = h1 / h2;
+          if(phr < phr_fltr || phr > 1 / phr_fltr){
+            adopt_gtc = false;
+            break;
+          }
+        }
+      }
+    }
+  }
+  return(adopt_gtc);
+}
+
 // [[Rcpp::export]]
 bool judge_gtc(std::vector<double> gtc,
+               std::vector<double> peaks,
+               std::vector<double> heights,
                std::vector<double> peaks_rm99,
                std::vector<double> heights_rm99,
+               std::vector<bool> sr_consider,
                double bsr_fltr,
                double fsr_fltr,
                double dsr_fltr,
                double m2sr_fltr,
-               std::vector<bool> sr_consider){
+               double phr_fltr,
+               double st){
   std::vector<double> cand_peak = make_cand_peak(gtc, sr_consider);
   bool adopt_gtc = is_element_all_vec_double(peaks_rm99, cand_peak);
 
   // Write other conditions
   if(adopt_gtc){
-    adopt_gtc = judge_gtc_sr(gtc, peaks_rm99, heights_rm99, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, sr_consider);
+    adopt_gtc = judge_gtc_sr(gtc, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr);
+    if(adopt_gtc){
+      adopt_gtc = judge_gtc_phr(gtc, peaks, heights, phr_fltr, st);
+    }
   }
 
   return(adopt_gtc);
@@ -116,11 +170,13 @@ std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<std::vector<double>> 
                                                std::vector<std::vector<int>> index_gt_comb,
                                                std::vector<double> peaks,
                                                std::vector<double> heights,
+                                               std::vector<bool> sr_consider,
                                                double bsr_fltr,
                                                double fsr_fltr,
                                                double dsr_fltr,
                                                double m2sr_fltr,
-                                               std::vector<bool> sr_consider){
+                                               double phr_fltr,
+                                               double st){
   int n_gt_comb = index_gt_comb.size();
   int hnc = index_gt_comb.at(0).size();
   int n_peak = peaks.size();
@@ -143,7 +199,7 @@ std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<std::vector<double>> 
       gtc[2 * j + 1] = gt[1];
     }
 
-    bool adopt_gtc = judge_gtc(gtc, peaks_rm99, heights_rm99, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, sr_consider);
+    bool adopt_gtc = judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st);
     if(adopt_gtc){
       index_gt_comb_adopt.push_back(std::vector<int>(hnc));
       for(int k = 0; k < hnc; ++k){
