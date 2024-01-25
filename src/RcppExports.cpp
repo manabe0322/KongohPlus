@@ -175,6 +175,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// make_eph_base_gtc
+std::vector<std::vector<double>> make_eph_base_gtc(std::vector<std::vector<double>> eph_base, std::vector<std::vector<int>> index_gt_comb_adopt, int n_peak);
+RcppExport SEXP _KongohPlus_make_eph_base_gtc(SEXP eph_baseSEXP, SEXP index_gt_comb_adoptSEXP, SEXP n_peakSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<std::vector<double>> >::type eph_base(eph_baseSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::vector<int>> >::type index_gt_comb_adopt(index_gt_comb_adoptSEXP);
+    Rcpp::traits::input_parameter< int >::type n_peak(n_peakSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_eph_base_gtc(eph_base, index_gt_comb_adopt, n_peak));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_make_eph_base", (DL_FUNC) &_KongohPlus_make_eph_base, 8},
@@ -189,6 +202,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_make_cand_peak", (DL_FUNC) &_KongohPlus_make_cand_peak, 2},
     {"_KongohPlus_judge_gtc", (DL_FUNC) &_KongohPlus_judge_gtc, 12},
     {"_KongohPlus_judge_gt_comb_mk", (DL_FUNC) &_KongohPlus_judge_gt_comb_mk, 11},
+    {"_KongohPlus_make_eph_base_gtc", (DL_FUNC) &_KongohPlus_make_eph_base_gtc, 3},
     {NULL, NULL, 0}
 };
 
