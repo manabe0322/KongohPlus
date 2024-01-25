@@ -61,7 +61,7 @@ transformed parameters{
   for(i in 1:Hnc){
     real mp_c1 = mp[i];
     real deg_c1 = deg[i];
-    eph_all += Eph_Base_All[, Hnc] * mp_c1 .* exp(deg_c1 * Size_Eph_All);
+    eph_all += Eph_Base_All[, i] * mp_c1 .* exp(deg_c1 * Size_Eph_All);
   }
 }
 
