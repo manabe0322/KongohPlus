@@ -46,9 +46,9 @@ functions{
         vector[n_peak] eph;
         eph = rep_vector(0, n_peak);
         for(k in 1:Hnc){
+          vector[n_eph_base] eph_p1 = eph_per_person_cspmk1[, k];
           int index_gt1 = index_gtc1[k];
-          matrix[n_peak, Hnc] eph_per_person_gt1 = eph_per_person_cspmk1[(n_peak * (index_gt1 - 1) + 1):(n_peak * index_gt1), ];
-          eph += eph_per_person_gt1[, k];
+          eph += eph_p1[(n_peak * (index_gt1 - 1) + 1):(n_peak * index_gt1)];
         }
 
         // vs oph
