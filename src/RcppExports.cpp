@@ -11,20 +11,18 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // make_eph_base
-std::vector<std::vector<double>> make_eph_base(std::vector<double> peaks, std::vector<std::vector<double>> cand_gts, std::vector<bool> sr_consider, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, double m2sr, double ae);
-RcppExport SEXP _KongohPlus_make_eph_base(SEXP peaksSEXP, SEXP cand_gtsSEXP, SEXP sr_considerSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srSEXP, SEXP aeSEXP) {
+std::vector<double> make_eph_base(std::vector<double> peaks, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, double m2sr, double ae);
+RcppExport SEXP _KongohPlus_make_eph_base(SEXP peaksSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srSEXP, SEXP aeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::vector<double> >::type peaks(peaksSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::vector<double>> >::type cand_gts(cand_gtsSEXP);
-    Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type bsrs(bsrsSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type fsrs(fsrsSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type dsrs(dsrsSEXP);
     Rcpp::traits::input_parameter< double >::type m2sr(m2srSEXP);
     Rcpp::traits::input_parameter< double >::type ae(aeSEXP);
-    rcpp_result_gen = Rcpp::wrap(make_eph_base(peaks, cand_gts, sr_consider, bsrs, fsrs, dsrs, m2sr, ae));
+    rcpp_result_gen = Rcpp::wrap(make_eph_base(peaks, bsrs, fsrs, dsrs, m2sr, ae));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -177,7 +175,7 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_KongohPlus_make_eph_base", (DL_FUNC) &_KongohPlus_make_eph_base, 8},
+    {"_KongohPlus_make_eph_base", (DL_FUNC) &_KongohPlus_make_eph_base, 6},
     {"_KongohPlus_find_index_double", (DL_FUNC) &_KongohPlus_find_index_double, 2},
     {"_KongohPlus_is_element_all_vec_double", (DL_FUNC) &_KongohPlus_is_element_all_vec_double, 2},
     {"_KongohPlus_setdiff_double", (DL_FUNC) &_KongohPlus_setdiff_double, 2},
