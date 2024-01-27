@@ -17,6 +17,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
   setkey(dt_alcor, Marker)
 
   eph_base_all <- list()
+  index_eph_gtc_all <- list()
 
   size_eph_all <- numeric(0)
   index_csp <- index_mk <- index_gt <- index_peak <- integer(0)
@@ -56,11 +57,11 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
 
 
       # All candidate genotypes in each contributor
-#      cand_gts <- combinations(n = length(peaks), r = 2, v = peaks, repeats.allowed = TRUE)
-#      cand_gts_all[[n_mk * (i - 1) + j]] <- cand_gts
-#      cand_gts <- asplit(cand_gts, 1)
+      cand_gts <- combinations(n = length(peaks), r = 2, v = peaks, repeats.allowed = TRUE)
+      cand_gts_all[[n_mk * (i - 1) + j]] <- cand_gts
+      cand_gts <- asplit(cand_gts, 1)
 
-#      sr_consider <- sr_consider_all_mk[mk, ]
+      sr_consider <- sr_consider_all_mk[mk, ]
 
 #      n_eph_base <- length(eph_base)
 #      n_gt <- length(cand_gts)
@@ -77,14 +78,16 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
 
 
       # Indices of genotypes for candidate genotype combinations of each contributor
-#      index_gt_comb <- permutations(n = length(cand_gts), r = hnc, repeats.allowed = TRUE)
-#      index_gt_comb <- index_gt_comb - 1 # for C++ index
-#      index_gt_comb <- asplit(index_gt_comb, 1)
+      index_gt_comb <- permutations(n = length(cand_gts), r = hnc, repeats.allowed = TRUE)
+      index_gt_comb <- index_gt_comb - 1 # for C++ index
+      index_gt_comb <- asplit(index_gt_comb, 1)
 
-#      index_gt_comb_adopt <- judge_gt_comb_mk(cand_gts, index_gt_comb, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
+      index_gt_comb_adopt <- judge_gt_comb_mk(cand_gts, index_gt_comb, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
 #      n_gt_comb_all[n_mk * (i - 1) + j] <- length(index_gt_comb_adopt)
 #      index_gt_comb_adopt <- unlist(index_gt_comb_adopt) + 1 # for R and stan index
 #      index_gt_comb_all <- rbind(index_gt_comb_all, matrix(index_gt_comb_adopt, ncol = hnc, byrow = TRUE))
+
+      index_eph_gtc_all[[n_mk * (i - 1) + j]] <- connect_eph_gtc_mk(cand_gts, index_gt_comb_adopt, peaks)
     }
   }
 
@@ -110,5 +113,5 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
 #    parallel_chains = detectCores()
 #  )
 
-  save(list = c("eph_base_all", "m2sr_all_mk"), file = "test.Rdata")
+  save(list = c("eph_base_all", "index_eph_gtc_all"), file = "test.Rdata")
 }

@@ -1,0 +1,73 @@
+#include "header.h"
+
+// [[Rcpp::export]]
+std::vector<std::vector<int>> connect_eph_gtc(std::vector<double> gtc,
+                                              std::vector<double> bs_gtc,
+                                              std::vector<double> fs_gtc,
+                                              std::vector<double> ds_gtc,
+                                              std::vector<double> m2s_gtc,
+                                              std::vector<double> peaks){
+  int n_allele = gtc.size();
+  int n_peak = peaks.size();
+  std::vector<std::vector<int>> ind_eph_gtc(n_peak, std::vector<int>(n_allele));
+
+  for(int i = 0; i < n_allele; ++i){
+    double al = gtc[i];
+    double bs = bs_gtc[i];
+    double fs = fs_gtc[i];
+    double ds = ds_gtc[i];
+    double m2s = m2s_gtc[i];
+
+    int ind_al = find_index_double(al, peaks);
+    ind_eph_gtc[ind_al][i] = ind_al;
+
+    int ind_bs = find_index_double(bs, peaks);
+    if(ind_bs != -1){
+      ind_eph_gtc[ind_bs][i] = n_peak + ind_bs;
+    }
+
+    int ind_fs = find_index_double(fs, peaks);
+    if(ind_fs != -1){
+      ind_eph_gtc[ind_fs][i] = 2 * n_peak + ind_fs;
+    }
+
+    int ind_ds = find_index_double(ds, peaks);
+    if(ind_ds != -1){
+      ind_eph_gtc[ind_ds][i] = 3 * n_peak + ind_ds;
+    }
+
+    int ind_m2s = find_index_double(m2s, peaks);
+    if(ind_m2s != -1){
+      ind_eph_gtc[ind_m2s][i] = 4 * n_peak + ind_m2s;
+    }
+  }
+  return(ind_eph_gtc);
+}
+
+// [[Rcpp::export]]
+std::vector<std::vector<std::vector<int>>> connect_eph_gtc_mk(std::vector<std::vector<double>> cand_gts,
+                                                              std::vector<std::vector<int>> index_gt_comb_adopt,
+                                                              std::vector<double> peaks){
+  int n_gt_comb = index_gt_comb_adopt.size();
+  int hnc = index_gt_comb_adopt.at(0).size();
+  int n_peak = peaks.size();
+
+  std::vector<std::vector<std::vector<int>>> index_eph_gtc_mk(n_gt_comb, std::vector<std::vector<int>>(n_peak, std::vector<int>(2 * hnc)));
+  for(int i = 0; i < n_gt_comb; ++i){
+    std::vector<int> ind_gtc = index_gt_comb_adopt.at(i);
+    std::vector<double> gtc(2 * hnc);
+    for(int j = 0; j < hnc; ++j){
+      std::vector<double> gt = cand_gts.at(ind_gtc[j]);
+      gtc[2 * j] = gt[0];
+      gtc[2 * j + 1] = gt[1];
+    }
+
+    std::vector<double> bs_gtc = calc_bs(gtc);
+    std::vector<double> fs_gtc = calc_fs(gtc);
+    std::vector<double> ds_gtc = calc_ds(gtc);
+    std::vector<double> m2s_gtc = calc_m2s(gtc);
+
+    index_eph_gtc_mk.at(i) = connect_eph_gtc(gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc, peaks);
+  }
+  return(index_eph_gtc_mk);
+}
