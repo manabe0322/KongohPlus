@@ -9,7 +9,7 @@ std::vector<std::vector<int>> connect_eph_gtc(std::vector<double> gtc,
                                               std::vector<double> peaks){
   int n_allele = gtc.size();
   int n_peak = peaks.size();
-  std::vector<std::vector<int>> ind_eph_gtc(n_peak, std::vector<int>(n_allele));
+  std::vector<std::vector<int>> ind_eph_gtc(n_peak, std::vector<int>(n_allele, -1));
 
   for(int i = 0; i < n_allele; ++i){
     double al = gtc[i];
