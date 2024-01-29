@@ -70,7 +70,7 @@ model{
       dens_mk[j] = calc_density(oph_mk[j], eph_mk[j], at, Beta);
     }
 
-    int n_gtc = N_Gtc_Cspmk [i];
+    int n_gtc = N_Gtc_Cspmk[i];
     int n_peak = N_Peak_Cspmk[i];
     vector[n_gtc] dens_gtc;
     for(j in 1:n_gtc){

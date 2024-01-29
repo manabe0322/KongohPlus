@@ -137,8 +137,8 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
   model_main <- readRDS(paste0(path_pack, "/model/model_main.rds"))
   fit_main <- model_main$sample(
     data_list_main,
-    iter_warmup = 1000,
-    iter_sampling = 1000,
+    iter_warmup = 1200,
+    iter_sampling = 1200,
     chains = 4,
     parallel_chains = detectCores()
   )
