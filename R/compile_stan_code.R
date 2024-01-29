@@ -28,8 +28,4 @@ compile_stan_code <- function(path_pack){
     model_main <- cmdstan_model(paste0(path_pack, "/stan/model_main.stan"))
     saveRDS(model_main, paste0(path_pack, "/model/model_main.rds"))
   }
-  if(!is.element("model_main2.rds", stan_models)){
-    model_main2 <- cmdstan_model(paste0(path_pack, "/stan/model_main2.stan"))
-    saveRDS(model_main2, paste0(path_pack, "/model/model_main2.rds"))
-  }
 }

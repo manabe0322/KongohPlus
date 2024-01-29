@@ -169,16 +169,16 @@ extract_beta <- function(dt_parameter){
   return(as.numeric(dt_gamma[, Beta]))
 }
 
-#' make_at_all
+#' make_at_cspmk
 #'
 #' @description The function to make a vector of ATs of all samples and all markers
 #' @param n_csp The number of crime stain profiles
 #' @param markers_auto A vector of the autosomal markers
 #' @param dt_at The data.table of the analytical thresholds
-make_at_all <- function(n_csp, markers_auto, dt_at){
+make_at_cspmk <- function(n_csp, markers_auto, dt_at){
   markers_at <- dt_at[, Marker]
   ats <- dt_at[, AT]
-  at_all_mk <- ats[match(markers_auto, markers_at)]
-  at_all_cspmk <- rep(at_all_mk, n_csp)
-  return(at_all_cspmk)
+  at_mk <- ats[match(markers_auto, markers_at)]
+  at_cspmk <- rep(at_mk, n_csp)
+  return(at_cspmk)
 }
