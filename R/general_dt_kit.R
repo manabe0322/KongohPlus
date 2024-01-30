@@ -3,8 +3,8 @@
 #' @description The function to extract information on the autosomal markers from the data.table of the information on the kit
 #' @param dt_kit The data.table of the information on the kit
 extract_kit_auto <- function(dt_kit){
-  setkey(dt_kit, Chr)
-  dt_kit_auto <- dt_kit["Auto"]
+  index_auto <- which(dt_kit[, Chr] == "Auto")
+  dt_kit_auto <- dt_kit[index_auto]
   return(dt_kit_auto)
 }
 

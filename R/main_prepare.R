@@ -20,7 +20,7 @@ make_peak_data <- function(dt_csp, dt_at, dt_kit, markers_auto){
   sn_all_csp <- unique(dt_csp[, SampleName])
   setkey(dt_csp, SampleName)
   setkey(dt_at, Marker)
-  setkey(dt_kit, Marker)
+  markers_dt_kit <- dt_kit[, Marker]
   n_mk <- length(markers_auto)
   for(i in 1:length(sn_all_csp)){
     # Define objects for one sample
@@ -50,7 +50,7 @@ make_peak_data <- function(dt_csp, dt_at, dt_kit, markers_auto){
       heights <- heights[index_above_at]
 
       # Add information on the drop-out peak
-      dt_kit_mk1 <- dt_kit[mk]
+      dt_kit_mk1 <- dt_kit[which(markers_dt_kit == mk)]
       peaks <- c(peaks, 99)
       sizes <- c(sizes, median(dt_kit_mk1[, Size]))
       heights <- c(heights, 0)

@@ -1,19 +1,19 @@
 functions{
-  vector calc_eph_dedup_1(vector mp, vector deg, int Hnc, int N_Dedup_1, vector Eph_Base, array[,] int Index_Dedup_1, vector Size_Dedup_1){
+  vector calc_eph_dedup_1(real tph, vector mp, vector deg, int Hnc, int N_Dedup_1, vector Eph_Base, array[,] int Index_Dedup_1, vector Size_Dedup_1){
     vector[N_Dedup_1] eph_dedup_1;
     eph_dedup_1 = rep_vector(0, N_Dedup_1);
     for(i in 1:Hnc){
-      real mp_c1 = mp[i];
+      real tph_c1 = tph * mp[i];
       real deg_c1 = deg[i];
-      eph_dedup_1 += Eph_Base[Index_Dedup_1[, 2 * i - 1]] * mp_c1 .* exp(deg_c1 * Size_Dedup_1);
-      eph_dedup_1 += Eph_Base[Index_Dedup_1[, 2 * i]] * mp_c1 .* exp(deg_c1 * Size_Dedup_1);
+      eph_dedup_1 += Eph_Base[Index_Dedup_1[, 2 * i - 1]] * tph_c1 .* exp(deg_c1 * Size_Dedup_1);
+      eph_dedup_1 += Eph_Base[Index_Dedup_1[, 2 * i]] * tph_c1 .* exp(deg_c1 * Size_Dedup_1);
     }
     return eph_dedup_1;
   }
 
   real calc_density(real oph, real eph, int at, real beta){
     real dens = 0;
-    if(eph != 0){ // other than 99
+    if(eph != 0){
       if(oph >= at){
         dens += gamma_lpdf(oph | eph * beta, beta);
       }else{
@@ -50,12 +50,17 @@ data{
 }
 
 parameters{
-  positive_ordered[Hnc] mp;
+  real<lower = 1, upper = 50000> tph;
+  simplex[Hnc] mp;
+
+  //positive_ordered[Hnc] mp;
   vector<lower = -0.05, upper = 0>[Hnc] deg;
 }
 
 model{
-  vector[N_Dedup_1] eph_dedup_1 = calc_eph_dedup_1(mp, deg, Hnc, N_Dedup_1, Eph_Base, Index_Dedup_1, Size_Dedup_1);
+  mp ~ dirichlet(rep_vector(1, Hnc));
+
+  vector[N_Dedup_1] eph_dedup_1 = calc_eph_dedup_1(tph, mp, deg, Hnc, N_Dedup_1, Eph_Base, Index_Dedup_1, Size_Dedup_1);
 
   int eph_start = 1;
   int peak_start = 1;

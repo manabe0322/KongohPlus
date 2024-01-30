@@ -25,6 +25,10 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
   oph_dedup_1 <- list()
   n_peak_cspmk <- rep(0, n_cspmk)
 
+  cand_gt_all <- list()
+  gtc_adopt_all <- list()
+
+  sumup_index_dedup_1 <- 0
   for(i in 1:n_csp){
     # Extract peak data of a crime stain profile
     peaks_list_sn1 <- peaks_list[[i]]
@@ -63,6 +67,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
       # All candidate genotypes of one contributor
       cand_gt <- combinations(n = n_peak, r = 2, v = peaks, repeats.allowed = TRUE)
       cand_gt <- asplit(cand_gt, 1)
+      cand_gt_all[[n_mk * (i - 1) + j]] <- cand_gt
 
       # Indices of genotypes of each contributor in all candidate genotype combinations
       index_gtc <- permutations(n = length(cand_gt), r = hnc, repeats.allowed = TRUE)
@@ -72,6 +77,14 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
       # Indices of genotypes of each contributor in each adopted genotype combination
       index_gtc_adopt <- judge_gt_comb_mk(cand_gt, index_gtc, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
       n_gtc_adopt <- length(index_gtc_adopt)
+      gtc_adopt_cspmk <- matrix(0, n_gtc_adopt, 2 * hnc)
+      for(k in 1:n_gtc_adopt){
+        ind_gtc_tmp <- index_gtc_adopt[[k]] + 1 # for R and stan index
+        for(l in 1:hnc){
+          gtc_adopt_cspmk[k, c(2 * l - 1, 2 * l)] <- cand_gt[[ind_gtc_tmp[l]]]
+        }
+      }
+      gtc_adopt_all[[n_mk * (i - 1) + j]] <- gtc_adopt_cspmk
 
       # Connect eph_base and genotype combinations
       index_eph_gtc <- connect_eph_gtc_mk(cand_gt, index_gtc_adopt, peaks)
@@ -84,7 +97,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
       # Delete duplicated indices -> de-duplicated objects (pattern 1)
       index_dedup_1_mk <- index_eph_gtc[bool_duplicated, , drop = FALSE]
       n_dedup_1_cspmk[n_mk * (i - 1) + j] <- nrow(index_dedup_1_mk)
-      index_dedup_1 <- rbind(index_dedup_1, index_dedup_1_mk)
+
 
       # Sizes for de-duplicated objects (pattern 1)
       size_tmp <- rep(sizes, n_gtc_adopt)
@@ -106,6 +119,11 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
         index_dedup_2_mk[k] <- which(apply(bool_mat, 1, all))
       }
       index_dedup_2[[n_mk * (i - 1) + j]] <- index_dedup_2_mk
+
+      # Sum-up
+      index_dedup_1_mk <- index_dedup_1_mk + sumup_index_dedup_1 # index for combining all loci
+      index_dedup_1 <- rbind(index_dedup_1, index_dedup_1_mk)
+      sumup_index_dedup_1 <- sumup_index_dedup_1 + length(eph_base[[n_mk * (i - 1) + j]])
     }
   }
 
@@ -122,23 +140,18 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
 
   ## check n_gt_comb_all == 0
 
-  eph_base <- unlist(eph_base)
-  index_dedup_2 <- unlist(index_dedup_2)
-  size_dedup_1 <- unlist(size_dedup_1)
-  oph_dedup_1 <- unlist(oph_dedup_1)
-
   data_list_main <- list(Hnc = hnc, N_Cspmk = n_cspmk,
-                         N_Eph_Base = n_eph_base, Eph_Base = eph_base,
-                         N_Dedup_1 = sum(n_dedup_1_cspmk), N_Dedup_1_Cspmk = n_dedup_1_cspmk, Index_Dedup_1 = index_dedup_1, Size_Dedup_1 = size_dedup_1, Oph_Dedup_1 = oph_dedup_1,
-                         N_Dedup_2 = sum(n_dedup_2_cspmk), Index_Dedup_2 = index_dedup_2,
+                         N_Eph_Base = n_eph_base, Eph_Base = unlist(eph_base),
+                         N_Dedup_1 = sum(n_dedup_1_cspmk), N_Dedup_1_Cspmk = n_dedup_1_cspmk, Index_Dedup_1 = index_dedup_1, Size_Dedup_1 = unlist(size_dedup_1), Oph_Dedup_1 = unlist(oph_dedup_1),
+                         N_Dedup_2 = sum(n_dedup_2_cspmk), Index_Dedup_2 = unlist(index_dedup_2),
                          N_Peak_Cspmk = n_peak_cspmk, N_Gtc_Cspmk = n_gtc_cspmk,
                          At_Cspmk = at_cspmk, Beta = gamma_beta)
 
   model_main <- readRDS(paste0(path_pack, "/model/model_main.rds"))
   fit_main <- model_main$sample(
     data_list_main,
-    iter_warmup = 1200,
-    iter_sampling = 1200,
+    iter_warmup = 1000,
+    iter_sampling = 1000,
     chains = 4,
     parallel_chains = detectCores()
   )
