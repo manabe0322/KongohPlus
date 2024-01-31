@@ -8,6 +8,7 @@
 #' @importFrom gtools combinations permutations
 #' @importFrom magrittr %>%
 #' @importFrom parallel detectCores
+#' @importFrom posterior as_draws_matrix rhat
 #' @importFrom Rcpp sourceCpp
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
 #' @importFrom shinyjs disable disabled enable useShinyjs
