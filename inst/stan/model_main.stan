@@ -52,8 +52,6 @@ data{
 parameters{
   real<lower = 1, upper = 50000> tph;
   simplex[Hnc] mp;
-
-  //positive_ordered[Hnc] mp;
   vector<lower = -0.05, upper = 0>[Hnc] deg;
 }
 

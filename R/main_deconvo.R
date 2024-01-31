@@ -147,6 +147,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
                          N_Peak_Cspmk = n_peak_cspmk, N_Gtc_Cspmk = n_gtc_cspmk,
                          At_Cspmk = at_cspmk, Beta = gamma_beta)
 
+  # Perform MCMC
   model_main <- readRDS(paste0(path_pack, "/model/model_main.rds"))
   fit_main <- model_main$sample(
     data_list_main,
@@ -156,8 +157,20 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
     parallel_chains = detectCores()
   )
 
+  # Trace plot
   draws <- fit_main$draws()
-  sampling_data <- as_draws_matrix(draws)
+  draws %>% mcmc_trace(pars = c("lp__")) -> traceplot
 
+  # Extract parameters
+  fit_main_summary <- fit_main$summary()
+  median_tph <- fit_main_summary$median[which(fit_main_summary$variable == "tph")]
+  rhat_lp <- fit_main_summary$rhat[which(fit_main_summary$variable == "lp__")]
+
+  # Determine the mixture proportions and the degradation parameters
+  sampling_data <- as_draws_matrix(draws)
   mpdeg_final <- determine_mpdeg(sampling_data, n_sampling = 1000, n_chain = 4, upper_rhat = 1.1)
+  mp <- mpdeg_final$mp_final
+  deg <- mpdeg_final$deg_final
+
+  # Calculate likelihood
 }
