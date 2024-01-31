@@ -57,3 +57,7 @@ judge_gt_comb_mk <- function(cand_gts, index_gt_comb, peaks, heights, sr_conside
     .Call(`_KongohPlus_judge_gt_comb_mk`, cand_gts, index_gt_comb, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
 }
 
+calc_eph_dedup_1_cpp <- function(tph, mp, deg, hnc, n_dedup_1, eph_base, index_dedup_1, size_dedup_1) {
+    .Call(`_KongohPlus_calc_eph_dedup_1_cpp`, tph, mp, deg, hnc, n_dedup_1, eph_base, index_dedup_1, size_dedup_1)
+}
+

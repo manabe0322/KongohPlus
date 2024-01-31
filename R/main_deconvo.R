@@ -163,7 +163,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
 
   # Extract parameters
   fit_main_summary <- fit_main$summary()
-  median_tph <- fit_main_summary$median[which(fit_main_summary$variable == "tph")]
+  tph <- fit_main_summary$median[which(fit_main_summary$variable == "tph")]
   rhat_lp <- fit_main_summary$rhat[which(fit_main_summary$variable == "lp__")]
 
   # Determine the mixture proportions and the degradation parameters
@@ -173,4 +173,6 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
   deg <- mpdeg_final$deg_final
 
   # Calculate likelihood
+  index_dedup_1 <- asplit(index_dedup_1, 2)
+  eph_dedup_1 <- calc_eph_dedup_1_cpp(tph, mp, deg, hnc, sum(n_dedup_1_cspmk), unlist(eph_base), index_dedup_1, unlist(size_dedup_1))
 }
