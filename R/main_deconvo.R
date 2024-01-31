@@ -156,5 +156,8 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
     parallel_chains = detectCores()
   )
 
-  fit_main$summary()
+  draws <- fit_main$draws()
+  sampling_data <- as_draws_matrix(draws)
+
+  mpdeg_final <- determine_mpdeg(sampling_data, n_sampling = 1000, n_chain = 4, upper_rhat = 1.1)
 }

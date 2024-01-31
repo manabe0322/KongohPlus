@@ -36,8 +36,38 @@ if(!is.element("model_main.rds", stan_models)){
   saveRDS(model_main, paste0(path_pack, "/inst/model/model_main.rds"))
 }
 
-
 fit_main$summary()
 fit_main_summary <- fit_main$summary()
 fit_main$draws() %>% mcmc_trace() -> traceplot
 
+draws <- fit_main$draws()
+sampling_data <- as_draws_matrix(draws)
+#colnames(sampling_data)
+median_mp <- matrix(0, hnc, 4)
+for(i in 1:4){
+  sampling_data_chain1 <- sampling_data[(1000 * (i - 1) + 1):(1000 * i), ]
+  for(j in 1:hnc){
+    median_mp[j, i] <- median(sampling_data_chain1[, 2 + j])
+  }
+}
+
+sampling_data_mp <- matrix(0, 4000, 2)
+sampling_data_mp[1:1000, 1] <- sampling_data[1:1000, 4]
+sampling_data_mp[1:1000, 2] <- sampling_data[1:1000, 3]
+sampling_data_mp[1001:2000, 1] <- sampling_data[1001:2000, 4]
+sampling_data_mp[1001:2000, 2] <- sampling_data[1001:2000, 3]
+sampling_data_mp[2001:3000, 1] <- sampling_data[2001:3000, 3]
+sampling_data_mp[2001:3000, 2] <- sampling_data[2001:3000, 4]
+sampling_data_mp[3001:4000, 1] <- sampling_data[3001:4000, 3]
+sampling_data_mp[3001:4000, 2] <- sampling_data[3001:4000, 4]
+
+
+sampling_data_deg <- matrix(0, 4000, 2)
+sampling_data_deg[1:1000, 1] <- sampling_data[1:1000, 6]
+sampling_data_deg[1:1000, 2] <- sampling_data[1:1000, 5]
+sampling_data_deg[1001:2000, 1] <- sampling_data[1001:2000, 6]
+sampling_data_deg[1001:2000, 2] <- sampling_data[1001:2000, 5]
+sampling_data_deg[2001:3000, 1] <- sampling_data[2001:3000, 5]
+sampling_data_deg[2001:3000, 2] <- sampling_data[2001:3000, 6]
+sampling_data_deg[3001:4000, 1] <- sampling_data[3001:4000, 5]
+sampling_data_deg[3001:4000, 2] <- sampling_data[3001:4000, 6]
