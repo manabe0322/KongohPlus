@@ -1,8 +1,8 @@
 #include <Rcpp.h>
 #include <iostream>   // push_back
-#include <math.h>     // tgamma
 #include <string>
 #include <vector>
+#include <boost/math/distributions/gamma.hpp>
 using namespace Rcpp;
 
 std::vector<int> extract_subvec_int(std::vector<int> vec, int index_start, int index_end);

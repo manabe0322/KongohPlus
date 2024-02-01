@@ -25,20 +25,20 @@ std::vector<double> calc_eph_dedup_1_cpp(double tph,
 
 // [[Rcpp::export]]
 double gamma_pdf(double value, double alpha, double beta){
-  return(std::pow(beta, alpha) * std::pow(value, (alpha - 1)) * std::pow(M_E, (-1 * beta * value))) / tgamma(alpha);
+  boost::math::gamma_distribution<double> d(alpha, 1 / beta);
+  return(pdf(d, value));
 }
 
 // [[Rcpp::export]]
 double calc_lpd(double oph, double eph, int at, double beta){
   double lpd = 0;
-  double at_double = (double)at;
   double alpha = eph * beta;
   if(eph != 0){
-    if(oph >= at_double){
+    if(oph >= at){
       lpd += log(gamma_pdf(oph, alpha, beta));
     }else{
       for(int i = 1; i < at; ++i){
-        lpd += log(gamma_pdf(double(i), alpha, beta));
+        lpd += log(gamma_pdf(i, alpha, beta));
       }
     }
   }
@@ -90,7 +90,7 @@ std::vector<std::vector<double>> calc_lpd_gtc_all(int n_cspmk,
                                                   std::vector<int> n_peak_cspmk,
                                                   std::vector<int> n_gtc_cspmk,
                                                   std::vector<std::vector<int>> index_dedup_2){
-  std::vector<std::vector<double>> lpd_gtc_all(n_cspmk);
+  std::vector<std::vector<double>> lpd_gtc_all(n_cspmk, std::vector<double>());
   int eph_start = 0;
   for(int i = 0; i < n_cspmk; ++i){
     int n_dedup_eph = n_dedup_1_cspmk[i];

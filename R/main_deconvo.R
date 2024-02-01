@@ -183,5 +183,11 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
   for(i in 1:length(index_dedup_2)){
     index_dedup_2_cpp[[i]] <- index_dedup_2[[i]] - 1
   }
-  lpd_gtc_all <- calc_lpd_gtc_all(n_cspmk, n_dedup_1_cspmk, unlist(oph_dedup_1), eph_dedup_1, at_cspmk, beta, n_peak_cspmk, n_gtc_cspmk, index_dedup_2_cpp)
+
+  i <- 1
+  eph_mk <- extract_subvec_double(eph_dedup_1, 0, n_dedup_1_cspmk[i] - 1)
+  lpd_mk <- calc_lpd_mk(oph_dedup_1[[i]], eph_mk, at_cspmk[i], gamma_beta)
+  lpd_gtc <- calc_lpd_gtc(oph_dedup_1[[i]], eph_mk, at_cspmk[i], gamma_beta, n_peak_cspmk[i], n_gtc_cspmk[i], index_dedup_2_cpp[[i]])
+
+  lpd_gtc_all <- calc_lpd_gtc_all(n_cspmk, n_dedup_1_cspmk, unlist(oph_dedup_1), eph_dedup_1, at_cspmk, gamma_beta, n_peak_cspmk, n_gtc_cspmk, index_dedup_2_cpp)
 }
