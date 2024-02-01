@@ -13,6 +13,14 @@ make_eph_base <- function(peaks, bsrs, fsrs, dsrs, m2sr, ae) {
     .Call(`_KongohPlus_make_eph_base`, peaks, bsrs, fsrs, dsrs, m2sr, ae)
 }
 
+extract_subvec_int <- function(vec, index_start, index_end) {
+    .Call(`_KongohPlus_extract_subvec_int`, vec, index_start, index_end)
+}
+
+extract_subvec_double <- function(vec, index_start, index_end) {
+    .Call(`_KongohPlus_extract_subvec_double`, vec, index_start, index_end)
+}
+
 find_index_double <- function(element, vec) {
     .Call(`_KongohPlus_find_index_double`, element, vec)
 }
@@ -59,5 +67,25 @@ judge_gt_comb_mk <- function(cand_gts, index_gt_comb, peaks, heights, sr_conside
 
 calc_eph_dedup_1_cpp <- function(tph, mp, deg, hnc, n_dedup_1, eph_base, index_dedup_1, size_dedup_1) {
     .Call(`_KongohPlus_calc_eph_dedup_1_cpp`, tph, mp, deg, hnc, n_dedup_1, eph_base, index_dedup_1, size_dedup_1)
+}
+
+gamma_pdf <- function(value, alpha, beta) {
+    .Call(`_KongohPlus_gamma_pdf`, value, alpha, beta)
+}
+
+calc_lpd <- function(oph, eph, at, beta) {
+    .Call(`_KongohPlus_calc_lpd`, oph, eph, at, beta)
+}
+
+calc_lpd_mk <- function(oph_mk, eph_mk, at, beta) {
+    .Call(`_KongohPlus_calc_lpd_mk`, oph_mk, eph_mk, at, beta)
+}
+
+calc_lpd_gtc <- function(oph_mk, eph_mk, at, beta, n_peak, n_gtc, index_dedup_2_mk) {
+    .Call(`_KongohPlus_calc_lpd_gtc`, oph_mk, eph_mk, at, beta, n_peak, n_gtc, index_dedup_2_mk)
+}
+
+calc_lpd_gtc_all <- function(n_cspmk, n_dedup_1_cspmk, oph_dedup_1, eph_dedup_1, at_cspmk, beta, n_peak_cspmk, n_gtc_cspmk, index_dedup_2) {
+    .Call(`_KongohPlus_calc_lpd_gtc_all`, n_cspmk, n_dedup_1_cspmk, oph_dedup_1, eph_dedup_1, at_cspmk, beta, n_peak_cspmk, n_gtc_cspmk, index_dedup_2)
 }
 

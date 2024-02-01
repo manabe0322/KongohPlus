@@ -1,16 +1,20 @@
 perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt_kit, dt_at, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st, hnc){
+  # Extract autosomal markers
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers_auto <- unique(dt_kit_auto[, Marker])
   n_mk <- length(markers_auto)
 
+  # Extract peak data from crime stain profiles
   tmp <- make_peak_data(dt_csp, dt_at, dt_kit, markers_auto)
   peaks_list <- tmp$peaks_list
   sizes_list <- tmp$sizes_list
   heights_list <- tmp$heights_list
   n_csp <- length(peaks_list)
 
+  # Information on consideration of each stutter
   sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_parameter)
 
+  # Extract the 'myu' parameters for AE and M2SR
   ae_all_mk <- extract_myu_all_mk("AE", markers_auto, dt_parameter)
   m2sr_all_mk <- extract_myu_all_mk("M2SR", markers_auto, dt_parameter)
 
@@ -71,15 +75,15 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
 
       # Indices of genotypes of each contributor in all candidate genotype combinations
       index_gtc <- permutations(n = length(cand_gt), r = hnc, repeats.allowed = TRUE)
-      index_gtc <- index_gtc - 1 # for C++ index
-      index_gtc <- asplit(index_gtc, 1)
+      index_gtc_cpp <- index_gtc - 1 # C++ index
+      index_gtc_cpp <- asplit(index_gtc_cpp, 1)
 
       # Indices of genotypes of each contributor in each adopted genotype combination
-      index_gtc_adopt <- judge_gt_comb_mk(cand_gt, index_gtc, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
-      n_gtc_adopt <- length(index_gtc_adopt)
+      index_gtc_adopt_cpp <- judge_gt_comb_mk(cand_gt, index_gtc_cpp, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
+      n_gtc_adopt <- length(index_gtc_adopt_cpp)
       gtc_adopt_cspmk <- matrix(0, n_gtc_adopt, 2 * hnc)
       for(k in 1:n_gtc_adopt){
-        ind_gtc_tmp <- index_gtc_adopt[[k]] + 1 # for R and stan index
+        ind_gtc_tmp <- index_gtc_adopt_cpp[[k]] + 1 # R and stan index
         for(l in 1:hnc){
           gtc_adopt_cspmk[k, c(2 * l - 1, 2 * l)] <- cand_gt[[ind_gtc_tmp[l]]]
         }
@@ -87,8 +91,8 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
       gtc_adopt_all[[n_mk * (i - 1) + j]] <- gtc_adopt_cspmk
 
       # Connect eph_base and genotype combinations
-      index_eph_gtc <- connect_eph_gtc_mk(cand_gt, index_gtc_adopt, peaks)
-      index_eph_gtc <- matrix(unlist(index_eph_gtc) + 1, ncol = 2 * hnc, byrow = TRUE) # for R and stan index
+      index_eph_gtc_cpp <- connect_eph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks)
+      index_eph_gtc <- matrix(unlist(index_eph_gtc_cpp) + 1, ncol = 2 * hnc, byrow = TRUE) # R and stan index
       index_eph_gtc[which(index_eph_gtc == 0, arr.ind = TRUE)] <- 5 * n_peak + 1 # for density = 0
 
       # Judge duplicated eph combination
@@ -173,6 +177,11 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
   deg <- mpdeg_final$deg_final
 
   # Calculate likelihood
-  index_dedup_1 <- asplit(index_dedup_1, 2)
-  eph_dedup_1 <- calc_eph_dedup_1_cpp(tph, mp, deg, hnc, sum(n_dedup_1_cspmk), unlist(eph_base), index_dedup_1, unlist(size_dedup_1))
+  index_dedup_1_cpp <- asplit(index_dedup_1 - 1, 2) # C++ index
+  eph_dedup_1 <- calc_eph_dedup_1_cpp(tph, mp, deg, hnc, sum(n_dedup_1_cspmk), unlist(eph_base), index_dedup_1_cpp, unlist(size_dedup_1))
+  index_dedup_2_cpp <- list()
+  for(i in 1:length(index_dedup_2)){
+    index_dedup_2_cpp[[i]] <- index_dedup_2[[i]] - 1
+  }
+  lpd_gtc_all <- calc_lpd_gtc_all(n_cspmk, n_dedup_1_cspmk, unlist(oph_dedup_1), eph_dedup_1, at_cspmk, beta, n_peak_cspmk, n_gtc_cspmk, index_dedup_2_cpp)
 }

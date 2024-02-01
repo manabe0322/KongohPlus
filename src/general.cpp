@@ -1,6 +1,18 @@
 #include "header.h"
 
 // [[Rcpp::export]]
+std::vector<int> extract_subvec_int(std::vector<int> vec, int index_start, int index_end){
+  std::vector<int> subvec(vec.begin() + index_start, vec.begin() + index_end + 1);
+  return(subvec);
+}
+
+// [[Rcpp::export]]
+std::vector<double> extract_subvec_double(std::vector<double> vec, int index_start, int index_end){
+  std::vector<double> subvec(vec.begin() + index_start, vec.begin() + index_end + 1);
+  return(subvec);
+}
+
+// [[Rcpp::export]]
 int find_index_double(double element, std::vector<double> vec){
   int index = -1;
   auto tmp = std::find(vec.begin(), vec.end(), element);

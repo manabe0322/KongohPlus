@@ -18,7 +18,7 @@ functions{
         dens += gamma_lpdf(oph | eph * beta, beta);
       }else{
         for(i in 1:(at - 1)){
-          dens += gamma_lpdf(i | eph * beta, beta);
+          dens += gamma_lpdf(i | eph * beta, beta); // Stan automatically promotes integer values to real values if necessary
         }
       }
     }
@@ -77,8 +77,8 @@ model{
     int n_peak = N_Peak_Cspmk[i];
     vector[n_gtc] dens_gtc;
     for(j in 1:n_gtc){
-      array[n_peak] int index_dedup_gt = Index_Dedup_2[peak_start:(peak_start + n_peak - 1)];
-      dens_gtc[j] = sum(dens_mk[index_dedup_gt]); // + log(genotype prob)
+      array[n_peak] int index_dedup_gtc = Index_Dedup_2[peak_start:(peak_start + n_peak - 1)];
+      dens_gtc[j] = sum(dens_mk[index_dedup_gtc]); // + log(genotype prob)
       peak_start += n_peak;
     }
     target += log_sum_exp(dens_gtc);
