@@ -167,7 +167,7 @@ bool judge_gtc(std::vector<double> gtc,
 
 // [[Rcpp::export]]
 std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<std::vector<double>> cand_gts,
-                                               std::vector<std::vector<int>> index_gt_comb,
+                                               std::vector<std::vector<int>> index_gtc_cpp,
                                                std::vector<double> peaks,
                                                std::vector<double> heights,
                                                std::vector<bool> sr_consider,
@@ -177,8 +177,8 @@ std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<std::vector<double>> 
                                                double m2sr_fltr,
                                                double phr_fltr,
                                                double st){
-  int n_gt_comb = index_gt_comb.size();
-  int hnc = index_gt_comb.at(0).size();
+  int n_gt_comb = index_gtc_cpp.size();
+  int hnc = index_gtc_cpp.at(0).size();
   int n_peak = peaks.size();
 
   std::vector<double> peaks_rm99 = peaks;
@@ -187,11 +187,11 @@ std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<std::vector<double>> 
   std::vector<double> heights_rm99 = heights;
   heights_rm99.erase(heights_rm99.begin() + n_peak - 1);
 
-  std::vector<std::vector<int>> index_gt_comb_adopt;
+  std::vector<std::vector<int>> index_gtc_adopt_cpp;
 
   int count = 0;
   for(int i = 0; i < n_gt_comb; ++i){
-    std::vector<int> ind_gtc = index_gt_comb.at(i);
+    std::vector<int> ind_gtc = index_gtc_cpp.at(i);
     std::vector<double> gtc(2 * hnc);
     for(int j = 0; j < hnc; ++j){
       std::vector<double> gt = cand_gts.at(ind_gtc[j]);
@@ -201,13 +201,32 @@ std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<std::vector<double>> 
 
     bool adopt_gtc = judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st);
     if(adopt_gtc){
-      index_gt_comb_adopt.push_back(std::vector<int>(hnc));
+      index_gtc_adopt_cpp.push_back(std::vector<int>(hnc));
       for(int k = 0; k < hnc; ++k){
-        index_gt_comb_adopt[count][k] = ind_gtc[k];
+        index_gtc_adopt_cpp[count][k] = ind_gtc[k];
       }
       count += 1;
     }
   }
 
-  return(index_gt_comb_adopt);
+  return(index_gtc_adopt_cpp);
+}
+
+// [[Rcpp::export]]
+std::vector<std::vector<double>> extract_gtc_adopt(std::vector<std::vector<double>> cand_gts,
+                                                   std::vector<std::vector<int>> index_gtc_adopt_cpp){
+  int n_gtc_adopt = index_gtc_adopt_cpp.size();
+  int hnc = index_gtc_adopt_cpp.at(0).size();
+  std::vector<std::vector<double>> gtc_adopt(n_gtc_adopt, std::vector<double>(hnc));
+
+  for(int i = 0; i < n_gtc_adopt; ++i){
+    std::vector<int> ind_gtc = index_gtc_adopt_cpp.at(i);
+    for(int j = 0; j < hnc; ++j){
+      std::vector<double> gt = cand_gts.at(ind_gtc[j]);
+      gtc_adopt[i][2 * j] = gt[0];
+      gtc_adopt[i][2 * j + 1] = gt[1];
+    }
+  }
+
+  return(gtc_adopt);
 }

@@ -61,8 +61,28 @@ judge_gtc <- function(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider
     .Call(`_KongohPlus_judge_gtc`, gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
 }
 
-judge_gt_comb_mk <- function(cand_gts, index_gt_comb, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st) {
-    .Call(`_KongohPlus_judge_gt_comb_mk`, cand_gts, index_gt_comb, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
+judge_gt_comb_mk <- function(cand_gts, index_gtc_cpp, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st) {
+    .Call(`_KongohPlus_judge_gt_comb_mk`, cand_gts, index_gtc_cpp, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
+}
+
+extract_gtc_adopt <- function(cand_gts, index_gtc_adopt_cpp) {
+    .Call(`_KongohPlus_extract_gtc_adopt`, cand_gts, index_gtc_adopt_cpp)
+}
+
+make_n_obs <- function(pop_al, prof_ref) {
+    .Call(`_KongohPlus_make_n_obs`, pop_al, prof_ref)
+}
+
+calc_gt_prob <- function(gt, pop_al, pop_prob, theta, n_obs) {
+    .Call(`_KongohPlus_calc_gt_prob`, gt, pop_al, pop_prob, theta, n_obs)
+}
+
+calc_gtc_prob <- function(gtc, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs) {
+    .Call(`_KongohPlus_calc_gtc_prob`, gtc, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs)
+}
+
+calc_gtc_adopt_prob <- function(gtc_adopt, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs) {
+    .Call(`_KongohPlus_calc_gtc_adopt_prob`, gtc_adopt, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs)
 }
 
 calc_eph_dedup_1_cpp <- function(tph, mp, deg, hnc, n_dedup_1, eph_base, index_dedup_1, size_dedup_1) {

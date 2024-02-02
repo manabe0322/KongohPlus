@@ -11,6 +11,11 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
   heights_list <- tmp$heights_list
   n_csp <- length(peaks_list)
 
+  # Set allele probabilities
+  tmp <- set_al_prob(markers_auto, dt_af, peaks_list)
+  pop_al_list <- tmp$pop_al_list
+  pop_prob_list <- tmp$pop_prob_list
+
   # Information on consideration of each stutter
   sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_parameter)
 
@@ -65,6 +70,10 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
       m2sr <- m2sr_all_mk[mk]
       ae <- ae_all_mk[mk]
 
+      # Extract allele probabilities
+      pop_al <- pop_al_list[[mk]]
+      pop_prob <- pop_prob_list[[mk]]
+
       # The base of the expected peak heights
       eph_base[[n_mk * (i - 1) + j]] <- make_eph_base(peaks, bsrs, fsrs, dsrs, m2sr, ae)
 
@@ -81,14 +90,14 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
       # Indices of genotypes of each contributor in each adopted genotype combination
       index_gtc_adopt_cpp <- judge_gt_comb_mk(cand_gt, index_gtc_cpp, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
       n_gtc_adopt <- length(index_gtc_adopt_cpp)
-      gtc_adopt_cspmk <- matrix(0, n_gtc_adopt, 2 * hnc)
-      for(k in 1:n_gtc_adopt){
-        ind_gtc_tmp <- index_gtc_adopt_cpp[[k]] + 1 # R and stan index
-        for(l in 1:hnc){
-          gtc_adopt_cspmk[k, c(2 * l - 1, 2 * l)] <- cand_gt[[ind_gtc_tmp[l]]]
-        }
-      }
-      gtc_adopt_all[[n_mk * (i - 1) + j]] <- gtc_adopt_cspmk
+
+      # Extract genotype combinations
+      gtc_adopt <- extract_gtc_adopt(cand_gt, index_gtc_adopt_cpp)
+      gtc_adopt_all[[n_mk * (i - 1) + j]] <- matrix(unlist(gtc_adopt), ncol = 2 * hnc, byrow = TRUE)
+
+      # Calculate genotype probabilities
+      n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
+      gtc_adopt_prob <- calc_gtc_adopt_prob(gtc_adopt, pop_al, pop_prob, theta = 0, prof_ref = numeric(0), hyp_id = c(0, 0), n_obs)
 
       # Connect eph_base and genotype combinations
       index_eph_gtc_cpp <- connect_eph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks)
@@ -101,7 +110,6 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
       # Delete duplicated indices -> de-duplicated objects (pattern 1)
       index_dedup_1_mk <- index_eph_gtc[bool_duplicated, , drop = FALSE]
       n_dedup_1_cspmk[n_mk * (i - 1) + j] <- nrow(index_dedup_1_mk)
-
 
       # Sizes for de-duplicated objects (pattern 1)
       size_tmp <- rep(sizes, n_gtc_adopt)
@@ -183,11 +191,6 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
   for(i in 1:length(index_dedup_2)){
     index_dedup_2_cpp[[i]] <- index_dedup_2[[i]] - 1
   }
-
-  i <- 1
-  eph_mk <- extract_subvec_double(eph_dedup_1, 0, n_dedup_1_cspmk[i] - 1)
-  lpd_mk <- calc_lpd_mk(oph_dedup_1[[i]], eph_mk, at_cspmk[i], gamma_beta)
-  lpd_gtc <- calc_lpd_gtc(oph_dedup_1[[i]], eph_mk, at_cspmk[i], gamma_beta, n_peak_cspmk[i], n_gtc_cspmk[i], index_dedup_2_cpp[[i]])
 
   lpd_gtc_all <- calc_lpd_gtc_all(n_cspmk, n_dedup_1_cspmk, unlist(oph_dedup_1), eph_dedup_1, at_cspmk, gamma_beta, n_peak_cspmk, n_gtc_cspmk, index_dedup_2_cpp)
 }

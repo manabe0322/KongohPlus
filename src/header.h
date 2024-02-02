@@ -1,5 +1,6 @@
 #include <Rcpp.h>
 #include <iostream>   // push_back
+#include <numeric>    // accumulate
 #include <string>
 #include <vector>
 #include <boost/math/distributions/gamma.hpp>

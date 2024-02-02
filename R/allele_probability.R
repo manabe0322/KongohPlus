@@ -57,17 +57,25 @@ set_al_prob <- function(markers_auto, dt_af, peaks_list){
     pop_freq <- pop_freq[!is.na(pop_freq)]
 
     al_csp <- numeric(0)
+    peaks_all_rep <- numeric(0)
     for(j in 1:n_sn_csp){
-      peaks_rm99 <- setdiff(peaks_list[[j]][[mk]], 99)
+      peaks <- peaks_list[[j]][[mk]]
+      peaks_rm99 <- setdiff(peaks, 99)
       al_csp <- c(al_csp, peaks_rm99)
+      peaks_all_rep <- c(peaks_all_rep, peaks)
     }
+    peaks_all_rep <- sort(unique(peaks_all_rep))
 
     unobs_al <- setdiff(al_csp, pop_al)
 
     tmp <- correct_af_dirichlet(pop_al, pop_freq, unobs_al)
     tmp <- add_al_prob_drop(al_csp, tmp$pop_al, tmp$pop_prob)
-    pop_al_list[[i]] <- tmp$pop_al
-    pop_prob_list[[i]] <- tmp$pop_prob
+    pop_al <- tmp$pop_al
+    pop_prob <- tmp$pop_prob
+
+    index_target <- match(peaks_all_rep, pop_al)
+    pop_al_list[[i]] <- pop_al[index_target]
+    pop_prob_list[[i]] <- pop_prob[index_target]
   }
 
   names(pop_al_list) <- markers_auto
