@@ -61,6 +61,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
     id,
     function(input, output, session){
       rv_deconvo_setting <- reactiveValues()
+      rv_deconvo_setting$dt_csp <- NULL
+      rv_deconvo_setting$dt_ref <- NULL
+      rv_deconvo_setting$dt_af <- NULL
       rv_deconvo_setting$dt_anameth <- NULL
       rv_deconvo_setting$dt_kit <- NULL
       rv_deconvo_setting$dt_at <- NULL
@@ -74,9 +77,6 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       rv_deconvo_setting$dt_dsr <- NULL
       rv_deconvo_setting$dt_m2sr <- NULL
       rv_deconvo_setting$dt_gamma <- NULL
-      rv_deconvo_setting$dt_csp <- NULL
-      rv_deconvo_setting$dt_ref <- NULL
-      rv_deconvo_setting$dt_af <- NULL
 
       observe({
         req(rv_file)

@@ -31,7 +31,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   # Extract methods to estimate genotype probabilities
   gtc_prob_param <- dt_gtc_prob[, Parameter]
   gtc_prob_value <- dt_gtc_prob[, Value]
-  theta <- gtc_prob_value[gtc_prob_param == "Theta"]
+  theta <- as.numeric(gtc_prob_value[gtc_prob_param == "Theta"])
 
   # Set allele probabilities
   tmp <- set_al_prob(markers_auto, dt_af, peaks_list)

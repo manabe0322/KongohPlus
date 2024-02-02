@@ -217,7 +217,7 @@ std::vector<std::vector<double>> extract_gtc_adopt(std::vector<std::vector<doubl
                                                    std::vector<std::vector<int>> index_gtc_adopt_cpp){
   int n_gtc_adopt = index_gtc_adopt_cpp.size();
   int hnc = index_gtc_adopt_cpp.at(0).size();
-  std::vector<std::vector<double>> gtc_adopt(n_gtc_adopt, std::vector<double>(hnc));
+  std::vector<std::vector<double>> gtc_adopt(n_gtc_adopt, std::vector<double>(2 * hnc));
 
   for(int i = 0; i < n_gtc_adopt; ++i){
     std::vector<int> ind_gtc = index_gtc_adopt_cpp.at(i);
