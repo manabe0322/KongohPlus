@@ -45,10 +45,10 @@ lr_setting_server <- function(id, path_pack, rv_file){
         checkboxGroupInput(session$ns("hd"), label = h4("Defense hypothesis"), choices = rv_setting_lr$refs)
       })
 
-      analysis_methods <- list.files(paste0(path_pack, "/extdata/analysis_method"))
+      anameth <- list.files(paste0(path_pack, "/extdata/anameth"))
 
       output$analysis_method_lr <- renderUI({
-        selectInput(session$ns("analysis_method_lr"), label = h4("Analysis method"), choices = analysis_methods, selected = analysis_methods[1])
+        selectInput(session$ns("analysis_method_lr"), label = h4("Analysis method"), choices = anameth, selected = anameth[1])
       })
     }
   )

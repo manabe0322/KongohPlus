@@ -146,14 +146,14 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
 
       output$seq_data <- renderUI({
         ns <- session$ns
-        seq_files <- list.files(paste0(path_pack, "/extdata/sequence_data"))
+        seq_files <- list.files(paste0(path_pack, "/extdata/seq"))
         selectInput(ns("seq_data"), label = h4("Sequence data"), choices = seq_files, selected = seq_files[1], multiple = FALSE)
       })
 
       observeEvent(input$seq_data, {
         file_input <- input$seq_data
         if(!is.null(file_input)){
-          dt_seq <- fread(paste0(path_pack, "/extdata/sequence_data/", file_input))
+          dt_seq <- fread(paste0(path_pack, "/extdata/seq/", file_input))
           dt_seq <- change_data_type_seq(dt_seq)
           rv_output$dt_seq <- dt_seq
         }

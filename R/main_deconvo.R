@@ -1,4 +1,4 @@
-perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt_kit, dt_at, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st, hnc){
+perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, hnc){
   # Extract autosomal markers
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers_auto <- unique(dt_kit_auto[, Marker])
@@ -11,17 +11,32 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
   heights_list <- tmp$heights_list
   n_csp <- length(peaks_list)
 
+  # Information on consideration of each stutter
+  sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_param)
+
+  # Extract the 'myu' parameters for AE and M2SR
+  ae_all_mk <- extract_myu_all_mk("AE", markers_auto, dt_param)
+  m2sr_all_mk <- extract_myu_all_mk("M2SR", markers_auto, dt_param)
+
+  # Extract filters to remove unrealistic genotype combinations
+  gtc_fltr_type <- dt_gtc_fltr[, Type]
+  gtc_fltr_value <- dt_gtc_fltr[, Value]
+  bsr_fltr <- gtc_fltr_value[gtc_fltr_type == "BSR"]
+  fsr_fltr <- gtc_fltr_value[gtc_fltr_type == "FSR"]
+  dsr_fltr <- gtc_fltr_value[gtc_fltr_type == "DSR"]
+  m2sr_fltr <- gtc_fltr_value[gtc_fltr_type == "M2SR"]
+  phr_fltr <- gtc_fltr_value[gtc_fltr_type == "PHR"]
+  st <- gtc_fltr_value[gtc_fltr_type == "ST"]
+
+  # Extract methods to estimate genotype probabilities
+  gtc_prob_param <- dt_gtc_prob[, Parameter]
+  gtc_prob_value <- dt_gtc_prob[, Value]
+  theta <- gtc_prob_value[gtc_prob_param == "Theta"]
+
   # Set allele probabilities
   tmp <- set_al_prob(markers_auto, dt_af, peaks_list)
   pop_al_list <- tmp$pop_al_list
   pop_prob_list <- tmp$pop_prob_list
-
-  # Information on consideration of each stutter
-  sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_parameter)
-
-  # Extract the 'myu' parameters for AE and M2SR
-  ae_all_mk <- extract_myu_all_mk("AE", markers_auto, dt_parameter)
-  m2sr_all_mk <- extract_myu_all_mk("M2SR", markers_auto, dt_parameter)
 
   setkey(dt_alcor, Marker)
 
@@ -97,7 +112,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
 
       # Calculate genotype probabilities
       n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
-      gtc_adopt_prob <- calc_gtc_adopt_prob(gtc_adopt, pop_al, pop_prob, theta = 0, prof_ref = numeric(0), hyp_id = c(0, 0), n_obs)
+      gtc_adopt_prob <- calc_gtc_adopt_prob(gtc_adopt, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = c(0, 0), n_obs)
 
       # Connect eph_base and genotype combinations
       index_eph_gtc_cpp <- connect_eph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks)
@@ -144,7 +159,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt
   n_dedup_2_cspmk <- sapply(index_dedup_2, length)
   n_gtc_cspmk <- n_dedup_2_cspmk / n_peak_cspmk
 
-  gamma_beta <- extract_beta(dt_parameter)
+  gamma_beta <- extract_beta(dt_param)
 
   at_cspmk <- make_at_cspmk(n_csp, markers_auto, dt_at)
 

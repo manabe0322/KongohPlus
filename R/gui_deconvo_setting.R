@@ -10,7 +10,7 @@ deconvo_setting_ui <- function(id){
              sidebarPanel(width = 3,
                           numericInput(ns("noc_deconvo"), label = h4("Number of contributors"), value = 1),
                           br(),
-                          uiOutput(ns("analysis_method_deconvo")),
+                          uiOutput(ns("anameth_deconvo")),
                           br(),
                           actionButton(ns("act_analyze_deconvo"), label = "Analyze", class = "btn btn-primary btn-lg")
              ),
@@ -61,24 +61,19 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
     id,
     function(input, output, session){
       rv_deconvo_setting <- reactiveValues()
-      rv_deconvo_setting$dt_analysis_method <- NULL
-      rv_deconvo_setting$dt_parameter <- NULL
-      rv_deconvo_setting$dt_alcor <- NULL
+      rv_deconvo_setting$dt_anameth <- NULL
       rv_deconvo_setting$dt_kit <- NULL
       rv_deconvo_setting$dt_at <- NULL
+      rv_deconvo_setting$dt_param <- NULL
+      rv_deconvo_setting$dt_alcor <- NULL
+      rv_deconvo_setting$gtc_fltr <- NULL
+      rv_deconvo_setting$gtc_prob <- NULL
       rv_deconvo_setting$dt_ae <- NULL
       rv_deconvo_setting$dt_bsr <- NULL
       rv_deconvo_setting$dt_fsr <- NULL
       rv_deconvo_setting$dt_dsr <- NULL
       rv_deconvo_setting$dt_m2sr <- NULL
       rv_deconvo_setting$dt_gamma <- NULL
-      rv_deconvo_setting$bsr_fltr <- NULL
-      rv_deconvo_setting$fsr_fltr <- NULL
-      rv_deconvo_setting$dsr_fltr <- NULL
-      rv_deconvo_setting$m2sr_fltr <- NULL
-      rv_deconvo_setting$phr_fltr <- NULL
-      rv_deconvo_setting$st <- NULL
-
       rv_deconvo_setting$dt_csp <- NULL
       rv_deconvo_setting$dt_ref <- NULL
       rv_deconvo_setting$dt_af <- NULL
@@ -101,31 +96,30 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         }
       })
 
-      output$analysis_method_deconvo <- renderUI({
-        analysis_methods <- list.files(paste0(path_pack, "/extdata/analysis_method"))
-        analysis_methods <- gsub(".{4}$", "", analysis_methods)
-        selectInput(session$ns("analysis_method_deconvo"), label = h4("Analysis method"), choices = analysis_methods, selected = analysis_methods[1])
+      output$anameth_deconvo <- renderUI({
+        anameth_all <- list.files(paste0(path_pack, "/extdata/anameth"))
+        anameth_all <- gsub(".{4}$", "", anameth_all)
+        selectInput(session$ns("anameth_deconvo"), label = h4("Analysis method"), choices = anameth_all, selected = anameth_all[1])
       })
 
-      observeEvent(input$analysis_method_deconvo, {
+      observeEvent(input$anameth_deconvo, {
         # Load the selected analysis method
-        analysis_method <- input$analysis_method_deconvo
-        rv_deconvo_setting$dt_analysis_method <- dt_analysis_method <- fread(paste0(path_pack, "/extdata/analysis_method/", analysis_method, ".csv"))
+        anameth <- input$anameth_deconvo
+        rv_deconvo_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", anameth, ".csv"))
 
         # Extract data per column
-        names <- dt_analysis_method[, Name]
-        values <- dt_analysis_method[, Value]
+        folders <- dt_anameth[, Folder]
+        names <- dt_anameth[, Name]
 
-        # Load the parameters, the corrected alleles, and the kit information
-        rv_deconvo_setting$dt_parameter <- fread(paste0(path_pack, "/extdata/parameter/", values[names == "Parameter"], ".csv"))
-        rv_deconvo_setting$dt_alcor <- fread(paste0(path_pack, "/extdata/corrected_allele/", values[names == "Corrected allele"], ".csv"))
-        rv_deconvo_setting$dt_kit <- fread(paste0(path_pack, "/extdata/kit/", values[names == "Kit"], ".csv"))
+        # Load each data.table
+        rv_deconvo_setting$dt_kit <- fread(paste0(path_pack, "/extdata/kit/", names[folders == "kit"], ".csv"))
+        rv_deconvo_setting$dt_at <- dt_at <- fread(paste0(path_pack, "/extdata/at/", names[folders == "at"], ".csv"))
+        rv_deconvo_setting$dt_param <- fread(paste0(path_pack, "/extdata/param/", names[folders == "param"], ".csv"))
+        rv_deconvo_setting$dt_alcor <- fread(paste0(path_pack, "/extdata/alcor/", names[folders == "alcor"], ".csv"))
+        rv_deconvo_setting$dt_gtc_fltr <- dt_gtc_fltr <- fread(paste0(path_pack, "/extdata/gtc_fltr/", names[folders == "gtc_fltr"], ".csv"))
+        rv_deconvo_setting$dt_gtc_prob <- dt_gtc_prob <- fread(paste0(path_pack, "/extdata/gtc_prob/", names[folders == "gtc_prob"], ".csv"))
 
-        # Extract analytical thresholds
-        index_at <- grep("AT_", names)
-        rv_deconvo_setting$dt_at <- dt_at <- data.table(Marker = gsub("AT_", "", names[index_at]),
-                                                        AT = as.numeric(values[index_at]))
-
+        # Display analytical thresholds
         output$dt_at <- renderDataTable(server = FALSE, {
           datatable(
             dt_at,
@@ -135,28 +129,27 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
           )
         })
 
-        rv_deconvo_setting$bsr_fltr <- bsr_fltr <- as.numeric(values[names == "Filter of back stutter ratio"])
-        rv_deconvo_setting$fsr_fltr <- fsr_fltr <- as.numeric(values[names == "Filter of forward stutter ratio"])
-        rv_deconvo_setting$dsr_fltr <- dsr_fltr <- as.numeric(values[names == "Filter of double-back stutter ratio"])
-        rv_deconvo_setting$m2sr_fltr <- m2sr_fltr <- as.numeric(values[names == "Filter of minus 2-nt stutter ratio"])
-        rv_deconvo_setting$phr_fltr <- phr_fltr <- as.numeric(values[names == "Filter of peak height ratio"])
-        rv_deconvo_setting$st <- st <- as.numeric(values[names == "Stochastic threshold"])
+        gtc_prob_param <- dt_gtc_prob[, Parameter]
+        gtc_prob_value <- dt_gtc_prob[, Value]
 
-        output$kit <- renderText({values[names == "Kit"]})
-        output$alprob <- renderText({values[names == "Allele probability"]})
-        output$theta <- renderText({values[names == "Theta"]})
-        output$bsr_fltr <- renderText({paste0("Filter of back stutter ratio: ", bsr_fltr)})
-        output$fsr_fltr <- renderText({paste0("Filter of forward stutter ratio: ", fsr_fltr)})
-        output$dsr_fltr <- renderText({paste0("Filter of double-back stutter ratio: ", dsr_fltr)})
-        output$m2sr_fltr <- renderText({paste0("Filter of minus 2-nt stutter ratio: ", m2sr_fltr)})
-        output$phr_fltr <- renderText({paste0("Filter of peak height ratio: ", phr_fltr)})
-        output$st <- renderText({paste0("Stochastic threshold: ", st)})
+        gtc_fltr_type <- dt_gtc_fltr[, Type]
+        gtc_fltr_value <- dt_gtc_fltr[, Value]
+
+        output$kit <- renderText({names[folders == "kit"]})
+        output$alprob <- renderText({gtc_prob_value[gtc_prob_param == "Method"]})
+        output$theta <- renderText({gtc_prob_value[gtc_prob_param == "Theta"]})
+        output$bsr_fltr <- renderText({paste0("Filter of back stutter ratio: ", gtc_fltr_value[gtc_fltr_type == "BSR"])})
+        output$fsr_fltr <- renderText({paste0("Filter of forward stutter ratio: ", gtc_fltr_value[gtc_fltr_type == "FSR"])})
+        output$dsr_fltr <- renderText({paste0("Filter of double-back stutter ratio: ", gtc_fltr_value[gtc_fltr_type == "DSR"])})
+        output$m2sr_fltr <- renderText({paste0("Filter of minus 2-nt stutter ratio: ", gtc_fltr_value[gtc_fltr_type == "M2SR"])})
+        output$phr_fltr <- renderText({paste0("Filter of peak height ratio: ", gtc_fltr_value[gtc_fltr_type == "PHR"])})
+        output$st <- renderText({paste0("Stochastic threshold: ", gtc_fltr_value[gtc_fltr_type == "ST"])})
       })
 
       observeEvent(input$act_ae, {
-        dt_parameter <- rv_deconvo_setting$dt_parameter
-        setkey(dt_parameter, Parameter)
-        rv_deconvo_setting$dt_ae <- dt_parameter["AE"]
+        dt_param <- rv_deconvo_setting$dt_param
+        setkey(dt_param, Parameter)
+        rv_deconvo_setting$dt_ae <- dt_param["AE"]
 
         showModal(modalDialog(
           title = "Locus-specific amplification efficiency",
@@ -183,9 +176,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         print(input$act_bsr)
 
         # Extract parameters for BSR
-        dt_parameter <- rv_deconvo_setting$dt_parameter
-        setkey(dt_parameter, Parameter)
-        rv_deconvo_setting$dt_bsr <- dt_bsr <- dt_parameter["BSR"]
+        dt_param <- rv_deconvo_setting$dt_param
+        setkey(dt_param, Parameter)
+        rv_deconvo_setting$dt_bsr <- dt_bsr <- dt_param["BSR"]
         markers <- dt_bsr[, Marker]
 
         showModal(modalDialog(
@@ -248,9 +241,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
 
       observeEvent(input$act_fsr, {
         # Extract parameters for FSR
-        dt_parameter <- rv_deconvo_setting$dt_parameter
-        setkey(dt_parameter, Parameter)
-        rv_deconvo_setting$dt_fsr <- dt_fsr <- dt_parameter["FSR"]
+        dt_param <- rv_deconvo_setting$dt_param
+        setkey(dt_param, Parameter)
+        rv_deconvo_setting$dt_fsr <- dt_fsr <- dt_param["FSR"]
         markers <- dt_fsr[, Marker]
 
         showModal(modalDialog(
@@ -313,9 +306,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
 
       observeEvent(input$act_dsr, {
         # Extract parameters for DSR
-        dt_parameter <- rv_deconvo_setting$dt_parameter
-        setkey(dt_parameter, Parameter)
-        rv_deconvo_setting$dt_dsr <- dt_dsr <- dt_parameter["DSR"]
+        dt_param <- rv_deconvo_setting$dt_param
+        setkey(dt_param, Parameter)
+        rv_deconvo_setting$dt_dsr <- dt_dsr <- dt_param["DSR"]
         markers <- dt_dsr[, Marker]
 
         showModal(modalDialog(
@@ -378,9 +371,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
 
       observeEvent(input$act_m2sr, {
         # Extract parameters for M2SR
-        dt_parameter <- rv_deconvo_setting$dt_parameter
-        setkey(dt_parameter, Parameter)
-        rv_deconvo_setting$dt_m2sr <- dt_m2sr <- dt_parameter["M2SR"]
+        dt_param <- rv_deconvo_setting$dt_param
+        setkey(dt_param, Parameter)
+        rv_deconvo_setting$dt_m2sr <- dt_m2sr <- dt_param["M2SR"]
         markers <- dt_m2sr[, Marker]
 
         showModal(modalDialog(
@@ -414,9 +407,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       })
 
       observeEvent(input$act_gamma, {
-        dt_parameter <- rv_deconvo_setting$dt_parameter
-        setkey(dt_parameter, Parameter)
-        rv_deconvo_setting$dt_gamma <- dt_parameter["Gamma"]
+        dt_param <- rv_deconvo_setting$dt_param
+        setkey(dt_param, Parameter)
+        rv_deconvo_setting$dt_gamma <- dt_param["Gamma"]
 
         showModal(modalDialog(
           title = "Gamma distribution",
@@ -446,24 +439,19 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         dt_csp <- rv_deconvo_setting$dt_csp
         dt_ref <- rv_deconvo_setting$dt_ref
         dt_af <- rv_deconvo_setting$dt_af
-        #dt_analysis_method <- rv_deconvo_setting$dt_analysis_method
-        dt_parameter <- rv_deconvo_setting$dt_parameter
-        dt_alcor <- rv_deconvo_setting$dt_alcor
         dt_kit <- rv_deconvo_setting$dt_kit
         dt_at <- rv_deconvo_setting$dt_at
-        bsr_fltr <- rv_deconvo_setting$bsr_fltr
-        fsr_fltr <- rv_deconvo_setting$fsr_fltr
-        dsr_fltr <- rv_deconvo_setting$dsr_fltr
-        m2sr_fltr <- rv_deconvo_setting$m2sr_fltr
-        phr_fltr <- rv_deconvo_setting$phr_fltr
-        st <- rv_deconvo_setting$st
+        dt_param <- rv_deconvo_setting$dt_param
+        dt_alcor <- rv_deconvo_setting$dt_alcor
+        dt_gtc_fltr <- rv_deconvo_setting$dt_gtc_fltr
+        dt_gtc_prob <- rv_deconvo_setting$dt_gtc_prob
 
         # Check input files and setting
         error_message <- check_main_file(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor, method = "deconvo")
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          perform_deconvo(path_pack, dt_csp, dt_af, dt_parameter, dt_alcor, dt_kit, dt_at, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st, noc_deconvo)
+          perform_deconvo(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, noc_deconvo)
         }
       })
     }

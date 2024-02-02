@@ -743,7 +743,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
         rv_par_names <- reactiveVal(NULL)
 
         observeEvent(input$act_save_par, {
-          par_names <- list.files(paste0(path_pack, "/extdata/parameter"))
+          par_names <- list.files(paste0(path_pack, "/extdata/param"))
           rv_par_names(gsub(".{4}$", "", par_names))
 
           showModal(modalDialog(
@@ -772,8 +772,8 @@ est_par_result_server <- function(id, path_pack, rv_output){
 
         observeEvent(input$act_download_par, {
           proj_par <- input$proj_par
-          write.csv(dt_par, paste0(path_pack, "/extdata/parameter/param_", proj_par, ".csv"), row.names = FALSE)
-          write.csv(dt_alcor_combined, paste0(path_pack, "/extdata/corrected_allele/alcor_", proj_par, ".csv"), row.names = FALSE)
+          write.csv(dt_par, paste0(path_pack, "/extdata/param/param_", proj_par, ".csv"), row.names = FALSE)
+          write.csv(dt_alcor_combined, paste0(path_pack, "/extdata/alcor/alcor_", proj_par, ".csv"), row.names = FALSE)
           removeModal()
         })
 
