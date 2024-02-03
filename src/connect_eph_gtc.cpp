@@ -9,7 +9,7 @@ std::vector<std::vector<int>> connect_eph_gtc(std::vector<double> gtc,
                                               std::vector<double> peaks){
   int n_allele = gtc.size();
   int n_peak = peaks.size();
-  std::vector<std::vector<int>> ind_eph_gtc(n_peak, std::vector<int>(n_allele, -1));
+  std::vector<std::vector<int>> index_eph_gtc_cpp(n_peak, std::vector<int>(n_allele, -1));
 
   for(int i = 0; i < n_allele; ++i){
     double al = gtc[i];
@@ -19,29 +19,29 @@ std::vector<std::vector<int>> connect_eph_gtc(std::vector<double> gtc,
     double m2s = m2s_gtc[i];
 
     int ind_al = find_index_double(al, peaks);
-    ind_eph_gtc[ind_al][i] = ind_al;
+    index_eph_gtc_cpp[ind_al][i] = ind_al;
 
     int ind_bs = find_index_double(bs, peaks);
     if(ind_bs != -1){
-      ind_eph_gtc[ind_bs][i] = n_peak + ind_bs;
+      index_eph_gtc_cpp[ind_bs][i] = n_peak + ind_bs;
     }
 
     int ind_fs = find_index_double(fs, peaks);
     if(ind_fs != -1){
-      ind_eph_gtc[ind_fs][i] = 2 * n_peak + ind_fs;
+      index_eph_gtc_cpp[ind_fs][i] = 2 * n_peak + ind_fs;
     }
 
     int ind_ds = find_index_double(ds, peaks);
     if(ind_ds != -1){
-      ind_eph_gtc[ind_ds][i] = 3 * n_peak + ind_ds;
+      index_eph_gtc_cpp[ind_ds][i] = 3 * n_peak + ind_ds;
     }
 
     int ind_m2s = find_index_double(m2s, peaks);
     if(ind_m2s != -1){
-      ind_eph_gtc[ind_m2s][i] = 4 * n_peak + ind_m2s;
+      index_eph_gtc_cpp[ind_m2s][i] = 4 * n_peak + ind_m2s;
     }
   }
-  return(ind_eph_gtc);
+  return(index_eph_gtc_cpp);
 }
 
 // [[Rcpp::export]]

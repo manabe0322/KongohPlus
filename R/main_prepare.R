@@ -1,11 +1,25 @@
+#' make_at_cspmk
+#'
+#' @description The function to make a vector of ATs of all samples and all markers
+#' @param n_csp The number of crime stain profiles
+#' @param markers_auto A vector of the autosomal markers
+#' @param dt_at The data.table of the analytical thresholds
+make_at_cspmk <- function(n_csp, markers_auto, dt_at){
+  markers_at <- dt_at[, Marker]
+  ats <- dt_at[, AT]
+  at_mk <- ats[match(markers_auto, markers_at)]
+  at_cspmk <- rep(at_mk, n_csp)
+  return(at_cspmk)
+}
+
 #' make_peak_data
 #'
 #' @description The function to make peak data
 #' @param dt_csp The data.table of the crime stain profiles
-#' @param dt_at The data.table of the analytical thresholds
 #' @param dt_kit The data.table of the kit information
 #' @param markers_auto A vector of the autosomal markers
-make_peak_data <- function(dt_csp, dt_at, dt_kit, markers_auto){
+#' @param at_cspmk A vector of the analytical thresholds for each marker of all crime stain profiles
+make_peak_data <- function(dt_csp, dt_kit, markers_auto, at_cspmk){
   # Define output objects
   peaks_list <- list()
   sizes_list <- list()
@@ -19,7 +33,6 @@ make_peak_data <- function(dt_csp, dt_at, dt_kit, markers_auto){
 
   sn_all_csp <- unique(dt_csp[, SampleName])
   setkey(dt_csp, SampleName)
-  setkey(dt_at, Marker)
   markers_dt_kit <- dt_kit[, Marker]
   n_mk <- length(markers_auto)
   for(i in 1:length(sn_all_csp)){
@@ -42,8 +55,7 @@ make_peak_data <- function(dt_csp, dt_at, dt_kit, markers_auto){
       heights <- heights[!is.na(heights)]
 
       # Keep peaks above AT
-      dt_at_mk1 <- dt_at[mk]
-      at <- as.numeric(dt_at_mk1[, AT])
+      at <- at_cspmk[n_mk * (i - 1) + j]
       index_above_at <- which(heights >= at)
       peaks <- peaks[index_above_at]
       sizes <- sizes[index_above_at]
@@ -169,16 +181,22 @@ extract_beta <- function(dt_parameter){
   return(as.numeric(dt_gamma[, Beta]))
 }
 
-#' make_at_cspmk
+#' make_index_dedup_2_mk
 #'
-#' @description The function to make a vector of ATs of all samples and all markers
-#' @param n_csp The number of crime stain profiles
-#' @param markers_auto A vector of the autosomal markers
-#' @param dt_at The data.table of the analytical thresholds
-make_at_cspmk <- function(n_csp, markers_auto, dt_at){
-  markers_at <- dt_at[, Marker]
-  ats <- dt_at[, AT]
-  at_mk <- ats[match(markers_auto, markers_at)]
-  at_cspmk <- rep(at_mk, n_csp)
-  return(at_cspmk)
+#' @description The function to make 'index_dedup_2_mk'
+#' @param index_eph_gtc Information on the connection between eph_base and genotype combinations
+#' @param n_al The number of alleles (i.e., the number of contributors * 2)
+#' @param index_dedup_1_mk Index for deduplication (pattern 1)
+make_index_dedup_2_mk <- function(index_eph_gtc, n_al, index_dedup_1_mk){
+  n_index_eph_gtc <- nrow(index_eph_gtc)
+  index_dedup_2_mk <- rep(0, n_index_eph_gtc)
+  bool_mat <- matrix(FALSE, nrow(index_dedup_1_mk), n_al)
+  for(i in 1:n_index_eph_gtc){
+    ind_eph_gtc1 <- index_eph_gtc[i, ]
+    for(j in 1:n_al){
+      bool_mat[, j] <- index_dedup_1_mk[, j] == ind_eph_gtc1[j]
+    }
+    index_dedup_2_mk[i] <- which(apply(bool_mat, 1, all))
+  }
+  return(index_dedup_2_mk)
 }

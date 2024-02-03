@@ -47,8 +47,8 @@ data{
   int Hnc;
   int N_Cspmk;
 
-  int N_Eph_Base;
-  vector[N_Eph_Base] Eph_Base;
+  int N_Eph_Base_All;
+  vector[N_Eph_Base_All] Eph_Base;
 
   int N_Dedup_1_All;
   array[N_Cspmk] int N_Dedup_1_Cspmk;
