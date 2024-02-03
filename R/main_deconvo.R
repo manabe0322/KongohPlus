@@ -5,6 +5,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   n_mk <- length(markers_auto)
 
   # Extract AT
+  n_csp <- length(unique(dt_csp[, SampleName]))
   at_cspmk <- make_at_cspmk(n_csp, markers_auto, dt_at)
 
   # Extract peak data from crime stain profiles
@@ -12,7 +13,6 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   peaks_list <- tmp$peaks_list
   sizes_list <- tmp$sizes_list
   heights_list <- tmp$heights_list
-  n_csp <- length(peaks_list)
 
   # Information on consideration of each stutter
   sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_param)
@@ -117,12 +117,12 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
       if(n_gtc != 0){
         # Extract genotype combinations
-        gtc <- extract_gtc_adopt(cand_gt, index_gtc_adopt_cpp)
-        gtc_all[[n_mk * (i - 1) + j]] <- matrix(unlist(gtc), ncol = 2 * hnc, byrow = TRUE)
+        gtc_mk <- extract_gtc_adopt(cand_gt, index_gtc_adopt_cpp)
+        gtc_all[[n_mk * (i - 1) + j]] <- matrix(unlist(gtc_mk), ncol = 2 * hnc, byrow = TRUE)
 
         # Calculate genotype probabilities
         n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
-        gtc_prob_mk <- calc_gtc_prob_mk(gtc, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = c(0, 0), n_obs)
+        gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = c(0, 0), n_obs)
         gtc_logprob_all[[n_mk * (i - 1) + j]] <- log(gtc_prob_mk)
 
         # Connect eph_base and genotype combinations
@@ -146,7 +146,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
         oph_dedup_1[[n_mk * (i - 1) + j]] <- oph_tmp[bool_duplicated]
 
         # Index for deduplication (pattern 2: After summation of the eph_base)
-        index_dedup_2_mk <- make_index_dedup_2_mk(index_eph_gtc, n_al, index_dedup_1_mk)
+        index_dedup_2_mk <- make_index_dedup_2_mk(index_eph_gtc, 2 * hnc, index_dedup_1_mk)
         index_dedup_2[[n_mk * (i - 1) + j]] <- index_dedup_2_mk
         n_dedup_2_cspmk[n_mk * (i - 1) + j] <- length(index_dedup_2_mk)
 
@@ -161,7 +161,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   ## check n_gt_comb_all == 0
 
   data_list_main <- list(Hnc = hnc, N_Cspmk = n_cspmk,
-                         N_Eph_Base_All = n_eph_base_all, Eph_Base = unlist(eph_base),
+                         N_Eph_Base_All = sum(n_eph_base_all), Eph_Base = unlist(eph_base),
                          N_Dedup_1_All = sum(n_dedup_1_cspmk), N_Dedup_1_Cspmk = n_dedup_1_cspmk, Index_Dedup_1 = index_dedup_1, Size_Dedup_1 = unlist(size_dedup_1), Oph_Dedup_1 = unlist(oph_dedup_1),
                          N_Dedup_2_All = sum(n_dedup_2_cspmk), N_Dedup_2_Cspmk = n_dedup_2_cspmk, Index_Dedup_2 = unlist(index_dedup_2),
                          N_Peak_Cspmk = n_peak_cspmk, N_Gtc_Cspmk = n_gtc_cspmk, Gtc_Logprob_All = unlist(gtc_logprob_all),
@@ -201,4 +201,6 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   }
 
   lpd_gtc_all <- calc_lpd_gtc_all(n_cspmk, n_dedup_1_cspmk, unlist(oph_dedup_1), eph_dedup_1, at_cspmk, gamma_beta, n_peak_cspmk, n_gtc_cspmk, index_dedup_2_cpp)
+
+  dt_pg_list <- make_dt_pg_list(gtc_all, lpd_gtc_all, gtc_logprob_all)
 }
