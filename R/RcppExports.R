@@ -81,8 +81,8 @@ calc_gtc_prob <- function(gtc, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs)
     .Call(`_KongohPlus_calc_gtc_prob`, gtc, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs)
 }
 
-calc_gtc_adopt_prob <- function(gtc_adopt, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs) {
-    .Call(`_KongohPlus_calc_gtc_adopt_prob`, gtc_adopt, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs)
+calc_gtc_prob_mk <- function(gtc_adopt, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs) {
+    .Call(`_KongohPlus_calc_gtc_prob_mk`, gtc_adopt, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs)
 }
 
 calc_eph_dedup_1_cpp <- function(tph, mp, deg, hnc, n_dedup_1, eph_base, index_dedup_1, size_dedup_1) {

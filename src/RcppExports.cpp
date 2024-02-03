@@ -284,9 +284,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// calc_gtc_adopt_prob
-std::vector<double> calc_gtc_adopt_prob(std::vector<std::vector<double>> gtc_adopt, std::vector<double> pop_al, std::vector<double> pop_prob, double theta, std::vector<double> prof_ref, std::vector<int> hyp_id, std::vector<int> n_obs);
-RcppExport SEXP _KongohPlus_calc_gtc_adopt_prob(SEXP gtc_adoptSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP thetaSEXP, SEXP prof_refSEXP, SEXP hyp_idSEXP, SEXP n_obsSEXP) {
+// calc_gtc_prob_mk
+std::vector<double> calc_gtc_prob_mk(std::vector<std::vector<double>> gtc_adopt, std::vector<double> pop_al, std::vector<double> pop_prob, double theta, std::vector<double> prof_ref, std::vector<int> hyp_id, std::vector<int> n_obs);
+RcppExport SEXP _KongohPlus_calc_gtc_prob_mk(SEXP gtc_adoptSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP thetaSEXP, SEXP prof_refSEXP, SEXP hyp_idSEXP, SEXP n_obsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -297,7 +297,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<double> >::type prof_ref(prof_refSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type hyp_id(hyp_idSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type n_obs(n_obsSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_gtc_adopt_prob(gtc_adopt, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs));
+    rcpp_result_gen = Rcpp::wrap(calc_gtc_prob_mk(gtc_adopt, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -418,7 +418,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_make_n_obs", (DL_FUNC) &_KongohPlus_make_n_obs, 2},
     {"_KongohPlus_calc_gt_prob", (DL_FUNC) &_KongohPlus_calc_gt_prob, 5},
     {"_KongohPlus_calc_gtc_prob", (DL_FUNC) &_KongohPlus_calc_gtc_prob, 7},
-    {"_KongohPlus_calc_gtc_adopt_prob", (DL_FUNC) &_KongohPlus_calc_gtc_adopt_prob, 7},
+    {"_KongohPlus_calc_gtc_prob_mk", (DL_FUNC) &_KongohPlus_calc_gtc_prob_mk, 7},
     {"_KongohPlus_calc_eph_dedup_1_cpp", (DL_FUNC) &_KongohPlus_calc_eph_dedup_1_cpp, 8},
     {"_KongohPlus_gamma_pdf", (DL_FUNC) &_KongohPlus_gamma_pdf, 3},
     {"_KongohPlus_calc_lpd", (DL_FUNC) &_KongohPlus_calc_lpd, 4},

@@ -48,9 +48,10 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   size_dedup_1 <- list()
   oph_dedup_1 <- list()
   n_peak_cspmk <- rep(0, n_cspmk)
+  n_gtc_cspmk <- rep(0, n_cspmk)
 
   cand_gt_all <- list()
-  gtc_adopt_all <- list()
+  gtc_all <- gtc_logprob_all <- list()
 
   sumup_index_dedup_1 <- 0
   for(i in 1:n_csp){
@@ -104,15 +105,16 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
       # Indices of genotypes of each contributor in each adopted genotype combination
       index_gtc_adopt_cpp <- judge_gt_comb_mk(cand_gt, index_gtc_cpp, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
-      n_gtc_adopt <- length(index_gtc_adopt_cpp)
+      n_gtc_cspmk[n_mk * (i - 1) + j] <- n_gtc <- length(index_gtc_adopt_cpp)
 
       # Extract genotype combinations
-      gtc_adopt <- extract_gtc_adopt(cand_gt, index_gtc_adopt_cpp)
-      gtc_adopt_all[[n_mk * (i - 1) + j]] <- matrix(unlist(gtc_adopt), ncol = 2 * hnc, byrow = TRUE)
+      gtc <- extract_gtc_adopt(cand_gt, index_gtc_adopt_cpp)
+      gtc_all[[n_mk * (i - 1) + j]] <- matrix(unlist(gtc), ncol = 2 * hnc, byrow = TRUE)
 
       # Calculate genotype probabilities
       n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
-      gtc_adopt_prob <- calc_gtc_adopt_prob(gtc_adopt, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = c(0, 0), n_obs)
+      gtc_prob_mk <- calc_gtc_prob_mk(gtc, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = c(0, 0), n_obs)
+      gtc_logprob_all[[n_mk * (i - 1) + j]] <- log(gtc_prob_mk)
 
       # Connect eph_base and genotype combinations
       index_eph_gtc_cpp <- connect_eph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks)
@@ -127,11 +129,11 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
       n_dedup_1_cspmk[n_mk * (i - 1) + j] <- nrow(index_dedup_1_mk)
 
       # Sizes for de-duplicated objects (pattern 1)
-      size_tmp <- rep(sizes, n_gtc_adopt)
+      size_tmp <- rep(sizes, n_gtc)
       size_dedup_1[[n_mk * (i - 1) + j]] <- size_tmp[bool_duplicated]
 
       # Observed peak heights for de-duplicated objects (pattern 1)
-      oph_tmp <- rep(heights, n_gtc_adopt)
+      oph_tmp <- rep(heights, n_gtc)
       oph_dedup_1[[n_mk * (i - 1) + j]] <- oph_tmp[bool_duplicated]
 
       n_index_eph_gtc <- nrow(index_eph_gtc)
@@ -157,21 +159,18 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   n_eph_base <- sum(sapply(eph_base, length))
 
   n_dedup_2_cspmk <- sapply(index_dedup_2, length)
-  n_gtc_cspmk <- n_dedup_2_cspmk / n_peak_cspmk
 
   gamma_beta <- extract_beta(dt_param)
 
   at_cspmk <- make_at_cspmk(n_csp, markers_auto, dt_at)
 
-  save(list = c("n_eph_base", "n_dedup_2_cspmk", "n_dedup_1_cspmk", "eph_base", "index_dedup_1", "index_dedup_2", "size_dedup_1", "n_peak_cspmk", "n_gtc_cspmk"), file = "test.Rdata")
-
   ## check n_gt_comb_all == 0
 
   data_list_main <- list(Hnc = hnc, N_Cspmk = n_cspmk,
                          N_Eph_Base = n_eph_base, Eph_Base = unlist(eph_base),
-                         N_Dedup_1 = sum(n_dedup_1_cspmk), N_Dedup_1_Cspmk = n_dedup_1_cspmk, Index_Dedup_1 = index_dedup_1, Size_Dedup_1 = unlist(size_dedup_1), Oph_Dedup_1 = unlist(oph_dedup_1),
-                         N_Dedup_2 = sum(n_dedup_2_cspmk), Index_Dedup_2 = unlist(index_dedup_2),
-                         N_Peak_Cspmk = n_peak_cspmk, N_Gtc_Cspmk = n_gtc_cspmk,
+                         N_Dedup_1_All = sum(n_dedup_1_cspmk), N_Dedup_1_Cspmk = n_dedup_1_cspmk, Index_Dedup_1 = index_dedup_1, Size_Dedup_1 = unlist(size_dedup_1), Oph_Dedup_1 = unlist(oph_dedup_1),
+                         N_Dedup_2_All = sum(n_dedup_2_cspmk), N_Dedup_2_Cspmk = n_dedup_2_cspmk, Index_Dedup_2 = unlist(index_dedup_2),
+                         N_Peak_Cspmk = n_peak_cspmk, N_Gtc_Cspmk = n_gtc_cspmk, Gtc_Logprob_All = unlist(gtc_logprob_all),
                          At_Cspmk = at_cspmk, Beta = gamma_beta)
 
   # Perform MCMC
