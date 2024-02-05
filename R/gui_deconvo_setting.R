@@ -56,7 +56,7 @@ deconvo_setting_ui <- function(id){
 #' deconvo_setting_server
 #'
 #' @description The function to create the server module for setting conditions of deconvolution
-deconvo_setting_server <- function(id, path_pack, rv_file){
+deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
   moduleServer(
     id,
     function(input, output, session){
@@ -77,6 +77,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       rv_deconvo_setting$dt_dsr <- NULL
       rv_deconvo_setting$dt_m2sr <- NULL
       rv_deconvo_setting$dt_gamma <- NULL
+
+      rv_deconvo <- reactiveValues()
+      rv_deconvo$results <- NULL
 
       observe({
         req(rv_file)
@@ -451,9 +454,14 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          result_deconvo <- perform_deconvo(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, noc_deconvo)
+          results <- perform_deconvo(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, noc_deconvo)
+          rv_deconvo$results <- results
+
+          updateTabsetPanel(session = session_deconvo_top, inputId = "tabset_deconvo", selected = "Result")
         }
       })
+
+      return(rv_deconvo)
     }
   )
 }
