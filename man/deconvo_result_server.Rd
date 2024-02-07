@@ -4,7 +4,7 @@
 \alias{deconvo_result_server}
 \title{deconvo_result_server}
 \usage{
-deconvo_result_server(id)
+deconvo_result_server(id, rv_deconvo_result)
 }
 \description{
 The function to create the server module for results of deconvolution

@@ -22,13 +22,11 @@ deconvo_server <- function(id, path_pack, rv_file){
   moduleServer(
     id,
     function(input, output, session){
-      observe({
-        rv_deconvo_result <- deconvo_setting_server("deconvo_setting", path_pack, rv_file, session)
+      rv_deconvo <- deconvo_setting_server("deconvo_setting", path_pack, rv_file, session)
 
-        observe({
-          req(rv_deconvo_result)
-          deconvo_result_server("deconvo_result", rv_deconvo_result)
-        })
+      observe({
+        req(rv_deconvo)
+        deconvo_result_server("deconvo_result", rv_deconvo)
       })
     }
   )

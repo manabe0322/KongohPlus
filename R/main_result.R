@@ -31,12 +31,13 @@ make_dt_pg <- function(gtc_mk, lpd_gtc_mk, gtc_logprob_mk){
   return(dt_pg)
 }
 
-make_dt_pg_list <- function(gtc_all, lpd_gtc_all, gtc_logprob_all){
+make_dt_pg_list <- function(markers_auto, gtc_all, lpd_gtc_all, gtc_logprob_all){
   n_cspmk <- length(gtc_all)
   dt_pg_list <- vector(mode = "list", length = n_cspmk)
   for(i in 1:n_cspmk){
     dt_pg_list[[i]] <- make_dt_pg(gtc_all[[i]], lpd_gtc_all[[i]], gtc_logprob_all[[i]])
   }
+  names(dt_pg_list) <- markers_auto
   return(dt_pg_list)
 }
 
@@ -49,7 +50,7 @@ calc_likelihood_all <- function(lpd_gtc_all, gtc_logprob_all){
   n_mk <- length(lpd_gtc_all)
   likelihood_all <- rep(0, n_mk)
   for(i in 1:n_mk){
-    likelihood_all[i] <- calc_likelihood(lpd_gtc_all[[1]], gtc_logprob_all[[1]])
+    likelihood_all[i] <- calc_likelihood(lpd_gtc_all[[i]], gtc_logprob_all[[i]])
   }
   return(likelihood_all)
 }

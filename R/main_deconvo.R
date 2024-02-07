@@ -202,20 +202,20 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   lpd_gtc_all <- calc_lpd_gtc_all(n_cspmk, n_dedup_1_cspmk, unlist(oph_dedup_1), eph_dedup_1, at_cspmk, gamma_beta, n_peak_cspmk, n_gtc_cspmk, index_dedup_2_cpp)
 
-  dt_pg_list <- make_dt_pg_list(gtc_all, lpd_gtc_all, gtc_logprob_all)
+  dt_pg_list <- make_dt_pg_list(markers_auto, gtc_all, lpd_gtc_all, gtc_logprob_all)
 
   likelihood_all <- calc_likelihood_all(lpd_gtc_all, gtc_logprob_all)
 
   dt_likelihood <- make_dt_likelihood(markers_auto, likelihood_all)
 
-  dt_mpdeg <- data.table(Contributor = paste("U", 1:hnc),
+  dt_mpdeg <- data.table(Contributor = paste0("U", 1:hnc),
                          MP = mp,
                          Deg = deg)
 
-  return("dt_pg_list" = dt_pg_list,
-         "dt_likelihood" = dt_likelihood,
-         "dt_mpdeg" = dt_mpdeg,
-         "tph" = tph,
-         "rhat_lp" = rhat_lp,
-         "traceplot" = traceplot)
+  return(list("dt_pg_list" = dt_pg_list,
+              "dt_likelihood" = dt_likelihood,
+              "dt_mpdeg" = dt_mpdeg,
+              "tph" = tph,
+              "rhat_lp" = rhat_lp,
+              "traceplot" = traceplot))
 }
