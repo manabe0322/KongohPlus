@@ -35,11 +35,13 @@ double calc_lpd(double oph, double eph, int at, double beta){
   double alpha = eph * beta;
   if(eph != 0){
     if(oph >= at){
-      lpd += log(gamma_pdf(oph, alpha, beta));
+      lpd = log(gamma_pdf(oph, alpha, beta));
     }else{
+      double pd_drop = 0;
       for(int i = 1; i < at; ++i){
-        lpd += log(gamma_pdf(i, alpha, beta));
+        pd_drop += gamma_pdf(i, alpha, beta);
       }
+      lpd = log(pd_drop / (at - 1));
     }
   }
   return(lpd);

@@ -12,14 +12,17 @@ functions{
   }
 
   real calc_lpd(real oph, real eph, int at, real beta){
-    real lpd = 0;
+    real lpd;
     if(eph != 0){
       if(oph >= at){
-        lpd += gamma_lpdf(oph | eph * beta, beta);
+        lpd = gamma_lpdf(oph | eph * beta, beta);
       }else{
-        for(i in 1:(at - 1)){
-          lpd += gamma_lpdf(i | eph * beta, beta);
+        int n_oph_drop = at - 1;
+        vector[n_oph_drop] lpd_drop;
+        for(i in 1:n_oph_drop){
+          lpd_drop[i] = gamma_lpdf(i | eph * beta, beta);
         }
+        lpd = log_sum_exp(lpd_drop) - log(n_oph_drop);
       }
     }
     return lpd;
