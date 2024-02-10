@@ -4,7 +4,7 @@
 #' @importFrom cmdstanr cmdstan_model
 #' @importFrom data.table as.data.table data.table copy fread setDT setkey
 #' @importFrom dplyr full_join
-#' @importFrom DT datatable dataTableOutput formatRound JS renderDataTable
+#' @importFrom DT datatable dataTableOutput formatRound formatSignif JS renderDataTable
 #' @importFrom gtools combinations permutations
 #' @importFrom magrittr %>%
 #' @importFrom parallel detectCores

@@ -12,7 +12,7 @@ functions{
   }
 
   real calc_lpd(real oph, real eph, int at, real beta){
-    real lpd;
+    real lpd = 0;
     if(eph != 0){
       if(oph >= at){
         lpd = gamma_lpdf(oph | eph * beta, beta);
