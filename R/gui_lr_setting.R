@@ -40,12 +40,12 @@ lr_setting_server <- function(id, path_pack, rv_file){
     function(input, output, session){
       dt_ref <- rv_file$dt_ref
 
-      rv_setting_lr <- reactiveValues()
-      rv_setting_lr$refs <- NULL
+      rv_lr_setting <- reactiveValues()
+      rv_lr_setting$refs <- NULL
       rv_lr_setting$dt_anameth <- NULL
 
       if(!is.null(dt_ref)){
-        rv_setting_lr$refs <- unique(dt_ref[, SampleName])
+        rv_lr_setting$refs <- unique(dt_ref[, SampleName])
       }
 
       observeEvent(input$noc_lr, {
@@ -60,11 +60,11 @@ lr_setting_server <- function(id, path_pack, rv_file){
       })
 
       output$hp <- renderUI({
-        checkboxGroupInput(session$ns("hp"), label = h4("Prosecutor hypothesis"), choices = rv_setting_lr$refs)
+        checkboxGroupInput(session$ns("hp"), label = h4("Prosecutor hypothesis"), choices = rv_lr_setting$refs)
       })
 
       output$hd <- renderUI({
-        checkboxGroupInput(session$ns("hd"), label = h4("Defense hypothesis"), choices = rv_setting_lr$refs)
+        checkboxGroupInput(session$ns("hd"), label = h4("Defense hypothesis"), choices = rv_lr_setting$refs)
       })
 
       anameth <- list.files(paste0(path_pack, "/extdata/anameth"))

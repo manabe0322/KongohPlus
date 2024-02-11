@@ -60,10 +60,6 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   gtc_logprob_all <- vector(mode = "list", length = n_cspmk)
   gtc_all <- vector(mode = "list", length = n_cspmk)
 
-  ####
-  n_peak_type_all <- rep(0, 4 * n_cspmk)
-  ####
-
   sumup_index_dedup_1 <- 0
   for(i in 1:n_csp){
     # Extract peak data of a crime stain profile
@@ -143,40 +139,11 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
         # Sizes for de-duplicated objects (pattern 1)
         size_tmp <- rep(sizes, n_gtc)
-        #size_dedup_1[[n_mk * (i - 1) + j]] <- size_tmp[bool_duplicated]
+        size_dedup_1[[n_mk * (i - 1) + j]] <- size_tmp[bool_duplicated]
 
         # Observed peak heights for de-duplicated objects (pattern 1)
         oph_tmp <- rep(heights, n_gtc)
-        #oph_dedup_1[[n_mk * (i - 1) + j]] <- oph_tmp[bool_duplicated]
-
-        ####
-        size_dedup_1_mk <- size_tmp[bool_duplicated]
-        oph_dedup_1_mk <- oph_tmp[bool_duplicated]
-
-        index_do_ig <- which(oph_dedup_1_mk == 0)
-
-        eph_tmp <- rep(0, nrow(index_dedup_1_mk))
-        for(k in 1:nrow(index_dedup_1_mk)){
-          eph_tmp[k] <- sum(eph_base_mk[index_dedup_1_mk[k, ]])
-        }
-        index_di_ig <- which(eph_tmp == 0)
-
-        index_ig <- intersect(index_do_ig, index_di_ig)
-
-        index_do <- setdiff(index_do_ig, index_ig)
-        index_di <- setdiff(index_di_ig, index_ig)
-        index_gen <- setdiff(1:nrow(index_dedup_1_mk), c(index_do, index_di, index_ig))
-
-        index_order <- c(index_gen, index_do, index_di, index_ig)
-        index_dedup_1_mk <- index_dedup_1_mk[index_order, , drop = FALSE]
-        size_dedup_1[[n_mk * (i - 1) + j]] <- size_dedup_1_mk[index_order]
-        oph_dedup_1[[n_mk * (i - 1) + j]] <- oph_dedup_1_mk[index_order]
-
-        n_peak_type_all[4 * (n_mk * (i - 1) + j) - 3] <- length(index_gen)
-        n_peak_type_all[4 * (n_mk * (i - 1) + j) - 2] <- length(index_do)
-        n_peak_type_all[4 * (n_mk * (i - 1) + j) - 1] <- length(index_di)
-        n_peak_type_all[4 * (n_mk * (i - 1) + j)] <- length(index_ig)
-        ####
+        oph_dedup_1[[n_mk * (i - 1) + j]] <- oph_tmp[bool_duplicated]
 
         # Index for deduplication (pattern 2: After summation of the eph_base)
         index_dedup_2_mk <- make_index_dedup_2_mk(index_eph_gtc, 2 * hnc, index_dedup_1_mk)
@@ -198,15 +165,14 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
                          N_Dedup_1_All = sum(n_dedup_1_cspmk), N_Dedup_1_Cspmk = n_dedup_1_cspmk, Index_Dedup_1 = index_dedup_1, Size_Dedup_1 = unlist(size_dedup_1), Oph_Dedup_1 = unlist(oph_dedup_1),
                          N_Dedup_2_All = sum(n_dedup_2_cspmk), N_Dedup_2_Cspmk = n_dedup_2_cspmk, Index_Dedup_2 = unlist(index_dedup_2),
                          N_Peak_Cspmk = n_peak_cspmk, N_Gtc_Cspmk = n_gtc_cspmk, Gtc_Logprob_All = unlist(gtc_logprob_all),
-                         At_M1_Cspmk = at_cspmk - 1, Beta = gamma_beta,
-                         N_Peak_Type_All = n_peak_type_all)
+                         At_Cspmk = at_cspmk, Beta = gamma_beta)
 
   # Perform MCMC
   model_main <- readRDS(paste0(path_pack, "/model/model_main.rds"))
   fit_main <- model_main$sample(
     data_list_main,
-    iter_warmup = 1000,
-    iter_sampling = 1000,
+    iter_warmup = 1200,
+    iter_sampling = 1200,
     chains = 4,
     parallel_chains = detectCores()
   )
@@ -222,7 +188,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   # Determine the mixture proportions and the degradation parameters
   sampling_data <- as_draws_matrix(draws)
-  mpdeg_final <- determine_mpdeg(sampling_data, n_sampling = 1000, n_chain = 4, upper_rhat = 1.1)
+  mpdeg_final <- determine_mpdeg(sampling_data, n_sampling = 1200, n_chain = 4, upper_rhat = 1.1)
   mp <- mpdeg_final$mp_final
   deg <- mpdeg_final$deg_final
 
