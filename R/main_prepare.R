@@ -1,92 +1,13 @@
-#' make_at_cspmk
+#' make_at_mk
 #'
-#' @description The function to make a vector of ATs of all samples and all markers
-#' @param n_csp The number of crime stain profiles
+#' @description The function to make a vector of ATs of all markers
 #' @param markers_auto A vector of the autosomal markers
 #' @param dt_at The data.table of the analytical thresholds
-make_at_cspmk <- function(n_csp, markers_auto, dt_at){
+make_at_mk <- function(markers_auto, dt_at){
   markers_at <- dt_at[, Marker]
   ats <- dt_at[, AT]
   at_mk <- ats[match(markers_auto, markers_at)]
-  at_cspmk <- rep(at_mk, n_csp)
-  return(at_cspmk)
-}
-
-#' make_peak_data
-#'
-#' @description The function to make peak data
-#' @param dt_csp The data.table of the crime stain profiles
-#' @param dt_kit The data.table of the kit information
-#' @param markers_auto A vector of the autosomal markers
-#' @param at_cspmk A vector of the analytical thresholds for each marker of all crime stain profiles
-make_peak_data <- function(dt_csp, dt_kit, markers_auto, at_cspmk){
-  # Define output objects
-  peaks_list <- list()
-  sizes_list <- list()
-  heights_list <- list()
-
-  # Column indices for alleles, sizes, and heights
-  names_csp <- names(dt_csp)
-  index_allele <- grep("Allele", names_csp)
-  index_size <- grep("Size", names_csp)
-  index_height <- grep("Height", names_csp)
-
-  sn_all_csp <- unique(dt_csp[, SampleName])
-  setkey(dt_csp, SampleName)
-  markers_dt_kit <- dt_kit[, Marker]
-  n_mk <- length(markers_auto)
-  for(i in 1:length(sn_all_csp)){
-    # Define objects for one sample
-    peaks_list_sn1 <- list()
-    sizes_list_sn1 <- list()
-    heights_list_sn1 <- list()
-
-    dt_csp_sn1 <- dt_csp[sn_all_csp[i]]
-    setkey(dt_csp_sn1, Marker)
-    for(j in 1:n_mk){
-      # Extract data for one marker
-      mk <- markers_auto[j]
-      dt_csp_sn1_mk1 <- dt_csp_sn1[mk]
-      peaks <- as.numeric(dt_csp_sn1_mk1[, index_allele, with = FALSE])
-      peaks <- peaks[!is.na(peaks)]
-      sizes <- as.numeric(dt_csp_sn1_mk1[, index_size, with = FALSE])
-      sizes <- sizes[!is.na(sizes)]
-      heights <- as.numeric(dt_csp_sn1_mk1[, index_height, with = FALSE])
-      heights <- heights[!is.na(heights)]
-
-      # Keep peaks above AT
-      at <- at_cspmk[n_mk * (i - 1) + j]
-      index_above_at <- which(heights >= at)
-      peaks <- peaks[index_above_at]
-      sizes <- sizes[index_above_at]
-      heights <- heights[index_above_at]
-
-      # Add information on the drop-out peak
-      dt_kit_mk1 <- dt_kit[which(markers_dt_kit == mk)]
-      peaks <- c(peaks, 99)
-      sizes <- c(sizes, median(dt_kit_mk1[, Size]))
-      heights <- c(heights, 0)
-
-      peaks_list_sn1[[j]] <- peaks
-      sizes_list_sn1[[j]] <- sizes
-      heights_list_sn1[[j]] <- heights
-    }
-
-    names(peaks_list_sn1) <- markers_auto
-    names(sizes_list_sn1) <- markers_auto
-    names(heights_list_sn1) <- markers_auto
-
-    peaks_list[[i]] <- peaks_list_sn1
-    sizes_list[[i]] <- sizes_list_sn1
-    heights_list[[i]] <- heights_list_sn1
-  }
-
-  names(peaks_list) <- sn_all_csp
-  names(sizes_list) <- sn_all_csp
-  names(heights_list) <- sn_all_csp
-  return(list("peaks_list" = peaks_list,
-              "sizes_list" = sizes_list,
-              "heights_list" = heights_list))
+  return(at_mk)
 }
 
 #' make_ref_data

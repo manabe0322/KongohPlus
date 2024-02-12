@@ -3,13 +3,13 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers_auto <- unique(dt_kit_auto[, Marker])
   n_mk <- length(markers_auto)
+  n_csp <- length(unique(dt_csp[, SampleName]))
 
   # Extract AT
-  n_csp <- length(unique(dt_csp[, SampleName]))
-  at_cspmk <- make_at_cspmk(n_csp, markers_auto, dt_at)
+  at_mk <- make_at_mk(markers_auto, dt_at)
 
   # Extract peak data from crime stain profiles
-  tmp <- make_peak_data(dt_csp, dt_kit, markers_auto, at_cspmk)
+  tmp <- make_peak_data(dt_csp, dt_kit_auto, markers_auto, at_mk)
   peaks_list <- tmp$peaks_list
   sizes_list <- tmp$sizes_list
   heights_list <- tmp$heights_list
