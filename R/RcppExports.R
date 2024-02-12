@@ -61,8 +61,8 @@ judge_gtc <- function(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider
     .Call(`_KongohPlus_judge_gtc`, gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
 }
 
-judge_gt_comb_mk <- function(cand_gts, index_gtc_cpp, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st) {
-    .Call(`_KongohPlus_judge_gt_comb_mk`, cand_gts, index_gtc_cpp, peaks, heights, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
+judge_gtc_mk <- function(cand_gts, index_gtc_cpp, peaks, heights_all_rep, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st) {
+    .Call(`_KongohPlus_judge_gtc_mk`, cand_gts, index_gtc_cpp, peaks, heights_all_rep, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
 }
 
 extract_gtc_adopt <- function(cand_gts, index_gtc_adopt_cpp) {

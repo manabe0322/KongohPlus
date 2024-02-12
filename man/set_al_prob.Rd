@@ -11,7 +11,7 @@ set_al_prob(markers_auto, dt_af, peaks_list)
 
 \item{dt_af}{The data.table of the allele frequencies}
 
-\item{peaks_list}{The peak list of all samples}
+\item{peaks_list}{The peak list of all markers}
 }
 \description{
 The function to set allele probabilities

@@ -166,26 +166,31 @@ bool judge_gtc(std::vector<double> gtc,
 }
 
 // [[Rcpp::export]]
-std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<std::vector<double>> cand_gts,
-                                               std::vector<std::vector<int>> index_gtc_cpp,
-                                               std::vector<double> peaks,
-                                               std::vector<double> heights,
-                                               std::vector<bool> sr_consider,
-                                               double bsr_fltr,
-                                               double fsr_fltr,
-                                               double dsr_fltr,
-                                               double m2sr_fltr,
-                                               double phr_fltr,
-                                               double st){
+std::vector<std::vector<int>> judge_gtc_mk(std::vector<std::vector<double>> cand_gts,
+                                           std::vector<std::vector<int>> index_gtc_cpp,
+                                           std::vector<double> peaks,
+                                           std::vector<std::vector<double>> heights_all_rep,
+                                           std::vector<bool> sr_consider,
+                                           double bsr_fltr,
+                                           double fsr_fltr,
+                                           double dsr_fltr,
+                                           double m2sr_fltr,
+                                           double phr_fltr,
+                                           double st){
   int n_gt_comb = index_gtc_cpp.size();
   int hnc = index_gtc_cpp.at(0).size();
   int n_peak = peaks.size();
+  int n_rep = heights_all_rep.size();
 
   std::vector<double> peaks_rm99 = peaks;
   peaks_rm99.erase(peaks_rm99.begin() + n_peak - 1);
 
-  std::vector<double> heights_rm99 = heights;
-  heights_rm99.erase(heights_rm99.begin() + n_peak - 1);
+  std::vector<std::vector<double>> heights_all_rep_rm99;
+  for(int i = 0; i < n_rep; ++i){
+    std::vector<double> heights_rm99 = heights_all_rep.at(i);
+    heights_rm99.erase(heights_rm99.begin() + n_peak - 1);
+    heights_all_rep_rm99.at(i) = heights_rm99;
+  }
 
   std::vector<std::vector<int>> index_gtc_adopt_cpp;
 
@@ -199,7 +204,16 @@ std::vector<std::vector<int>> judge_gt_comb_mk(std::vector<std::vector<double>> 
       gtc[2 * j + 1] = gt[1];
     }
 
-    bool adopt_gtc = judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st);
+    bool adopt_gtc = true;
+    for(int j = 0; j < n_rep; ++j){
+      std::vector<double> heights = heights_all_rep.at(j);
+      std::vector<double> heights_rm99 = heights_all_rep_rm99.at(j);
+      adopt_gtc = judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st);
+      if(!adopt_gtc){
+        break;
+      }
+    }
+
     if(adopt_gtc){
       index_gtc_adopt_cpp.push_back(std::vector<int>(hnc));
       for(int k = 0; k < hnc; ++k){

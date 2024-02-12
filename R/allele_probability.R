@@ -44,10 +44,10 @@ add_al_prob_drop <- function(al_csp, pop_al, pop_prob){
 #' @description The function to set allele probabilities
 #' @param markers_auto A vector of the autosomal markers
 #' @param dt_af The data.table of the allele frequencies
-#' @param peaks_list The peak list of all samples
+#' @param peaks_list The peak list of all markers
 set_al_prob <- function(markers_auto, dt_af, peaks_list){
   n_mk <- length(markers_auto)
-  n_sn_csp <- length(peaks_list)
+  n_sn_csp <- length(peaks_list[[1]])
   pop_al_all <- dt_af[, Allele]
   pop_al_list <- pop_prob_list <- vector(mode = "list", length = n_mk)
   for(i in 1:n_mk){
@@ -55,16 +55,8 @@ set_al_prob <- function(markers_auto, dt_af, peaks_list){
     pop_freq <- as.numeric(unlist(dt_af[, mk, with = FALSE]))
     pop_al <- pop_al_all[!is.na(pop_freq)]
     pop_freq <- pop_freq[!is.na(pop_freq)]
-
-    al_csp <- numeric(0)
-    peaks_all_rep <- numeric(0)
-    for(j in 1:n_sn_csp){
-      peaks <- peaks_list[[j]][[mk]]
-      peaks_rm99 <- setdiff(peaks, 99)
-      al_csp <- c(al_csp, peaks_rm99)
-      peaks_all_rep <- c(peaks_all_rep, peaks)
-    }
-    peaks_all_rep <- sort(unique(peaks_all_rep))
+    peaks <- peaks_list[[mk]]
+    al_csp <- setdiff(peaks, 99)
 
     unobs_al <- setdiff(al_csp, pop_al)
 
@@ -73,7 +65,7 @@ set_al_prob <- function(markers_auto, dt_af, peaks_list){
     pop_al <- tmp$pop_al
     pop_prob <- tmp$pop_prob
 
-    index_target <- match(peaks_all_rep, pop_al)
+    index_target <- match(peaks, pop_al)
     pop_al_list[[i]] <- pop_al[index_target]
     pop_prob_list[[i]] <- pop_prob[index_target]
   }
