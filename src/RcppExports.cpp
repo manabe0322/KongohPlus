@@ -332,6 +332,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// gamma_cdf
+double gamma_cdf(double threshold, double alpha, double beta);
+RcppExport SEXP _KongohPlus_gamma_cdf(SEXP thresholdSEXP, SEXP alphaSEXP, SEXP betaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
+    Rcpp::traits::input_parameter< double >::type alpha(alphaSEXP);
+    Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
+    rcpp_result_gen = Rcpp::wrap(gamma_cdf(threshold, alpha, beta));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calc_lpd
 double calc_lpd(double oph, double eph, int at, double beta);
 RcppExport SEXP _KongohPlus_calc_lpd(SEXP ophSEXP, SEXP ephSEXP, SEXP atSEXP, SEXP betaSEXP) {
@@ -378,21 +391,21 @@ BEGIN_RCPP
 END_RCPP
 }
 // calc_lpd_gtc_all
-std::vector<std::vector<double>> calc_lpd_gtc_all(int n_cspmk, std::vector<int> n_dedup_1_cspmk, std::vector<double> oph_dedup_1, std::vector<double> eph_dedup_1, std::vector<int> at_cspmk, double beta, std::vector<int> n_peak_cspmk, std::vector<int> n_gtc_cspmk, std::vector<std::vector<int>> index_dedup_2);
-RcppExport SEXP _KongohPlus_calc_lpd_gtc_all(SEXP n_cspmkSEXP, SEXP n_dedup_1_cspmkSEXP, SEXP oph_dedup_1SEXP, SEXP eph_dedup_1SEXP, SEXP at_cspmkSEXP, SEXP betaSEXP, SEXP n_peak_cspmkSEXP, SEXP n_gtc_cspmkSEXP, SEXP index_dedup_2SEXP) {
+std::vector<std::vector<double>> calc_lpd_gtc_all(int n_mk, std::vector<int> n_dedup_1_mk, std::vector<double> oph_dedup_1, std::vector<double> eph_dedup_1, std::vector<int> at_mk, double beta, std::vector<int> n_peak_mk, std::vector<int> n_gtc_mk, std::vector<std::vector<int>> index_dedup_2);
+RcppExport SEXP _KongohPlus_calc_lpd_gtc_all(SEXP n_mkSEXP, SEXP n_dedup_1_mkSEXP, SEXP oph_dedup_1SEXP, SEXP eph_dedup_1SEXP, SEXP at_mkSEXP, SEXP betaSEXP, SEXP n_peak_mkSEXP, SEXP n_gtc_mkSEXP, SEXP index_dedup_2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type n_cspmk(n_cspmkSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type n_dedup_1_cspmk(n_dedup_1_cspmkSEXP);
+    Rcpp::traits::input_parameter< int >::type n_mk(n_mkSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type n_dedup_1_mk(n_dedup_1_mkSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type oph_dedup_1(oph_dedup_1SEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type eph_dedup_1(eph_dedup_1SEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type at_cspmk(at_cspmkSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type at_mk(at_mkSEXP);
     Rcpp::traits::input_parameter< double >::type beta(betaSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type n_peak_cspmk(n_peak_cspmkSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type n_gtc_cspmk(n_gtc_cspmkSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type n_peak_mk(n_peak_mkSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type n_gtc_mk(n_gtc_mkSEXP);
     Rcpp::traits::input_parameter< std::vector<std::vector<int>> >::type index_dedup_2(index_dedup_2SEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_lpd_gtc_all(n_cspmk, n_dedup_1_cspmk, oph_dedup_1, eph_dedup_1, at_cspmk, beta, n_peak_cspmk, n_gtc_cspmk, index_dedup_2));
+    rcpp_result_gen = Rcpp::wrap(calc_lpd_gtc_all(n_mk, n_dedup_1_mk, oph_dedup_1, eph_dedup_1, at_mk, beta, n_peak_mk, n_gtc_mk, index_dedup_2));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -421,6 +434,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_gtc_prob_mk", (DL_FUNC) &_KongohPlus_calc_gtc_prob_mk, 7},
     {"_KongohPlus_calc_eph_dedup_1_cpp", (DL_FUNC) &_KongohPlus_calc_eph_dedup_1_cpp, 8},
     {"_KongohPlus_gamma_pdf", (DL_FUNC) &_KongohPlus_gamma_pdf, 3},
+    {"_KongohPlus_gamma_cdf", (DL_FUNC) &_KongohPlus_gamma_cdf, 3},
     {"_KongohPlus_calc_lpd", (DL_FUNC) &_KongohPlus_calc_lpd, 4},
     {"_KongohPlus_calc_lpd_mk", (DL_FUNC) &_KongohPlus_calc_lpd_mk, 4},
     {"_KongohPlus_calc_lpd_gtc", (DL_FUNC) &_KongohPlus_calc_lpd_gtc, 7},

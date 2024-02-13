@@ -43,26 +43,26 @@ functions{
 
 data{
   int Hnc;
-  int N_Cspmk;
+  int N_Mk;
 
   int N_Eph_Base_All;
   vector[N_Eph_Base_All] Eph_Base;
 
   int N_Dedup_1_All;
-  array[N_Cspmk] int N_Dedup_1_Cspmk;
+  array[N_Mk] int N_Dedup_1_Mk;
   array[N_Dedup_1_All, 2 * Hnc] int Index_Dedup_1;
   vector[N_Dedup_1_All] Size_Dedup_1;
   vector[N_Dedup_1_All] Oph_Dedup_1;
 
   int N_Dedup_2_All;
-  array[N_Cspmk] int N_Dedup_2_Cspmk;
+  array[N_Mk] int N_Dedup_2_Mk;
   array[N_Dedup_2_All] int Index_Dedup_2;
 
-  array[N_Cspmk] int N_Peak_Cspmk;
-  array[N_Cspmk] int N_Gtc_Cspmk;
-  vector[sum(N_Gtc_Cspmk)] Gtc_Logprob_All;
+  array[N_Mk] int N_Peak_Mk;
+  array[N_Mk] int N_Gtc_Mk;
+  vector[sum(N_Gtc_Mk)] Gtc_Logprob_All;
 
-  vector[N_Cspmk] At_Cspmk;
+  vector[N_Mk] At_Mk;
   real Beta;
 }
 
@@ -80,17 +80,17 @@ model{
   int eph_start = 1;
   int dedup2_start = 1;
   int gtc_start = 1;
-  for(i in 1:N_Cspmk){
-    int n_dedup_eph = N_Dedup_1_Cspmk[i];
+  for(i in 1:N_Mk){
+    int n_dedup_eph = N_Dedup_1_Mk[i];
     vector[n_dedup_eph] eph_mk = eph_dedup_1[eph_start:(eph_start + n_dedup_eph - 1)];
     vector[n_dedup_eph] oph_mk = Oph_Dedup_1[eph_start:(eph_start + n_dedup_eph - 1)];
-    real at = At_Cspmk[i];
+    real at = At_Mk[i];
 
     vector[n_dedup_eph] lpd_mk = calc_lpd_mk(n_dedup_eph, oph_mk, eph_mk, at, Beta);
 
-    int n_dedup_2 = N_Dedup_2_Cspmk[i];
-    int n_gtc = N_Gtc_Cspmk[i];
-    int n_peak = N_Peak_Cspmk[i];
+    int n_dedup_2 = N_Dedup_2_Mk[i];
+    int n_gtc = N_Gtc_Mk[i];
+    int n_peak = N_Peak_Mk[i];
     array[n_dedup_2] int index_dedup_2_mk = Index_Dedup_2[dedup2_start:(dedup2_start + n_dedup_2 - 1)];
     vector[n_gtc] gtc_logprob_mk = Gtc_Logprob_All[gtc_start:(gtc_start + n_gtc - 1)];
     vector[n_gtc] lpd_gtc = calc_lpd_gtc(n_peak, n_gtc, index_dedup_2_mk, lpd_mk, gtc_logprob_mk);

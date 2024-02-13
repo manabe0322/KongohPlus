@@ -30,6 +30,12 @@ double gamma_pdf(double value, double alpha, double beta){
 }
 
 // [[Rcpp::export]]
+double gamma_cdf(double threshold, double alpha, double beta){
+  boost::math::gamma_distribution<double> p(alpha, 1 / beta);
+  return(cdf(p, threshold));
+}
+
+// [[Rcpp::export]]
 double calc_lpd(double oph, double eph, int at, double beta){
   double lpd = 0;
   double alpha = eph * beta;
@@ -37,11 +43,7 @@ double calc_lpd(double oph, double eph, int at, double beta){
     if(oph >= at){
       lpd = log(gamma_pdf(oph, alpha, beta));
     }else{
-      double pd_drop = 0;
-      for(int i = 1; i < at; ++i){
-        pd_drop += gamma_pdf(i, alpha, beta);
-      }
-      lpd = log(pd_drop / (at - 1));
+      lpd = log(gamma_cdf(at, alpha, beta));
     }
   }
   return(lpd);
@@ -83,24 +85,24 @@ std::vector<double> calc_lpd_gtc(std::vector<double> oph_mk,
 }
 
 // [[Rcpp::export]]
-std::vector<std::vector<double>> calc_lpd_gtc_all(int n_cspmk,
-                                                  std::vector<int> n_dedup_1_cspmk,
+std::vector<std::vector<double>> calc_lpd_gtc_all(int n_mk,
+                                                  std::vector<int> n_dedup_1_mk,
                                                   std::vector<double> oph_dedup_1,
                                                   std::vector<double> eph_dedup_1,
-                                                  std::vector<int> at_cspmk,
+                                                  std::vector<int> at_mk,
                                                   double beta,
-                                                  std::vector<int> n_peak_cspmk,
-                                                  std::vector<int> n_gtc_cspmk,
+                                                  std::vector<int> n_peak_mk,
+                                                  std::vector<int> n_gtc_mk,
                                                   std::vector<std::vector<int>> index_dedup_2){
-  std::vector<std::vector<double>> lpd_gtc_all(n_cspmk, std::vector<double>());
+  std::vector<std::vector<double>> lpd_gtc_all(n_mk, std::vector<double>());
   int eph_start = 0;
-  for(int i = 0; i < n_cspmk; ++i){
-    int n_dedup_eph = n_dedup_1_cspmk[i];
+  for(int i = 0; i < n_mk; ++i){
+    int n_dedup_eph = n_dedup_1_mk[i];
     std::vector<double> oph_mk = extract_subvec_double(oph_dedup_1, eph_start, eph_start + n_dedup_eph - 1);
     std::vector<double> eph_mk = extract_subvec_double(eph_dedup_1, eph_start, eph_start + n_dedup_eph - 1);
-    int at = at_cspmk[i];
-    int n_peak = n_peak_cspmk[i];
-    int n_gtc = n_gtc_cspmk[i];
+    int at = at_mk[i];
+    int n_peak = n_peak_mk[i];
+    int n_gtc = n_gtc_mk[i];
 
     std::vector<int> index_dedup_2_mk = index_dedup_2.at(i);
     lpd_gtc_all.at(i) = calc_lpd_gtc(oph_mk, eph_mk, at, beta, n_peak, n_gtc, index_dedup_2_mk);

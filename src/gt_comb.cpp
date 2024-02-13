@@ -185,7 +185,7 @@ std::vector<std::vector<int>> judge_gtc_mk(std::vector<std::vector<double>> cand
   std::vector<double> peaks_rm99 = peaks;
   peaks_rm99.erase(peaks_rm99.begin() + n_peak - 1);
 
-  std::vector<std::vector<double>> heights_all_rep_rm99;
+  std::vector<std::vector<double>> heights_all_rep_rm99(n_rep);
   for(int i = 0; i < n_rep; ++i){
     std::vector<double> heights_rm99 = heights_all_rep.at(i);
     heights_rm99.erase(heights_rm99.begin() + n_peak - 1);

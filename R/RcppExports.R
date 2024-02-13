@@ -93,6 +93,10 @@ gamma_pdf <- function(value, alpha, beta) {
     .Call(`_KongohPlus_gamma_pdf`, value, alpha, beta)
 }
 
+gamma_cdf <- function(threshold, alpha, beta) {
+    .Call(`_KongohPlus_gamma_cdf`, threshold, alpha, beta)
+}
+
 calc_lpd <- function(oph, eph, at, beta) {
     .Call(`_KongohPlus_calc_lpd`, oph, eph, at, beta)
 }
@@ -105,7 +109,7 @@ calc_lpd_gtc <- function(oph_mk, eph_mk, at, beta, n_peak, n_gtc, index_dedup_2_
     .Call(`_KongohPlus_calc_lpd_gtc`, oph_mk, eph_mk, at, beta, n_peak, n_gtc, index_dedup_2_mk)
 }
 
-calc_lpd_gtc_all <- function(n_cspmk, n_dedup_1_cspmk, oph_dedup_1, eph_dedup_1, at_cspmk, beta, n_peak_cspmk, n_gtc_cspmk, index_dedup_2) {
-    .Call(`_KongohPlus_calc_lpd_gtc_all`, n_cspmk, n_dedup_1_cspmk, oph_dedup_1, eph_dedup_1, at_cspmk, beta, n_peak_cspmk, n_gtc_cspmk, index_dedup_2)
+calc_lpd_gtc_all <- function(n_mk, n_dedup_1_mk, oph_dedup_1, eph_dedup_1, at_mk, beta, n_peak_mk, n_gtc_mk, index_dedup_2) {
+    .Call(`_KongohPlus_calc_lpd_gtc_all`, n_mk, n_dedup_1_mk, oph_dedup_1, eph_dedup_1, at_mk, beta, n_peak_mk, n_gtc_mk, index_dedup_2)
 }
 
