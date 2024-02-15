@@ -44,6 +44,8 @@ functions{
 data{
   int Hnc;
   int N_Mk;
+  real Ltph;
+  real Htph;
 
   int N_Eph_Base_All;
   vector[N_Eph_Base_All] Eph_Base;
@@ -67,7 +69,7 @@ data{
 }
 
 parameters{
-  real<lower = 1500, upper = 6000> tph;
+  real<lower = Ltph, upper = Htph> tph;
   simplex[Hnc] mp;
   vector<lower = -0.05, upper = 0>[Hnc] deg;
 }

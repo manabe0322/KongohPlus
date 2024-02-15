@@ -60,6 +60,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   gtc_all <- vector(mode = "list", length = n_mk)
 
   sumup_index_dedup_1 <- 0
+  max_tph <- 0
   for(i in 1:n_mk){
     # Extract peak data of one marker
     mk <- markers_auto[i]
@@ -129,11 +130,17 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
       size_tmp <- rep(sizes, n_gtc)
       size_dedup_1_mk <- size_tmp[bool_duplicated]
 
-      # Observed peak heights for de-duplicated objects (pattern 1)
+      # Observed peak heights for de-duplicated objects (pattern 1) and keep the total peak heights of the current marker for determining the range of the parameter 'tph'
       oph_dedup_1_mk <- numeric(0)
       for(k in 1:n_rep){
-        oph_tmp <- rep(heights_all_rep[[k]], n_gtc)
+        heights_one_rep <- heights_all_rep[[k]]
+        oph_tmp <- rep(heights_one_rep, n_gtc)
         oph_dedup_1_mk <- c(oph_dedup_1_mk, oph_tmp[bool_duplicated])
+
+        tph_mk <- sum(heights_one_rep)
+        if(tph_mk > max_tph){
+          max_tph <- tph_mk
+        }
       }
 
       # Index for deduplication (pattern 2: After summation of the eph_base)
@@ -162,7 +169,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   ## check n_gt_comb_all == 0
 
   if(n_rep == 1){
-    data_list_main <- list(Hnc = hnc, N_Mk = n_mk,
+    data_list_main <- list(Hnc = hnc, N_Mk = n_mk, Ltph = max_tph / 4, Htph = max_tph,
                            N_Eph_Base_All = sum(n_eph_base_mk), Eph_Base = unlist(eph_base),
                            N_Dedup_1_All = sum(n_dedup_1_mk), N_Dedup_1_Mk = n_dedup_1_mk, Index_Dedup_1 = index_dedup_1, Size_Dedup_1 = unlist(size_dedup_1), Oph_Dedup_1 = unlist(oph_dedup_1),
                            N_Dedup_2_All = sum(n_dedup_2_mk), N_Dedup_2_Mk = n_dedup_2_mk, Index_Dedup_2 = unlist(index_dedup_2),
