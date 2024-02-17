@@ -29,6 +29,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   dsr_fltr <- gtc_fltr_value[gtc_fltr_type == "DSR"]
   m2sr_fltr <- gtc_fltr_value[gtc_fltr_type == "M2SR"]
   phr_fltr <- gtc_fltr_value[gtc_fltr_type == "PHR"]
+  mr_fltr <- gtc_fltr_value[gtc_fltr_type == "MR"]
   st <- gtc_fltr_value[gtc_fltr_type == "ST"]
 
   # Extract methods to estimate genotype probabilities
@@ -104,7 +105,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     index_gtc_cpp <- asplit(index_gtc_cpp, 1)
 
     # Indices of genotypes of each contributor in each adopted genotype combination
-    index_gtc_adopt_cpp <- judge_gtc_mk(cand_gt, index_gtc_cpp, peaks, heights_all_rep, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st)
+    index_gtc_adopt_cpp <- judge_gtc_mk(cand_gt, index_gtc_cpp, peaks, heights_all_rep, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, mr_fltr, st)
     n_gtc <- length(index_gtc_adopt_cpp)
 
     if(n_gtc != 0){
@@ -116,7 +117,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
       gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = c(0, 0), n_obs)
 
       # Connect eph_base and genotype combinations
-      index_eph_gtc_cpp <- connect_eph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks)
+      index_eph_gtc_cpp <- connect_eph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks, sr_consider)
       index_eph_gtc <- matrix(unlist(index_eph_gtc_cpp) + 1, ncol = 2 * hnc, byrow = TRUE) # R and stan index
       index_eph_gtc[which(index_eph_gtc == 0, arr.ind = TRUE)] <- 5 * n_peak + 1 # for density = 0
 
@@ -168,10 +169,12 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   ## check n_gt_comb_all == 0
 
+  min_size <- min(unlist(sizes_list))
+
   if(n_rep == 1){
-    data_list_main <- list(Hnc = hnc, N_Mk = n_mk, Ltph = max_tph / 4, Htph = max_tph,
+    data_list_main <- list(Hnc = hnc, N_Mk = n_mk, Ltph = max_tph / 4, Htph = max_tph / 2,
                            N_Eph_Base_All = sum(n_eph_base_mk), Eph_Base = unlist(eph_base),
-                           N_Dedup_1_All = sum(n_dedup_1_mk), N_Dedup_1_Mk = n_dedup_1_mk, Index_Dedup_1 = index_dedup_1, Size_Dedup_1 = unlist(size_dedup_1), Oph_Dedup_1 = unlist(oph_dedup_1),
+                           N_Dedup_1_All = sum(n_dedup_1_mk), N_Dedup_1_Mk = n_dedup_1_mk, Index_Dedup_1 = t(index_dedup_1), Size_Dedup_1 = unlist(size_dedup_1) - min_size, Oph_Dedup_1 = unlist(oph_dedup_1),
                            N_Dedup_2_All = sum(n_dedup_2_mk), N_Dedup_2_Mk = n_dedup_2_mk, Index_Dedup_2 = unlist(index_dedup_2),
                            N_Peak_Mk = n_peak_mk, N_Gtc_Mk = n_gtc_mk, Gtc_Logprob_All = unlist(gtc_logprob_all),
                            At_Mk = at_mk, Beta = gamma_beta)

@@ -3,10 +3,10 @@ functions{
     vector[n_dedup_1_all] eph_dedup_1;
     eph_dedup_1 = rep_vector(0, n_dedup_1_all);
     for(i in 1:hnc){
+      vector[n_dedup_1_all] eph_base_c1 = eph_base[index_dedup_1[2 * i - 1, ]] + eph_base[index_dedup_1[2 * i, ]];
       real tph_c1 = tph * mp[i];
       real deg_c1 = deg[i];
-      eph_dedup_1 += eph_base[index_dedup_1[, 2 * i - 1]] * tph_c1 .* exp(deg_c1 * size_dedup_1);
-      eph_dedup_1 += eph_base[index_dedup_1[, 2 * i]] * tph_c1 .* exp(deg_c1 * size_dedup_1);
+      eph_dedup_1 += eph_base_c1 * tph_c1 .* exp(deg_c1 * size_dedup_1);
     }
     return eph_dedup_1;
   }
@@ -52,7 +52,7 @@ data{
 
   int N_Dedup_1_All;
   array[N_Mk] int N_Dedup_1_Mk;
-  array[N_Dedup_1_All, 2 * Hnc] int Index_Dedup_1;
+  array[2 * Hnc, N_Dedup_1_All] int Index_Dedup_1;
   vector[N_Dedup_1_All] Size_Dedup_1;
   vector[N_Dedup_1_All] Oph_Dedup_1;
 

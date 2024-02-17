@@ -139,6 +139,79 @@ bool judge_gtc_phr(std::vector<double> gtc,
 }
 
 // [[Rcpp::export]]
+bool judge_gtc_mr(std::vector<double> gtc,
+                  std::vector<double> peaks,
+                  std::vector<double> heights,
+                  double mr_fltr,
+                  double st){
+  bool adopt_gtc = true;
+  int hnc = gtc.size() / 2;
+  std::vector<int> index_gtc_all(2 * hnc);
+  std::iota(index_gtc_all.begin(), index_gtc_all.end(), 0);
+  std::vector<double> uniq_heights;
+  std::vector<bool> pass_st;
+
+  for(int i = 0; i < hnc; ++i){
+    double al_1 = gtc[2 * i];
+    double al_2 = gtc[2 * i + 1];
+
+    std::vector<int> index_gtc_current(2);
+    index_gtc_current[0] = 2 * i;
+    index_gtc_current[1] = 2 * i + 1;
+    std::vector<int> index_gtc_other = setdiff_int(index_gtc_all, index_gtc_current);
+
+    int n_gtc_other = 2 * hnc - 2;
+    std::vector<double> gtc_other(n_gtc_other);
+    for(int j = 0; j < n_gtc_other; ++j){
+      gtc_other[j] = gtc[index_gtc_other[j]];
+    }
+
+    int index_gtc_other_1 = find_index_double(al_1, gtc_other);
+    int index_gtc_other_2 = find_index_double(al_2, gtc_other);
+
+    double n_divide = 0;
+    std::vector<double> uniq_h_per_al(2, 0);
+    if(index_gtc_other_1 == -1){
+      int index_peak_1 = find_index_double(al_1, peaks);
+      uniq_h_per_al[0] = heights[index_peak_1];
+      n_divide += 1;
+    }
+    if(index_gtc_other_2 == -1){
+      if(al_1 != al_2){
+        int index_peak_2 = find_index_double(al_2, peaks);
+        uniq_h_per_al[1] = heights[index_peak_2];
+      }
+      n_divide += 1;
+    }
+
+    if(n_divide != 0){
+      double uniq_h = accumulate(uniq_h_per_al.begin(), uniq_h_per_al.end(), 0.0) / n_divide;
+      uniq_heights.push_back(uniq_h);
+      pass_st.push_back(uniq_h >= st);
+    }
+  }
+
+  int n_uniq = uniq_heights.size();
+  if(n_uniq >= 2){
+    for(int i = 0; i < (n_uniq - 1); ++i){
+      if(pass_st[i]){
+        double uniq_heights_target = uniq_heights[i];
+        std::vector<double> uniq_heights_others = extract_subvec_double(uniq_heights, i + 1, n_uniq);
+        int n_others = uniq_heights_others.size();
+        for(int j = 0; j < n_others; ++j){
+          double mr = uniq_heights_target / uniq_heights_others[j];
+          if(mr < mr_fltr){
+            adopt_gtc = false;
+            break;
+          }
+        }
+      }
+    }
+  }
+  return(adopt_gtc);
+}
+
+// [[Rcpp::export]]
 bool judge_gtc(std::vector<double> gtc,
                std::vector<double> peaks,
                std::vector<double> heights,
@@ -150,6 +223,7 @@ bool judge_gtc(std::vector<double> gtc,
                double dsr_fltr,
                double m2sr_fltr,
                double phr_fltr,
+               double mr_fltr,
                double st){
   std::vector<double> cand_peak = make_cand_peak(gtc, sr_consider);
   bool adopt_gtc = is_element_all_vec_double(peaks_rm99, cand_peak);
@@ -159,6 +233,9 @@ bool judge_gtc(std::vector<double> gtc,
     adopt_gtc = judge_gtc_sr(gtc, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr);
     if(adopt_gtc){
       adopt_gtc = judge_gtc_phr(gtc, peaks, heights, phr_fltr, st);
+//      if(adopt_gtc){
+//        adopt_gtc = judge_gtc_mr(gtc, peaks, heights, mr_fltr, st);
+//      }
     }
   }
 
@@ -176,6 +253,7 @@ std::vector<std::vector<int>> judge_gtc_mk(std::vector<std::vector<double>> cand
                                            double dsr_fltr,
                                            double m2sr_fltr,
                                            double phr_fltr,
+                                           double mr_fltr,
                                            double st){
   int n_gt_comb = index_gtc_cpp.size();
   int hnc = index_gtc_cpp.at(0).size();
@@ -208,7 +286,7 @@ std::vector<std::vector<int>> judge_gtc_mk(std::vector<std::vector<double>> cand
     for(int j = 0; j < n_rep; ++j){
       std::vector<double> heights = heights_all_rep.at(j);
       std::vector<double> heights_rm99 = heights_all_rep_rm99.at(j);
-      adopt_gtc = judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, st);
+      adopt_gtc = judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, mr_fltr, st);
       if(!adopt_gtc){
         break;
       }
