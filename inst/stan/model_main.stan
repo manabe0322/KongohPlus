@@ -31,11 +31,10 @@ functions{
     return lpd_mk;
   }
 
-  vector calc_lpd_gtc(int n_peak, int n_gtc, array[] int index_dedup_2_mk, vector lpd_mk, vector gtc_logprob_mk){
+  vector calc_lpd_gtc(int n_gtc, matrix lpd_extract, vector gtc_logprob_mk){
     vector[n_gtc] lpd_gtc;
     for(i in 1:n_gtc){
-      array[n_peak] int index_dedup_gtc = index_dedup_2_mk[(n_peak * (i - 1) + 1):(n_peak * i)];
-      lpd_gtc[i] = sum(lpd_mk[index_dedup_gtc]) + gtc_logprob_mk[i];
+      lpd_gtc[i] = sum(lpd_extract[, i]) + gtc_logprob_mk[i];
     }
     return lpd_gtc;
   }
@@ -94,8 +93,9 @@ model{
     int n_gtc = N_Gtc_Mk[i];
     int n_peak = N_Peak_Mk[i];
     array[n_dedup_2] int index_dedup_2_mk = Index_Dedup_2[dedup2_start:(dedup2_start + n_dedup_2 - 1)];
+    matrix[n_peak, n_gtc] lpd_extract = to_matrix(lpd_mk[index_dedup_2_mk], n_peak, n_gtc);
     vector[n_gtc] gtc_logprob_mk = Gtc_Logprob_All[gtc_start:(gtc_start + n_gtc - 1)];
-    vector[n_gtc] lpd_gtc = calc_lpd_gtc(n_peak, n_gtc, index_dedup_2_mk, lpd_mk, gtc_logprob_mk);
+    vector[n_gtc] lpd_gtc = calc_lpd_gtc(n_gtc, lpd_extract, gtc_logprob_mk);
 
     target += log_sum_exp(lpd_gtc);
 

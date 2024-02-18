@@ -184,7 +184,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     fit_main <- model_main$sample(
       data_list_main,
       iter_warmup = 1200,
-      iter_sampling = 1200,
+      iter_sampling = 300,
       chains = 4,
       parallel_chains = detectCores()
     )
@@ -203,7 +203,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   # Determine the mixture proportions and the degradation parameters
   sampling_data <- as_draws_matrix(draws)
-  mpdeg_final <- determine_mpdeg(sampling_data, n_sampling = 1200, n_chain = 4, upper_rhat = 1.1)
+  mpdeg_final <- determine_mpdeg(sampling_data, n_sampling = 300, n_chain = 4, upper_rhat = 1.1)
   mp <- mpdeg_final$mp_final
   deg <- mpdeg_final$deg_final
 
