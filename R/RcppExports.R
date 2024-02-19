@@ -9,8 +9,8 @@ connect_eph_gtc_mk <- function(cand_gts, index_gt_comb_adopt, peaks, sr_consider
     .Call(`_KongohPlus_connect_eph_gtc_mk`, cand_gts, index_gt_comb_adopt, peaks, sr_consider)
 }
 
-make_eph_base <- function(peaks, bsrs, fsrs, dsrs, m2sr, ae) {
-    .Call(`_KongohPlus_make_eph_base`, peaks, bsrs, fsrs, dsrs, m2sr, ae)
+make_eph_base <- function(peaks, bsrs, fsrs, dsrs, m2sr) {
+    .Call(`_KongohPlus_make_eph_base`, peaks, bsrs, fsrs, dsrs, m2sr)
 }
 
 extract_subvec_int <- function(vec, index_start, index_end) {

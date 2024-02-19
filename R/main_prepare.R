@@ -41,31 +41,31 @@ make_ref_data <- function(dt_ref, markers_auto){
 #'
 #' @description The function to make information on consideration of each stutter
 #' @param markers_auto A vector of the autosomal markers
-#' @param dt_parameter The data.table of the parameters
-make_sr_consider_all_mk <- function(markers_auto, dt_parameter){
-  setkey(dt_parameter, Parameter)
-  dt_parameter_bsr <- dt_parameter["BSR"]
-  dt_parameter_fsr <- dt_parameter["FSR"]
-  dt_parameter_dsr <- dt_parameter["DSR"]
-  dt_parameter_m2sr <- dt_parameter["M2SR"]
+#' @param dt_param The data.table of the parameters
+make_sr_consider_all_mk <- function(markers_auto, dt_param){
+  setkey(dt_param, Parameter)
+  dt_param_bsr <- dt_param["BSR"]
+  dt_param_fsr <- dt_param["FSR"]
+  dt_param_dsr <- dt_param["DSR"]
+  dt_param_m2sr <- dt_param["M2SR"]
 
-  index_mk_bsr <- match(markers_auto, dt_parameter_bsr[, Marker])
-  model_bsr <- dt_parameter_bsr[, Model]
+  index_mk_bsr <- match(markers_auto, dt_param_bsr[, Marker])
+  model_bsr <- dt_param_bsr[, Model]
   model_bsr <- model_bsr[index_mk_bsr]
   sr_consider_all_mk_bsr <- model_bsr != "Not consider"
 
-  index_mk_fsr <- match(markers_auto, dt_parameter_fsr[, Marker])
-  model_fsr <- dt_parameter_fsr[, Model]
+  index_mk_fsr <- match(markers_auto, dt_param_fsr[, Marker])
+  model_fsr <- dt_param_fsr[, Model]
   model_fsr <- model_fsr[index_mk_fsr]
   sr_consider_all_mk_fsr <- model_fsr != "Not consider"
 
-  index_mk_dsr <- match(markers_auto, dt_parameter_dsr[, Marker])
-  model_dsr <- dt_parameter_dsr[, Model]
+  index_mk_dsr <- match(markers_auto, dt_param_dsr[, Marker])
+  model_dsr <- dt_param_dsr[, Model]
   model_dsr <- model_dsr[index_mk_dsr]
   sr_consider_all_mk_dsr <- model_dsr != "Not consider"
 
-  index_mk_m2sr <- match(markers_auto, dt_parameter_m2sr[, Marker])
-  model_m2sr <- dt_parameter_m2sr[, Model]
+  index_mk_m2sr <- match(markers_auto, dt_param_m2sr[, Marker])
+  model_m2sr <- dt_param_m2sr[, Model]
   model_m2sr <- model_m2sr[index_mk_m2sr]
   sr_consider_all_mk_m2sr <- model_m2sr != "Not consider"
 
@@ -76,29 +76,30 @@ make_sr_consider_all_mk <- function(markers_auto, dt_parameter){
   return(sr_consider_all_mk)
 }
 
-#' extract_myu_all_mk
+#' extract_param_all_mk
 #'
 #' @description The function to extract minus 2-nt stutter ratios of all markers
-#' @param param_name A parameter name
+#' @param biparam_name A biological parameter name
+#' @param extparam_name The extracted parameter name
 #' @param markers_auto A vector of the autosomal markers
-#' @param dt_parameter The data.table of the parameters
-extract_myu_all_mk <- function(param_name, markers_auto, dt_parameter){
-  setkey(dt_parameter, Parameter)
-  dt_parameter_target <- dt_parameter[param_name]
-  myu_all_mk <- dt_parameter_target[, Myu]
-  myu_all_mk <- myu_all_mk[match(markers_auto, dt_parameter_target[, Marker])]
-  myu_all_mk[is.na(myu_all_mk)] <- 0
-  names(myu_all_mk) <- markers_auto
-  return(myu_all_mk)
+#' @param dt_param The data.table of the parameters
+extract_param_all_mk <- function(biparam_name, extparam_name, markers_auto, dt_param){
+  setkey(dt_param, Parameter)
+  dt_param_target <- dt_param[biparam_name]
+  val_all_mk <- unlist(dt_param_target[, extparam_name, with = FALSE])
+  val_all_mk <- val_all_mk[match(markers_auto, dt_param_target[, Marker])]
+  val_all_mk[is.na(val_all_mk)] <- 0
+  names(val_all_mk) <- markers_auto
+  return(val_all_mk)
 }
 
 #' extract_beta
 #'
 #' @description The function to extract the beta
-#' @param dt_parameter The data.table of the parameters
-extract_beta <- function(dt_parameter){
-  setkey(dt_parameter, Parameter)
-  dt_gamma <- dt_parameter["Gamma"]
+#' @param dt_param The data.table of the parameters
+extract_beta <- function(dt_param){
+  setkey(dt_param, Parameter)
+  dt_gamma <- dt_param["Gamma"]
   return(as.numeric(dt_gamma[, Beta]))
 }
 

@@ -5,8 +5,7 @@ std::vector<double> make_eph_base(std::vector<double> peaks,
                                   std::vector<double> bsrs,
                                   std::vector<double> fsrs,
                                   std::vector<double> dsrs,
-                                  double m2sr,
-                                  double ae){
+                                  double m2sr){
   int n_peaks = peaks.size();
   std::vector<double> bs_all = calc_bs(peaks);
   std::vector<double> fs_all = calc_fs(peaks);
@@ -19,30 +18,30 @@ std::vector<double> make_eph_base(std::vector<double> peaks,
     double fsr = fsrs[i];
     double dsr = dsrs[i];
 
-    eph_base[i] = ae / (1 + bsr + fsr + dsr + m2sr);
+    eph_base[i] = 1 / (1 + bsr + fsr + dsr + m2sr);
 
     double bs = bs_all[i];
     int index_bs = find_index_double(bs, peaks);
     if(index_bs != -1){
-      eph_base[n_peaks + index_bs] = ae * bsr / (1 + bsr + fsr + dsr + m2sr);
+      eph_base[n_peaks + index_bs] = bsr / (1 + bsr + fsr + dsr + m2sr);
     }
 
     double fs = fs_all[i];
     int index_fs = find_index_double(fs, peaks);
     if(index_fs != -1){
-      eph_base[2 * n_peaks + index_fs] = ae * fsr / (1 + bsr + fsr + dsr + m2sr);
+      eph_base[2 * n_peaks + index_fs] = fsr / (1 + bsr + fsr + dsr + m2sr);
     }
 
     double ds = ds_all[i];
     int index_ds = find_index_double(ds, peaks);
     if(index_ds != -1){
-      eph_base[3 * n_peaks + index_ds] = ae * dsr / (1 + bsr + fsr + dsr + m2sr);
+      eph_base[3 * n_peaks + index_ds] = dsr / (1 + bsr + fsr + dsr + m2sr);
     }
 
     double m2s = m2s_all[i];
     int index_m2s = find_index_double(m2s, peaks);
     if(index_m2s != -1){
-      eph_base[4 * n_peaks + index_m2s] = ae * m2sr / (1 + bsr + fsr + dsr + m2sr);
+      eph_base[4 * n_peaks + index_m2s] = m2sr / (1 + bsr + fsr + dsr + m2sr);
     }
   }
   return(eph_base);

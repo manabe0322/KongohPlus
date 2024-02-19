@@ -17,9 +17,10 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   # Information on consideration of each stutter
   sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_param)
 
-  # Extract the 'myu' parameters for AE and M2SR
-  ae_all_mk <- extract_myu_all_mk("AE", markers_auto, dt_param)
-  m2sr_all_mk <- extract_myu_all_mk("M2SR", markers_auto, dt_param)
+  # Extract parameters for AE and M2SR
+  #ae_myu_mk <- extract_param_all_mk("AE", "Myu", markers_auto, dt_param)
+  #ae_sigma_mk <- extract_param_all_mk("AE", "Sigma", markers_auto, dt_param)
+  m2sr_mk <- extract_param_all_mk("M2SR", "Myu", markers_auto, dt_param)
 
   # Extract filters to remove unrealistic genotype combinations
   gtc_fltr_type <- dt_gtc_fltr[, Type]
@@ -49,6 +50,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   n_eph_base_mk <- rep(0, n_mk)
   eph_base <- vector(mode = "list", length = n_mk)
+  ae_sd_mk <- rep(0, n_mk)
   n_dedup_1_mk <- rep(0, n_mk)
   index_dedup_1 <- NULL
   size_dedup_1 <- vector(mode = "list", length = n_mk)
@@ -84,15 +86,14 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     fsrs[is.na(fsrs)] <- 0
     dsrs <- alcor_dsrs[index_alcor_peaks]
     dsrs[is.na(dsrs)] <- 0
-    m2sr <- m2sr_all_mk[mk]
-    ae <- ae_all_mk[mk]
+    m2sr <- m2sr_mk[mk]
 
     # Extract allele probabilities
     pop_al <- pop_al_list[[mk]]
     pop_prob <- pop_prob_list[[mk]]
 
     # The base of the expected peak heights
-    eph_base_mk <- make_eph_base(peaks, bsrs, fsrs, dsrs, m2sr, ae)
+    eph_base_mk <- make_eph_base(peaks, bsrs, fsrs, dsrs, m2sr)
     n_eph_base <- length(eph_base_mk)
 
     # All candidate genotypes of one contributor
@@ -131,14 +132,17 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
       size_tmp <- rep(sizes, n_gtc)
       size_dedup_1_mk <- size_tmp[bool_duplicated]
 
-      # Observed peak heights for de-duplicated objects (pattern 1) and keep the total peak heights of the current marker for determining the range of the parameter 'tph'
+      # Deal with heights for the following reasons
+      ## Observed peak heights for de-duplicated objects (pattern 1)
+      ## Keep the total peak heights of the current marker for determining the range of the parameter 'tph'
       oph_dedup_1_mk <- numeric(0)
+      tph_mk_all_rep <- rep(0, n_rep)
       for(k in 1:n_rep){
         heights_one_rep <- heights_all_rep[[k]]
         oph_tmp <- rep(heights_one_rep, n_gtc)
         oph_dedup_1_mk <- c(oph_dedup_1_mk, oph_tmp[bool_duplicated])
 
-        tph_mk <- sum(heights_one_rep)
+        tph_mk_all_rep[k] <- tph_mk <- sum(heights_one_rep)
         if(tph_mk > max_tph){
           max_tph <- tph_mk
         }
@@ -200,6 +204,9 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   fit_main_summary <- fit_main$summary()
   tph <- fit_main_summary$median[which(fit_main_summary$variable == "tph")]
   rhat_lp <- fit_main_summary$rhat[which(fit_main_summary$variable == "lp__")]
+
+  ae_estimate <- fit_main_summary$median[which(is.element(fit_main_summary$variable, c("ae[1]", "ae[2]", "ae[3]", "ae[4]", "ae[5]", "ae[6]", "ae[7]", "ae[8]", "ae[9]", "ae[10]",
+                                                                                       "ae[11]", "ae[12]", "ae[13]", "ae[14]", "ae[15]", "ae[16]", "ae[17]", "ae[18]", "ae[19]", "ae[20]", "ae[21]")))]
 
   # Determine the mixture proportions and the degradation parameters
   sampling_data <- as_draws_matrix(draws)
