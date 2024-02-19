@@ -4,10 +4,10 @@
 \alias{extract_beta}
 \title{extract_beta}
 \usage{
-extract_beta(dt_parameter)
+extract_beta(dt_param)
 }
 \arguments{
-\item{dt_parameter}{The data.table of the parameters}
+\item{dt_param}{The data.table of the parameters}
 }
 \description{
 The function to extract the beta

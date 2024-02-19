@@ -4,12 +4,12 @@
 \alias{make_sr_consider_all_mk}
 \title{make_sr_consider_all_mk}
 \usage{
-make_sr_consider_all_mk(markers_auto, dt_parameter)
+make_sr_consider_all_mk(markers_auto, dt_param)
 }
 \arguments{
 \item{markers_auto}{A vector of the autosomal markers}
 
-\item{dt_parameter}{The data.table of the parameters}
+\item{dt_param}{The data.table of the parameters}
 }
 \description{
 The function to make information on consideration of each stutter
