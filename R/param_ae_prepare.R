@@ -25,7 +25,7 @@ get_ae_data <- function(height_list){
 
     # Calculate the locus-specific amplification efficiency
     for(i in 1:n_sample_use){
-      ae_data[i, ] <- height_ae[i, ] / mean(height_ae[i, ])
+      ae_data[i, ] <- height_ae[i, ] / sum(height_ae[i, ])
     }
   }else{
     ae_data <- height_ae
