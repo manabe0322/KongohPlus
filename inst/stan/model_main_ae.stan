@@ -48,6 +48,7 @@ data{
 
   int N_Eph_Base_All;
   vector[N_Eph_Base_All] Eph_Base;
+  vector[N_Mk] AE_Alpha_Mk;
 
   int N_Dedup_1_All;
   array[N_Mk] int N_Dedup_1_Mk;
@@ -76,7 +77,7 @@ parameters{
 
 model{
   mp ~ dirichlet(rep_vector(1, Hnc));
-  ae ~ dirichlet(rep_vector(1, N_Mk));
+  ae ~ dirichlet(AE_Alpha_Mk);
 
   vector[N_Dedup_1_All] eph_dedup_1 = calc_eph_dedup_1(tph, mp, deg, Hnc, N_Dedup_1_All, Eph_Base, Index_Dedup_1, Size_Dedup_1);
 

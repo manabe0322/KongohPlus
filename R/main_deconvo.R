@@ -18,6 +18,11 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_param)
 
   # Extract parameters for AE and M2SR
+  ae_alpha_mk <- c(19.348500, 16.487050, 14.815050, 17.627450, 11.555000,
+                   23.640450, 19.523250, 23.413250,
+                   15.579200, 12.634250, 8.308645, 15.639650,
+                   16.623350, 18.282100, 22.134350, 19.109550, 21.268600,
+                   21.576100, 18.243450, 16.630100, 12.951150)
   #ae_myu_mk <- extract_param_all_mk("AE", "Myu", markers_auto, dt_param)
   #ae_sigma_mk <- extract_param_all_mk("AE", "Sigma", markers_auto, dt_param)
   m2sr_mk <- extract_param_all_mk("M2SR", "Myu", markers_auto, dt_param)
@@ -177,7 +182,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   if(n_rep == 1){
     data_list_main <- list(Hnc = hnc, N_Mk = n_mk, Ltph = max_tph / 4, Htph = max_tph / 2,
-                           N_Eph_Base_All = sum(n_eph_base_mk), Eph_Base = unlist(eph_base),
+                           N_Eph_Base_All = sum(n_eph_base_mk), Eph_Base = unlist(eph_base), AE_Alpha_Mk = ae_alpha_mk,
                            N_Dedup_1_All = sum(n_dedup_1_mk), N_Dedup_1_Mk = n_dedup_1_mk, Index_Dedup_1 = t(index_dedup_1), Size_Dedup_1 = unlist(size_dedup_1) - min_size, Oph_Dedup_1 = unlist(oph_dedup_1),
                            N_Dedup_2_All = sum(n_dedup_2_mk), N_Dedup_2_Mk = n_dedup_2_mk, Index_Dedup_2 = unlist(index_dedup_2),
                            N_Peak_Mk = n_peak_mk, N_Gtc_Mk = n_gtc_mk, Gtc_Logprob_All = unlist(gtc_logprob_all),
@@ -195,6 +200,8 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   }else{
 
   }
+
+  test <- fit_main$label.switching(pars = paste0("mp[", 1:hnc, "]"), criterion = "median", decreasing = TRUE)
 
   # Trace plot
   draws <- fit_main$draws()

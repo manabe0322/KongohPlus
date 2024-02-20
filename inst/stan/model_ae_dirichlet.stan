@@ -1,7 +1,7 @@
 data{
   int N;
   int N_Mk;
-  vector[N] AE;
+  matrix[N_Mk, N] AE;
 }
 
 parameters{
@@ -10,8 +10,6 @@ parameters{
 
 model{
   for(i in 1:N){
-    mp ~ dirichlet();
-
-    AE[i] ~ lognormal(log(myu), sqrt(sigma / Height[i]));
+    AE[, i] ~ dirichlet(alpha);
   }
 }
