@@ -1,3 +1,22 @@
+#' extract_mp_cand
+#'
+#' @description The function to extract the candidate mixture proportions
+#' @param hnc The hypothesized number of contributors
+extract_mp_cand <- function(hnc){
+  if(hnc == 1){
+    mp_cand <- mp_cand_1p
+  }else if(hnc == 2){
+    mp_cand <- mp_cand_2p
+  }else if(hnc == 3){
+    mp_cand <- mp_cand_3p
+  }else if(hnc == 4){
+    mp_cand <- mp_cand_4p
+  }else{
+    mp_cand <- NULL
+  }
+  return(mp_cand)
+}
+
 #' make_at_mk
 #'
 #' @description The function to make a vector of ATs of all markers
@@ -7,6 +26,7 @@ make_at_mk <- function(markers_auto, dt_at){
   markers_at <- dt_at[, Marker]
   ats <- dt_at[, AT]
   at_mk <- ats[match(markers_auto, markers_at)]
+  names(at_mk) <- markers_auto
   return(at_mk)
 }
 
@@ -103,22 +123,13 @@ extract_beta <- function(dt_param){
   return(as.numeric(dt_gamma[, Beta]))
 }
 
-#' make_index_dedup_2_mk
+#' make_index_dedup2_mk
 #'
-#' @description The function to make 'index_dedup_2_mk'
+#' @description The function to make 'index_dedup2_mk'
 #' @param index_eph_gtc Information on the connection between eph_base and genotype combinations
-#' @param n_al The number of alleles (i.e., the number of contributors * 2)
-#' @param index_dedup_1_mk Index for deduplication (pattern 1)
-make_index_dedup_2_mk <- function(index_eph_gtc, n_al, index_dedup_1_mk){
-  n_index_eph_gtc <- nrow(index_eph_gtc)
-  index_dedup_2_mk <- rep(0, n_index_eph_gtc)
-  bool_mat <- matrix(FALSE, nrow(index_dedup_1_mk), n_al)
-  for(i in 1:n_index_eph_gtc){
-    ind_eph_gtc1 <- index_eph_gtc[i, ]
-    for(j in 1:n_al){
-      bool_mat[, j] <- index_dedup_1_mk[, j] == ind_eph_gtc1[j]
-    }
-    index_dedup_2_mk[i] <- which(apply(bool_mat, 1, all))
-  }
-  return(index_dedup_2_mk)
+#' @param index_dedup1_mk Index for deduplication (pattern 1)
+make_index_dedup2_mk <- function(index_eph_gtc, index_dedup1_mk){
+  paste_index_eph_gtc <- apply(index_eph_gtc, 1, paste, collapse = "-")
+  paste_index_dedup1_mk <- apply(index_dedup1_mk, 1, paste, collapse = "-")
+  return(match(paste_index_eph_gtc, paste_index_dedup1_mk))
 }
