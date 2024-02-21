@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <algorithm>  // max_element
 #include <iostream>   // push_back
 #include <numeric>    // accumulate
 #include <string>

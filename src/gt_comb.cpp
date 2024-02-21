@@ -224,22 +224,19 @@ bool judge_gtc(std::vector<double> gtc,
                double bsr_fltr,
                double fsr_fltr,
                double dsr_fltr,
-               double m2sr_fltr,
-               double phr_fltr,
-               double mr_fltr,
-               double st){
+               double m2sr_fltr){
   std::vector<double> cand_peak = make_cand_peak(gtc, sr_consider);
   bool adopt_gtc = is_element_all_vec_double(peaks_rm99, cand_peak);
 
   // Write other conditions
   if(adopt_gtc){
     adopt_gtc = judge_gtc_sr(gtc, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr);
-    if(adopt_gtc){
-      adopt_gtc = judge_gtc_phr(gtc, peaks, heights, phr_fltr, st);
-      if(adopt_gtc){
-        adopt_gtc = judge_gtc_mr(gtc, peaks, heights, mr_fltr, st);
-      }
-    }
+    //if(adopt_gtc){
+    //  adopt_gtc = judge_gtc_phr(gtc, peaks, heights, phr_fltr, st);
+    //  if(adopt_gtc){
+    //    adopt_gtc = judge_gtc_mr(gtc, peaks, heights, mr_fltr, st);
+    //  }
+    //}
   }
 
   return(adopt_gtc);
@@ -254,10 +251,7 @@ std::vector<std::vector<int>> judge_gtc_mk(std::vector<std::vector<double>> cand
                                            double bsr_fltr,
                                            double fsr_fltr,
                                            double dsr_fltr,
-                                           double m2sr_fltr,
-                                           double phr_fltr,
-                                           double mr_fltr,
-                                           double st){
+                                           double m2sr_fltr){
   int n_gt_comb = index_gtc_cpp.size();
   int hnc = index_gtc_cpp.at(0).size();
   int n_peak = peaks.size();
@@ -289,7 +283,7 @@ std::vector<std::vector<int>> judge_gtc_mk(std::vector<std::vector<double>> cand
     for(int j = 0; j < n_rep; ++j){
       std::vector<double> heights = heights_all_rep.at(j);
       std::vector<double> heights_rm99 = heights_all_rep_rm99.at(j);
-      adopt_gtc = judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, mr_fltr, st);
+      adopt_gtc = judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr);
       if(!adopt_gtc){
         break;
       }

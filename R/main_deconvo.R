@@ -1,4 +1,8 @@
 perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, hnc){
+  # Extract the candidate mixture proportions
+  mp_cand <- extract_mp_cand(hnc)
+  mp_cand <- asplit(mp_cand, 1)
+
   # Extract autosomal markers
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers_auto <- unique(dt_kit_auto[, Marker])
@@ -23,8 +27,6 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
                    15.579200, 12.634250, 8.308645, 15.639650,
                    16.623350, 18.282100, 22.134350, 19.109550, 21.268600,
                    21.576100, 18.243450, 16.630100, 12.951150)
-  #ae_myu_mk <- extract_param_all_mk("AE", "Myu", markers_auto, dt_param)
-  #ae_sigma_mk <- extract_param_all_mk("AE", "Sigma", markers_auto, dt_param)
   m2sr_mk <- extract_param_all_mk("M2SR", "Myu", markers_auto, dt_param)
 
   # Extract filters to remove unrealistic genotype combinations
@@ -34,9 +36,9 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   fsr_fltr <- gtc_fltr_value[gtc_fltr_type == "FSR"]
   dsr_fltr <- gtc_fltr_value[gtc_fltr_type == "DSR"]
   m2sr_fltr <- gtc_fltr_value[gtc_fltr_type == "M2SR"]
-  phr_fltr <- gtc_fltr_value[gtc_fltr_type == "PHR"]
-  mr_fltr <- gtc_fltr_value[gtc_fltr_type == "MR"]
-  st <- gtc_fltr_value[gtc_fltr_type == "ST"]
+  #phr_fltr <- gtc_fltr_value[gtc_fltr_type == "PHR"]
+  #mr_fltr <- gtc_fltr_value[gtc_fltr_type == "MR"]
+  #st <- gtc_fltr_value[gtc_fltr_type == "ST"]
 
   # Extract methods to estimate genotype probabilities
   gtc_prob_param <- dt_gtc_prob[, Parameter]
@@ -56,18 +58,18 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   n_eph_base_mk <- rep(0, n_mk)
   eph_base <- vector(mode = "list", length = n_mk)
   ae_sd_mk <- rep(0, n_mk)
-  n_dedup_1_mk <- rep(0, n_mk)
-  index_dedup_1 <- NULL
-  size_dedup_1 <- vector(mode = "list", length = n_mk)
-  oph_dedup_1 <- vector(mode = "list", length = n_mk)
-  n_dedup_2_mk <- rep(0, n_mk)
-  index_dedup_2 <- vector(mode = "list", length = n_mk)
+  n_dedup1_mk_mcmc <- rep(0, n_mk)
+  index_dedup1 <- NULL
+  size_dedup1 <- vector(mode = "list", length = n_mk)
+  oph_dedup1 <- vector(mode = "list", length = n_mk)
+  n_dedup2_mk_mcmc <- rep(0, n_mk)
+  index_dedup2_mcmc <- vector(mode = "list", length = n_mk)
   n_peak_mk <- rep(0, n_mk)
-  n_gtc_mk <- rep(0, n_mk)
-  gtc_logprob_all <- vector(mode = "list", length = n_mk)
+  n_gtc_mk_mcmc <- rep(0, n_mk)
+  gtc_logprob_all <- gtc_logprob_all_mcmc <- vector(mode = "list", length = n_mk)
   gtc_all <- vector(mode = "list", length = n_mk)
 
-  sumup_index_dedup_1 <- 0
+  sumup_index_dedup1 <- 0
   max_tph <- 0
   for(i in 1:n_mk){
     # Extract peak data of one marker
@@ -76,6 +78,9 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     sizes <- sizes_list[[mk]]
     heights_all_rep <- heights_list[[mk]]
     n_peak <- length(peaks)
+
+    # Extract AT of one marker
+    at <- at_mk[mk]
 
     # Extract parameters of one marker
     sr_consider <- sr_consider_all_mk[mk, ]
@@ -111,7 +116,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     index_gtc_cpp <- asplit(index_gtc_cpp, 1)
 
     # Indices of genotypes of each contributor in each adopted genotype combination
-    index_gtc_adopt_cpp <- judge_gtc_mk(cand_gt, index_gtc_cpp, peaks, heights_all_rep, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, phr_fltr, mr_fltr, st)
+    index_gtc_adopt_cpp <- judge_gtc_mk(cand_gt, index_gtc_cpp, peaks, heights_all_rep, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr)
     n_gtc <- length(index_gtc_adopt_cpp)
 
     if(n_gtc != 0){
@@ -127,53 +132,76 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
       index_eph_gtc <- matrix(unlist(index_eph_gtc_cpp) + 1, ncol = 2 * hnc, byrow = TRUE) # R and stan index
       index_eph_gtc[which(index_eph_gtc == 0, arr.ind = TRUE)] <- 5 * n_peak + 1 # for density = 0
 
-      # Judge duplicated eph combination
-      bool_duplicated <- !duplicated(index_eph_gtc)
-
       # Delete duplicated indices -> index for deduplication (pattern 1: Before summation of the eph_base)
-      index_dedup_1_mk <- index_eph_gtc[bool_duplicated, , drop = FALSE]
-
-      # Sizes for de-duplicated objects (pattern 1)
-      size_tmp <- rep(sizes, n_gtc)
-      size_dedup_1_mk <- size_tmp[bool_duplicated]
-
-      # Deal with heights for the following reasons
-      ## Observed peak heights for de-duplicated objects (pattern 1)
-      ## Keep the total peak heights of the current marker for determining the range of the parameter 'tph'
-      oph_dedup_1_mk <- numeric(0)
-      tph_mk_all_rep <- rep(0, n_rep)
-      for(k in 1:n_rep){
-        heights_one_rep <- heights_all_rep[[k]]
-        oph_tmp <- rep(heights_one_rep, n_gtc)
-        oph_dedup_1_mk <- c(oph_dedup_1_mk, oph_tmp[bool_duplicated])
-
-        tph_mk_all_rep[k] <- tph_mk <- sum(heights_one_rep)
-        if(tph_mk > max_tph){
-          max_tph <- tph_mk
-        }
-      }
+      bool_duplicated <- !duplicated(index_eph_gtc)
+      index_dedup1_mk <- index_eph_gtc[bool_duplicated, , drop = FALSE]
+      n_dedup1 <- nrow(index_dedup1_mk)
 
       # Index for deduplication (pattern 2: After summation of the eph_base)
-      index_dedup_2_mk <- make_index_dedup_2_mk(index_eph_gtc, 2 * hnc, index_dedup_1_mk)
+      index_dedup2_mk <- make_index_dedup2_mk(index_eph_gtc, index_dedup1_mk)
 
-      # Sequential numbering of index_dedup_1_mk
-      index_dedup_1_mk <- index_dedup_1_mk + sumup_index_dedup_1 # index for combining all loci
-      index_dedup_1 <- rbind(index_dedup_1, index_dedup_1_mk)
-      sumup_index_dedup_1 <- sumup_index_dedup_1 + n_eph_base
+      index_dedup1_mk_cpp <- asplit(index_dedup1_mk - 1, 2) # C++ index
+      index_dedup2_mk_cpp <- index_dedup2_mk - 1 # C++ index
+      index_gtc_mcmc <- integer(0)
+      for(j in 1:n_rep){
+        heights <- heights_all_rep[[j]]
+        oph_sum <- sum(heights)
+        if(oph_sum > max_tph){
+          max_tph <- oph_sum
+        }
+        oph_tmp <- rep(heights, n_gtc)
+        oph_mk <- oph_tmp[bool_duplicated]
+        lpd_gtc_best <- calc_lpd_gtc_best(oph_sum, mp_cand, eph_base_mk, n_dedup1, index_dedup1_mk_cpp, oph_mk, at, gamma_beta, n_peak, n_gtc, index_dedup2_mk_cpp, log(gtc_prob_mk))
+        pd_tmp <- exp(lpd_gtc_best)
+        weight <- pd_tmp / sum(pd_tmp)
+        index_gtc_mcmc <- c(index_gtc_mcmc, which(weight / max(weight) >= 0.0001))
+      }
+      index_gtc_mcmc <- sort(unique(index_gtc_mcmc))
+
+      n_gtc_mcmc <- length(index_gtc_mcmc)
+      index_extract_mcmc <- rep(0, n_peak * n_gtc_mcmc)
+      for(k in 1:n_gtc_mcmc){
+        index_extract_mcmc[n_peak * (k - 1) + 1:n_peak] <- n_peak * (index_gtc_mcmc[k] - 1) + 1:n_peak
+      }
+
+      index_eph_gtc_mcmc <- index_eph_gtc[index_extract_mcmc, , drop = FALSE]
+
+      bool_duplicated_mcmc <- !duplicated(index_eph_gtc_mcmc)
+      index_dedup1_mk_mcmc <- index_eph_gtc_mcmc[bool_duplicated_mcmc, , drop = FALSE]
+      n_dedup1_mcmc <- nrow(index_dedup1_mk_mcmc)
+
+      index_dedup2_mk_mcmc <- make_index_dedup2_mk(index_eph_gtc_mcmc, index_dedup1_mk_mcmc)
+
+      # Sizes for de-duplicated objects (pattern 1)
+      size_tmp <- rep(sizes, n_gtc_mcmc)
+      size_dedup1_mk_mcmc <- size_tmp[bool_duplicated_mcmc]
+
+      oph_dedup1_mk_mcmc <- numeric(0)
+      for(j in 1:n_rep){
+        heights <- heights_all_rep[[j]]
+        oph_tmp <- rep(heights, n_gtc_mcmc)
+        oph_dedup1_mk_mcmc <- c(oph_dedup1_mk_mcmc, oph_tmp[bool_duplicated_mcmc])
+      }
+
+      # Sequential numbering of index_dedup1_mk
+      index_dedup1_mk_mcmc <- index_dedup1_mk_mcmc + sumup_index_dedup1 # index for combining all loci
+      index_dedup1 <- rbind(index_dedup1, index_dedup1_mk_mcmc)
+      sumup_index_dedup1 <- sumup_index_dedup1 + n_eph_base
     }
 
     # Assign
     n_peak_mk[i] <- n_peak
-    n_gtc_mk[i] <- n_gtc
+    n_gtc_mk_mcmc[i] <- n_gtc_mcmc
     eph_base[[i]] <- eph_base_mk
     n_eph_base_mk[i] <- n_eph_base
     gtc_all[[i]] <- matrix(unlist(gtc_mk), ncol = 2 * hnc, byrow = TRUE)
     gtc_logprob_all[[i]] <- log(gtc_prob_mk)
-    n_dedup_1_mk[i] <- nrow(index_dedup_1_mk)
-    size_dedup_1[[i]] <- size_dedup_1_mk
-    oph_dedup_1[[i]] <- oph_dedup_1_mk
-    index_dedup_2[[i]] <- index_dedup_2_mk
-    n_dedup_2_mk[i] <- length(index_dedup_2_mk)
+    gtc_logprob_all_mcmc[[i]] <- log(gtc_prob_mk[index_gtc_mcmc])
+    n_dedup1_mk_mcmc[i] <- nrow(index_dedup1_mk_mcmc)
+    size_dedup1[[i]] <- size_dedup1_mk_mcmc
+    oph_dedup1[[i]] <- oph_dedup1_mk_mcmc
+    index_dedup2_mcmc[[i]] <- index_dedup2_mk_mcmc
+    n_dedup2_mk_mcmc[i] <- length(index_dedup2_mk_mcmc)
   }
 
   ## check n_gt_comb_all == 0
@@ -183,9 +211,9 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   if(n_rep == 1){
     data_list_main <- list(Hnc = hnc, N_Mk = n_mk, Ltph = max_tph / 4, Htph = max_tph / 2,
                            N_Eph_Base_All = sum(n_eph_base_mk), Eph_Base = unlist(eph_base), AE_Alpha_Mk = ae_alpha_mk,
-                           N_Dedup_1_All = sum(n_dedup_1_mk), N_Dedup_1_Mk = n_dedup_1_mk, Index_Dedup_1 = t(index_dedup_1), Size_Dedup_1 = unlist(size_dedup_1) - min_size, Oph_Dedup_1 = unlist(oph_dedup_1),
-                           N_Dedup_2_All = sum(n_dedup_2_mk), N_Dedup_2_Mk = n_dedup_2_mk, Index_Dedup_2 = unlist(index_dedup_2),
-                           N_Peak_Mk = n_peak_mk, N_Gtc_Mk = n_gtc_mk, Gtc_Logprob_All = unlist(gtc_logprob_all),
+                           N_Dedup_1_All = sum(n_dedup1_mk_mcmc), N_Dedup_1_Mk = n_dedup1_mk_mcmc, Index_Dedup_1 = t(index_dedup1), Size_Dedup_1 = unlist(size_dedup1) - min_size, Oph_Dedup_1 = unlist(oph_dedup1),
+                           N_Dedup_2_All = sum(n_dedup2_mk_mcmc), N_Dedup_2_Mk = n_dedup2_mk_mcmc, Index_Dedup_2 = unlist(index_dedup2_mcmc),
+                           N_Peak_Mk = n_peak_mk, N_Gtc_Mk = n_gtc_mk_mcmc, Gtc_Logprob_All = unlist(gtc_logprob_all_mcmc),
                            At_Mk = at_mk, Beta = gamma_beta)
 
     # Perform MCMC
@@ -200,8 +228,6 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   }else{
 
   }
-
-  test <- fit_main$label.switching(pars = paste0("mp[", 1:hnc, "]"), criterion = "median", decreasing = TRUE)
 
   # Trace plot
   draws <- fit_main$draws()
@@ -221,15 +247,18 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   mp <- mpdeg_final$mp_final
   deg <- mpdeg_final$deg_final
 
+###############################################################################################################
+
+
   # Calculate likelihood
-  index_dedup_1_cpp <- asplit(index_dedup_1 - 1, 2) # C++ index
-  eph_dedup_1 <- calc_eph_dedup_1_cpp(tph, mp, deg, hnc, sum(n_dedup_1_mk), unlist(eph_base), index_dedup_1_cpp, unlist(size_dedup_1))
-  index_dedup_2_cpp <- list()
-  for(i in 1:length(index_dedup_2)){
-    index_dedup_2_cpp[[i]] <- index_dedup_2[[i]] - 1
+  index_dedup1_cpp <- asplit(index_dedup1 - 1, 2) # C++ index
+  eph_dedup1 <- calc_eph_dedup1_cpp(tph, mp, deg, hnc, sum(n_dedup1_mk), unlist(eph_base), index_dedup1_cpp, unlist(size_dedup1))
+  index_dedup2_cpp <- list()
+  for(i in 1:length(index_dedup2)){
+    index_dedup2_cpp[[i]] <- index_dedup2[[i]] - 1
   }
 
-  lpd_gtc_all <- calc_lpd_gtc_all(n_mk, n_dedup_1_mk, unlist(oph_dedup_1), eph_dedup_1, at_mk, gamma_beta, n_peak_mk, n_gtc_mk, index_dedup_2_cpp)
+  lpd_gtc_all <- calc_lpd_gtc_all(n_mk, n_dedup1_mk, unlist(oph_dedup1), eph_dedup1, at_mk, gamma_beta, n_peak_mk, n_gtc_mk, index_dedup2_cpp)
 
   dt_pg_list <- make_dt_pg_list(markers_auto, gtc_all, lpd_gtc_all, gtc_logprob_all)
 
