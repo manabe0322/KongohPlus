@@ -436,9 +436,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// calc_lpd_gtc_best
-std::vector<double> calc_lpd_gtc_best(double oph_sum, std::vector<std::vector<double>> mp_cand, std::vector<double> eph_base_mk, int n_dedup1, std::vector<std::vector<int>> index_dedup1_mk, std::vector<double> oph_mk, double at, double beta, int n_peak, int n_gtc, std::vector<int> index_dedup2_mk, std::vector<double> gtc_logprob_mk);
-RcppExport SEXP _KongohPlus_calc_lpd_gtc_best(SEXP oph_sumSEXP, SEXP mp_candSEXP, SEXP eph_base_mkSEXP, SEXP n_dedup1SEXP, SEXP index_dedup1_mkSEXP, SEXP oph_mkSEXP, SEXP atSEXP, SEXP betaSEXP, SEXP n_peakSEXP, SEXP n_gtcSEXP, SEXP index_dedup2_mkSEXP, SEXP gtc_logprob_mkSEXP) {
+// calc_loglike_gtc_all_mp
+std::vector<std::vector<double>> calc_loglike_gtc_all_mp(double oph_sum, std::vector<std::vector<double>> mp_cand, std::vector<double> eph_base_mk, int n_dedup1, std::vector<std::vector<int>> index_dedup1_mk, std::vector<double> oph_mk, double at, double beta, int n_peak, int n_gtc, std::vector<int> index_dedup2_mk, std::vector<double> gtc_logprob_mk);
+RcppExport SEXP _KongohPlus_calc_loglike_gtc_all_mp(SEXP oph_sumSEXP, SEXP mp_candSEXP, SEXP eph_base_mkSEXP, SEXP n_dedup1SEXP, SEXP index_dedup1_mkSEXP, SEXP oph_mkSEXP, SEXP atSEXP, SEXP betaSEXP, SEXP n_peakSEXP, SEXP n_gtcSEXP, SEXP index_dedup2_mkSEXP, SEXP gtc_logprob_mkSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -454,7 +454,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type n_gtc(n_gtcSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type index_dedup2_mk(index_dedup2_mkSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type gtc_logprob_mk(gtc_logprob_mkSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_lpd_gtc_best(oph_sum, mp_cand, eph_base_mk, n_dedup1, index_dedup1_mk, oph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk, gtc_logprob_mk));
+    rcpp_result_gen = Rcpp::wrap(calc_loglike_gtc_all_mp(oph_sum, mp_cand, eph_base_mk, n_dedup1, index_dedup1_mk, oph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk, gtc_logprob_mk));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -490,7 +490,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_lpd_gtc", (DL_FUNC) &_KongohPlus_calc_lpd_gtc, 7},
     {"_KongohPlus_calc_lpd_gtc_all", (DL_FUNC) &_KongohPlus_calc_lpd_gtc_all, 9},
     {"_KongohPlus_calc_eph_mk", (DL_FUNC) &_KongohPlus_calc_eph_mk, 5},
-    {"_KongohPlus_calc_lpd_gtc_best", (DL_FUNC) &_KongohPlus_calc_lpd_gtc_best, 12},
+    {"_KongohPlus_calc_loglike_gtc_all_mp", (DL_FUNC) &_KongohPlus_calc_loglike_gtc_all_mp, 12},
     {NULL, NULL, 0}
 };
 

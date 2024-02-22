@@ -132,44 +132,37 @@ std::vector<double> calc_eph_mk(double oph_sum,
   return(eph_mk);
 }
 
-double calc_like_mk(int n_gtc,
-                    std::vector<double> lpd_gtc,
-                    std::vector<double> gtc_logprob_mk){
-  std::vector<double> like_gtc(n_gtc);
+std::vector<double> calc_loglike_gtc(int n_gtc,
+                                     std::vector<double> lpd_gtc,
+                                     std::vector<double> gtc_logprob_mk){
+  std::vector<double> loglike_gtc = gtc_logprob_mk;
   for(int i = 0; i < n_gtc; ++i){
-    double loglike_gtc1 = lpd_gtc[i] + gtc_logprob_mk[i];
-    like_gtc[i] = exp(loglike_gtc1);
+    loglike_gtc[i] += lpd_gtc[i];
   }
-  double like_mk = accumulate(like_gtc.begin(), like_gtc.end(), 0.0);
-  return(like_mk);
+  return(loglike_gtc);
 }
 
 // [[Rcpp::export]]
-std::vector<double> calc_lpd_gtc_best(double oph_sum,
-                                      std::vector<std::vector<double>> mp_cand,
-                                      std::vector<double> eph_base_mk,
-                                      int n_dedup1,
-                                      std::vector<std::vector<int>> index_dedup1_mk,
-                                      std::vector<double> oph_mk,
-                                      double at,
-                                      double beta,
-                                      int n_peak,
-                                      int n_gtc,
-                                      std::vector<int> index_dedup2_mk,
-                                      std::vector<double> gtc_logprob_mk){
+std::vector<std::vector<double>> calc_loglike_gtc_all_mp(double oph_sum,
+                                                         std::vector<std::vector<double>> mp_cand,
+                                                         std::vector<double> eph_base_mk,
+                                                         int n_dedup1,
+                                                         std::vector<std::vector<int>> index_dedup1_mk,
+                                                         std::vector<double> oph_mk,
+                                                         double at,
+                                                         double beta,
+                                                         int n_peak,
+                                                         int n_gtc,
+                                                         std::vector<int> index_dedup2_mk,
+                                                         std::vector<double> gtc_logprob_mk){
   int n_mp_cand = mp_cand.size();
-  std::vector<double> like_mk_all_mp(n_mp_cand);
-  std::vector<std::vector<double>> lpd_gtc_all_mp(n_mp_cand, std::vector<double>(n_gtc));
+  std::vector<std::vector<double>> loglike_gtc_all_mp(n_mp_cand, std::vector<double>(n_gtc));
   for(int i = 0; i < n_mp_cand; ++i){
     std::vector<double> mp = mp_cand.at(i);
     std::vector<double> eph_mk = calc_eph_mk(oph_sum, mp, eph_base_mk, n_dedup1, index_dedup1_mk);
     std::vector<double> lpd_gtc = calc_lpd_gtc(oph_mk, eph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk);
-    lpd_gtc_all_mp.at(i) = lpd_gtc;
-    like_mk_all_mp[i] = calc_like_mk(n_gtc, lpd_gtc, gtc_logprob_mk);
+    std::vector<double> loglike_gtc = calc_loglike_gtc(n_gtc, lpd_gtc, gtc_logprob_mk);
+    loglike_gtc_all_mp.at(i) = loglike_gtc;
   }
-  double like_max = *std::max_element(like_mk_all_mp.begin(), like_mk_all_mp.end());
-  int index_max = find_index_double(like_max, like_mk_all_mp);
-  std::vector<double> lpd_gtc_best = lpd_gtc_all_mp.at(index_max);
-
-  return(lpd_gtc_best);
+  return(loglike_gtc_all_mp);
 }

@@ -121,7 +121,7 @@ calc_eph_mk <- function(oph_sum, mp, eph_base_mk, n_dedup1, index_dedup1_mk) {
     .Call(`_KongohPlus_calc_eph_mk`, oph_sum, mp, eph_base_mk, n_dedup1, index_dedup1_mk)
 }
 
-calc_lpd_gtc_best <- function(oph_sum, mp_cand, eph_base_mk, n_dedup1, index_dedup1_mk, oph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk, gtc_logprob_mk) {
-    .Call(`_KongohPlus_calc_lpd_gtc_best`, oph_sum, mp_cand, eph_base_mk, n_dedup1, index_dedup1_mk, oph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk, gtc_logprob_mk)
+calc_loglike_gtc_all_mp <- function(oph_sum, mp_cand, eph_base_mk, n_dedup1, index_dedup1_mk, oph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk, gtc_logprob_mk) {
+    .Call(`_KongohPlus_calc_loglike_gtc_all_mp`, oph_sum, mp_cand, eph_base_mk, n_dedup1, index_dedup1_mk, oph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk, gtc_logprob_mk)
 }
 
