@@ -48,6 +48,7 @@ data{
 
   int N_Eph_Base_All;
   vector[N_Eph_Base_All] Eph_Base;
+  vector[N_Mk] AE_Alpha_Mk;
 
   int N_Dedup_1_All;
   array[N_Mk] int N_Dedup_1_Mk;
@@ -71,10 +72,12 @@ parameters{
   real<lower = Ltph, upper = Htph> tph;
   simplex[Hnc] mp;
   vector<lower = -0.05, upper = 0>[Hnc] deg;
+  simplex[N_Mk] ae;
 }
 
 model{
   mp ~ dirichlet(rep_vector(1, Hnc));
+  ae ~ dirichlet(AE_Alpha_Mk);
 
   vector[N_Dedup_1_All] eph_dedup_1 = calc_eph_dedup_1(tph, mp, deg, Hnc, N_Dedup_1_All, Eph_Base, Index_Dedup_1, Size_Dedup_1);
 
@@ -83,7 +86,7 @@ model{
   int gtc_start = 1;
   for(i in 1:N_Mk){
     int n_dedup_eph = N_Dedup_1_Mk[i];
-    vector[n_dedup_eph] eph_mk = eph_dedup_1[eph_start:(eph_start + n_dedup_eph - 1)];
+    vector[n_dedup_eph] eph_mk = N_Mk * ae[i] * eph_dedup_1[eph_start:(eph_start + n_dedup_eph - 1)];
     vector[n_dedup_eph] oph_mk = Oph_Dedup_1[eph_start:(eph_start + n_dedup_eph - 1)];
     real at = At_Mk[i];
 
