@@ -787,8 +787,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
             options = list(dom = "t", iDisplayLength = nrow(dt_result_ae), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatRound(columns = c("Myu", "Rhat_Myu", "Rhat_Sigma", "Rhat_Likelihood"), digits = 3) %>%
-            formatRound(columns = c("Sigma"), digits = 0)
+            formatRound(columns = c("Alpha", "Rhat_Alpha", "Rhat_Likelihood"), digits = 3)
         })
 
         # Display the result for BSR

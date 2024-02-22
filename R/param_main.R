@@ -16,13 +16,15 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
   dt_par <- data.table(Marker = c(rep(markers, 5), NA),
                        Parameter = c(rep("AE", n_mk), rep("BSR", n_mk), rep("FSR", n_mk), rep("DSR", n_mk), rep("M2SR", n_mk), "Gamma"),
                        Model = c(rep("Log-normal", n_mk), dt_result_bsr[, Model], dt_result_fsr[, Model], dt_result_dsr[, Model], dt_result_m2sr[, Model], "Gamma"),
-                       Myu = c(dt_result_ae[, Myu], dt_result_bsr[, Myu], dt_result_fsr[, Myu], dt_result_dsr[, Myu], dt_result_m2sr[, Myu], NA),
+                       Alpha = c(dt_result_ae[, Alpha], rep(NA, 4 * n_mk + 1)),
+                       Myu = c(rep(NA, n_mk), dt_result_bsr[, Myu], dt_result_fsr[, Myu], dt_result_dsr[, Myu], dt_result_m2sr[, Myu], NA),
                        Slope = c(rep(NA, n_mk), dt_result_bsr[, Slope], dt_result_fsr[, Slope], dt_result_dsr[, Slope], rep(NA, n_mk), NA),
                        Intercept = c(rep(NA, n_mk), dt_result_bsr[, Intercept], dt_result_fsr[, Intercept], dt_result_dsr[, Intercept], rep(NA, n_mk), NA),
                        Sigma = c(dt_result_ae[, Sigma], dt_result_bsr[, Sigma], dt_result_fsr[, Sigma], dt_result_dsr[, Sigma], dt_result_m2sr[, Sigma], NA),
                        MinUS = c(rep(NA, n_mk), dt_result_bsr[, MinUS], dt_result_fsr[, MinUS], dt_result_dsr[, MinUS], rep(NA, n_mk), NA),
                        Beta = c(rep(NA, 5 * n_mk), dt_result_gamma[, Beta]),
-                       Rhat_Myu = c(dt_result_ae[, Rhat_Myu], dt_result_bsr[, Rhat_Myu], dt_result_fsr[, Rhat_Myu], dt_result_dsr[, Rhat_Myu], dt_result_m2sr[, Rhat_Myu], NA),
+                       Rhat_Alpha = c(dt_result_ae[, Rhat_Alpha], rep(NA, 4 * n_mk + 1)),
+                       Rhat_Myu = c(rep(NA, n_mk), dt_result_bsr[, Rhat_Myu], dt_result_fsr[, Rhat_Myu], dt_result_dsr[, Rhat_Myu], dt_result_m2sr[, Rhat_Myu], NA),
                        Rhat_Slope = c(rep(NA, n_mk), dt_result_bsr[, Rhat_Slope], dt_result_fsr[, Rhat_Slope], dt_result_dsr[, Rhat_Slope], rep(NA, n_mk), NA),
                        Rhat_Intercept = c(rep(NA, n_mk), dt_result_bsr[, Rhat_Intercept], dt_result_fsr[, Rhat_Intercept], dt_result_dsr[, Rhat_Intercept], rep(NA, n_mk), NA),
                        Rhat_Sigma = c(dt_result_ae[, Rhat_Sigma], dt_result_bsr[, Rhat_Sigma], dt_result_fsr[, Rhat_Sigma], dt_result_dsr[, Rhat_Sigma], dt_result_m2sr[, Rhat_Sigma], NA),
@@ -81,9 +83,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
   gt_list <- tmp[[4]]
 
   # Prepare data for the locus-specific amplification efficiency
-  tmp <- get_ae_data(height_list)
-  ae_data <- tmp[[1]]
-  height_ae_data <- tmp[[2]]
+  ae_data <- get_ae_data(height_list)
 
   # Prepare data for the stutter ratios
   tmp <- get_sr_data(peak_list, height_list, gt_list, sr_consider_all_mk)

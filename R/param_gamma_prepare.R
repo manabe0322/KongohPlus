@@ -176,7 +176,7 @@ calc_eph_all_data <- function(markers_par, n_oph, tph_all_data, gt_list, peak_li
   setkey(dt_alcor_fsr, Marker)
   setkey(dt_alcor_dsr, Marker)
 
-  ae_myu_all_mk <- dt_result_ae[, Myu]
+  ae_myu_all_mk <- n_mk * dt_result_ae[, Alpha]
 
   bsr_model_all_mk <- dt_result_bsr[, Model]
   bsr_myu_all_mk <- dt_result_bsr[, Myu]
