@@ -7,6 +7,7 @@
 run_mcmc_ae(
   model_ae,
   data_list_ae,
+  n_mk,
   n_warmup,
   n_sampling,
   n_chains,
@@ -17,6 +18,8 @@ run_mcmc_ae(
 \item{model_ae}{The stan model of the locus-specific amplification efficiency}
 
 \item{data_list_ae}{The data list of the locus-specific amplification efficiency}
+
+\item{n_mk}{The number of markers}
 
 \item{n_warmup}{The number of simulations for warm-up}
 

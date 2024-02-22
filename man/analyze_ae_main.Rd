@@ -8,7 +8,6 @@ analyze_ae_main(
   markers_par,
   model_ae,
   ae_data,
-  height_ae_data,
   n_warmup,
   n_sampling,
   n_chains,
@@ -21,8 +20,6 @@ analyze_ae_main(
 \item{model_ae}{The stan model for AE}
 
 \item{ae_data}{The AE data of all markers}
-
-\item{height_ae_data}{The height data for AE of all markers}
 
 \item{n_warmup}{The number of simulations for warm-up}
 
