@@ -153,7 +153,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
         oph_mk <- oph_tmp[bool_duplicated]
         loglike_gtc_all_mp <- calc_loglike_gtc_all_mp(oph_sum, mp_cand, eph_base_mk, n_dedup1, index_dedup1_mk_cpp, oph_mk, at, gamma_beta, n_peak, n_gtc, index_dedup2_mk_cpp, log(gtc_prob_mk))
         loglike_gtc_all_mp <- matrix(unlist(loglike_gtc_all_mp), ncol = n_gtc, byrow = TRUE)
-        index_tmp <- which(loglike_gtc_all_mp >= max(loglike_gtc_all_mp) - 5, arr.ind = TRUE)
+        index_tmp <- which(loglike_gtc_all_mp >= max(loglike_gtc_all_mp) - 10, arr.ind = TRUE)
         index_gtc_mcmc <- c(index_gtc_mcmc, unique(index_tmp[, 2]))
       }
       index_gtc_mcmc <- sort(unique(index_gtc_mcmc))
@@ -215,6 +215,16 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
                            N_Dedup_2_All = sum(n_dedup2_mk_mcmc), N_Dedup_2_Mk = n_dedup2_mk_mcmc, Index_Dedup_2 = unlist(index_dedup2_mcmc),
                            N_Peak_Mk = n_peak_mk, N_Gtc_Mk = n_gtc_mk_mcmc, Gtc_Logprob_All = unlist(gtc_logprob_all_mcmc),
                            At_Mk = at_mk, Beta = gamma_beta)
+
+#    init_fun <- function(){
+#      mp_init_pre <- runif(hnc)
+#      mp_init <- sort(mp_init_pre, decreasing = TRUE) / sum(mp_init_pre)
+#      deg_init <- runif(hnc, -0.0025, 0)
+#      return(list(tph = max_tph / 3,
+#                  mp = mp_init,
+#                  deg = deg_init,
+#                  ae = ae_alpha_mk / sum(ae_alpha_mk)))
+#    }
 
     # Perform MCMC
     model_main <- readRDS(paste0(path_pack, "/model/model_main.rds"))

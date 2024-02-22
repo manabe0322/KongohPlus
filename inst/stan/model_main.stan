@@ -68,6 +68,11 @@ data{
   real Beta;
 }
 
+transformed data{
+  real tph_mean = (Ltph + Htph) / 2;
+  real tph_sd = (Htph - Ltph) / 2;
+}
+
 parameters{
   real<lower = Ltph, upper = Htph> tph;
   simplex[Hnc] mp;
@@ -76,7 +81,9 @@ parameters{
 }
 
 model{
+  tph ~ normal(tph_mean, tph_sd);
   mp ~ dirichlet(rep_vector(1, Hnc));
+  deg ~ normal(-0.025, 0.0125);
   ae ~ dirichlet(AE_Alpha_Mk);
 
   vector[N_Dedup_1_All] eph_dedup_1 = calc_eph_dedup_1(tph, mp, deg, Hnc, N_Dedup_1_All, Eph_Base, Index_Dedup_1, Size_Dedup_1);
