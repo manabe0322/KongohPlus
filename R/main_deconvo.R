@@ -10,10 +10,10 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   n_rep <- length(unique(dt_csp[, SampleName]))
 
   # Extract AT
-  at_mk <- make_at_mk(markers_auto, dt_at)
+  at_all_mk <- extract_at_all_mk(markers_auto, dt_at)
 
   # Extract peak data from crime stain profiles
-  tmp <- make_peak_data(dt_csp, dt_kit_auto, markers_auto, at_mk)
+  tmp <- make_peak_data(dt_csp, dt_kit_auto, markers_auto, at_all_mk)
   peaks_list <- tmp$peaks_list
   sizes_list <- tmp$sizes_list
   heights_list <- tmp$heights_list
@@ -22,12 +22,8 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_param)
 
   # Extract parameters for AE and M2SR
-  ae_alpha_mk <- c(19.348500, 16.487050, 14.815050, 17.627450, 11.555000,
-                   23.640450, 19.523250, 23.413250,
-                   15.579200, 12.634250, 8.308645, 15.639650,
-                   16.623350, 18.282100, 22.134350, 19.109550, 21.268600,
-                   21.576100, 18.243450, 16.630100, 12.951150)
-  m2sr_mk <- extract_param_all_mk("M2SR", "Myu", markers_auto, dt_param)
+  ae_alpha_all_mk <- extract_param_all_mk("AE", "Alpha", markers_auto, dt_param)
+  m2sr_all_mk <- extract_param_all_mk("M2SR", "Myu", markers_auto, dt_param)
 
   # Extract filters to remove unrealistic genotype combinations
   gtc_fltr_type <- dt_gtc_fltr[, Type]
@@ -79,7 +75,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     n_peak <- length(peaks)
 
     # Extract AT of one marker
-    at <- at_mk[mk]
+    at <- at_all_mk[mk]
 
     # Extract parameters of one marker
     sr_consider <- sr_consider_all_mk[mk, ]
@@ -95,7 +91,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     fsrs[is.na(fsrs)] <- 0
     dsrs <- alcor_dsrs[index_alcor_peaks]
     dsrs[is.na(dsrs)] <- 0
-    m2sr <- m2sr_mk[mk]
+    m2sr <- m2sr_all_mk[mk]
 
     # Extract allele probabilities
     pop_al <- pop_al_list[[mk]]
@@ -230,12 +226,12 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   if(n_rep == 1){
     data_list_main <- list(Hnc = hnc, N_Mk = n_mk, Ltph = max_tph / 4, Htph = max_tph / 2,
-                           N_Eph_Base_All = sum(n_eph_base_adopt), Eph_Base = unlist(eph_base), AE_Alpha_Mk = ae_alpha_mk,
+                           N_Eph_Base_All = sum(n_eph_base_adopt), Eph_Base = unlist(eph_base), AE_Alpha_All_Mk = ae_alpha_all_mk,
                            N_Dedup1_All = sum(n_dedup1_mcmc), N_Dedup1_Mcmc = n_dedup1_mcmc, Index_Dedup1_Mcmc = t(index_dedup1_mcmc),
                            Size_Dedup1_Mcmc = unlist(size_dedup1_mcmc) - min_size, Oph_Dedup1_Mcmc = unlist(oph_dedup1_mcmc),
                            N_Dedup2_All = sum(n_dedup2_mcmc), N_Dedup2_Mcmc = n_dedup2_mcmc, Index_Dedup2_Mcmc = unlist(index_dedup2_mcmc),
                            N_Peak_Adopt = n_peak_adopt, N_Gtc_Mcmc = n_gtc_mcmc, Gtc_Logprob_Mcmc = unlist(gtc_logprob_mcmc),
-                           At_Mk = at_mk, Beta = gamma_beta)
+                           At_All_Mk = at_all_mk, Beta = gamma_beta)
 
 #    init_fun <- function(){
 #      mp_init_pre <- runif(hnc)
@@ -244,7 +240,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 #      return(list(tph = max_tph / 3,
 #                  mp = mp_init,
 #                  deg = deg_init,
-#                  ae = ae_alpha_mk / sum(ae_alpha_mk)))
+#                  ae = ae_alpha_all_mk / sum(ae_alpha_all_mk)))
 #    }
 
     # Perform MCMC
@@ -272,12 +268,13 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   tph <- medians[which(variables == "tph")]
   mp <- medians[grep("mp", variables)]
   deg <- medians[grep("deg", variables)]
-  ae <- medians[grep("ae", variables)]
+  pae <- medians[grep("pae", variables)]
+  ae <- n_mk * pae
   rhat_lp <- rhats[which(variables == "lp__")]
   rhat_tph <- rhats[which(variables == "tph")]
   rhat_mp <- rhats[grep("mp", variables)]
   rhat_deg <- rhats[grep("deg", variables)]
-  rhat_ae <- rhats[grep("ae", variables)]
+  rhat_pae <- rhats[grep("pae", variables)]
 
   # Determine the mixture proportions and the degradation parameters
   #sampling_data <- as_draws_matrix(draws)
@@ -288,20 +285,20 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 ###############################################################################################################
 
   # Calculate likelihood
-  index_dedup1_cpp <- asplit(index_dedup1 - 1, 2) # C++ index
-  eph_dedup1 <- calc_eph_dedup1_cpp(tph, mp, deg, hnc, sum(n_dedup1_mk), unlist(eph_base), index_dedup1_cpp, unlist(size_dedup1))
-  index_dedup2_cpp <- list()
-  for(i in 1:length(index_dedup2)){
-    index_dedup2_cpp[[i]] <- index_dedup2[[i]] - 1
+  index_dedup1_adopt_cpp <- asplit(index_dedup1_adopt - 1, 2) # C++ index
+  eph_dedup1_adopt <- calc_eph_dedup1_cpp(tph, mp, deg, hnc, sum(n_dedup1_adopt), unlist(eph_base), index_dedup1_adopt_cpp, unlist(size_dedup1_adopt))
+  index_dedup2_adopt_cpp <- vector(mode = "list", length = n_mk)
+  for(i in 1:n_mk){
+    index_dedup2_adopt_cpp[[i]] <- index_dedup2_adopt[[i]] - 1
   }
 
-  lpd_gtc_all <- calc_lpd_gtc_all(n_mk, n_dedup1_mk, unlist(oph_dedup1), eph_dedup1, at_mk, gamma_beta, n_peak_mk, n_gtc_mk, index_dedup2_cpp)
+  lpd_gtc_adopt <- calc_lpd_gtc_adopt(n_mk, n_dedup1_adopt, unlist(oph_dedup1_adopt), eph_dedup1_adopt, at_all_mk, gamma_beta, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp)
 
-  dt_pg_list <- make_dt_pg_list(markers_auto, gtc_all, lpd_gtc_all, gtc_logprob_all)
+  dt_pg_list <- make_dt_pg_list(markers_auto, gtc_adopt, lpd_gtc_adopt, gtc_logprob_adopt)
 
-  likelihood_all <- calc_likelihood_all(lpd_gtc_all, gtc_logprob_all)
+  likelihood_adopt <- calc_likelihood_adopt(lpd_gtc_adopt, gtc_logprob_adopt)
 
-  dt_likelihood <- make_dt_likelihood(markers_auto, likelihood_all)
+  dt_likelihood <- make_dt_likelihood(markers_auto, likelihood_adopt)
 
   dt_mpdeg <- data.table(Contributor = paste0("U", 1:hnc),
                          MP = mp,
@@ -311,6 +308,11 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
               "dt_likelihood" = dt_likelihood,
               "dt_mpdeg" = dt_mpdeg,
               "tph" = tph,
+              "ae" = ae,
               "rhat_lp" = rhat_lp,
+              "rhat_tph" = rhat_tph,
+              "rhat_mp" = rhat_mp,
+              "rhat_deg" = rhat_deg,
+              "rhat_pae" = rhat_pae,
               "traceplot" = traceplot))
 }

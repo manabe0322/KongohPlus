@@ -48,7 +48,7 @@ data{
 
   int N_Eph_Base_All;
   vector[N_Eph_Base_All] Eph_Base;
-  vector[N_Mk] AE_Alpha_Mk;
+  vector[N_Mk] AE_Alpha_All_Mk;
 
   int N_Dedup1_All;
   array[N_Mk] int N_Dedup1_Mcmc;
@@ -64,7 +64,7 @@ data{
   array[N_Mk] int N_Gtc_Mcmc;
   vector[sum(N_Gtc_Mcmc)] Gtc_Logprob_Mcmc;
 
-  vector[N_Mk] At_Mk;
+  vector[N_Mk] At_All_Mk;
   real Beta;
 }
 
@@ -77,14 +77,14 @@ parameters{
   real<lower = Ltph, upper = Htph> tph;
   simplex[Hnc] mp;
   vector<lower = -0.05, upper = 0>[Hnc] deg;
-  simplex[N_Mk] ae;
+  simplex[N_Mk] pae;
 }
 
 model{
   tph ~ normal(tph_mean, tph_sd);
   mp ~ dirichlet(rep_vector(1, Hnc));
   deg ~ normal(-0.025, 0.0125);
-  ae ~ dirichlet(AE_Alpha_Mk);
+  pae ~ dirichlet(AE_Alpha_All_Mk);
 
   vector[N_Dedup1_All] eph_dedup1 = calc_eph_dedup1(tph, mp, deg, Hnc, N_Dedup1_All, Eph_Base, Index_Dedup1_Mcmc, Size_Dedup1_Mcmc);
 
@@ -93,9 +93,9 @@ model{
   int gtc_start = 1;
   for(i in 1:N_Mk){
     int n_dedup_eph = N_Dedup1_Mcmc[i];
-    vector[n_dedup_eph] eph_mk = N_Mk * ae[i] * eph_dedup1[eph_start:(eph_start + n_dedup_eph - 1)];
+    vector[n_dedup_eph] eph_mk = N_Mk * pae[i] * eph_dedup1[eph_start:(eph_start + n_dedup_eph - 1)];
     vector[n_dedup_eph] oph_mk = Oph_Dedup1_Mcmc[eph_start:(eph_start + n_dedup_eph - 1)];
-    real at = At_Mk[i];
+    real at = At_All_Mk[i];
 
     vector[n_dedup_eph] lpd_mk = calc_lpd_mk(n_dedup_eph, oph_mk, eph_mk, at, Beta);
 

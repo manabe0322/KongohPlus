@@ -1,29 +1,6 @@
 #include "header.h"
 
 // [[Rcpp::export]]
-std::vector<double> calc_eph_dedup1_cpp(double tph,
-                                        std::vector<double> mp,
-                                        std::vector<double> deg,
-                                        int hnc,
-                                        int n_dedup1,
-                                        std::vector<double> eph_base,
-                                        std::vector<std::vector<int>> index_dedup1,
-                                        std::vector<double> size_dedup1){
-  std::vector<double> eph_dedup1(n_dedup1, 0);
-  for(int i = 0; i < hnc; ++i){
-    double tph_c1 = tph * mp[i];
-    double deg_c1 = deg[i];
-    std::vector<int> ind_dedup1_al1 = index_dedup1.at(2 * i);
-    std::vector<int> ind_dedup1_al2 = index_dedup1.at(2 * i + 1);
-    for(int j = 0; j < n_dedup1; ++j){
-      eph_dedup1[j] += eph_base[ind_dedup1_al1[j]] * tph_c1 * exp(deg_c1 * size_dedup1[j]);
-      eph_dedup1[j] += eph_base[ind_dedup1_al2[j]] * tph_c1 * exp(deg_c1 * size_dedup1[j]);
-    }
-  }
-  return(eph_dedup1);
-}
-
-// [[Rcpp::export]]
 double gamma_pdf(double value, double alpha, double beta){
   boost::math::gamma_distribution<double> d(alpha, 1 / beta);
   return(pdf(d, value));
@@ -85,34 +62,6 @@ std::vector<double> calc_lpd_gtc(std::vector<double> oph_mk,
 }
 
 // [[Rcpp::export]]
-std::vector<std::vector<double>> calc_lpd_gtc_all(int n_mk,
-                                                  std::vector<int> n_dedup1_mk,
-                                                  std::vector<double> oph_dedup1,
-                                                  std::vector<double> eph_dedup1,
-                                                  std::vector<double> at_mk,
-                                                  double beta,
-                                                  std::vector<int> n_peak_mk,
-                                                  std::vector<int> n_gtc_mk,
-                                                  std::vector<std::vector<int>> index_dedup2){
-  std::vector<std::vector<double>> lpd_gtc_all(n_mk, std::vector<double>());
-  int eph_start = 0;
-  for(int i = 0; i < n_mk; ++i){
-    int n_dedup_eph = n_dedup1_mk[i];
-    std::vector<double> oph_mk = extract_subvec_double(oph_dedup1, eph_start, eph_start + n_dedup_eph - 1);
-    std::vector<double> eph_mk = extract_subvec_double(eph_dedup1, eph_start, eph_start + n_dedup_eph - 1);
-    double at = at_mk[i];
-    int n_peak = n_peak_mk[i];
-    int n_gtc = n_gtc_mk[i];
-
-    std::vector<int> index_dedup2_mk = index_dedup2.at(i);
-    lpd_gtc_all.at(i) = calc_lpd_gtc(oph_mk, eph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk);
-
-    eph_start += n_dedup_eph;
-  }
-  return(lpd_gtc_all);
-}
-
-// [[Rcpp::export]]
 std::vector<double> calc_eph_mk(double oph_sum,
                                 std::vector<double> mp,
                                 std::vector<double> eph_base_mk,
@@ -164,4 +113,55 @@ std::vector<std::vector<double>> calc_loglike_gtc_all_mp(double oph_sum,
     loglike_gtc_all_mp.at(i) = loglike_gtc;
   }
   return(loglike_gtc_all_mp);
+}
+
+// [[Rcpp::export]]
+std::vector<double> calc_eph_dedup1_cpp(double tph,
+                                        std::vector<double> mp,
+                                        std::vector<double> deg,
+                                        int hnc,
+                                        int n_dedup1,
+                                        std::vector<double> eph_base,
+                                        std::vector<std::vector<int>> index_dedup1,
+                                        std::vector<double> size_dedup1){
+  std::vector<double> eph_dedup1(n_dedup1, 0);
+  for(int i = 0; i < hnc; ++i){
+    double tph_c1 = tph * mp[i];
+    double deg_c1 = deg[i];
+    std::vector<int> ind_dedup1_al1 = index_dedup1.at(2 * i);
+    std::vector<int> ind_dedup1_al2 = index_dedup1.at(2 * i + 1);
+    for(int j = 0; j < n_dedup1; ++j){
+      eph_dedup1[j] += eph_base[ind_dedup1_al1[j]] * tph_c1 * exp(deg_c1 * size_dedup1[j]);
+      eph_dedup1[j] += eph_base[ind_dedup1_al2[j]] * tph_c1 * exp(deg_c1 * size_dedup1[j]);
+    }
+  }
+  return(eph_dedup1);
+}
+
+// [[Rcpp::export]]
+std::vector<std::vector<double>> calc_lpd_gtc_adopt(int n_mk,
+                                                    std::vector<int> n_dedup1_adopt,
+                                                    std::vector<double> oph_dedup1,
+                                                    std::vector<double> eph_dedup1,
+                                                    std::vector<double> at_mk,
+                                                    double beta,
+                                                    std::vector<int> n_peak_adopt,
+                                                    std::vector<int> n_gtc_adopt,
+                                                    std::vector<std::vector<int>> index_dedup2_adopt_cpp){
+  std::vector<std::vector<double>> lpd_gtc_adopt(n_mk, std::vector<double>());
+  int eph_start = 0;
+  for(int i = 0; i < n_mk; ++i){
+    int n_dedup_eph = n_dedup1_adopt[i];
+    std::vector<double> oph_mk = extract_subvec_double(oph_dedup1, eph_start, eph_start + n_dedup_eph - 1);
+    std::vector<double> eph_mk = extract_subvec_double(eph_dedup1, eph_start, eph_start + n_dedup_eph - 1);
+    double at = at_mk[i];
+    int n_peak = n_peak_adopt[i];
+    int n_gtc = n_gtc_adopt[i];
+
+    std::vector<int> index_dedup2_mk = index_dedup2_adopt_cpp.at(i);
+    lpd_gtc_adopt.at(i) = calc_lpd_gtc(oph_mk, eph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk);
+
+    eph_start += n_dedup_eph;
+  }
+  return(lpd_gtc_adopt);
 }
