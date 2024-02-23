@@ -78,20 +78,20 @@ double calc_gtc_prob(std::vector<double> gtc,
 }
 
 // [[Rcpp::export]]
-std::vector<double> calc_gtc_prob_mk(std::vector<std::vector<double>> gtc_adopt,
+std::vector<double> calc_gtc_prob_mk(std::vector<std::vector<double>> gtc_mk,
                                      std::vector<double> pop_al,
                                      std::vector<double> pop_prob,
                                      double theta,
                                      std::vector<double> prof_ref,
                                      std::vector<int> hyp_id,
                                      std::vector<int> n_obs){
-  int n_gtc_adopt = gtc_adopt.size();
-  std::vector<double> gtc_adopt_prob(n_gtc_adopt);
+  int n_gtc_mk = gtc_mk.size();
+  std::vector<double> gtc_prob_mk(n_gtc_mk);
 
-  for(int i = 0; i < n_gtc_adopt; ++i){
-    std::vector<double> gtc = gtc_adopt.at(i);
-    gtc_adopt_prob[i] = calc_gtc_prob(gtc, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs);
+  for(int i = 0; i < n_gtc_mk; ++i){
+    std::vector<double> gtc = gtc_mk.at(i);
+    gtc_prob_mk[i] = calc_gtc_prob(gtc, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs);
   }
 
-  return(gtc_adopt_prob);
+  return(gtc_prob_mk);
 }

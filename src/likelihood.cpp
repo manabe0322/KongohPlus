@@ -116,9 +116,9 @@ std::vector<std::vector<double>> calc_lpd_gtc_all(int n_mk,
 std::vector<double> calc_eph_mk(double oph_sum,
                                 std::vector<double> mp,
                                 std::vector<double> eph_base_mk,
-                                int n_dedup1,
                                 std::vector<std::vector<int>> index_dedup1_mk){
   int hnc = mp.size();
+  int n_dedup1 = index_dedup1_mk.at(0).size();
   std::vector<double> eph_mk(n_dedup1, 0);
   for(int i = 0; i < hnc; ++i){
     double ph_het_c1 = oph_sum * mp[i] / 2;
@@ -146,7 +146,6 @@ std::vector<double> calc_loglike_gtc(int n_gtc,
 std::vector<std::vector<double>> calc_loglike_gtc_all_mp(double oph_sum,
                                                          std::vector<std::vector<double>> mp_cand,
                                                          std::vector<double> eph_base_mk,
-                                                         int n_dedup1,
                                                          std::vector<std::vector<int>> index_dedup1_mk,
                                                          std::vector<double> oph_mk,
                                                          double at,
@@ -159,7 +158,7 @@ std::vector<std::vector<double>> calc_loglike_gtc_all_mp(double oph_sum,
   std::vector<std::vector<double>> loglike_gtc_all_mp(n_mp_cand, std::vector<double>(n_gtc));
   for(int i = 0; i < n_mp_cand; ++i){
     std::vector<double> mp = mp_cand.at(i);
-    std::vector<double> eph_mk = calc_eph_mk(oph_sum, mp, eph_base_mk, n_dedup1, index_dedup1_mk);
+    std::vector<double> eph_mk = calc_eph_mk(oph_sum, mp, eph_base_mk, index_dedup1_mk);
     std::vector<double> lpd_gtc = calc_lpd_gtc(oph_mk, eph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk);
     std::vector<double> loglike_gtc = calc_loglike_gtc(n_gtc, lpd_gtc, gtc_logprob_mk);
     loglike_gtc_all_mp.at(i) = loglike_gtc;
