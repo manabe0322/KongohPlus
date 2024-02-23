@@ -17,17 +17,17 @@ extract_mp_cand <- function(hnc){
   return(mp_cand)
 }
 
-#' make_at_mk
+#' extract_at_all_mk
 #'
-#' @description The function to make a vector of ATs of all markers
+#' @description The function to extract ATs of all markers
 #' @param markers_auto A vector of the autosomal markers
 #' @param dt_at The data.table of the analytical thresholds
-make_at_mk <- function(markers_auto, dt_at){
-  markers_at <- dt_at[, Marker]
-  ats <- dt_at[, AT]
-  at_mk <- ats[match(markers_auto, markers_at)]
-  names(at_mk) <- markers_auto
-  return(at_mk)
+extract_at_all_mk <- function(markers_auto, dt_at){
+  markers_dt <- dt_at[, Marker]
+  ats_dt <- dt_at[, AT]
+  at_all_mk <- ats_dt[match(markers_auto, markers_dt)]
+  names(at_all_mk) <- markers_auto
+  return(at_all_mk)
 }
 
 #' make_ref_data
