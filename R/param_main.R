@@ -15,7 +15,7 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
   n_mk <- length(markers)
   dt_par <- data.table(Marker = c(rep(markers, 5), NA),
                        Parameter = c(rep("AE", n_mk), rep("BSR", n_mk), rep("FSR", n_mk), rep("DSR", n_mk), rep("M2SR", n_mk), "Gamma"),
-                       Model = c(rep("Log-normal", n_mk), dt_result_bsr[, Model], dt_result_fsr[, Model], dt_result_dsr[, Model], dt_result_m2sr[, Model], "Gamma"),
+                       Model = c(rep("Dirichlet", n_mk), dt_result_bsr[, Model], dt_result_fsr[, Model], dt_result_dsr[, Model], dt_result_m2sr[, Model], "Gamma"),
                        Alpha = c(dt_result_ae[, Alpha], rep(NA, 4 * n_mk + 1)),
                        Myu = c(rep(NA, n_mk), dt_result_bsr[, Myu], dt_result_fsr[, Myu], dt_result_dsr[, Myu], dt_result_m2sr[, Myu], NA),
                        Slope = c(rep(NA, n_mk), dt_result_bsr[, Slope], dt_result_fsr[, Slope], dt_result_dsr[, Slope], rep(NA, n_mk), NA),
