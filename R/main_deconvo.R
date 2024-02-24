@@ -309,14 +309,14 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   dt_log10like <- make_dt_log10like(markers_auto, log10like_adopt)
 
   dt_mpdeg <- data.table(Contributor = paste0("U", 1:hnc),
-                         MP = mp,
-                         Deg = deg)
+                         MP = mp[hnc:1],
+                         Deg = deg[hnc:1])
 
   dt_ae <- data.table(Marker = markers_auto,
                       AE = ae)
 
-  dt_rhat <- data.table(Parameter = c("lp__", "tph", paste0("lambda", 1:hnc), paste0("mp", 1:hnc), paste0("deg", 1:hnc), paste0("pae", 1:n_mk)),
-                        Rhat = c(rhat_lp, rhat_tph, rhat_lambda, rhat_mp, rhat_deg, rhat_pae))
+  dt_rhat <- data.table(Parameter = c("lp__", "tph", paste0("lambda", hnc:1), paste0("mp", hnc:1), paste0("deg", hnc:1), paste0("pae", 1:n_mk)),
+                        Rhat = c(rhat_lp, rhat_tph, rhat_lambda[hnc:1], rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
 
   return(list("dt_pg_list" = dt_pg_list,
               "dt_log10like" = dt_log10like,

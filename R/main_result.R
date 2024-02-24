@@ -10,7 +10,7 @@ make_dt_pg <- function(gtc_mk, lpd_gtc_mk, gtc_logprob_mk){
 
   # Paste two alleles
   for(i in 1:hnc){
-    gtc_mk_new[, i] <- apply(gtc_mk[, c(2 * i - 1, 2 * i)], 1, paste, collapse = ", ")
+    gtc_mk_new[, i] <- apply(gtc_mk[, c(2 * (hnc - i) + 1, 2 * (hnc - i) + 2)], 1, paste, collapse = ", ")
   }
 
   # Calculate weights
@@ -31,11 +31,11 @@ make_dt_pg <- function(gtc_mk, lpd_gtc_mk, gtc_logprob_mk){
   return(dt_pg)
 }
 
-make_dt_pg_list <- function(markers_auto, gtc_all, lpd_gtc_all, gtc_logprob_all){
-  n_cspmk <- length(gtc_all)
+make_dt_pg_list <- function(markers_auto, gtc_adopt, lpd_gtc_adopt, gtc_logprob_adopt){
+  n_cspmk <- length(gtc_adopt)
   dt_pg_list <- vector(mode = "list", length = n_cspmk)
   for(i in 1:n_cspmk){
-    dt_pg_list[[i]] <- make_dt_pg(gtc_all[[i]], lpd_gtc_all[[i]], gtc_logprob_all[[i]])
+    dt_pg_list[[i]] <- make_dt_pg(gtc_adopt[[i]], lpd_gtc_adopt[[i]], gtc_logprob_adopt[[i]])
   }
   names(dt_pg_list) <- markers_auto
   return(dt_pg_list)
