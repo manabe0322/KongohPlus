@@ -55,6 +55,7 @@ KongohPlus <- function(bool_compile = TRUE){
     observe({
 #      req(rv_file)
 #      deconvo_server("deconvo", path_pack, rv_file)
+      req(rv_deconvo)
       lr_server("lr", path_pack, rv_file, rv_deconvo)
     })
 

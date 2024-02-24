@@ -319,7 +319,8 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   dt_rhat <- data.table(Parameter = c("lp__", "tph", paste0("lambda", hnc:1), paste0("mp", hnc:1), paste0("deg", hnc:1), paste0("pae", 1:n_mk)),
                         Rhat = c(rhat_lp, rhat_tph, rhat_lambda[hnc:1], rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
 
-  return(list("dt_pg_list" = dt_pg_list,
+  return(list("hnc" = hnc,
+              "dt_pg_list" = dt_pg_list,
               "dt_log10like" = dt_log10like,
               "dt_mpdeg" = dt_mpdeg,
               "tph" = tph,

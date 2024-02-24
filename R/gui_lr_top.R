@@ -18,11 +18,15 @@ lr_ui <- function(id){
 #' lr_server
 #'
 #' @description The function to create the server module for the likelihood ratio
-lr_server <- function(id, path_pack, rv_file){
+lr_server <- function(id, path_pack, rv_file, rv_deconvo){
   moduleServer(
     id,
     function(input, output, session){
-      lr_setting_server("lr_setting", path_pack, rv_file)
+      lr_setting_server("lr_setting", path_pack, rv_file, rv_deconvo)
+
+      observe({
+        lr_result_server("lr_result")
+      })
     }
   )
 }

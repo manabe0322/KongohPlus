@@ -510,7 +510,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
 
       observeEvent(input$act_analyze_deconvo, {
         # Fix setting
-        noc_deconvo <- input$noc_deconvo
+        hnc_deconvo <- input$noc_deconvo
 
         # Fix data.table
         dt_csp <- rv_deconvo_setting$dt_csp
@@ -531,7 +531,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          results <- perform_deconvo(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, noc_deconvo,
+          results <- perform_deconvo(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, hnc_deconvo,
                                      warmup, sampling, chains)
           rv_deconvo$results <- results
 
