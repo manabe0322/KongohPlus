@@ -46,7 +46,7 @@ est_par_setting_ui <- function(id){
                           uiOutput(ns("seq_data")),
                           uiOutput(ns("kit_par")),
                           br(),
-                          actionButton(ns("act_advanced"), "Advanced setting"),
+                          actionButton(ns("act_advance_par"), "Advanced setting"),
                           br(),
                           br(),
                           br(),
@@ -244,7 +244,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       rv_advanced$min_n_motif_multi <- 3
 
       # Make the setting pop-up window
-      observeEvent(input$act_advanced, {
+      observeEvent(input$act_advance_par, {
         showModal(modalDialog(
           title = "Advanced setting",
           fluidRow(

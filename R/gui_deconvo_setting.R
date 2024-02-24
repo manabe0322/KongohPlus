@@ -12,6 +12,8 @@ deconvo_setting_ui <- function(id){
                           br(),
                           uiOutput(ns("anameth_deconvo")),
                           br(),
+                          actionButton(ns("act_advance_deconvo"), label = "Advanced setting"),
+                          br(),
                           actionButton(ns("act_analyze_deconvo"), label = "Analyze", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 9,
@@ -77,6 +79,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
       rv_deconvo_setting$dt_dsr <- NULL
       rv_deconvo_setting$dt_m2sr <- NULL
       rv_deconvo_setting$dt_gamma <- NULL
+      rv_deconvo_setting$warmup <- 1200
+      rv_deconvo_setting$sampling <- 300
+      rv_deconvo_setting$chains <- 4
 
       rv_deconvo <- reactiveValues()
       rv_deconvo$results <- NULL
@@ -427,10 +432,80 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
           dt_gamma,
           selection = "none",
           options = list(dom = "t", iDisplayLength = nrow(dt_gamma), ordering = FALSE, autoWidth = TRUE,
-                         columnDefs = list(list(targets = c(0:7, 9:14), visible = FALSE))),
+                         columnDefs = list(list(targets = c(0:8, 10:16), visible = FALSE))),
           rownames = FALSE
         ) %>%
           formatRound(columns = c("Beta"), digits = 3)
+      })
+
+      observeEvent(input$act_advance_deconvo, {
+        showModal(modalDialog(
+          title = "Advanced setting",
+          fluidRow(
+            column(6,
+                   h4("MCMC conditions"),
+                   numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_deconvo_setting$warmup),
+                   numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_deconvo_setting$sampling),
+                   numericInput(session$ns("chains"), label = "Number of chains", value = rv_deconvo_setting$chains)
+            ),
+            column(6)
+          ),
+          footer = tagList(
+            actionButton(session$ns("act_advance_save"), "Save"),
+            modalButton("Cancel")
+          ),
+          size = "l"
+        ))
+      })
+
+      observeEvent(input$warmup, {
+        warmup <- input$warmup
+        if(!is.integer(warmup)){
+          showFeedbackDanger(inputId = "warmup", text = "A positive integer is required!")
+        }else if(warmup <= 0){
+          showFeedbackDanger(inputId = "warmup", text = "A positive integer is required!")
+        }else{
+          hideFeedback("warmup")
+        }
+      })
+
+      observeEvent(input$sampling, {
+        sampling <- input$sampling
+        if(!is.integer(sampling)){
+          showFeedbackDanger(inputId = "sampling", text = "A positive integer is required!")
+        }else if(sampling <= 0){
+          showFeedbackDanger(inputId = "sampling", text = "A positive integer is required!")
+        }else{
+          hideFeedback("sampling")
+        }
+      })
+
+      observeEvent(input$chains, {
+        chains <- input$chains
+        if(!is.integer(chains)){
+          showFeedbackDanger(inputId = "chains", text = "A positive integer is required!")
+        }else if(chains <= 0){
+          showFeedbackDanger(inputId = "chains", text = "A positive integer is required!")
+        }else{
+          hideFeedback("chains")
+        }
+      })
+
+      observeEvent(input$act_advance_save, {
+        req(input$warmup)
+        req(input$sampling)
+        req(input$chains)
+
+        isolate(warmup <- input$warmup)
+        isolate(sampling <- input$sampling)
+        isolate(chains <- input$chains)
+
+        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains))){
+          rv_deconvo_setting$warmup <- warmup
+          rv_deconvo_setting$sampling <- sampling
+          rv_deconvo_setting$chains <- chains
+          removeModal()
+        }
       })
 
       observeEvent(input$act_analyze_deconvo, {
@@ -447,13 +522,17 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         dt_alcor <- rv_deconvo_setting$dt_alcor
         dt_gtc_fltr <- rv_deconvo_setting$dt_gtc_fltr
         dt_gtc_prob <- rv_deconvo_setting$dt_gtc_prob
+        warmup <- rv_deconvo_setting$warmup
+        sampling <- rv_deconvo_setting$sampling
+        chains <- rv_deconvo_setting$chains
 
         # Check input files and setting
         error_message <- check_main_file(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor, method = "deconvo")
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          results <- perform_deconvo(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, noc_deconvo)
+          results <- perform_deconvo(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, noc_deconvo,
+                                     warmup, sampling, chains)
           rv_deconvo$results <- results
 
           updateTabsetPanel(session = session_deconvo_top, inputId = "tabset_deconvo", selected = "Result")

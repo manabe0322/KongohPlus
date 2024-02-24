@@ -1,4 +1,5 @@
-perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, hnc){
+perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, hnc,
+                            warmup, sampling, chains){
   # Extract the candidate mixture proportions
   mp_cand <- extract_mp_cand(hnc)
   mp_cand_tmp <- mp_cand * 0
@@ -251,9 +252,9 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     model_main <- readRDS(paste0(path_pack, "/model/model_main.rds"))
     fit_main <- model_main$sample(
       data_list_main,
-      iter_warmup = 1200,
-      iter_sampling = 300,
-      chains = 4,
+      iter_warmup = warmup,
+      iter_sampling = sampling,
+      chains = chains,
       parallel_chains = detectCores()
     )
   }else{
