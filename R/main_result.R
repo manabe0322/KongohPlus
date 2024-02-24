@@ -41,27 +41,27 @@ make_dt_pg_list <- function(markers_auto, gtc_all, lpd_gtc_all, gtc_logprob_all)
   return(dt_pg_list)
 }
 
-calc_likelihood_mk <- function(lpd_gtc_mk, gtc_logprob_mk){
+calc_log10like_mk <- function(lpd_gtc_mk, gtc_logprob_mk){
   loglike_mk <- lpd_gtc_mk + gtc_logprob_mk
-  return(sum(exp(loglike_mk)))
+  return(log10(sum(exp(loglike_mk))))
 }
 
-calc_likelihood_adopt <- function(lpd_gtc_adopt, gtc_logprob_adopt){
+calc_log10like_adopt <- function(lpd_gtc_adopt, gtc_logprob_adopt){
   n_mk <- length(lpd_gtc_adopt)
-  likelihood_adopt <- rep(0, n_mk)
+  log10like_adopt <- rep(0, n_mk)
   for(i in 1:n_mk){
-    likelihood_adopt[i] <- calc_likelihood_mk(lpd_gtc_adopt[[i]], gtc_logprob_adopt[[i]])
+    log10like_adopt[i] <- calc_log10like_mk(lpd_gtc_adopt[[i]], gtc_logprob_adopt[[i]])
   }
-  return(likelihood_adopt)
+  return(log10like_adopt)
 }
 
-calc_combined_likelihood <- function(likelihood_adopt){
-  return(exp(sum(log(likelihood_adopt))))
+calc_combined_log10like <- function(log10like_adopt){
+  return(sum(log10like_adopt))
 }
 
-make_dt_likelihood <- function(markers_auto, likelihood_adopt){
-  combined_likelihood <- calc_combined_likelihood(likelihood_adopt)
-  dt_likelihood <- data.table(Marker = c(markers_auto, "Total"),
-                              Likelihood = c(likelihood_adopt, combined_likelihood))
-  return(dt_likelihood)
+make_dt_log10like <- function(markers_auto, log10like_adopt){
+  combined_log10like <- calc_combined_log10like(log10like_adopt)
+  dt_log10like <- data.table(Marker = c(markers_auto, "Total"),
+                             Likelihood = c(log10like_adopt, combined_log10like))
+  return(dt_log10like)
 }

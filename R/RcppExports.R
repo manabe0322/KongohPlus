@@ -57,6 +57,10 @@ make_cand_peak <- function(alleles, sr_consider) {
     .Call(`_KongohPlus_make_cand_peak`, alleles, sr_consider)
 }
 
+judge_gtc_sr <- function(gtc, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr) {
+    .Call(`_KongohPlus_judge_gtc_sr`, gtc, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr)
+}
+
 judge_gtc_mr <- function(gtc, peaks, heights, mr_fltr, st) {
     .Call(`_KongohPlus_judge_gtc_mr`, gtc, peaks, heights, mr_fltr, st)
 }

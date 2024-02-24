@@ -168,11 +168,10 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
           dt_ae,
           selection = "none",
           options = list(dom = "t", iDisplayLength = nrow(dt_ae), ordering = FALSE, autoWidth = TRUE,
-                         columnDefs = list(list(targets = c(1, 2, 4, 5, 7:14), visible = FALSE))),
+                         columnDefs = list(list(targets = c(1, 2, 4:16), visible = FALSE))),
           rownames = FALSE
         ) %>%
-          formatRound(columns = c("Myu"), digits = 3) %>%
-          formatRound(columns = c("Sigma"), digits = 0)
+          formatRound(columns = c("Alpha"), digits = 3)
       })
 
       observeEvent(input$act_bsr, {
@@ -219,7 +218,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
             dt_bsr_select,
             selection = "none",
             options = list(dom = "t", iDisplayLength = nrow(dt_bsr_select), ordering = FALSE, autoWidth = TRUE,
-                           columnDefs = list(list(targets = c(0, 1, 8:14), visible = FALSE))),
+                           columnDefs = list(list(targets = c(0, 1, 3, 9:16), visible = FALSE))),
             rownames = FALSE
           ) %>%
             formatRound(columns = c("Myu", "Slope", "Intercept"), digits = 3) %>%
@@ -284,7 +283,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
             dt_fsr_select,
             selection = "none",
             options = list(dom = "t", iDisplayLength = nrow(dt_fsr_select), ordering = FALSE, autoWidth = TRUE,
-                           columnDefs = list(list(targets = c(0, 1, 8:14), visible = FALSE))),
+                           columnDefs = list(list(targets = c(0, 1, 3, 9:16), visible = FALSE))),
             rownames = FALSE
           ) %>%
             formatRound(columns = c("Myu", "Slope", "Intercept"), digits = 3) %>%
@@ -349,7 +348,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
             dt_dsr_select,
             selection = "none",
             options = list(dom = "t", iDisplayLength = nrow(dt_dsr_select), ordering = FALSE, autoWidth = TRUE,
-                           columnDefs = list(list(targets = c(0, 1, 8:14), visible = FALSE))),
+                           columnDefs = list(list(targets = c(0, 1, 3, 9:16), visible = FALSE))),
             rownames = FALSE
           ) %>%
             formatRound(columns = c("Myu", "Slope", "Intercept"), digits = 3) %>%
@@ -401,7 +400,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
             dt_m2sr_select,
             selection = "none",
             options = list(dom = "t", iDisplayLength = nrow(dt_m2sr_select), ordering = FALSE, autoWidth = TRUE,
-                           columnDefs = list(list(targets = c(0, 1, 4, 5, 7:14), visible = FALSE))),
+                           columnDefs = list(list(targets = c(0, 1, 3, 5, 6, 8:16), visible = FALSE))),
             rownames = FALSE
           ) %>%
             formatRound(columns = c("Myu"), digits = 3) %>%

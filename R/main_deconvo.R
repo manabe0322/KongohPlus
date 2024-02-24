@@ -1,6 +1,10 @@
 perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, hnc){
   # Extract the candidate mixture proportions
   mp_cand <- extract_mp_cand(hnc)
+  mp_cand_tmp <- mp_cand * 0
+  for(i in 1:hnc){
+    mp_cand_tmp[, i] <- mp_cand[, hnc - i + 1]
+  }
   mp_cand <- asplit(mp_cand, 1)
 
   # Extract autosomal markers
@@ -266,21 +270,25 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   medians <- fit_main_summary$median
   rhats <- fit_main_summary$rhat
   tph <- medians[which(variables == "tph")]
+  lambda <- medians[grep("lambda", variables)]
   mp <- medians[grep("mp", variables)]
   deg <- medians[grep("deg", variables)]
   pae <- medians[grep("pae", variables)]
   ae <- n_mk * pae
   rhat_lp <- rhats[which(variables == "lp__")]
   rhat_tph <- rhats[which(variables == "tph")]
+  rhat_lambda <- rhats[grep("lambda", variables)]
   rhat_mp <- rhats[grep("mp", variables)]
   rhat_deg <- rhats[grep("deg", variables)]
   rhat_pae <- rhats[grep("pae", variables)]
 
   # Determine the mixture proportions and the degradation parameters
-  #sampling_data <- as_draws_matrix(draws)
-  #mpdeg_final <- determine_mpdeg(sampling_data, n_sampling = 300, n_chain = 4, upper_rhat = 1.1)
-  #mp <- mpdeg_final$mp_final
-  #deg <- mpdeg_final$deg_final
+  #if(any(rhat_mp >= 1.1)){
+  #  sampling_data <- as_draws_matrix(draws)
+  #  mpdeg_final <- determine_mpdeg(sampling_data, n_sampling = 300, n_chain = 4, upper_rhat = 1.1)
+  #  mp <- mpdeg_final$mp_final
+  #  deg <- mpdeg_final$deg_final
+  #}
 
 ###############################################################################################################
 
@@ -296,23 +304,26 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   dt_pg_list <- make_dt_pg_list(markers_auto, gtc_adopt, lpd_gtc_adopt, gtc_logprob_adopt)
 
-  likelihood_adopt <- calc_likelihood_adopt(lpd_gtc_adopt, gtc_logprob_adopt)
+  log10like_adopt <- calc_log10like_adopt(lpd_gtc_adopt, gtc_logprob_adopt)
 
-  dt_likelihood <- make_dt_likelihood(markers_auto, likelihood_adopt)
+  dt_log10like <- make_dt_log10like(markers_auto, log10like_adopt)
 
   dt_mpdeg <- data.table(Contributor = paste0("U", 1:hnc),
                          MP = mp,
                          Deg = deg)
 
+  dt_ae <- data.table(Marker = markers_auto,
+                      AE = ae)
+
+  dt_rhat <- data.table(Parameter = c("lp__", "tph", paste0("lambda", 1:hnc), paste0("mp", 1:hnc), paste0("deg", 1:hnc), paste0("pae", 1:n_mk)),
+                        Rhat = c(rhat_lp, rhat_tph, rhat_lambda, rhat_mp, rhat_deg, rhat_pae))
+
   return(list("dt_pg_list" = dt_pg_list,
-              "dt_likelihood" = dt_likelihood,
+              "dt_log10like" = dt_log10like,
               "dt_mpdeg" = dt_mpdeg,
               "tph" = tph,
-              "ae" = ae,
-              "rhat_lp" = rhat_lp,
-              "rhat_tph" = rhat_tph,
-              "rhat_mp" = rhat_mp,
-              "rhat_deg" = rhat_deg,
-              "rhat_pae" = rhat_pae,
+              "lambda" = lambda,
+              "dt_ae" = dt_ae,
+              "dt_rhat" = dt_rhat,
               "traceplot" = traceplot))
 }

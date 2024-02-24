@@ -1,5 +1,6 @@
 #include "header.h"
 
+// [[Rcpp::export]]
 bool judge_gtc_sr(std::vector<double> gtc,
                   std::vector<double> peaks_rm99,
                   std::vector<double> heights_rm99,

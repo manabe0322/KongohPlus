@@ -12,12 +12,17 @@ deconvo_result_ui <- function(id){
                       h4("Estimated parameter"),
                       br(),
                       dataTableOutput(ns("dt_mpdeg")),
-                      br()
+                      br(),
+                      textOutput(ns("tph")),
+                      br(),
+                      textOutput(ns("lambda")),
+                      br(),
+                      actionButton(ns("act_ae"), label = "AE")
                     ),
                     wellPanel(
                       h4("Diagnostics"),
                       br(),
-                      textOutput(ns("rhat_lp")),
+                      actionButton(ns("act_rhat"), label = "Rhat"),
                       br(),
                       actionButton(ns("act_traceplot_lp"), label = "Trace plot")
                     ),
@@ -38,7 +43,7 @@ deconvo_result_ui <- function(id){
                     wellPanel(
                       h4("Likelihood"),
                       br(),
-                      dataTableOutput(ns("dt_likelihood")),
+                      dataTableOutput(ns("dt_log10like")),
                       br()
                     )
              )
@@ -56,10 +61,12 @@ deconvo_result_server <- function(id, rv_deconvo){
       results <- rv_deconvo$results
       if(!is.null(results)){
         dt_pg_list <- results$dt_pg_list
-        dt_likelihood <- results$dt_likelihood
+        dt_log10like <- results$dt_log10like
         dt_mpdeg <- results$dt_mpdeg
         tph <- results$tph
-        rhat_lp <- results$rhat_lp
+        lambda <- results$lambda
+        dt_ae <- results$dt_ae
+        dt_rhat <- results$dt_rhat
         traceplot <- results$traceplot
 
         hnc <- nrow(dt_mpdeg)
@@ -75,7 +82,47 @@ deconvo_result_server <- function(id, rv_deconvo){
             formatSignif(columns = c("MP", "Deg"), digits = 3)
         })
 
-        output$rhat_lp <- renderText({paste0("Rhat: ", round(rhat_lp, 3))})
+        output$tph <- renderText({paste0("tph: ", round(tph, 0))})
+
+        output$lambda <- renderText({paste0("lambda: ", paste(round(lambda, 0), collapse = ", "))})
+
+        observeEvent(input$act_ae, {
+          showModal(modalDialog(
+            title = "AE",
+            dataTableOutput(session$ns("dt_ae")),
+            easyClose = TRUE,
+            footer = NULL
+          ))
+        })
+
+        output$dt_ae <- renderDataTable(server = FALSE, {
+          datatable(
+            dt_ae,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_ae), ordering = FALSE, autoWidth = TRUE),
+            rownames = FALSE
+          ) %>%
+            formatRound(columns = c("AE"), digits = 3)
+        })
+
+        observeEvent(input$act_rhat, {
+          showModal(modalDialog(
+            title = "Rhat",
+            dataTableOutput(session$ns("dt_rhat")),
+            easyClose = TRUE,
+            footer = NULL
+          ))
+        })
+
+        output$dt_rhat <- renderDataTable(server = FALSE, {
+          datatable(
+            dt_rhat,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_rhat), ordering = FALSE, autoWidth = TRUE),
+            rownames = FALSE
+          ) %>%
+            formatRound(columns = c("Rhat"), digits = 3)
+        })
 
         observeEvent(input$act_traceplot_lp, {
           showModal(modalDialog(
@@ -111,11 +158,11 @@ deconvo_result_server <- function(id, rv_deconvo){
           })
         })
 
-        output$dt_likelihood <- renderDataTable(server = FALSE, {
+        output$dt_log10like <- renderDataTable(server = FALSE, {
           datatable(
-            dt_likelihood,
+            dt_log10like,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_likelihood), ordering = FALSE, autowidth = TRUE),
+            options = list(dom = "t", iDisplayLength = nrow(dt_log10like), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
             formatSignif(columns = c("Likelihood"), digits = 3)

@@ -75,14 +75,20 @@ transformed data{
 
 parameters{
   real<lower = Ltph, upper = Htph> tph;
-  simplex[Hnc] mp;
+  //simplex[Hnc] mp;
+  positive_ordered[Hnc] lambda;
   vector<lower = -0.05, upper = 0>[Hnc] deg;
   simplex[N_Mk] pae;
 }
 
+transformed parameters{
+  simplex[Hnc] mp = lambda / sum(lambda);
+}
+
 model{
   tph ~ normal(tph_mean, tph_sd);
-  mp ~ dirichlet(rep_vector(1, Hnc));
+  target += gamma_lpdf(lambda | rep_vector(1, Hnc), 1);
+  //mp ~ dirichlet(rep_vector(1, Hnc));
   deg ~ normal(-0.025, 0.0125);
   pae ~ dirichlet(AE_Alpha_All_Mk);
 
