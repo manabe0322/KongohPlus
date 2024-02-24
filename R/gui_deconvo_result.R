@@ -84,7 +84,7 @@ deconvo_result_server <- function(id, rv_deconvo){
 
         output$tph <- renderText({paste0("tph: ", round(tph, 0))})
 
-        output$lambda <- renderText({paste0("lambda: ", paste(round(lambda, 0), collapse = ", "))})
+        output$lambda <- renderText({paste0("lambda: ", paste(round(lambda, 3), collapse = ", "))})
 
         observeEvent(input$act_ae, {
           showModal(modalDialog(
