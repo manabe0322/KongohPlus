@@ -58,16 +58,16 @@ deconvo_result_server <- function(id, rv_deconvo){
   moduleServer(
     id,
     function(input, output, session){
-      results <- rv_deconvo$results
-      if(!is.null(results)){
-        dt_pg_list <- results$dt_pg_list
-        dt_log10like <- results$dt_log10like
-        dt_mpdeg <- results$dt_mpdeg
-        tph <- results$tph
-        lambda <- results$lambda
-        dt_ae <- results$dt_ae
-        dt_rhat <- results$dt_rhat
-        traceplot <- results$traceplot
+      data_deconvo <- rv_deconvo$data_deconvo
+      if(!is.null(data_deconvo)){
+        dt_pg_list <- data_deconvo$dt_pg_list
+        dt_log10like <- data_deconvo$dt_log10like
+        dt_mpdeg <- data_deconvo$dt_mpdeg
+        tph <- data_deconvo$tph
+        lambda <- data_deconvo$lambda
+        dt_ae <- data_deconvo$dt_ae
+        dt_rhat <- data_deconvo$dt_rhat
+        traceplot <- data_deconvo$traceplot
 
         hnc <- nrow(dt_mpdeg)
         markers_auto <- names(dt_pg_list)

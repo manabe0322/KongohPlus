@@ -68,6 +68,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   n_gtc_adopt <- n_gtc_mcmc <- rep(0, n_mk)
   gtc_logprob_adopt <- gtc_logprob_mcmc <- vector(mode = "list", length = n_mk)
   gtc_adopt <- vector(mode = "list", length = n_mk)
+  names(gtc_adopt) <- markers_auto
 
   sumup_index_dedup1 <- 0
   max_tph <- 0
@@ -320,6 +321,12 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
                         Rhat = c(rhat_lp, rhat_tph, rhat_lambda[hnc:1], rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
 
   return(list("hnc" = hnc,
+              "markers_auto" = markers_auto,
+              "pop_al_list" = pop_al_list,
+              "pop_prob_list" = pop_prob_list,
+              "theta" = theta,
+              "gtc_adopt" = gtc_adopt,
+              "lpd_gtc_adopt" = lpd_gtc_adopt,
               "dt_pg_list" = dt_pg_list,
               "dt_log10like" = dt_log10like,
               "dt_mpdeg" = dt_mpdeg,
