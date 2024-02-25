@@ -165,7 +165,7 @@ deconvo_result_server <- function(id, rv_deconvo){
             options = list(dom = "t", iDisplayLength = nrow(dt_log10like), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatSignif(columns = c("Likelihood"), digits = 3)
+            formatSignif(columns = c("Log10_Likelihood"), digits = 3)
         })
       }
     }

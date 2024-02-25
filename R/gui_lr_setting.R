@@ -578,14 +578,17 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
       })
 
       observeEvent(input$act_analyze_lr, {
+        hp <- input$hp
+        hd <- input$hd
+        refs <- rv_lr_setting$refs
+        dt_ref <- rv_lr_setting$dt_ref
         use_deconvo <- input$use_deconvo
         if(use_deconvo){
-          hp <- input$hp
-          hd <- input$hd
-          refs <- rv_lr_setting$refs
+          log10like_hp <- assign_log10like(data_deconvo, dt_ref, hp, refs)
+          log10like_hd <- assign_log10like(data_deconvo, dt_ref, hd, refs)
+          dt_lr <- make_dt_lr(data_deconvo$markers_auto, log10like_hp, log10like_hd)
 
-          print(hp)
-          print(hd)
+          print(dt_lr)
         }else{
           hnc_lr_hp <- input$noc_lr_hp
           hnc_lr_hd <- input$noc_lr_hd
@@ -617,6 +620,10 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
               data_deconvo_hd <- perform_deconvo(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, hnc_lr_hd,
                                                  warmup, sampling, chains)
             }
+
+            log10like_hp <- assign_log10like(data_deconvo_hp, dt_ref, hp, refs)
+            log10like_hd <- assign_log10like(data_deconvo_hd, dt_ref, hd, refs)
+            dt_lr <- make_dt_lr(data_deconvo_hd$markers_auto, log10like_hp, log10like_hd)
           }
         }
       })

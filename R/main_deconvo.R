@@ -306,7 +306,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   dt_pg_list <- make_dt_pg_list(markers_auto, gtc_adopt, lpd_gtc_adopt, gtc_logprob_adopt)
 
-  log10like_adopt <- calc_log10like_adopt(lpd_gtc_adopt, gtc_logprob_adopt)
+  log10like_adopt <- calc_log10like_all_mk(lpd_gtc_adopt, gtc_logprob_adopt)
 
   dt_log10like <- make_dt_log10like(markers_auto, log10like_adopt)
 

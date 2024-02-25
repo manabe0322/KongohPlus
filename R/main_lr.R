@@ -1,4 +1,4 @@
-assign_like <- function(data_deconvo, dt_ref, hyp, refs){
+assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
   # Extract data from data_deconvo
   hnc <- data_deconvo$hnc
   markers_auto <- data_deconvo$markers_auto
@@ -11,11 +11,15 @@ assign_like <- function(data_deconvo, dt_ref, hyp, refs){
   n_mk <- length(markers_auto)
 
   prof_ref_all <- make_prof_ref_all(dt_ref, markers_auto)
+  print(prof_ref_all)
 
   hyp_id_all <- make_hyp_id_all(hnc, hyp, refs)
   n_hyp <- nrow(hyp_id_all)
 
-  gtc_logprob_all_mk <- vector(mode = "list", length = n_mk)
+  gtc_logprob_all <- vector(mode = "list", length = n_hyp)
+  for(i in 1:n_hyp){
+    gtc_logprob_all[[i]] <- vector(mode = "list", length = n_mk)
+  }
 
   for(i in 1:n_mk){
     # Extract data of one marker
@@ -27,12 +31,19 @@ assign_like <- function(data_deconvo, dt_ref, hyp, refs){
 
     # Calculate genotype probabilities
     n_obs <- make_n_obs(pop_al, prof_ref)
-    gtc_logprob_one_mk <- vector(mode = "list", length = n_hyp)
     for(j in 1:n_hyp){
+      print(paste0("j = ", j))
       gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref, hyp_id_all[j, ], n_obs)
-      gtc_logprob_one_mk[[j]] <- log(gtc_prob_mk)
+      gtc_logprob_all[[j]][[i]] <- log(gtc_prob_mk)
     }
-
-    gtc_logprob_all_mk[[i]] <- gtc_logprob_one_mk
   }
+
+  log10like_tmp <- matrix(0, n_mk + 1, n_hyp)
+  for(i in 1:n_hyp){
+    log10like <- calc_log10like_all_mk(lpd_gtc_adopt, gtc_logprob_all[[i]])
+    combined_log10like <- calc_combined_log10like(log10like)
+    log10like_tmp[, i] <- c(log10like, combined_log10like)
+  }
+
+  return(log10like_tmp[, which.max(log10like_tmp[n_mk + 1, ])])
 }
