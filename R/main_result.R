@@ -4,7 +4,8 @@ calc_weight <- function(lpd_gtc_mk){
 }
 
 make_dt_pg <- function(gtc_mk, lpd_gtc_mk, gtc_logprob_mk){
-  hnc <- ncol(gtc_mk) / 2
+  hnc <- length(gtc_mk[[1]]) / 2
+  gtc_mk <- matrix(unlist(gtc_mk), ncol = 2 * hnc, byrow = TRUE)
   gtc_mk[which(gtc_mk == 99, arr.ind = TRUE)] <- "Q"
   gtc_mk_new <- matrix("", nrow(gtc_mk), hnc)
 
@@ -32,9 +33,9 @@ make_dt_pg <- function(gtc_mk, lpd_gtc_mk, gtc_logprob_mk){
 }
 
 make_dt_pg_list <- function(markers_auto, gtc_all_mk, lpd_gtc_all_mk, gtc_logprob_all_mk){
-  n_cspmk <- length(gtc_all_mk)
-  dt_pg_list <- vector(mode = "list", length = n_cspmk)
-  for(i in 1:n_cspmk){
+  n_mk <- length(gtc_all_mk)
+  dt_pg_list <- vector(mode = "list", length = n_mk)
+  for(i in 1:n_mk){
     dt_pg_list[[i]] <- make_dt_pg(gtc_all_mk[[i]], lpd_gtc_all_mk[[i]], gtc_logprob_all_mk[[i]])
   }
   names(dt_pg_list) <- markers_auto

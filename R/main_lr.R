@@ -27,7 +27,6 @@ assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
     pop_al <- pop_al_list[[mk]]
     pop_prob <- pop_prob_list[[mk]]
     gtc_mk <- gtc_adopt[[mk]]
-    gtc_mk <- asplit(gtc_mk, 1)
 
     # Calculate genotype probabilities
     n_obs <- make_n_obs(pop_al, prof_ref)

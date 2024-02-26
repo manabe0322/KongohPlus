@@ -222,7 +222,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
       gtc_logprob_adopt[[i]] <- gtc_logprob_mk
       gtc_logprob_mcmc[[i]] <- gtc_logprob_mk[index_gtc_mk_mcmc]
 
-      gtc_adopt[[i]] <- matrix(unlist(gtc_mk), ncol = 2 * hnc, byrow = TRUE)
+      gtc_adopt[[i]] <- gtc_mk
     }
   }
 

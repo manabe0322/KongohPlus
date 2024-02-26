@@ -26,7 +26,7 @@ lr_server <- function(id, path_pack, rv_file, rv_deconvo){
 
       observe({
         req(rv_lr)
-        lr_result_server("lr_result")
+        lr_result_server("lr_result", rv_lr)
       })
     }
   )

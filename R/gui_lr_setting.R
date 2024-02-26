@@ -597,8 +597,6 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
           log10like_hp <- assign_log10like(data_deconvo, dt_ref, hp, refs)
           log10like_hd <- assign_log10like(data_deconvo, dt_ref, hd, refs)
           dt_lr <- make_dt_lr(data_deconvo$markers_auto, log10like_hp, log10like_hd)
-
-          print(dt_lr)
         }else{
           hnc_lr_hp <- input$noc_lr_hp
           hnc_lr_hd <- input$noc_lr_hd
@@ -638,7 +636,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         }
 
         if(error_message == ""){
-          rv_lr$dt_lr <- dt_lr
+          data_lr <- list("dt_lr" = dt_lr)
+          rv_lr$data_lr <- data_lr
         }
       })
 
