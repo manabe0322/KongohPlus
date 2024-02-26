@@ -66,11 +66,3 @@ make_dt_log10like <- function(markers_auto, log10like_all_mk){
                              Log10_Likelihood = c(log10like_all_mk, combined_log10like))
   return(dt_log10like)
 }
-
-make_dt_lr <- function(markers_auto, log10like_hp, log10like_hd){
-  dt_lr <- data.table(Marker = c(markers_auto, "Total"),
-                      Log10_Likelihood_Hp = log10like_hp,
-                      Log10_Likelihood_Hd = log10like_hd,
-                      LR = 10^(log10like_hp - log10like_hd))
-  return(dt_lr)
-}

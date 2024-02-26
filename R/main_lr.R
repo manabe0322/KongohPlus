@@ -7,6 +7,7 @@ assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
   theta <- data_deconvo$theta
   gtc_adopt <- data_deconvo$gtc_adopt
   lpd_gtc_adopt <- data_deconvo$lpd_gtc_adopt
+  dt_mpdeg <- data_deconvo$dt_mpdeg
 
   n_mk <- length(markers_auto)
 
@@ -36,14 +37,69 @@ assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
     }
   }
 
-  log10like_tmp <- matrix(0, n_mk + 1, n_hyp)
+  log10like_tmp <- matrix(0, n_mk, n_hyp)
+  combined_log10like_tmp <- rep(0, n_hyp)
   for(i in 1:n_hyp){
-    log10like <- calc_log10like_all_mk(lpd_gtc_adopt, gtc_logprob_all[[i]])
+    log10like_tmp[, i] <- log10like <- calc_log10like_all_mk(lpd_gtc_adopt, gtc_logprob_all[[i]])
     combined_log10like <- calc_combined_log10like(log10like)
-    log10like_tmp[, i] <- c(log10like, combined_log10like)
-
-    print(gtc_logprob_all[[i]])
+    combined_log10like_tmp[i] <- combined_log10like
   }
 
-  return(log10like_tmp[, which.max(log10like_tmp[n_mk + 1, ])])
+  index_max_like <- which.max(combined_log10like_tmp)
+  log10like_adopt <- log10like_tmp[, index_max_like]
+  combined_log10like_adopt <- combined_log10like_tmp[index_max_like]
+
+  hyp_id_adopt <- hyp_id_all[index_max_like, ]
+
+  label_contrib <- make_label_contrib(refs, hyp_id_adopt)
+  dt_mpdeg_hyp <- data.table(Contributor = label_contrib,
+                             MP = dt_mpdeg[, MP],
+                             Deg = dt_mpdeg[, Deg])
+
+  return("log10like_adopt" = log10like_adopt,
+         "combined_log10like_adopt" = combined_log10like_adopt,
+         "dt_mpdeg_hyp" = dt_mpdeg_hyp)
+}
+
+#' make_label_contrib
+#'
+#' @description The function to make labels of each contributor for assigning them to MP and Deg
+#' @param refs The vector of all references
+#' @param hyp_id A vector of IDs in a hypothesis
+make_label_contrib <- function(refs, hyp_id){
+  hnc <- length(hyp_id)
+
+  # Reverse sequence of 'hyp_id' (minor to major -> major to minor)
+  hyp_id <- hyp_id[hnc:1]
+
+  label_contrib <- rep("", hnc)
+  index_unk <- which(hyp_id == 0)
+  n_unk <- length(index_unk)
+  if(n_unk != 0){
+    label_contrib[index_unk] <- paste0("U", 1:n_unk)
+  }
+
+  index_k <- which(hyp_id != 0)
+  n_k <- length(index_k)
+  if(n_k != 0){
+    label_contrib[index_k] <- refs[hyp_id[index_k]]
+  }
+
+  return(label_contrib)
+}
+
+#' make_dt_lr
+#'
+#' @description The function to make a data.table of the LR
+#' @param markers_auto A vector of the autosomal markers
+#' @param log10like_hp A vector of the log10 likelihoods of all markers in Hp
+#' @param combined_log10like_hp The combined log10 likelihood in Hp
+#' @param log10like_hd A vector of the log10 likelihoods of all markers in Hd
+#' @param combined_log10like_hd The combined log10 likelihood in Hd
+make_dt_lr <- function(markers_auto, log10like_hp, combined_log10like_hp, log10like_hd, combined_log10like_hd){
+  dt_lr <- data.table(Marker = c(markers_auto, "Total"),
+                      Log10_Likelihood_Hp = c(log10like_hp, combined_log10like_hp),
+                      Log10_Likelihood_Hd = c(log10like_hd, combined_log10like_hd),
+                      LR = c(10^(log10like_hp - log10like_hd), 10^(combined_log10like_hp - combined_log10like_hd)))
+  return(dt_lr)
 }

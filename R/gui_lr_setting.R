@@ -594,13 +594,15 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         print(hp)
         print(hd)
         if(use_deconvo){
-          log10like_hp <- assign_log10like(data_deconvo, dt_ref, hp, refs)
-          log10like_hd <- assign_log10like(data_deconvo, dt_ref, hd, refs)
-          dt_lr <- make_dt_lr(data_deconvo$markers_auto, log10like_hp, log10like_hd)
+          data_hp <- assign_log10like(data_deconvo, dt_ref, hp, refs)
+          data_hd <- assign_log10like(data_deconvo, dt_ref, hd, refs)
+          dt_lr <- make_dt_lr(data_deconvo$markers_auto,
+                              data_hp$log10like_adopt, data_hp$combined_log10like_adopt,
+                              data_hd$log10like_adopt, data_hd$combined_log10like_adopt)
         }else{
+          # Fix setting
           hnc_lr_hp <- input$noc_lr_hp
           hnc_lr_hd <- input$noc_lr_hd
-
           dt_csp <- rv_lr_setting$dt_csp
           dt_ref <- rv_lr_setting$dt_ref
           dt_af <- rv_lr_setting$dt_af
@@ -629,14 +631,18 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                                                  warmup, sampling, chains)
             }
 
-            log10like_hp <- assign_log10like(data_deconvo_hp, dt_ref, hp, refs)
-            log10like_hd <- assign_log10like(data_deconvo_hd, dt_ref, hd, refs)
-            dt_lr <- make_dt_lr(data_deconvo_hd$markers_auto, log10like_hp, log10like_hd)
+            data_hp <- assign_log10like(data_deconvo_hp, dt_ref, hp, refs)
+            data_hd <- assign_log10like(data_deconvo_hd, dt_ref, hd, refs)
+            dt_lr <- make_dt_lr(data_deconvo_hd$markers_auto,
+                                data_hp$log10like_adopt, data_hp$combined_log10like_adopt,
+                                data_hd$log10like_adopt, data_hd$combined_log10like_adopt)
           }
         }
 
         if(error_message == ""){
-          data_lr <- list("dt_lr" = dt_lr)
+          data_lr <- list("data_hp" = data_hp,
+                          "data_hd" = data_hd,
+                          "dt_lr" = dt_lr)
           rv_lr$data_lr <- data_lr
         }
       })

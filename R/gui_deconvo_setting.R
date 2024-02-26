@@ -522,8 +522,6 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
       observeEvent(input$act_analyze_deconvo, {
         # Fix setting
         hnc_deconvo <- input$noc_deconvo
-
-        # Fix data.table
         dt_csp <- rv_deconvo_setting$dt_csp
         dt_ref <- rv_deconvo_setting$dt_ref
         dt_af <- rv_deconvo_setting$dt_af
