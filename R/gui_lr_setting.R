@@ -90,7 +90,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
       rv_lr_setting$chains <- 4
 
       rv_lr <- reactiveValues()
-      rv_lr$data_lr <- NULL
+      rv_lr$dt_lr <- NULL
       rv_lr$dt_csp <- NULL
       rv_lr$dt_ref <- NULL
       rv_lr$dt_af <- NULL
@@ -107,12 +107,13 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
       observe({
         req(rv_file)
-        rv_lr_setting$dt_csp <- rv_file$dt_csp
-        rv_lr_setting$dt_ref <- dt_ref <- rv_file$dt_ref
-        rv_lr_setting$dt_af <- rv_file$dt_af
+        isolate(rv_lr_setting$dt_csp <- rv_file$dt_csp)
+        isolate(rv_lr_setting$dt_ref <- rv_file$dt_ref)
+        isolate(rv_lr_setting$dt_af <- rv_file$dt_af)
 
+        isolate(dt_ref <- rv_lr_setting$dt_ref)
         if(!is.null(dt_ref)){
-          rv_lr_setting$refs <- unique(dt_ref[, SampleName])
+          isolate(rv_lr_setting$refs <- unique(dt_ref[, SampleName]))
         }
       })
 
@@ -235,9 +236,9 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         isolate(chains <- input$chains)
 
         if(all(is.integer(warmup), is.integer(sampling), is.integer(chains))){
-          rv_lr_setting$warmup <- warmup
-          rv_lr_setting$sampling <- sampling
-          rv_lr_setting$chains <- chains
+          isolate(rv_lr_setting$warmup <- warmup)
+          isolate(rv_lr_setting$sampling <- sampling)
+          isolate(rv_lr_setting$chains <- chains)
           removeModal()
         }
       })
@@ -253,20 +254,20 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
       observeEvent(input$anameth_lr, {
         # Load the selected analysis method
         anameth <- input$anameth_lr
-        rv_lr_setting$anameth <- anameth
-        rv_lr_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", anameth, ".csv"))
+        isolate(rv_lr_setting$anameth <- anameth)
+        isolate(rv_lr_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", anameth, ".csv")))
 
         # Extract data per column
         folders <- dt_anameth[, Folder]
         names <- dt_anameth[, Name]
 
         # Load each data.table
-        rv_lr_setting$dt_kit <- fread(paste0(path_pack, "/extdata/kit/", names[folders == "kit"], ".csv"))
-        rv_lr_setting$dt_at <- dt_at <- fread(paste0(path_pack, "/extdata/at/", names[folders == "at"], ".csv"))
-        rv_lr_setting$dt_param <- fread(paste0(path_pack, "/extdata/param/", names[folders == "param"], ".csv"))
-        rv_lr_setting$dt_alcor <- fread(paste0(path_pack, "/extdata/alcor/", names[folders == "alcor"], ".csv"))
-        rv_lr_setting$dt_gtc_fltr <- dt_gtc_fltr <- fread(paste0(path_pack, "/extdata/gtc_fltr/", names[folders == "gtc_fltr"], ".csv"))
-        rv_lr_setting$dt_gtc_prob <- dt_gtc_prob <- fread(paste0(path_pack, "/extdata/gtc_prob/", names[folders == "gtc_prob"], ".csv"))
+        isolate(rv_lr_setting$dt_kit <- fread(paste0(path_pack, "/extdata/kit/", names[folders == "kit"], ".csv")))
+        isolate(rv_lr_setting$dt_at <- dt_at <- fread(paste0(path_pack, "/extdata/at/", names[folders == "at"], ".csv")))
+        isolate(rv_lr_setting$dt_param <- fread(paste0(path_pack, "/extdata/param/", names[folders == "param"], ".csv")))
+        isolate(rv_lr_setting$dt_alcor <- fread(paste0(path_pack, "/extdata/alcor/", names[folders == "alcor"], ".csv")))
+        isolate(rv_lr_setting$dt_gtc_fltr <- dt_gtc_fltr <- fread(paste0(path_pack, "/extdata/gtc_fltr/", names[folders == "gtc_fltr"], ".csv")))
+        isolate(rv_lr_setting$dt_gtc_prob <- dt_gtc_prob <- fread(paste0(path_pack, "/extdata/gtc_prob/", names[folders == "gtc_prob"], ".csv")))
 
         # Display analytical thresholds
         output$dt_at <- renderDataTable(server = FALSE, {
@@ -307,7 +308,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
       })
 
       output$dt_ae <- renderDataTable(server = FALSE, {
-        dt_ae <- rv_lr_setting$dt_ae
+        isolate(dt_ae <- rv_lr_setting$dt_ae)
         datatable(
           dt_ae,
           selection = "none",
@@ -322,9 +323,9 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         print(input$act_bsr)
 
         # Extract parameters for BSR
-        dt_param <- rv_lr_setting$dt_param
+        isolate(dt_param <- rv_lr_setting$dt_param)
         setkey(dt_param, Parameter)
-        rv_lr_setting$dt_bsr <- dt_bsr <- dt_param["BSR"]
+        isolate(rv_lr_setting$dt_bsr <- dt_bsr <- dt_param["BSR"])
         markers <- dt_bsr[, Marker]
 
         showModal(modalDialog(
@@ -342,7 +343,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
       observeEvent(input$mk_bsr, {
         # Extract parameters
-        dt_bsr <- rv_lr_setting$dt_bsr
+        isolate(dt_bsr <- rv_lr_setting$dt_bsr)
         mk_bsr <- input$mk_bsr
         setkey(dt_bsr, Marker)
         dt_bsr_select <- dt_bsr[mk_bsr]
@@ -350,7 +351,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
         if(model_bsr_select != "Not consider"){
           # Extract corrected alleles
-          dt_alcor <- rv_lr_setting$dt_alcor
+          isolate(dt_alcor <- rv_lr_setting$dt_alcor)
           setkey(dt_alcor, Marker)
           dt_alcor_select <- dt_alcor[mk_bsr]
         }else{
@@ -387,9 +388,9 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
       observeEvent(input$act_fsr, {
         # Extract parameters for FSR
-        dt_param <- rv_lr_setting$dt_param
+        isolate(dt_param <- rv_lr_setting$dt_param)
         setkey(dt_param, Parameter)
-        rv_lr_setting$dt_fsr <- dt_fsr <- dt_param["FSR"]
+        isolate(rv_lr_setting$dt_fsr <- dt_fsr <- dt_param["FSR"])
         markers <- dt_fsr[, Marker]
 
         showModal(modalDialog(
@@ -407,7 +408,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
       observeEvent(input$mk_fsr, {
         # Extract parameters
-        dt_fsr <- rv_lr_setting$dt_fsr
+        isolate(dt_fsr <- rv_lr_setting$dt_fsr)
         mk_fsr <- input$mk_fsr
         setkey(dt_fsr, Marker)
         dt_fsr_select <- dt_fsr[mk_fsr]
@@ -415,7 +416,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
         if(model_fsr_select != "Not consider"){
           # Extract corrected alleles
-          dt_alcor <- rv_lr_setting$dt_alcor
+          isolate(dt_alcor <- rv_lr_setting$dt_alcor)
           setkey(dt_alcor, Marker)
           dt_alcor_select <- dt_alcor[mk_fsr]
         }else{
@@ -452,9 +453,9 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
       observeEvent(input$act_dsr, {
         # Extract parameters for DSR
-        dt_param <- rv_lr_setting$dt_param
+        isolate(dt_param <- rv_lr_setting$dt_param)
         setkey(dt_param, Parameter)
-        rv_lr_setting$dt_dsr <- dt_dsr <- dt_param["DSR"]
+        isolate(rv_lr_setting$dt_dsr <- dt_dsr <- dt_param["DSR"])
         markers <- dt_dsr[, Marker]
 
         showModal(modalDialog(
@@ -472,7 +473,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
       observeEvent(input$mk_dsr, {
         # Extract parameters
-        dt_dsr <- rv_lr_setting$dt_dsr
+        isolate(dt_dsr <- rv_lr_setting$dt_dsr)
         mk_dsr <- input$mk_dsr
         setkey(dt_dsr, Marker)
         dt_dsr_select <- dt_dsr[mk_dsr]
@@ -480,7 +481,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
         if(model_dsr_select != "Not consider"){
           # Extract corrected alleles
-          dt_alcor <- rv_lr_setting$dt_alcor
+          isolate(dt_alcor <- rv_lr_setting$dt_alcor)
           setkey(dt_alcor, Marker)
           dt_alcor_select <- dt_alcor[mk_dsr]
         }else{
@@ -517,9 +518,9 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
       observeEvent(input$act_m2sr, {
         # Extract parameters for M2SR
-        dt_param <- rv_lr_setting$dt_param
+        isolate(dt_param <- rv_lr_setting$dt_param)
         setkey(dt_param, Parameter)
-        rv_lr_setting$dt_m2sr <- dt_m2sr <- dt_param["M2SR"]
+        isolate(rv_lr_setting$dt_m2sr <- dt_m2sr <- dt_param["M2SR"])
         markers <- dt_m2sr[, Marker]
 
         showModal(modalDialog(
@@ -533,7 +534,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
       observeEvent(input$mk_m2sr, {
         # Extract parameters
-        dt_m2sr <- rv_lr_setting$dt_m2sr
+        isolate(dt_m2sr <- rv_lr_setting$dt_m2sr)
         mk_m2sr <- input$mk_m2sr
         setkey(dt_m2sr, Marker)
         dt_m2sr_select <- dt_m2sr[mk_m2sr]
@@ -553,9 +554,9 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
       })
 
       observeEvent(input$act_gamma, {
-        dt_param <- rv_lr_setting$dt_param
+        isolate(dt_param <- rv_lr_setting$dt_param)
         setkey(dt_param, Parameter)
-        rv_lr_setting$dt_gamma <- dt_param["Gamma"]
+        isolate(rv_lr_setting$dt_gamma <- dt_param["Gamma"])
 
         showModal(modalDialog(
           title = "Gamma distribution",
@@ -566,7 +567,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
       })
 
       output$dt_gamma <- renderDataTable(server = FALSE, {
-        dt_gamma <- rv_lr_setting$dt_gamma
+        isolate(dt_gamma <- rv_lr_setting$dt_gamma)
         datatable(
           dt_gamma,
           selection = "none",
@@ -580,8 +581,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
       observeEvent(input$act_analyze_lr, {
         hp <- input$hp
         hd <- input$hd
-        refs <- rv_lr_setting$refs
-        dt_ref <- rv_lr_setting$dt_ref
+        isolate(refs <- rv_lr_setting$refs)
+        isolate(dt_ref <- rv_lr_setting$dt_ref)
         use_deconvo <- input$use_deconvo
         if(use_deconvo){
           log10like_hp <- assign_log10like(data_deconvo, dt_ref, hp, refs)
@@ -589,6 +590,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
           dt_lr <- make_dt_lr(data_deconvo$markers_auto, log10like_hp, log10like_hd)
 
           print(dt_lr)
+
+          rv_lr$dt_lr <- dt_lr
         }else{
           hnc_lr_hp <- input$noc_lr_hp
           hnc_lr_hd <- input$noc_lr_hd
@@ -624,9 +627,13 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
             log10like_hp <- assign_log10like(data_deconvo_hp, dt_ref, hp, refs)
             log10like_hd <- assign_log10like(data_deconvo_hd, dt_ref, hd, refs)
             dt_lr <- make_dt_lr(data_deconvo_hd$markers_auto, log10like_hp, log10like_hd)
+
+            rv_lr$dt_lr <- dt_lr
           }
         }
       })
+
+      return(rv_lr)
     }
   )
 }

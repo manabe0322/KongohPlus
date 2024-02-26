@@ -11,7 +11,6 @@ assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
   n_mk <- length(markers_auto)
 
   prof_ref_all <- make_prof_ref_all(dt_ref, markers_auto)
-  print(prof_ref_all)
 
   hyp_id_all <- make_hyp_id_all(hnc, hyp, refs)
   n_hyp <- nrow(hyp_id_all)
@@ -28,11 +27,11 @@ assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
     pop_al <- pop_al_list[[mk]]
     pop_prob <- pop_prob_list[[mk]]
     gtc_mk <- gtc_adopt[[mk]]
+    gtc_mk <- asplit(gtc_mk, 1)
 
     # Calculate genotype probabilities
     n_obs <- make_n_obs(pop_al, prof_ref)
     for(j in 1:n_hyp){
-      print(paste0("j = ", j))
       gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref, hyp_id_all[j, ], n_obs)
       gtc_logprob_all[[j]][[i]] <- log(gtc_prob_mk)
     }
@@ -44,6 +43,7 @@ assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
     combined_log10like <- calc_combined_log10like(log10like)
     log10like_tmp[, i] <- c(log10like, combined_log10like)
   }
+  print(log10like_tmp)
 
   return(log10like_tmp[, which.max(log10like_tmp[n_mk + 1, ])])
 }
