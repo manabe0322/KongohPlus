@@ -42,8 +42,9 @@ assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
     log10like <- calc_log10like_all_mk(lpd_gtc_adopt, gtc_logprob_all[[i]])
     combined_log10like <- calc_combined_log10like(log10like)
     log10like_tmp[, i] <- c(log10like, combined_log10like)
+
+    print(gtc_logprob_all[[i]])
   }
-  print(log10like_tmp)
 
   return(log10like_tmp[, which.max(log10like_tmp[n_mk + 1, ])])
 }
