@@ -56,9 +56,12 @@ assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
                              MP = dt_mpdeg[, MP],
                              Deg = dt_mpdeg[, Deg])
 
-  return("log10like_adopt" = log10like_adopt,
-         "combined_log10like_adopt" = combined_log10like_adopt,
-         "dt_mpdeg_hyp" = dt_mpdeg_hyp)
+  dt_pg_list_hyp <- make_dt_pg_list(markers_auto, gtc_adopt, lpd_gtc_adopt, gtc_logprob_all[[index_max_like]], label_contrib)
+
+  return(list("log10like_adopt" = log10like_adopt,
+              "combined_log10like_adopt" = combined_log10like_adopt,
+              "dt_mpdeg_hyp" = dt_mpdeg_hyp,
+              "dt_pg_list_hyp" = dt_pg_list_hyp))
 }
 
 #' make_label_contrib

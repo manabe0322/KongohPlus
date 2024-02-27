@@ -60,7 +60,7 @@ lr_setting_ui <- function(id){
 #' lr_setting_server
 #'
 #' @description The function to create the server module for setting conditions of the likelihood ratio
-lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
+lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top){
   moduleServer(
     id,
     function(input, output, session){
@@ -589,14 +589,12 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         refs <- rv_lr_setting$refs
         dt_ref <- rv_lr_setting$dt_ref
         use_deconvo <- input$use_deconvo
-        data_deconvo <- rv_lr_setting$data_deconvo
 
-        print(hp)
-        print(hd)
         if(use_deconvo){
-          data_hp <- assign_log10like(data_deconvo, dt_ref, hp, refs)
-          data_hd <- assign_log10like(data_deconvo, dt_ref, hd, refs)
-          dt_lr <- make_dt_lr(data_deconvo$markers_auto,
+          data_deconvo_hp <- data_deconvo_hd <- rv_lr_setting$data_deconvo
+          data_hp <- assign_log10like(data_deconvo_hp, dt_ref, hp, refs)
+          data_hd <- assign_log10like(data_deconvo_hd, dt_ref, hd, refs)
+          dt_lr <- make_dt_lr(data_deconvo_hd$markers_auto,
                               data_hp$log10like_adopt, data_hp$combined_log10like_adopt,
                               data_hd$log10like_adopt, data_hd$combined_log10like_adopt)
         }else{
@@ -640,10 +638,14 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         }
 
         if(error_message == ""){
-          data_lr <- list("data_hp" = data_hp,
-                          "data_hd" = data_hd,
+          data_lr <- list("dt_mpdeg_hp" = data_hp$dt_mpdeg_hyp,
+                          "dt_mpdeg_hd" = data_hd$dt_mpdeg_hyp,
+                          "dt_pg_list_hp" = data_hp$dt_pg_list_hyp,
+                          "dt_pg_list_hd" = data_hd$dt_pg_list_hyp,
                           "dt_lr" = dt_lr)
           rv_lr$data_lr <- data_lr
+
+          updateTabsetPanel(session = session_lr_top, inputId = "tabset_lr", selected = "Result")
         }
       })
 

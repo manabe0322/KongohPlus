@@ -62,13 +62,91 @@ lr_result_server <- function(id, rv_lr){
     function(input, output, session){
       data_lr <- rv_lr$data_lr
       if(!is.null(data_lr)){
+        dt_mpdeg_hp <- data_lr$dt_mpdeg_hp
+        dt_mpdeg_hd <- data_lr$dt_mpdeg_hd
+        dt_pg_list_hp <- data_lr$dt_pg_list_hp
+        dt_pg_list_hd <- data_lr$dt_pg_list_hd
         dt_lr <- data_lr$dt_lr
+
+        hnc <- nrow(dt_mpdeg_hd)
+        markers_auto <- names(dt_pg_list_hd)
+
+        rv_lr_result <- reactiveValues()
+        rv_lr_result$dt_pg_display <- dt_pg_list_hp
+
+        output$dt_mpdeg_hp <- renderDataTable(server = FALSE, {
+          datatable(
+            dt_mpdeg_hp,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_mpdeg_hp), ordering = FALSE, autowidth = TRUE),
+            rownames = FALSE
+          ) %>%
+            formatSignif(columns = c("MP", "Deg"), digits = 3)
+        })
+
+        output$dt_mpdeg_hd <- renderDataTable(server = FALSE, {
+          datatable(
+            dt_mpdeg_hd,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_mpdeg_hd), ordering = FALSE, autowidth = TRUE),
+            rownames = FALSE
+          ) %>%
+            formatSignif(columns = c("MP", "Deg"), digits = 3)
+        })
+
+        output$hyp_pg <- renderUI({
+          selectInput(session$ns("hyp_pg"), label = "Hypothesis", choices = c("Hp", "Hd"), selected = "Hp")
+        })
+
+        output$mk_pg <- renderUI({
+          selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_auto, selected = markers_auto[1])
+        })
+
+        observeEvent(input$hyp_pg, {
+          hyp_select <- input$hyp_pg
+          if(hyp_select == "Hp"){
+            rv_lr_result$dt_pg_display <- dt_pg_list_hp
+          }else{
+            rv_lr_result$dt_pg_display <- dt_pg_list_hd
+          }
+
+          mk_select <- input$mk_pg
+          isolate(dt_pg_display <- rv_lr_result$dt_pg_display)
+
+          output$dt_pg <- renderDataTable(server = FALSE, {
+            datatable(
+              dt_pg_display[[mk_select]],
+              selection = list(mode = "single", target = "row"),
+              options = list(iDisplayLength = 25, ordering = FALSE, autowidth = TRUE,
+                             columnDefs = list(list(targets = c(hnc + 1, hnc + 2), visible = FALSE))),
+              rownames = FALSE
+            ) %>%
+              formatSignif(columns = c("Weight"), digits = 3)
+          })
+        })
+
+        observeEvent(input$mk_pg, {
+          mk_select <- input$mk_pg
+          isolate(dt_pg_display <- rv_lr_result$dt_pg_display)
+
+          output$dt_pg <- renderDataTable(server = FALSE, {
+            datatable(
+              dt_pg_display[[mk_select]],
+              selection = list(mode = "single", target = "row"),
+              options = list(iDisplayLength = 25, ordering = FALSE, autowidth = TRUE,
+                             columnDefs = list(list(targets = c(hnc + 1, hnc + 2), visible = FALSE))),
+              rownames = FALSE
+            ) %>%
+              formatSignif(columns = c("Weight"), digits = 3)
+          })
+        })
 
         output$dt_lr <- renderDataTable(server = FALSE, {
           datatable(
             dt_lr,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_lr), ordering = FALSE, autowidth = TRUE),
+            options = list(dom = "t", iDisplayLength = nrow(dt_lr), ordering = FALSE, autowidth = TRUE,
+                           columnDefs = list(list(targets = c(1, 2), visible = FALSE))),
             rownames = FALSE
           ) %>%
             formatSignif(columns = c("LR"), digits = 3)

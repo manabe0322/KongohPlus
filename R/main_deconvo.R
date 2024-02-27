@@ -304,7 +304,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   lpd_gtc_adopt <- calc_lpd_gtc_adopt(n_mk, n_dedup1_adopt, unlist(oph_dedup1_adopt), eph_dedup1_adopt, at_all_mk, gamma_beta, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp)
 
-  dt_pg_list <- make_dt_pg_list(markers_auto, gtc_adopt, lpd_gtc_adopt, gtc_logprob_adopt)
+  dt_pg_list <- make_dt_pg_list(markers_auto, gtc_adopt, lpd_gtc_adopt, gtc_logprob_adopt, paste0("U", 1:hnc))
 
   log10like_adopt <- calc_log10like_all_mk(lpd_gtc_adopt, gtc_logprob_adopt)
 

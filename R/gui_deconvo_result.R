@@ -60,6 +60,8 @@ deconvo_result_server <- function(id, rv_deconvo){
     function(input, output, session){
       data_deconvo <- rv_deconvo$data_deconvo
       if(!is.null(data_deconvo)){
+        hnc <- data_deconvo$hnc
+        markers_auto <- data_deconvo$markers_auto
         dt_pg_list <- data_deconvo$dt_pg_list
         dt_log10like <- data_deconvo$dt_log10like
         dt_mpdeg <- data_deconvo$dt_mpdeg
@@ -68,9 +70,6 @@ deconvo_result_server <- function(id, rv_deconvo){
         dt_ae <- data_deconvo$dt_ae
         dt_rhat <- data_deconvo$dt_rhat
         traceplot <- data_deconvo$traceplot
-
-        hnc <- nrow(dt_mpdeg)
-        markers_auto <- names(dt_pg_list)
 
         output$dt_mpdeg <- renderDataTable(server = FALSE, {
           datatable(
@@ -140,7 +139,7 @@ deconvo_result_server <- function(id, rv_deconvo){
         })
 
         output$mk_pg <- renderUI({
-          selectInput(session$ns("mk_pg"), label = h4("Marker"), choices = markers_auto, selected = markers_auto[1])
+          selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_auto, selected = markers_auto[1])
         })
 
         observeEvent(input$mk_pg, {
