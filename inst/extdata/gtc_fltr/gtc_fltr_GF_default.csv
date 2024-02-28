@@ -3,6 +3,5 @@ BSR,0.3
 FSR,0.15
 DSR,0.05
 M2SR,0.05
-PHR,0.25
-MR,0.25
-ST,500
+N_DropIn,2
+H_DropIn,300

@@ -216,6 +216,50 @@ bool judge_gtc_mr(std::vector<double> gtc,
 }
 
 // [[Rcpp::export]]
+bool is_element_all_vec_double(std::vector<double> vec_a, std::vector<double> vec_b){
+  bool ans = true;
+  int n_vec_a = vec_a.size();
+  for(int i = 0; i < n_vec_a; ++i){
+    double element = vec_a[i];
+    auto index = std::find(vec_b.begin(), vec_b.end(), element);
+    ans = index != vec_b.end();
+    if(!ans){
+      break;
+    }
+  }
+  return(ans);
+}
+
+// [[Rcpp::export]]
+std::vector<int> search_index_dropin(std::vector<double> peaks_rm99,
+                                     std::vector<double> cand_peak){
+  int n_peaks_rm99 = peaks_rm99.size();
+  std::vector<int> index_dropin;
+  for(int i = 0; i < n_peaks_rm99; ++i){
+    int index_peak = find_index_double(peaks_rm99[i], cand_peak);
+    if(index_peak == -1){
+      index_dropin.push_back(i);
+    }
+  }
+  return(index_dropin);
+}
+
+// [[Rcpp::export]]
+bool judge_gtc_dropin(std::vector<double> gtc,
+                      std::vector<double> peaks_rm99,
+                      std::vector<double> heights_rm99,
+                      std::vector<bool> sr_consider,
+                      int n_dropin_fltr
+                      double h_dropin_fltr){
+  bool adopt_gtc = false;
+  std::vector<double> cand_peak = make_cand_peak(gtc, sr_consider);
+  std::vector<int> index_dropin = search_index_dropin(peaks_rm99, cand_peak);
+  if(index_dropin.size() <= n_dropin_fltr){
+
+  }
+}
+
+// [[Rcpp::export]]
 bool judge_gtc(std::vector<double> gtc,
                std::vector<double> peaks,
                std::vector<double> heights,
@@ -226,7 +270,6 @@ bool judge_gtc(std::vector<double> gtc,
                double fsr_fltr,
                double dsr_fltr,
                double m2sr_fltr){
-  std::vector<double> cand_peak = make_cand_peak(gtc, sr_consider);
   bool adopt_gtc = is_element_all_vec_double(peaks_rm99, cand_peak);
 
   // Write other conditions

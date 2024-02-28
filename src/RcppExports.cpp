@@ -94,18 +94,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// is_element_all_vec_double
-bool is_element_all_vec_double(std::vector<double> vec_a, std::vector<double> vec_b);
-RcppExport SEXP _KongohPlus_is_element_all_vec_double(SEXP vec_aSEXP, SEXP vec_bSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type vec_a(vec_aSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type vec_b(vec_bSEXP);
-    rcpp_result_gen = Rcpp::wrap(is_element_all_vec_double(vec_a, vec_b));
-    return rcpp_result_gen;
-END_RCPP
-}
 // setdiff_double
 std::vector<double> setdiff_double(std::vector<double> vec_num1, std::vector<double> vec_num2);
 RcppExport SEXP _KongohPlus_setdiff_double(SEXP vec_num1SEXP, SEXP vec_num2SEXP) {
@@ -216,6 +204,30 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type mr_fltr(mr_fltrSEXP);
     Rcpp::traits::input_parameter< double >::type st(stSEXP);
     rcpp_result_gen = Rcpp::wrap(judge_gtc_mr(gtc, peaks, heights, mr_fltr, st));
+    return rcpp_result_gen;
+END_RCPP
+}
+// is_element_all_vec_double
+bool is_element_all_vec_double(std::vector<double> vec_a, std::vector<double> vec_b);
+RcppExport SEXP _KongohPlus_is_element_all_vec_double(SEXP vec_aSEXP, SEXP vec_bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type vec_a(vec_aSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type vec_b(vec_bSEXP);
+    rcpp_result_gen = Rcpp::wrap(is_element_all_vec_double(vec_a, vec_b));
+    return rcpp_result_gen;
+END_RCPP
+}
+// search_index_dropin
+std::vector<int> search_index_dropin(std::vector<double> peaks_rm99, std::vector<double> cand_peak);
+RcppExport SEXP _KongohPlus_search_index_dropin(SEXP peaks_rm99SEXP, SEXP cand_peakSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type peaks_rm99(peaks_rm99SEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type cand_peak(cand_peakSEXP);
+    rcpp_result_gen = Rcpp::wrap(search_index_dropin(peaks_rm99, cand_peak));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -482,7 +494,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_extract_subvec_int", (DL_FUNC) &_KongohPlus_extract_subvec_int, 3},
     {"_KongohPlus_extract_subvec_double", (DL_FUNC) &_KongohPlus_extract_subvec_double, 3},
     {"_KongohPlus_find_index_double", (DL_FUNC) &_KongohPlus_find_index_double, 2},
-    {"_KongohPlus_is_element_all_vec_double", (DL_FUNC) &_KongohPlus_is_element_all_vec_double, 2},
     {"_KongohPlus_setdiff_double", (DL_FUNC) &_KongohPlus_setdiff_double, 2},
     {"_KongohPlus_setdiff_int", (DL_FUNC) &_KongohPlus_setdiff_int, 2},
     {"_KongohPlus_calc_bs", (DL_FUNC) &_KongohPlus_calc_bs, 1},
@@ -492,6 +503,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_make_cand_peak", (DL_FUNC) &_KongohPlus_make_cand_peak, 2},
     {"_KongohPlus_judge_gtc_sr", (DL_FUNC) &_KongohPlus_judge_gtc_sr, 8},
     {"_KongohPlus_judge_gtc_mr", (DL_FUNC) &_KongohPlus_judge_gtc_mr, 5},
+    {"_KongohPlus_is_element_all_vec_double", (DL_FUNC) &_KongohPlus_is_element_all_vec_double, 2},
+    {"_KongohPlus_search_index_dropin", (DL_FUNC) &_KongohPlus_search_index_dropin, 2},
     {"_KongohPlus_judge_gtc", (DL_FUNC) &_KongohPlus_judge_gtc, 10},
     {"_KongohPlus_judge_gtc_mk", (DL_FUNC) &_KongohPlus_judge_gtc_mk, 9},
     {"_KongohPlus_extract_gtc_adopt", (DL_FUNC) &_KongohPlus_extract_gtc_adopt, 2},

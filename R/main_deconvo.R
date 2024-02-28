@@ -37,6 +37,8 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   fsr_fltr <- gtc_fltr_value[gtc_fltr_type == "FSR"]
   dsr_fltr <- gtc_fltr_value[gtc_fltr_type == "DSR"]
   m2sr_fltr <- gtc_fltr_value[gtc_fltr_type == "M2SR"]
+  n_dropin_fltr <- gtc_fltr_value[gtc_fltr_type == "N_DropIn"]
+  h_dropin_fltr <- gtc_fltr_value[gtc_fltr_type == "H_DropIn"]
   #phr_fltr <- gtc_fltr_value[gtc_fltr_type == "PHR"]
   #mr_fltr <- gtc_fltr_value[gtc_fltr_type == "MR"]
   #st <- gtc_fltr_value[gtc_fltr_type == "ST"]

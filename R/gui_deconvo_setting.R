@@ -45,7 +45,9 @@ deconvo_setting_ui <- function(id){
                                 textOutput(ns("bsr_fltr")),
                                 textOutput(ns("fsr_fltr")),
                                 textOutput(ns("dsr_fltr")),
-                                textOutput(ns("m2sr_fltr"))
+                                textOutput(ns("m2sr_fltr")),
+                                textOutput(ns("n_dropin")),
+                                textOutput(ns("h_dropin"))
                          )
                        )
              )
@@ -233,6 +235,8 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         output$fsr_fltr <- renderText({paste0("Filter of forward stutter ratio: ", gtc_fltr_value[gtc_fltr_type == "FSR"])})
         output$dsr_fltr <- renderText({paste0("Filter of double-back stutter ratio: ", gtc_fltr_value[gtc_fltr_type == "DSR"])})
         output$m2sr_fltr <- renderText({paste0("Filter of minus 2-nt stutter ratio: ", gtc_fltr_value[gtc_fltr_type == "M2SR"])})
+        output$n_dropin <- renderText({paste0("Filter of the number of drop-in peaks: ", gtc_fltr_value[gtc_fltr_type == "N_DropIn"])})
+        output$h_dropin <- renderText({paste0("Filter of the height of drop-in peaks: ", gtc_fltr_value[gtc_fltr_type == "H_DropIn"])})
       })
 
       observeEvent(input$act_ae, {

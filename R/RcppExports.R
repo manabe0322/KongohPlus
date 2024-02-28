@@ -25,10 +25,6 @@ find_index_double <- function(element, vec) {
     .Call(`_KongohPlus_find_index_double`, element, vec)
 }
 
-is_element_all_vec_double <- function(vec_a, vec_b) {
-    .Call(`_KongohPlus_is_element_all_vec_double`, vec_a, vec_b)
-}
-
 setdiff_double <- function(vec_num1, vec_num2) {
     .Call(`_KongohPlus_setdiff_double`, vec_num1, vec_num2)
 }
@@ -63,6 +59,14 @@ judge_gtc_sr <- function(gtc, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, f
 
 judge_gtc_mr <- function(gtc, peaks, heights, mr_fltr, st) {
     .Call(`_KongohPlus_judge_gtc_mr`, gtc, peaks, heights, mr_fltr, st)
+}
+
+is_element_all_vec_double <- function(vec_a, vec_b) {
+    .Call(`_KongohPlus_is_element_all_vec_double`, vec_a, vec_b)
+}
+
+search_index_dropin <- function(peaks_rm99, cand_peak) {
+    .Call(`_KongohPlus_search_index_dropin`, peaks_rm99, cand_peak)
 }
 
 judge_gtc <- function(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr) {
