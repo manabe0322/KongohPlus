@@ -11,7 +11,7 @@ functions{
     return eph_dedup1;
   }
 
-  real calc_lpd(real oph, real eph, real at, real beta, real di_alpha, real di_beta, real logprob_di){
+  real calc_lpd(real oph, real eph, real at, real beta, real di_alpha, real di_beta, real logprob_di, real di_min){
     real lpd = 0;
     if(eph > 0){
       if(oph >= at){
@@ -20,15 +20,15 @@ functions{
         lpd = gamma_lcdf(at | eph * beta, beta);
       }
     }else if(eph < 0){
-      lpd = gamma_lpdf(oph | di_alpha, di_beta) + logprob_di;
+      lpd = gamma_lpdf(oph - di_min | di_alpha, di_beta) + logprob_di;
     }
     return lpd;
   }
 
-  vector calc_lpd_mk(int n_dedup_eph, vector oph_mk, vector eph_mk, real at, real beta, real di_alpha, real di_beta, real logprob_di){
+  vector calc_lpd_mk(int n_dedup_eph, vector oph_mk, vector eph_mk, real at, real beta, real di_alpha, real di_beta, real logprob_di, real di_min){
     vector[n_dedup_eph] lpd_mk;
     for(i in 1:n_dedup_eph){
-      lpd_mk[i] = calc_lpd(oph_mk[i], eph_mk[i], at, beta, di_alpha, di_beta, logprob_di);
+      lpd_mk[i] = calc_lpd(oph_mk[i], eph_mk[i], at, beta, di_alpha, di_beta, logprob_di, di_min);
     }
     return lpd_mk;
   }
@@ -71,6 +71,7 @@ data{
   real Di_Alpha;
   real Di_Beta;
   real Logprob_Di;
+  real Di_Min;
 }
 
 transformed data{
@@ -108,7 +109,7 @@ model{
     vector[n_dedup_eph] oph_mk = Oph_Dedup1_Mcmc[eph_start:(eph_start + n_dedup_eph - 1)];
     real at = At_All_Mk[i];
 
-    vector[n_dedup_eph] lpd_mk = calc_lpd_mk(n_dedup_eph, oph_mk, eph_mk, at, Beta, Di_Alpha, Di_Beta, Logprob_Di);
+    vector[n_dedup_eph] lpd_mk = calc_lpd_mk(n_dedup_eph, oph_mk, eph_mk, at, Beta, Di_Alpha, Di_Beta, Logprob_Di, Di_Min);
 
     int n_dedup2 = N_Dedup2_Mcmc[i];
     int n_gtc = N_Gtc_Mcmc[i];

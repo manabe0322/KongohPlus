@@ -1,5 +1,5 @@
 perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, hnc,
-                            warmup, sampling, chains, di_alpha = 1.22, di_beta = 0.0503, logprob_di = log(0.00335)){
+                            warmup, sampling, chains, di_alpha = 1.22, di_beta = 0.0503, logprob_di = log(0.00335), di_min = 49){
   # Extract the candidate mixture proportions
   mp_cand <- extract_mp_cand(hnc)
   mp_cand_tmp <- mp_cand * 0
@@ -160,7 +160,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
         oph_tmp <- rep(heights, n_gtc)
         oph_mk <- oph_tmp[bool_duplicated_adopt]
         oph_dedup1_mk_adopt <- c(oph_dedup1_mk_adopt, oph_mk)
-        loglike_gtc_all_mp <- calc_loglike_gtc_all_mp(oph_sum, mp_cand, eph_base_mk, index_dedup1_mk_adopt_cpp, oph_mk, at, gamma_beta, di_alpha, di_beta, logprob_di, n_peak, n_gtc, index_dedup2_mk_adopt_cpp, gtc_logprob_mk)
+        loglike_gtc_all_mp <- calc_loglike_gtc_all_mp(oph_sum, mp_cand, eph_base_mk, index_dedup1_mk_adopt_cpp, oph_mk, at, gamma_beta, di_alpha, di_beta, logprob_di, di_min, n_peak, n_gtc, index_dedup2_mk_adopt_cpp, gtc_logprob_mk)
         loglike_gtc_all_mp <- matrix(unlist(loglike_gtc_all_mp), ncol = n_gtc, byrow = TRUE)
         index_tmp <- which(loglike_gtc_all_mp >= max(loglike_gtc_all_mp) - 10, arr.ind = TRUE)
         index_gtc_mk_mcmc <- c(index_gtc_mk_mcmc, unique(index_tmp[, 2]))
@@ -239,7 +239,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
                            N_Dedup2_All = sum(n_dedup2_mcmc), N_Dedup2_Mcmc = n_dedup2_mcmc, Index_Dedup2_Mcmc = unlist(index_dedup2_mcmc),
                            N_Peak_Adopt = n_peak_adopt, N_Gtc_Mcmc = n_gtc_mcmc, Gtc_Logprob_Mcmc = unlist(gtc_logprob_mcmc),
                            At_All_Mk = at_all_mk, Beta = gamma_beta,
-                           Di_Alpha = di_alpha, Di_Beta = di_beta, Logprob_Di = logprob_di)
+                           Di_Alpha = di_alpha, Di_Beta = di_beta, Logprob_Di = logprob_di, Di_Min = di_min)
 
 #    init_fun <- function(){
 #      mp_init_pre <- runif(hnc)
@@ -304,7 +304,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     index_dedup2_adopt_cpp[[i]] <- index_dedup2_adopt[[i]] - 1
   }
 
-  lpd_gtc_adopt <- calc_lpd_gtc_adopt(n_mk, n_dedup1_adopt, unlist(oph_dedup1_adopt), eph_dedup1_adopt, at_all_mk, gamma_beta, di_alpha, di_beta, logprob_di, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp)
+  lpd_gtc_adopt <- calc_lpd_gtc_adopt(n_mk, n_dedup1_adopt, unlist(oph_dedup1_adopt), eph_dedup1_adopt, at_all_mk, gamma_beta, di_alpha, di_beta, logprob_di, di_min, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp)
 
   dt_pg_list <- make_dt_pg_list(markers_auto, gtc_adopt, lpd_gtc_adopt, gtc_logprob_adopt, paste0("U", 1:hnc))
 
