@@ -5,8 +5,8 @@ connect_eph_gtc <- function(gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc, peaks, sr_cons
     .Call(`_KongohPlus_connect_eph_gtc`, gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc, peaks, sr_consider)
 }
 
-connect_eph_gtc_mk <- function(cand_gts, index_gt_comb_adopt, peaks, sr_consider) {
-    .Call(`_KongohPlus_connect_eph_gtc_mk`, cand_gts, index_gt_comb_adopt, peaks, sr_consider)
+connect_eph_gtc_mk <- function(cand_gt, index_gt_comb_adopt, peaks, sr_consider) {
+    .Call(`_KongohPlus_connect_eph_gtc_mk`, cand_gt, index_gt_comb_adopt, peaks, sr_consider)
 }
 
 make_eph_base <- function(peaks, bsrs, fsrs, dsrs, m2sr) {
@@ -53,28 +53,28 @@ make_cand_peak <- function(alleles, sr_consider) {
     .Call(`_KongohPlus_make_cand_peak`, alleles, sr_consider)
 }
 
-judge_gtc_sr <- function(gtc, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr) {
-    .Call(`_KongohPlus_judge_gtc_sr`, gtc, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr)
-}
-
-judge_gtc_mr <- function(gtc, peaks, heights, mr_fltr, st) {
-    .Call(`_KongohPlus_judge_gtc_mr`, gtc, peaks, heights, mr_fltr, st)
-}
-
-is_element_all_vec_double <- function(vec_a, vec_b) {
-    .Call(`_KongohPlus_is_element_all_vec_double`, vec_a, vec_b)
-}
-
 search_index_dropin <- function(peaks_rm99, cand_peak) {
     .Call(`_KongohPlus_search_index_dropin`, peaks_rm99, cand_peak)
 }
 
-judge_gtc <- function(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr) {
-    .Call(`_KongohPlus_judge_gtc`, gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr)
+judge_gtc_dropin <- function(peaks_rm99, heights_rm99, cand_peak, index_dropin, n_dropin_fltr, h_dropin_fltr) {
+    .Call(`_KongohPlus_judge_gtc_dropin`, peaks_rm99, heights_rm99, cand_peak, index_dropin, n_dropin_fltr, h_dropin_fltr)
 }
 
-judge_gtc_mk <- function(cand_gts, index_gtc_cpp, peaks, heights_all_rep, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr) {
-    .Call(`_KongohPlus_judge_gtc_mk`, cand_gts, index_gtc_cpp, peaks, heights_all_rep, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr)
+remove_dropin <- function(peaks_rm99, heights_rm99, index_dropin) {
+    .Call(`_KongohPlus_remove_dropin`, peaks_rm99, heights_rm99, index_dropin)
+}
+
+judge_gtc_sr <- function(gtc, peaks_rm99_rmdi, heights_rm99_rmdi, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr) {
+    .Call(`_KongohPlus_judge_gtc_sr`, gtc, peaks_rm99_rmdi, heights_rm99_rmdi, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr)
+}
+
+judge_gtc <- function(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr) {
+    .Call(`_KongohPlus_judge_gtc`, gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+}
+
+judge_gtc_mk <- function(cand_gts, index_gtc_cpp, peaks, heights_all_rep, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr) {
+    .Call(`_KongohPlus_judge_gtc_mk`, cand_gts, index_gtc_cpp, peaks, heights_all_rep, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
 }
 
 extract_gtc_adopt <- function(cand_gts, index_gtc_adopt_cpp) {
@@ -105,31 +105,31 @@ gamma_cdf <- function(threshold, alpha, beta) {
     .Call(`_KongohPlus_gamma_cdf`, threshold, alpha, beta)
 }
 
-calc_lpd <- function(oph, eph, at, beta) {
-    .Call(`_KongohPlus_calc_lpd`, oph, eph, at, beta)
+calc_lpd <- function(oph, eph, at, beta, di_alpha, di_beta, logprob_di) {
+    .Call(`_KongohPlus_calc_lpd`, oph, eph, at, beta, di_alpha, di_beta, logprob_di)
 }
 
-calc_lpd_mk <- function(oph_mk, eph_mk, at, beta) {
-    .Call(`_KongohPlus_calc_lpd_mk`, oph_mk, eph_mk, at, beta)
+calc_lpd_mk <- function(oph_mk, eph_mk, at, beta, di_alpha, di_beta, logprob_di) {
+    .Call(`_KongohPlus_calc_lpd_mk`, oph_mk, eph_mk, at, beta, di_alpha, di_beta, logprob_di)
 }
 
-calc_lpd_gtc <- function(oph_mk, eph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk) {
-    .Call(`_KongohPlus_calc_lpd_gtc`, oph_mk, eph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk)
+calc_lpd_gtc <- function(oph_mk, eph_mk, at, beta, di_alpha, di_beta, logprob_di, n_peak, n_gtc, index_dedup2_mk) {
+    .Call(`_KongohPlus_calc_lpd_gtc`, oph_mk, eph_mk, at, beta, di_alpha, di_beta, logprob_di, n_peak, n_gtc, index_dedup2_mk)
 }
 
 calc_eph_mk <- function(oph_sum, mp, eph_base_mk, index_dedup1_mk) {
     .Call(`_KongohPlus_calc_eph_mk`, oph_sum, mp, eph_base_mk, index_dedup1_mk)
 }
 
-calc_loglike_gtc_all_mp <- function(oph_sum, mp_cand, eph_base_mk, index_dedup1_mk, oph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk, gtc_logprob_mk) {
-    .Call(`_KongohPlus_calc_loglike_gtc_all_mp`, oph_sum, mp_cand, eph_base_mk, index_dedup1_mk, oph_mk, at, beta, n_peak, n_gtc, index_dedup2_mk, gtc_logprob_mk)
+calc_loglike_gtc_all_mp <- function(oph_sum, mp_cand, eph_base_mk, index_dedup1_mk, oph_mk, at, beta, di_alpha, di_beta, logprob_di, n_peak, n_gtc, index_dedup2_mk, gtc_logprob_mk) {
+    .Call(`_KongohPlus_calc_loglike_gtc_all_mp`, oph_sum, mp_cand, eph_base_mk, index_dedup1_mk, oph_mk, at, beta, di_alpha, di_beta, logprob_di, n_peak, n_gtc, index_dedup2_mk, gtc_logprob_mk)
 }
 
 calc_eph_dedup1_cpp <- function(tph, mp, deg, hnc, n_dedup1, eph_base, index_dedup1, size_dedup1) {
     .Call(`_KongohPlus_calc_eph_dedup1_cpp`, tph, mp, deg, hnc, n_dedup1, eph_base, index_dedup1, size_dedup1)
 }
 
-calc_lpd_gtc_adopt <- function(n_mk, n_dedup1_adopt, oph_dedup1, eph_dedup1, at_mk, beta, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp) {
-    .Call(`_KongohPlus_calc_lpd_gtc_adopt`, n_mk, n_dedup1_adopt, oph_dedup1, eph_dedup1, at_mk, beta, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp)
+calc_lpd_gtc_adopt <- function(n_mk, n_dedup1_adopt, oph_dedup1, eph_dedup1, at_mk, beta, di_alpha, di_beta, logprob_di, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp) {
+    .Call(`_KongohPlus_calc_lpd_gtc_adopt`, n_mk, n_dedup1_adopt, oph_dedup1, eph_dedup1, at_mk, beta, di_alpha, di_beta, logprob_di, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp)
 }
 

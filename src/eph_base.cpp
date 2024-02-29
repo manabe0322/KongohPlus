@@ -11,7 +11,8 @@ std::vector<double> make_eph_base(std::vector<double> peaks,
   std::vector<double> fs_all = calc_fs(peaks);
   std::vector<double> ds_all = calc_ds(peaks);
   std::vector<double> m2s_all = calc_m2s(peaks);
-  std::vector<double> eph_base(5 * n_peaks + 1, 0);
+  std::vector<double> eph_base(5 * n_peaks + 2, 0);
+  eph_base[5 * n_peaks + 1] = -1; // for drop-in
 
   for(int i = 0; i < n_peaks; ++i){
     double bsr = bsrs[i];
