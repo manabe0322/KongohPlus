@@ -10,9 +10,10 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
   # fsr: forward stutter ratio
   # dsr: double-back stutter ratio
   # m2sr: minus 2-nt stutter ratio
-  # allele_sr: allele data for stutter ratios
-  # height_sr: height data for stutter ratios (i.e., total allelic product)
-  bsr <- fsr <- dsr <- m2sr <- allele_sr <- height_sr <- rep(0, 2)
+  # parent_al: parent allele data for stutter ratios
+  # parent_ph: peak height data for parent alleles
+  # total_al_prod: total allelic product data for stutter ratios
+  bsr <- fsr <- dsr <- m2sr <- parent_al <- parent_ph <- total_al_prod <- rep(0, 2)
 
   peaks <- as.numeric(peaks)
 
@@ -28,9 +29,9 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
 
     # No allelic drop-out
     if(is.element(al_1, peaks)){
-      allele_sr[1] <- al_1
-      height_sr[1] <- sum(heights)
-      h_al <- heights[peaks == al_1]
+      parent_al[1] <- al_1
+      parent_ph[1] <- h_al <- heights[peaks == al_1]
+      total_al_prod[1] <- sum(heights)
 
       # Back stutter
       if(sr_consider["BS"]){
@@ -83,8 +84,9 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
 
         # No allelic drop-out
         if(is.element(al_1, peaks)){
-          allele_sr[i] <- al_1
+          parent_al[i] <- al_1
           h_sum <- h_al <- heights[peaks == al_1]
+          parent_ph[i] <- h_al
 
           # Candidates of shared peaks
           al_2 <- gt[3 - i]
@@ -150,12 +152,12 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
               h_sum <- h_sum + h_m2s
             }
           }
-          height_sr[i] <- h_sum
+          total_al_prod[i] <- h_sum
         }
       }
     }
   }
-  return(list(bsr, fsr, dsr, m2sr, allele_sr, height_sr))
+  return(list(bsr, fsr, dsr, m2sr, parent_al, parent_ph, total_al_prod))
 }
 
 #' get_sr_data
@@ -169,14 +171,14 @@ get_sr_data <- function(peak_list, height_list, gt_list, sr_consider_all_mk){
   markers <- names(peak_list[[1]])
   n_mk <- length(markers)
 
-  bsr_data <- fsr_data <- dsr_data <- m2sr_data <- allele_sr_data <- height_sr_data <- matrix(0, 2 * n_sample, n_mk)
+  bsr_data <- fsr_data <- dsr_data <- m2sr_data <- parent_al_data <- parent_ph_data <- total_al_prod_data <- matrix(0, 2 * n_sample, n_mk)
 
   # Define row and column names
   tmp <- sapply(names(height_list), rep, 2)
   tmp[1, ] <- paste0(tmp[1, ], "_data1")
   tmp[2, ] <- paste0(tmp[2, ], "_data2")
-  rownames(bsr_data) <- rownames(fsr_data) <- rownames(dsr_data) <- rownames(m2sr_data) <- rownames(allele_sr_data) <- rownames(height_sr_data) <- as.vector(tmp)
-  colnames(bsr_data) <- colnames(fsr_data) <- colnames(dsr_data) <- colnames(m2sr_data) <- colnames(allele_sr_data) <- colnames(height_sr_data) <- markers
+  rownames(bsr_data) <- rownames(fsr_data) <- rownames(dsr_data) <- rownames(m2sr_data) <- rownames(parent_al_data) <- rownames(parent_ph_data) <- rownames(total_al_prod_data) <- as.vector(tmp)
+  colnames(bsr_data) <- colnames(fsr_data) <- colnames(dsr_data) <- colnames(m2sr_data) <- colnames(parent_al_data) <- colnames(parent_ph_data) <- colnames(total_al_prod_data) <- markers
 
   for(i in 1:n_sample){
     peak_list_one <- peak_list[[i]]
@@ -196,21 +198,20 @@ get_sr_data <- function(peak_list, height_list, gt_list, sr_consider_all_mk){
         fsr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[2]]
         dsr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[3]]
         m2sr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[4]]
-        allele_sr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[5]]
-        height_sr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[6]]
+        parent_al_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[5]]
+        parent_ph_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[6]]
+        total_al_prod_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[7]]
       }
     }
   }
 
-  sr_list <- list()
-  sr_list[[1]] <- bsr_data
-  sr_list[[2]] <- fsr_data
-  sr_list[[3]] <- dsr_data
-  sr_list[[4]] <- m2sr_data
-  sr_list[[5]] <- allele_sr_data
-  sr_list[[6]] <- height_sr_data
-  names(sr_list) <- c("BSR", "FSR", "DSR", "M2SR", "Allele_SR", "Height_SR")
-  return(sr_list)
+  return(list("bsr_data" = bsr_data,
+              "fsr_data" = fsr_data,
+              "dsr_data" = dsr_data,
+              "m2sr_data" = m2sr_data,
+              "parent_al_data" = parent_al_data,
+              "parent_ph_data" = parent_ph_data,
+              "total_al_prod_data" = total_al_prod_data))
 }
 
 #' extract_sr_use

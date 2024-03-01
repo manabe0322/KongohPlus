@@ -83,16 +83,19 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
   gt_list <- tmp[[4]]
 
   # Prepare data for the locus-specific amplification efficiency
-  ae_data <- get_ae_data(height_list)
+  pae_data <- get_pae_data(height_list)
+  index_pae_use <- which(apply(pae_data, 2, prod) > 0)
+  pae_data_use <- pae_data[, index_pae_use, drop = FALSE]
 
   # Prepare data for the stutter ratios
   tmp <- get_sr_data(peak_list, height_list, gt_list, sr_consider_all_mk)
-  bsr_data <- tmp[[1]]
-  fsr_data <- tmp[[2]]
-  dsr_data <- tmp[[3]]
-  m2sr_data <- tmp[[4]]
-  allele_sr_data <- tmp[[5]]
-  height_sr_data <- tmp[[6]]
+  bsr_data <- tmp$bsr_data
+  fsr_data <- tmp$fsr_data
+  dsr_data <- tmp$dsr_data
+  m2sr_data <- tmp$m2sr_data
+  parent_al_data <- tmp$parent_al_data
+  parent_ph_data <- tmp$parent_ph_data
+  total_al_prod_data <- tmp$total_al_prod_data
 
   # Prepare data related to the sequence data
   tmp <- analyze_seq(dt_seq, markers_par)
@@ -113,25 +116,25 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit_set,
 
   # Perform the MCMC for the back stutter ratio
   bsr_result_list <- analyze_bfdstr_main("BSR", markers_par, model_bsr_all_mk, model_sr_gen, model_sr_together,
-                                         bsr_data, allele_sr_data, height_sr_data,
+                                         bsr_data, parent_al_data, total_al_prod_data,
                                          lus_all_mk, reps_all_mk, seq_al_all_mk, seq_count_all_mk,
                                          n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
 
   # Perform the MCMC for the forward stutter ratio
   fsr_result_list <- analyze_bfdstr_main("FSR", markers_par, model_fsr_all_mk, model_sr_gen, model_sr_together,
-                                         fsr_data, allele_sr_data, height_sr_data,
+                                         fsr_data, parent_al_data, total_al_prod_data,
                                          lus_all_mk, reps_all_mk, seq_al_all_mk, seq_count_all_mk,
                                          n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
 
   # Perform the MCMC for the double-back stutter ratio
   dsr_result_list <- analyze_bfdstr_main("DSR", markers_par, model_dsr_all_mk, model_sr_gen, model_sr_together,
-                                         dsr_data, allele_sr_data, height_sr_data,
+                                         dsr_data, parent_al_data, total_al_prod_data,
                                          lus_all_mk, reps_all_mk, seq_al_all_mk, seq_count_all_mk,
                                          n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
 
   # Perform the MCMC for the minus 2-nt stutter ratio
   m2sr_result_list <- analyze_m2sr_main(markers_par, model_m2sr_all_mk, model_sr_uni, model_sr_together,
-                                        m2sr_data, allele_sr_data, height_sr_data,
+                                        m2sr_data, parent_al_data, total_al_prod_data,
                                         lus_all_mk,
                                         n_warmup, n_sampling, n_chains, n_parallel_chains)
 

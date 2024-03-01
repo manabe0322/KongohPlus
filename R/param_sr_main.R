@@ -214,8 +214,8 @@ make_dt_aic <- function(markers_par, model_sr_all_mk, aics_sr_all_mk,
 #' @param model_sr_gen The stan model for locus-specific models with the slope parameter
 #' @param model_sr_together The stan model for multiple loci together
 #' @param sr_data The stutter ratios of all markers
-#' @param allele_sr_data The parent alleles for each stutter ratios of all markers
-#' @param height_sr_data The total allelic products of all markers
+#' @param parent_al_data The parent alleles for each stutter ratios of all markers
+#' @param total_al_prod_data The total allelic products of all markers
 #' @param lus_all_mk The information on the LUS values of all markers
 #' @param reps_all_mk The information on the repeat motifs of all alleles
 #' @param seq_al_all_mk The information on the alleles for each sequence
@@ -228,7 +228,7 @@ make_dt_aic <- function(markers_par, model_sr_all_mk, aics_sr_all_mk,
 #' @param min_n_motif_multi The minimum number of repeat motifs for considering the multi-sequence model
 #' @param max_n_motif_multi The maximum number of repeat motifs for considering the multi-sequence model
 analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_gen, model_sr_together,
-                                sr_data, allele_sr_data, height_sr_data,
+                                sr_data, parent_al_data, total_al_prod_data,
                                 lus_all_mk, reps_all_mk, seq_al_all_mk, seq_count_all_mk,
                                 n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi){
   # Define objects
@@ -261,7 +261,7 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
       id_mk <- index_mk_specific_sr[i]
 
       # Extract data of one marker
-      tmp <- extract_sr_use(sr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
+      tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_all_mk[[id_mk]])
       sr_one_mk <- tmp[[1]]
       sr_al_one_mk <- tmp[[2]]
       sr_h_one_mk <- tmp[[3]]
@@ -424,7 +424,7 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
     for(i in 1:n_mk_together_sr){
       # Extract data of one marker
       id_mk <- index_mk_together_sr[i]
-      tmp <- extract_sr_use(sr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
+      tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_all_mk[[id_mk]])
       sr_one_mk <- tmp[[1]]
       sr_al_one_mk <- tmp[[2]]
       sr_h_one_mk <- tmp[[3]]
@@ -517,15 +517,15 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
 #' @param model_sr_uni The stan model for the uniform model
 #' @param model_sr_together The stan model for multiple loci together
 #' @param sr_data The minus 2-nt stutter ratios of all markers
-#' @param allele_sr_data The parent alleles for each stutter ratios of all markers
-#' @param height_sr_data The total allelic products of all markers
+#' @param parent_al_data The parent alleles for each stutter ratios of all markers
+#' @param total_al_prod_data The total allelic products of all markers
 #' @param lus_all_mk The information on the LUS values of all markers
 #' @param n_warmup The number of simulations for warm-up
 #' @param n_sampling The number of simulations for sampling
 #' @param n_chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
 analyze_m2sr_main <- function(markers_par, model_sr_all_mk, model_sr_uni, model_sr_together,
-                              sr_data, allele_sr_data, height_sr_data,
+                              sr_data, parent_al_data, total_al_prod_data,
                               lus_all_mk,
                               n_warmup, n_sampling, n_chains, n_parallel_chains){
   # Define objects
@@ -546,7 +546,7 @@ analyze_m2sr_main <- function(markers_par, model_sr_all_mk, model_sr_uni, model_
       cat(paste0("MCMC for the M2SR of the ", markers_par[id_mk], ": Uniform model\n"))
 
       # Extract data of one marker
-      tmp <- extract_sr_use(sr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
+      tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_all_mk[[id_mk]])
       sr_one_mk <- tmp[[1]]
       sr_al_one_mk <- tmp[[2]]
       sr_h_one_mk <- tmp[[3]]
@@ -582,7 +582,7 @@ analyze_m2sr_main <- function(markers_par, model_sr_all_mk, model_sr_uni, model_
     for(i in 1:n_mk_together_sr){
       # Extract data of one marker
       id_mk <- index_mk_together_sr[i]
-      tmp <- extract_sr_use(sr_data[, id_mk], allele_sr_data[, id_mk], height_sr_data[, id_mk], lus_all_mk[[id_mk]])
+      tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_all_mk[[id_mk]])
       sr_one_mk <- tmp[[1]]
       sr_al_one_mk <- tmp[[2]]
       sr_h_one_mk <- tmp[[3]]
