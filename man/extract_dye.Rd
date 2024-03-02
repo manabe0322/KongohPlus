@@ -4,13 +4,13 @@
 \alias{extract_dye}
 \title{extract_dye}
 \usage{
-extract_dye(dt_kit_auto, markers_par)
+extract_dye(dt_kit, markers)
 }
 \arguments{
-\item{dt_kit_auto}{The data.table of the kit information on autosomal STRs}
+\item{dt_kit}{The data.table of the kit information}
 
-\item{markers_par}{A vector of the markers for estimating parameters}
+\item{markers}{A vector of the markers}
 }
 \description{
-The function to extract dyes from dt_kit_auto
+The function to extract dyes from dt_kit
 }
