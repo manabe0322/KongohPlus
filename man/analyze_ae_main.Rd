@@ -7,7 +7,7 @@
 analyze_ae_main(
   markers_par,
   model_ae,
-  ae_data,
+  pae_data,
   n_warmup,
   n_sampling,
   n_chains,
@@ -19,7 +19,7 @@ analyze_ae_main(
 
 \item{model_ae}{The stan model for AE}
 
-\item{ae_data}{The AE data of all markers}
+\item{pae_data}{The data of the proportion of the AE}
 
 \item{n_warmup}{The number of simulations for warm-up}
 
