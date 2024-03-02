@@ -417,10 +417,11 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           model_sr_gen <- readRDS(paste0(path_pack, "/model/model_sr_gen.rds"))
           model_sr_together <- readRDS(paste0(path_pack, "/model/model_sr_together.rds"))
           model_sr_uni <- readRDS(paste0(path_pack, "/model/model_sr_uni.rds"))
+          model_phr <- readRDS(paste0(path_pack, "/model/model_phr.rds"))
           model_gamma <- readRDS(paste0(path_pack, "/model/model_gamma.rds"))
 
           results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
-                                                 model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
+                                                 model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_phr, model_gamma,
                                                  n_warmup, n_sampling, n_chains,
                                                  pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi)
           rv_output$results_est_par <- results_est_par

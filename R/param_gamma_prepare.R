@@ -1,3 +1,89 @@
+#' prepare_eph_oph
+#'
+#' @description The function to prepare the expected and observed peak heights
+#' @param peak_list The list of peaks
+#' @param height_list The list of peak heights
+#' @param gt_list The list of genotypes
+#' @param at_auto Analytical thresholds for autosomal markers
+prepare_eph_oph <- function(peak_list, height_list, gt_list, at_auto){
+  n_sample <- length(peak_list)
+  n_mk <- length(peak_list[[1]])
+  eph_all <- oph_all <- at_all <- rep(NA, 2 * n_sample * n_mk)
+
+  for(i in 1:n_sample){
+    peak_list_one <- peak_list[[i]]
+    height_list_one <- height_list[[i]]
+    gt_list_one <- gt_list[[i]]
+
+    for(j in 1:n_mk){
+      gt <- gt_list_one[j, ]
+      if(gt[1] != gt[2]){
+        peaks <- peak_list_one[[j]]
+        heights <- height_list_one[[j]]
+
+        index_al <- which(is.element(peaks, gt))
+        n_detect_al <- length(index_al)
+        if(n_detect_al == 1 || n_detect_al == 2){
+          oph <- heights[index_al]
+          if(n_detect_al == 1){
+            oph <- c(heights[index_al], 0)
+          }
+          current_index <- 2 * n_mk * (i - 1) + c(2 * j - 1, 2 * j)
+          eph_all[current_index] <- mean(oph)
+          oph_all[current_index] <- oph
+          at_all[current_index] <- at_auto[j]
+        }
+      }
+    }
+  }
+  eph_all <- eph_all[!is.na(eph_all)]
+  oph_all <- oph_all[!is.na(oph_all)]
+  at_all <- at_all[!is.na(at_all)]
+
+  return(list("eph_all" = eph_all,
+              "oph_all" = oph_all,
+              "at_all" = at_all))
+}
+
+#' prepare_phr_data
+#'
+#' @description The function to prepare data of the peak height ratio
+#' @param peak_list The list of peaks
+#' @param height_list The list of peak heights
+#' @param gt_list The list of genotypes
+prepare_phr_data <- function(peak_list, height_list, gt_list){
+  n_sample <- length(peak_list)
+  n_mk <- length(peak_list[[1]])
+  phr_all <- mean_ph_all <- rep(NA, n_sample * n_mk)
+
+  for(i in 1:n_sample){
+    peak_list_one <- peak_list[[i]]
+    height_list_one <- height_list[[i]]
+    gt_list_one <- gt_list[[i]]
+
+    for(j in 1:n_mk){
+      gt <- gt_list_one[j, ]
+      if(gt[1] != gt[2] && abs(round(as.numeric(gt[1]) - as.numeric(gt[2]), 1)) != 1){
+        peaks <- peak_list_one[[j]]
+        heights <- height_list_one[[j]]
+
+        index_al <- which(is.element(peaks, gt))
+        if(length(index_al) == 2){
+          oph <- heights[index_al]
+          current_index <- n_mk * (i - 1) + j
+          phr_all[current_index] <- oph[2] / oph[1]
+          mean_ph_all[current_index] <- mean(oph)
+        }
+      }
+    }
+  }
+  phr_all <- phr_all[!is.na(phr_all)]
+  mean_ph_all <- mean_ph_all[!is.na(mean_ph_all)]
+
+  return(list("phr_all" = phr_all,
+              "mean_ph_all" = mean_ph_all))
+}
+
 #' calc_tph_all_data
 #'
 #' @description The function to calculate the average total peak heights of all data

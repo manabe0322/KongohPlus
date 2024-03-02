@@ -46,6 +46,7 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param model_sr_gen The stan model for the general stutter ratio
 #' @param model_sr_together The stan model for the stutter ratio when considering multiple loci together
 #' @param model_sr_uni The stan model for the uniform stutter ratio
+#' @param model_phr The stan model for the peak height ratio
 #' @param model_gamma The stan model for gamma distribution
 #' @param n_warmup The number of simulations for warm-up
 #' @param n_sampling The number of simulations for sampling
@@ -55,7 +56,7 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param min_n_motif_lus The minimum number of repeat motifs for considering the LUS model
 #' @param min_n_motif_multi The minimum number of repeat motifs for considering the multi-sequence model
 estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
-                                model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
+                                model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_phr, model_gamma,
                                 n_warmup, n_sampling, n_chains,
                                 pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi = 10,
                                 n_parallel_chains = detectCores()){
@@ -157,28 +158,39 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
 
   #### Gamma parameter ####
 
+  cat("MCMC for the peak height ratio\n")
+
+  tmp <- prepare_phr_data(peak_list, height_list, gt_list)
+  phr_all <- tmp$phr_all
+  mean_ph_all <- tmp$mean_ph_all
+  data_list_phr <- list(N = length(phr_all), PHR = phr_all, Mean_Ph = mean_ph_all)
+
+
   cat("MCMC for the gamma parameter\n")
 
+
+
+
   # Calculate expected peak heights
-  dt_result_ae <- ae_result_list$dt_result
-  dt_result_bsr <- bsr_result_list$dt_result
-  dt_result_fsr <- fsr_result_list$dt_result
-  dt_result_dsr <- dsr_result_list$dt_result
-  dt_result_m2sr <- m2sr_result_list$dt_result
-  dt_alcor_bsr <- bsr_result_list$dt_alcor
-  dt_alcor_fsr <- fsr_result_list$dt_alcor
-  dt_alcor_dsr <- dsr_result_list$dt_alcor
-  eph_all_data <- calc_eph_all_data(markers_auto, n_oph, tph_all_data, gt_list, peak_list,
-                                    dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr,
-                                    dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr)
+  #dt_result_ae <- ae_result_list$dt_result
+  #dt_result_bsr <- bsr_result_list$dt_result
+  #dt_result_fsr <- fsr_result_list$dt_result
+  #dt_result_dsr <- dsr_result_list$dt_result
+  #dt_result_m2sr <- m2sr_result_list$dt_result
+  #dt_alcor_bsr <- bsr_result_list$dt_alcor
+  #dt_alcor_fsr <- fsr_result_list$dt_alcor
+  #dt_alcor_dsr <- dsr_result_list$dt_alcor
+  #eph_all_data <- calc_eph_all_data(markers_auto, n_oph, tph_all_data, gt_list, peak_list,
+  #                                  dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr,
+  #                                  dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr)
 
   # Remove data without sequence information (i.e., NA data)
-  index_adopt <- which(!is.na(eph_all_data))
-  oph_all_data <- oph_all_data[index_adopt]
-  eph_all_data <- eph_all_data[index_adopt]
+  #index_adopt <- which(!is.na(eph_all_data))
+  #oph_all_data <- oph_all_data[index_adopt]
+  #eph_all_data <- eph_all_data[index_adopt]
 
   # Perform MCMC
-  data_list_gamma <- list(N = length(oph_all_data), OPH = oph_all_data, EPH = eph_all_data)
+  #data_list_gamma <- list(N = length(oph_all_data), OPH = oph_all_data, EPH = eph_all_data)
   tmp <- run_mcmc_gamma(model_gamma, data_list_gamma, n_warmup, n_sampling, n_chains, n_parallel_chains)
   dt_result_gamma <- data.table(Beta = tmp$median_beta,
                                 Rhat_Beta = tmp$rhat_beta,

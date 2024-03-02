@@ -14,6 +14,7 @@ estimate_parameters(
   model_sr_gen,
   model_sr_together,
   model_sr_uni,
+  model_phr,
   model_gamma,
   n_warmup,
   n_sampling,
@@ -45,6 +46,8 @@ estimate_parameters(
 \item{model_sr_together}{The stan model for the stutter ratio when considering multiple loci together}
 
 \item{model_sr_uni}{The stan model for the uniform stutter ratio}
+
+\item{model_phr}{The stan model for the peak height ratio}
 
 \item{model_gamma}{The stan model for gamma distribution}
 
