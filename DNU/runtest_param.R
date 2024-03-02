@@ -27,6 +27,7 @@ n_sampling <- 2000
 n_chains <- 4
 pu_auto <- TRUE
 pu_dist <- 1
+at_sex <- 100
 min_n_motif_lus <- 2
 min_n_motif_multi <- 3
 
