@@ -5,7 +5,7 @@
 \title{make_dt_aic}
 \usage{
 make_dt_aic(
-  markers_par,
+  markers_auto,
   model_sr_all_mk,
   aics_sr_all_mk,
   sr_allele_median_slope_all_mk,
@@ -33,7 +33,7 @@ make_dt_aic(
 )
 }
 \arguments{
-\item{markers_par}{The vector of markers for parameters}
+\item{markers_auto}{The vector of autosomal markers}
 
 \item{model_sr_all_mk}{The vector of model settings of all markers}
 

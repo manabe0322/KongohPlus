@@ -5,7 +5,7 @@
 \title{calc_eph_all_data}
 \usage{
 calc_eph_all_data(
-  markers_par,
+  markers_auto,
   n_oph,
   tph_all_data,
   gt_list,
@@ -21,6 +21,8 @@ calc_eph_all_data(
 )
 }
 \arguments{
+\item{markers_auto}{The vector of autosomal markers}
+
 \item{tph_all_data}{The average total peak heights of all data}
 }
 \description{

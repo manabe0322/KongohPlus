@@ -6,7 +6,7 @@
 \usage{
 analyze_bfdstr_main(
   sr_type,
-  markers_par,
+  markers_auto,
   model_sr_all_mk,
   model_sr_gen,
   model_sr_together,
@@ -29,7 +29,7 @@ analyze_bfdstr_main(
 \arguments{
 \item{sr_type}{"BSR", "FSR", or "DSR"}
 
-\item{markers_par}{The vector of markers for parameters}
+\item{markers_auto}{The vector of autosomal markers}
 
 \item{model_sr_all_mk}{The vector of model settings of all markers}
 

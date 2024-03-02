@@ -5,7 +5,7 @@
 \title{make_dt_alcor}
 \usage{
 make_dt_alcor(
-  markers_par,
+  markers_auto,
   sr_best_model_all_mk,
   sr_best_median_myu_all_mk,
   sr_best_median_slope_all_mk,
@@ -14,7 +14,7 @@ make_dt_alcor(
 )
 }
 \arguments{
-\item{markers_par}{The vector of markers for parameters}
+\item{markers_auto}{The vector of autosomal markers}
 
 \item{sr_best_model_all_mk}{The vector of the best SR model for all markers}
 

@@ -4,12 +4,12 @@
 \alias{analyze_seq}
 \title{analyze_seq}
 \usage{
-analyze_seq(dt_seq_init, par_markers)
+analyze_seq(dt_seq_init, markers_auto)
 }
 \arguments{
 \item{dt_seq_init}{The initial data.table of sequence data}
 
-\item{markers}{The vector of markers to estimate parameters}
+\item{markers_auto}{The vector of autosomal markers}
 }
 \description{
 The function to analyze sequence data

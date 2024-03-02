@@ -5,7 +5,7 @@
 \title{analyze_m2sr_main}
 \usage{
 analyze_m2sr_main(
-  markers_par,
+  markers_auto,
   model_sr_all_mk,
   model_sr_uni,
   model_sr_together,
@@ -20,7 +20,7 @@ analyze_m2sr_main(
 )
 }
 \arguments{
-\item{markers_par}{The vector of markers for parameters}
+\item{markers_auto}{The vector of autosomal markers}
 
 \item{model_sr_all_mk}{The vector of model settings of all markers}
 

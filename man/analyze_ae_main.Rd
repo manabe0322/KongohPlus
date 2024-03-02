@@ -5,7 +5,7 @@
 \title{analyze_ae_main}
 \usage{
 analyze_ae_main(
-  markers_par,
+  markers_auto,
   model_ae,
   pae_data,
   n_warmup,
@@ -15,7 +15,7 @@ analyze_ae_main(
 )
 }
 \arguments{
-\item{markers_par}{The vector of markers for parameters}
+\item{markers_auto}{The vector of autosomal markers}
 
 \item{model_ae}{The stan model for AE}
 
