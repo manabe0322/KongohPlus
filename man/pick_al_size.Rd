@@ -4,16 +4,36 @@
 \alias{pick_al_size}
 \title{pick_al_size}
 \usage{
-pick_al_size(dt_exp_one, dt_gt_one, at_all_mk, dye_all_mk)
+pick_al_size(
+  dt_exp_one,
+  dt_gt_one,
+  markers_all,
+  at_all_mk,
+  dye_all_mk,
+  index_exp_peak,
+  index_exp_size,
+  index_exp_height,
+  index_gt_allele
+)
 }
 \arguments{
-\item{dt_exp_one}{The data.table of the experimental data of one sample}
+\item{dt_exp_one}{The data.table of the experimental data of one sample with 'setkey' for Marker}
 
-\item{dt_gt_one}{The data.table of the genotype data of one sample}
+\item{dt_gt_one}{The data.table of the genotype data of one sample with 'setkey' for Marker}
+
+\item{markers_all}{All markers}
 
 \item{at_all_mk}{Analytical thresholds of all markers}
 
 \item{dye_all_mk}{Dyes of all markers}
+
+\item{index_exp_peak}{Column indices of peaks in the experimental data}
+
+\item{index_exp_size}{Column indices of sizes in the experimental data}
+
+\item{index_exp_height}{Column indices of heights in the experimental data}
+
+\item{index_gt_allele}{Column indices of alleles in the genotype data}
 }
 \description{
 The function to pick up allele sizes

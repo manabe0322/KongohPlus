@@ -117,6 +117,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       rv_output <- reactiveValues()
       rv_output$dt_exp <- NULL
       rv_output$dt_gt <- NULL
+      rv_output$dt_kit <- NULL
       rv_output$dt_kit_set <- NULL
       rv_output$results_est_par <- NULL
 
@@ -165,7 +166,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       react_dt_kit_set0 <- reactive({
         # Extract autosomal markers
         kit <- input$kit_par
-        dt_kit <- fread(paste0(path_pack, "/extdata/kit/", kit, ".csv"))
+        rv_output$dt_kit <- dt_kit <- fread(paste0(path_pack, "/extdata/kit/", kit, ".csv"))
         dt_kit_auto <- extract_kit_auto(dt_kit)
         markers_par <- unique(dt_kit_auto[, Marker])
         dyes_par <- extract_dye(dt_kit_auto, markers_par)
@@ -238,8 +239,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       rv_advanced$warmup <- 2000
       rv_advanced$sampling <- 2000
       rv_advanced$chains <- 4
-      rv_advanced$pu_auto <- TRUE
+      rv_advanced$pu_remove <- TRUE
       rv_advanced$pu_dist <- 1
+      rv_advanced$at_sex <- 100
       rv_advanced$min_n_motif_lus <- 2
       rv_advanced$min_n_motif_multi <- 3
 
@@ -256,8 +258,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
             ),
             column(6,
                    h4("Pull-up"),
-                   checkboxInput(session$ns("pu_auto"), label = "Automatically removed", value = rv_advanced$pu_auto),
+                   checkboxInput(session$ns("pu_remove"), label = "Automatically removed", value = rv_advanced$pu_remove),
                    numericInput(session$ns("pu_dist"), label = "Maximum pull-up distance (bp)", value = rv_advanced$pu_dist),
+                   numericInput(session$ns("at_sex"), label = "AT of the sex-chromosomal markers", value = rv_advanced$at_sex),
                    br(),
                    h4("Stutter model"),
                    numericInput(session$ns("min_n_motif_lus"), label = "Minimum number of repeat motifs for considering the LUS model", value = rv_advanced$min_n_motif_lus),
@@ -315,6 +318,17 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           }
         })
 
+        observeEvent(input$at_sex, {
+          at_sex <- input$at_sex
+          if(!is.numeric(at_sex)){
+            showFeedbackDanger(inputId = "at_sex", text = "A positive number is required!")
+          }else if(at_sex <= 0){
+            showFeedbackDanger(inputId = "at_sex", text = "A positive number is required!")
+          }else{
+            hideFeedback("at_sex")
+          }
+        })
+
         observeEvent(input$min_n_motif_lus, {
           min_n_motif_lus <- input$min_n_motif_lus
           if(!is.integer(min_n_motif_lus)){
@@ -344,23 +358,28 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         req(input$sampling)
         req(input$chains)
         req(input$pu_dist)
+        req(input$at_sex)
         req(input$min_n_motif_lus)
         req(input$min_n_motif_multi)
 
         isolate(warmup <- input$warmup)
         isolate(sampling <- input$sampling)
         isolate(chains <- input$chains)
-        isolate(pu_auto <- input$pu_auto)
+        isolate(pu_remove <- input$pu_remove)
         isolate(pu_dist <- input$pu_dist)
+        isolate(at_sex <- input$at_sex)
         isolate(min_n_motif_lus <- input$min_n_motif_lus)
         isolate(min_n_motif_multi <- input$min_n_motif_multi)
 
-        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains), is.numeric(pu_dist), is.integer(min_n_motif_lus), is.integer(min_n_motif_multi))){
+        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains), is.numeric(pu_dist), is.numeric(at_sex), is.integer(min_n_motif_lus), is.integer(min_n_motif_multi))){
+          if(all(warmup > 0, sampling > 0, chains > 0, pu_dist > 0, at_sex > 0, min_n_motif_lus > 0, min_n_motif_multi > 0))
+
           rv_advanced$warmup <- warmup
           rv_advanced$sampling <- sampling
           rv_advanced$chains <- chains
-          rv_advanced$pu_auto <- pu_auto
+          rv_advanced$pu_remove <- pu_remove
           rv_advanced$pu_dist <- pu_dist
+          rv_advanced$at_sex <- at_sex
           rv_advanced$min_n_motif_lus <- min_n_motif_lus
           rv_advanced$min_n_motif_multi <- min_n_motif_multi
 
@@ -375,13 +394,16 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         dt_exp <- rv_output$dt_exp
         dt_gt <- rv_output$dt_gt
         dt_seq <- rv_output$dt_seq
+        dt_kit <- rv_output$dt_kit
         dt_kit_set <- rv_output$dt_kit_set
 
         # Fix parameters
         n_warmup <- rv_advanced$warmup
         n_sampling <- rv_advanced$sampling
         n_chains <- rv_advanced$chains
+        pu_remove <- rv_advanced$pu_remove
         pu_dist <- rv_advanced$pu_dist
+        at_sex <- rv_advanced$at_sex
         min_n_motif_lus <- rv_advanced$min_n_motif_lus
         min_n_motif_multi <- rv_advanced$min_n_motif_multi
 
@@ -397,10 +419,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           model_sr_uni <- readRDS(paste0(path_pack, "/model/model_sr_uni.rds"))
           model_gamma <- readRDS(paste0(path_pack, "/model/model_gamma.rds"))
 
-          results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit_set,
+          results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
                                                  model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
                                                  n_warmup, n_sampling, n_chains,
-                                                 min_n_motif_lus, min_n_motif_multi)
+                                                 pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi)
           rv_output$results_est_par <- results_est_par
 
           updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result")

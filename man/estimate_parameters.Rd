@@ -8,6 +8,7 @@ estimate_parameters(
   dt_exp,
   dt_gt,
   dt_seq,
+  dt_kit,
   dt_kit_set,
   model_ae,
   model_sr_gen,
@@ -17,6 +18,9 @@ estimate_parameters(
   n_warmup,
   n_sampling,
   n_chains,
+  pu_remove,
+  pu_dist,
+  at_sex,
   min_n_motif_lus,
   min_n_motif_multi,
   max_n_motif_multi = 10,
@@ -29,6 +33,8 @@ estimate_parameters(
 \item{dt_gt}{The data.table of the genotype data}
 
 \item{dt_seq}{The data.table of the sequence data}
+
+\item{dt_kit}{The data.table of information on the kit}
 
 \item{dt_kit_set}{The data.table of the kit-setting}
 
@@ -47,6 +53,10 @@ estimate_parameters(
 \item{n_sampling}{The number of simulations for sampling}
 
 \item{n_chains}{The number of chains}
+
+\item{pu_dist}{Maximum pull-up distance (bp)}
+
+\item{at_sex}{The analytical threshold of the sex-chromosomal markers}
 
 \item{min_n_motif_lus}{The minimum number of repeat motifs for considering the LUS model}
 

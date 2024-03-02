@@ -6,13 +6,13 @@
 \usage{
 analyze_m2sr_main(
   markers_auto,
-  model_sr_all_mk,
+  meth_model_sr_auto,
   model_sr_uni,
   model_sr_together,
   sr_data,
   parent_al_data,
   total_al_prod_data,
-  lus_all_mk,
+  lus_auto,
   n_warmup,
   n_sampling,
   n_chains,
@@ -22,19 +22,19 @@ analyze_m2sr_main(
 \arguments{
 \item{markers_auto}{The vector of autosomal markers}
 
-\item{model_sr_all_mk}{The vector of model settings of all markers}
+\item{meth_model_sr_auto}{The vector of modeling methods of autosomal markers}
 
 \item{model_sr_uni}{The stan model for the uniform model}
 
 \item{model_sr_together}{The stan model for multiple loci together}
 
-\item{sr_data}{The minus 2-nt stutter ratios of all markers}
+\item{sr_data}{The minus 2-nt stutter ratios of autosomal markers}
 
-\item{parent_al_data}{The parent alleles for each stutter ratios of all markers}
+\item{parent_al_data}{The parent alleles for each stutter ratios of autosomal markers}
 
-\item{total_al_prod_data}{The total allelic products of all markers}
+\item{total_al_prod_data}{The total allelic products of all autosomal markers}
 
-\item{lus_all_mk}{The information on the LUS values of all markers}
+\item{lus_auto}{The information on the LUS values of autosomal markers}
 
 \item{n_warmup}{The number of simulations for warm-up}
 

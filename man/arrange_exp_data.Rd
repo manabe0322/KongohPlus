@@ -7,11 +7,13 @@
 arrange_exp_data(
   dt_exp,
   dt_gt,
-  markers_par,
+  markers_auto,
+  sr_consider_auto,
+  markers_all,
   at_all_mk,
   dye_all_mk,
-  sr_consider_all_mk,
-  max_dist_pu = 1
+  pu_remove,
+  pu_dist
 )
 }
 \arguments{
@@ -19,15 +21,19 @@ arrange_exp_data(
 
 \item{dt_gt}{The data.table of the genotype data}
 
-\item{markers_par}{Markers for parameters}
+\item{markers_auto}{Autosomal markers}
+
+\item{sr_consider_auto}{Information on consideration of back, forward, double-back, and minus 2-nt stutters in autosomal markers}
+
+\item{markers_all}{All markers}
 
 \item{at_all_mk}{Analytical thresholds of all markers}
 
 \item{dye_all_mk}{Dyes of all markers}
 
-\item{sr_consider_all_mk}{Information on consideration of back, forward, double-back, and minus 2-nt stutters in all markers}
+\item{pu_remove}{TRUE or FALSE (whether pull-up peaks are automatically removed or not)}
 
-\item{max_dist_pu}{The maximum distance between a pull-up peak and the parent allele}
+\item{pu_dist}{The maximum distance between a pull-up peak and the parent allele}
 }
 \description{
 The function to arrange the experimental data

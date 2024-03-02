@@ -1,18 +1,18 @@
 #' set_consider_sr_model
 #'
 #' @description The function to set consideration of each stutter ratio model
-#' @param model_sr The stutter model
+#' @param meth_model_sr The modeling method of the stutter in one marker
 #' @param reps_one_mk Repeat motifs of one marker
 #' @param min_n_motif_lus The minimum number of repeat motifs for considering the LUS model
 #' @param min_n_motif_multi The minimum number of repeat motifs for considering the multi-sequence model
-set_consider_sr_model <- function(model_sr, reps_one_mk, min_n_motif_lus, min_n_motif_multi){
+set_consider_sr_model <- function(meth_model_sr, reps_one_mk, min_n_motif_lus, min_n_motif_multi){
   consider_sr_model <- rep(FALSE, 3)
   names(consider_sr_model) <- c("Allele", "LUS", "Multi-sequence")
-  if(model_sr == "Allele"){
+  if(meth_model_sr == "Allele"){
     consider_sr_model["Allele"] <- TRUE
-  }else if(model_sr == "LUS"){
+  }else if(meth_model_sr == "LUS"){
     consider_sr_model["LUS"] <- TRUE
-  }else if(model_sr == "Multi-sequence"){
+  }else if(meth_model_sr == "Multi-sequence"){
     consider_sr_model["Multi-sequence"] <- TRUE
   }else{
     consider_sr_model["Allele"] <- TRUE
@@ -105,7 +105,7 @@ make_dt_alcor_combined <- function(dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr){
 #'
 #' @description The function to make a data.table for information on AIC values and parameters of the candidate models
 #' @param markers_auto The vector of autosomal markers
-#' @param model_sr_all_mk The vector of model settings of all markers
+#' @param meth_model_sr_auto The vector of modeling methods of all markers
 #' @param aics_sr_all_mk The list of AIC values of all markers
 #' @param sr_allele_median_slope_all_mk The slope parameters of all markers under the Allele model
 #' @param sr_allele_median_intercept_all_mk The intercept parameters of all markers under the Allele model
@@ -129,7 +129,7 @@ make_dt_alcor_combined <- function(dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr){
 #' @param sr_multi_rhat_intercept_all_mk The Rhat values for the intercept parameters of all markers under the Multi-sequence model
 #' @param sr_multi_rhat_sigma_all_mk The Rhat values for the sigma parameters of all markers under the Multi-sequence model
 #' @param sr_multi_rhat_lp_all_mk The Rhat values for the likelihoods of all markers under the Multi-sequence model
-make_dt_aic <- function(markers_auto, model_sr_all_mk, aics_sr_all_mk,
+make_dt_aic <- function(markers_auto, meth_model_sr_auto, aics_sr_all_mk,
                         sr_allele_median_slope_all_mk, sr_allele_median_intercept_all_mk, sr_allele_median_sigma_all_mk,
                         sr_allele_rhat_slope_all_mk, sr_allele_rhat_intercept_all_mk, sr_allele_rhat_sigma_all_mk, sr_allele_rhat_lp_all_mk,
                         sr_lus_median_slope_all_mk, sr_lus_median_intercept_all_mk, sr_lus_median_sigma_all_mk,
@@ -141,7 +141,7 @@ make_dt_aic <- function(markers_auto, model_sr_all_mk, aics_sr_all_mk,
   sr_aics <- sr_slopes <- sr_intercepts <- sr_sigmas <- sr_rhat_slopes <- sr_rhat_intercepts <- sr_rhat_sigmas <- sr_rhat_lps <- numeric(0)
   sr_min_us <- integer(0)
   for(i in 1:n_mk){
-    if(model_sr_all_mk[i] == "Best"){
+    if(meth_model_sr_auto[i] == "Best"){
       mk <- markers_auto[i]
       aics <- aics_sr_all_mk[[i]]
       if(!is.null(aics)){
@@ -210,16 +210,16 @@ make_dt_aic <- function(markers_auto, model_sr_all_mk, aics_sr_all_mk,
 #' @description The function to analyze BSR, FSR, or DSR data
 #' @param sr_type "BSR", "FSR", or "DSR"
 #' @param markers_auto The vector of autosomal markers
-#' @param model_sr_all_mk The vector of model settings of all markers
+#' @param meth_model_sr_auto The vector of modeling methods of autosomal markers
 #' @param model_sr_gen The stan model for locus-specific models with the slope parameter
 #' @param model_sr_together The stan model for multiple loci together
-#' @param sr_data The stutter ratios of all markers
-#' @param parent_al_data The parent alleles for each stutter ratios of all markers
-#' @param total_al_prod_data The total allelic products of all markers
-#' @param lus_all_mk The information on the LUS values of all markers
-#' @param reps_all_mk The information on the repeat motifs of all alleles
-#' @param seq_al_all_mk The information on the alleles for each sequence
-#' @param seq_count_all_mk The information on the number of counts for each sequence
+#' @param sr_data The stutter ratios of autosomal markers
+#' @param parent_al_data The parent alleles for each stutter ratios of autosomal markers
+#' @param total_al_prod_data The total allelic products of autosomal markers
+#' @param lus_auto The information on the LUS values of autosomal markers
+#' @param reps_auto The information on the repeat motifs of all alleles
+#' @param seq_al_auto The information on the alleles for each sequence
+#' @param seq_count_auto The information on the number of counts for each sequence
 #' @param n_warmup The number of simulations for warm-up
 #' @param n_sampling The number of simulations for sampling
 #' @param n_chains The number of chains
@@ -227,9 +227,9 @@ make_dt_aic <- function(markers_auto, model_sr_all_mk, aics_sr_all_mk,
 #' @param min_n_motif_lus The minimum number of repeat motifs for considering the LUS model
 #' @param min_n_motif_multi The minimum number of repeat motifs for considering the multi-sequence model
 #' @param max_n_motif_multi The maximum number of repeat motifs for considering the multi-sequence model
-analyze_bfdstr_main <- function(sr_type, markers_auto, model_sr_all_mk, model_sr_gen, model_sr_together,
+analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model_sr_gen, model_sr_together,
                                 sr_data, parent_al_data, total_al_prod_data,
-                                lus_all_mk, reps_all_mk, seq_al_all_mk, seq_count_all_mk,
+                                lus_auto, reps_auto, seq_al_auto, seq_count_auto,
                                 n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi){
   # Define objects
   n_mk <- length(markers_auto)
@@ -254,24 +254,24 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, model_sr_all_mk, model_sr
   sr_best_trace_all_mk <- vector(mode = "list", length = n_mk)
 
   # locus-specific model
-  index_mk_specific_sr <- which(is.element(model_sr_all_mk, c("Best", "Allele", "LUS", "Multi-sequence")))
+  index_mk_specific_sr <- which(is.element(meth_model_sr_auto, c("Best", "Allele", "LUS", "Multi-sequence")))
   n_mk_specific_sr <- length(index_mk_specific_sr)
   if(n_mk_specific_sr > 0){
     for(i in 1:n_mk_specific_sr){
       id_mk <- index_mk_specific_sr[i]
 
       # Extract data of one marker
-      tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_all_mk[[id_mk]])
+      tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_auto[[id_mk]])
       sr_one_mk <- tmp[[1]]
       sr_al_one_mk <- tmp[[2]]
       sr_h_one_mk <- tmp[[3]]
       sr_lus_one_mk <- tmp[[4]]
-      reps_one_mk <- reps_all_mk[[id_mk]]
-      seq_al_one_mk <- seq_al_all_mk[[id_mk]]
-      seq_count_one_mk <- seq_count_all_mk[[id_mk]]
+      reps_one_mk <- reps_auto[[id_mk]]
+      seq_al_one_mk <- seq_al_auto[[id_mk]]
+      seq_count_one_mk <- seq_count_auto[[id_mk]]
 
       # Set consideration of each model
-      model_sr <- model_sr_all_mk[id_mk]
+      model_sr <- meth_model_sr_auto[id_mk]
       consider_sr <- set_consider_sr_model(model_sr, reps_one_mk, min_n_motif_lus, min_n_motif_multi)
 
       # Define an object to assign log-likelihoods of each model
@@ -397,11 +397,11 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, model_sr_all_mk, model_sr
       aics_sr_all_mk[[id_mk]] <- aics
 
       # Allele repeat correction
-      info_al_one_mk <- as.numeric(names(lus_all_mk[[id_mk]]))
+      info_al_one_mk <- as.numeric(names(lus_auto[[id_mk]]))
       if(sr_best_model_all_mk[id_mk] == "Allele"){
         info_ca_one_mk <- info_al_one_mk
       }else if(sr_best_model_all_mk[id_mk] == "LUS"){
-        info_ca_one_mk <- lus_all_mk[[id_mk]]
+        info_ca_one_mk <- lus_auto[[id_mk]]
       }else if(sr_best_model_all_mk[id_mk] == "Multi-sequence"){
         info_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[index_max_like_multi], reps_one_mk, seq_al_one_mk, seq_count_one_mk, info_al_one_mk)
       }else{
@@ -413,7 +413,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, model_sr_all_mk, model_sr
   }
 
   # Multiple loci together
-  index_mk_together_sr <- which(model_sr_all_mk == "Multiple loci together")
+  index_mk_together_sr <- which(meth_model_sr_auto == "Multiple loci together")
   n_mk_together_sr <- length(index_mk_together_sr)
   sr_together <- sr_h_together <- id_mk_together <- numeric(0)
   id_mk_count <- 0
@@ -424,7 +424,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, model_sr_all_mk, model_sr
     for(i in 1:n_mk_together_sr){
       # Extract data of one marker
       id_mk <- index_mk_together_sr[i]
-      tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_all_mk[[id_mk]])
+      tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_auto[[id_mk]])
       sr_one_mk <- tmp[[1]]
       sr_al_one_mk <- tmp[[2]]
       sr_h_one_mk <- tmp[[3]]
@@ -445,7 +445,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, model_sr_all_mk, model_sr
       sr_data_all_mk[[id_mk]] <- sr_data_one_mk
 
       # Allele repeat correction
-      info_al_one_mk <- as.numeric(names(lus_all_mk[[id_mk]]))
+      info_al_one_mk <- as.numeric(names(lus_auto[[id_mk]]))
       info_ca_one_mk <- rep(NA, length(info_al_one_mk))
       sr_alcor_all_mk[[id_mk]] <- list(info_al = info_al_one_mk,
                                         info_ca = info_ca_one_mk)
@@ -462,12 +462,12 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, model_sr_all_mk, model_sr
   }
 
   # Not consider
-  index_mk_not_consider_sr <- which(model_sr_all_mk == "Not consider")
+  index_mk_not_consider_sr <- which(meth_model_sr_auto == "Not consider")
   if(length(index_mk_not_consider_sr) > 0){
     sr_best_model_all_mk[index_mk_not_consider_sr] <- "Not consider"
     for(i in 1:length(index_mk_not_consider_sr)){
       id_mk <- index_mk_not_consider_sr[i]
-      info_al_one_mk <- as.numeric(names(lus_all_mk[[id_mk]]))
+      info_al_one_mk <- as.numeric(names(lus_auto[[id_mk]]))
       info_ca_one_mk <- rep(NA, length(info_al_one_mk))
       sr_alcor_all_mk[[id_mk]] <- list(info_al = info_al_one_mk,
                                        info_ca = info_ca_one_mk)
@@ -494,7 +494,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, model_sr_all_mk, model_sr
                             sr_alcor_all_mk)
 
   # Make a data.table for AIC
-  dt_aic <- make_dt_aic(markers_auto, model_sr_all_mk, aics_sr_all_mk,
+  dt_aic <- make_dt_aic(markers_auto, meth_model_sr_auto, aics_sr_all_mk,
                         sr_allele_median_slope_all_mk, sr_allele_median_intercept_all_mk, sr_allele_median_sigma_all_mk,
                         sr_allele_rhat_slope_all_mk, sr_allele_rhat_intercept_all_mk, sr_allele_rhat_sigma_all_mk, sr_allele_rhat_lp_all_mk,
                         sr_lus_median_slope_all_mk, sr_lus_median_intercept_all_mk, sr_lus_median_sigma_all_mk,
@@ -513,20 +513,20 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, model_sr_all_mk, model_sr
 #'
 #' @description The function to analyze M2SR data
 #' @param markers_auto The vector of autosomal markers
-#' @param model_sr_all_mk The vector of model settings of all markers
+#' @param meth_model_sr_auto The vector of modeling methods of autosomal markers
 #' @param model_sr_uni The stan model for the uniform model
 #' @param model_sr_together The stan model for multiple loci together
-#' @param sr_data The minus 2-nt stutter ratios of all markers
-#' @param parent_al_data The parent alleles for each stutter ratios of all markers
-#' @param total_al_prod_data The total allelic products of all markers
-#' @param lus_all_mk The information on the LUS values of all markers
+#' @param sr_data The minus 2-nt stutter ratios of autosomal markers
+#' @param parent_al_data The parent alleles for each stutter ratios of autosomal markers
+#' @param total_al_prod_data The total allelic products of all autosomal markers
+#' @param lus_auto The information on the LUS values of autosomal markers
 #' @param n_warmup The number of simulations for warm-up
 #' @param n_sampling The number of simulations for sampling
 #' @param n_chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
-analyze_m2sr_main <- function(markers_auto, model_sr_all_mk, model_sr_uni, model_sr_together,
+analyze_m2sr_main <- function(markers_auto, meth_model_sr_auto, model_sr_uni, model_sr_together,
                               sr_data, parent_al_data, total_al_prod_data,
-                              lus_all_mk,
+                              lus_auto,
                               n_warmup, n_sampling, n_chains, n_parallel_chains){
   # Define objects
   n_mk <- length(markers_auto)
@@ -538,7 +538,7 @@ analyze_m2sr_main <- function(markers_auto, model_sr_all_mk, model_sr_uni, model
   # Locus-specific
   sr_data_all_mk <- vector(mode = "list", length = n_mk)
   names(sr_data_all_mk) <- markers_auto
-  index_mk_specific_sr <- which(model_sr_all_mk == "Uniform")
+  index_mk_specific_sr <- which(meth_model_sr_auto == "Uniform")
   n_mk_specific_sr <- length(index_mk_specific_sr)
   if(n_mk_specific_sr > 0){
     for(i in 1:n_mk_specific_sr){
@@ -546,7 +546,7 @@ analyze_m2sr_main <- function(markers_auto, model_sr_all_mk, model_sr_uni, model
       cat(paste0("MCMC for the M2SR of the ", markers_auto[id_mk], ": Uniform model\n"))
 
       # Extract data of one marker
-      tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_all_mk[[id_mk]])
+      tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_auto[[id_mk]])
       sr_one_mk <- tmp[[1]]
       sr_al_one_mk <- tmp[[2]]
       sr_h_one_mk <- tmp[[3]]
@@ -571,7 +571,7 @@ analyze_m2sr_main <- function(markers_auto, model_sr_all_mk, model_sr_uni, model
   }
 
   # Multiple loci together
-  index_mk_together_sr <- which(model_sr_all_mk == "Multiple loci together")
+  index_mk_together_sr <- which(meth_model_sr_auto == "Multiple loci together")
   n_mk_together_sr <- length(index_mk_together_sr)
   sr_together <- sr_h_together <- id_mk_together <- numeric(0)
   id_mk_count <- 0
@@ -582,7 +582,7 @@ analyze_m2sr_main <- function(markers_auto, model_sr_all_mk, model_sr_uni, model
     for(i in 1:n_mk_together_sr){
       # Extract data of one marker
       id_mk <- index_mk_together_sr[i]
-      tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_all_mk[[id_mk]])
+      tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_auto[[id_mk]])
       sr_one_mk <- tmp[[1]]
       sr_al_one_mk <- tmp[[2]]
       sr_h_one_mk <- tmp[[3]]
@@ -614,7 +614,7 @@ analyze_m2sr_main <- function(markers_auto, model_sr_all_mk, model_sr_uni, model
   }
 
   # Not consider
-  index_mk_not_consider_sr <- which(model_sr_all_mk == "Not consider")
+  index_mk_not_consider_sr <- which(meth_model_sr_auto == "Not consider")
   if(length(index_mk_not_consider_sr) > 0){
     sr_best_model_all_mk[index_mk_not_consider_sr] <- "Not consider"
   }

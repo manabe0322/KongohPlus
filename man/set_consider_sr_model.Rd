@@ -5,14 +5,14 @@
 \title{set_consider_sr_model}
 \usage{
 set_consider_sr_model(
-  model_sr,
+  meth_model_sr,
   reps_one_mk,
   min_n_motif_lus,
   min_n_motif_multi
 )
 }
 \arguments{
-\item{model_sr}{The stutter model}
+\item{meth_model_sr}{The modeling method of the stutter in one marker}
 
 \item{reps_one_mk}{Repeat motifs of one marker}
 

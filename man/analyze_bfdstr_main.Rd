@@ -7,16 +7,16 @@
 analyze_bfdstr_main(
   sr_type,
   markers_auto,
-  model_sr_all_mk,
+  meth_model_sr_auto,
   model_sr_gen,
   model_sr_together,
   sr_data,
   parent_al_data,
   total_al_prod_data,
-  lus_all_mk,
-  reps_all_mk,
-  seq_al_all_mk,
-  seq_count_all_mk,
+  lus_auto,
+  reps_auto,
+  seq_al_auto,
+  seq_count_auto,
   n_warmup,
   n_sampling,
   n_chains,
@@ -31,25 +31,25 @@ analyze_bfdstr_main(
 
 \item{markers_auto}{The vector of autosomal markers}
 
-\item{model_sr_all_mk}{The vector of model settings of all markers}
+\item{meth_model_sr_auto}{The vector of modeling methods of autosomal markers}
 
 \item{model_sr_gen}{The stan model for locus-specific models with the slope parameter}
 
 \item{model_sr_together}{The stan model for multiple loci together}
 
-\item{sr_data}{The stutter ratios of all markers}
+\item{sr_data}{The stutter ratios of autosomal markers}
 
-\item{parent_al_data}{The parent alleles for each stutter ratios of all markers}
+\item{parent_al_data}{The parent alleles for each stutter ratios of autosomal markers}
 
-\item{total_al_prod_data}{The total allelic products of all markers}
+\item{total_al_prod_data}{The total allelic products of autosomal markers}
 
-\item{lus_all_mk}{The information on the LUS values of all markers}
+\item{lus_auto}{The information on the LUS values of autosomal markers}
 
-\item{reps_all_mk}{The information on the repeat motifs of all alleles}
+\item{reps_auto}{The information on the repeat motifs of all alleles}
 
-\item{seq_al_all_mk}{The information on the alleles for each sequence}
+\item{seq_al_auto}{The information on the alleles for each sequence}
 
-\item{seq_count_all_mk}{The information on the number of counts for each sequence}
+\item{seq_count_auto}{The information on the number of counts for each sequence}
 
 \item{n_warmup}{The number of simulations for warm-up}
 

@@ -6,7 +6,7 @@
 \usage{
 make_dt_aic(
   markers_auto,
-  model_sr_all_mk,
+  meth_model_sr_auto,
   aics_sr_all_mk,
   sr_allele_median_slope_all_mk,
   sr_allele_median_intercept_all_mk,
@@ -35,7 +35,7 @@ make_dt_aic(
 \arguments{
 \item{markers_auto}{The vector of autosomal markers}
 
-\item{model_sr_all_mk}{The vector of model settings of all markers}
+\item{meth_model_sr_auto}{The vector of modeling methods of all markers}
 
 \item{aics_sr_all_mk}{The list of AIC values of all markers}
 
