@@ -164,12 +164,13 @@ calc_eph_base <- function(gt_comb, peaks, tph,
 #' calc_eph_all_data
 #'
 #' @description The function to calculate the expected peak heights of all data
+#' @param markers_auto The vector of autosomal markers
 #' @param tph_all_data The average total peak heights of all data
-calc_eph_all_data <- function(markers_par, n_oph, tph_all_data, gt_list, peak_list,
+calc_eph_all_data <- function(markers_auto, n_oph, tph_all_data, gt_list, peak_list,
                               dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr,
                               dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr){
   n_gt <- length(gt_list)
-  n_mk <- length(markers_par)
+  n_mk <- length(markers_auto)
   eph_all_data <- rep(0, n_oph)
 
   setkey(dt_alcor_bsr, Marker)
@@ -208,7 +209,7 @@ calc_eph_all_data <- function(markers_par, n_oph, tph_all_data, gt_list, peak_li
     tph <- tph_all_data[i]
 
     for(j in 1:n_mk){
-      mk <- markers_par[j]
+      mk <- markers_auto[j]
       gt <- gt_one_data[j, ]
       peaks <- peaks_one_data[[j]]
       n_peak <- length(peaks)

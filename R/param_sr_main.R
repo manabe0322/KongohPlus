@@ -40,21 +40,21 @@ calc_average_sr <- function(allele, slope, intercept){
 #' make_dt_alcor
 #'
 #' @description The function to make a data.table for corrected alleles
-#' @param markers_par The vector of markers for parameters
+#' @param markers_auto The vector of autosomal markers
 #' @param sr_best_model_all_mk The vector of the best SR model for all markers
 #' @param sr_best_median_myu_all_mk The vector of the myu values for all markers under the best SR model
 #' @param sr_best_median_slope_all_mk The vector of the slope values for all markers under the best SR model
 #' @param sr_best_median_intercept_all_mk The vector of the intercept values for all markers under the best SR model
 #' @param sr_alcor_all_mk The list of the information on corrected alleles of all markers
-make_dt_alcor <- function(markers_par, sr_best_model_all_mk,
+make_dt_alcor <- function(markers_auto, sr_best_model_all_mk,
                           sr_best_median_myu_all_mk, sr_best_median_slope_all_mk, sr_best_median_intercept_all_mk,
                           sr_alcor_all_mk){
   vec_mk <- vec_model <- character(0)
   vec_info_al <- vec_info_ca <- vec_average_sr <- numeric(0)
 
-  n_mk <- length(markers_par)
+  n_mk <- length(markers_auto)
   for(i in 1:n_mk){
-    mk <- markers_par[i]
+    mk <- markers_auto[i]
     model <- sr_best_model_all_mk[i]
     myu <- sr_best_median_myu_all_mk[i]
     slope <- sr_best_median_slope_all_mk[i]
@@ -104,7 +104,7 @@ make_dt_alcor_combined <- function(dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr){
 #' make_dt_aic
 #'
 #' @description The function to make a data.table for information on AIC values and parameters of the candidate models
-#' @param markers_par The vector of markers for parameters
+#' @param markers_auto The vector of autosomal markers
 #' @param model_sr_all_mk The vector of model settings of all markers
 #' @param aics_sr_all_mk The list of AIC values of all markers
 #' @param sr_allele_median_slope_all_mk The slope parameters of all markers under the Allele model
@@ -129,20 +129,20 @@ make_dt_alcor_combined <- function(dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr){
 #' @param sr_multi_rhat_intercept_all_mk The Rhat values for the intercept parameters of all markers under the Multi-sequence model
 #' @param sr_multi_rhat_sigma_all_mk The Rhat values for the sigma parameters of all markers under the Multi-sequence model
 #' @param sr_multi_rhat_lp_all_mk The Rhat values for the likelihoods of all markers under the Multi-sequence model
-make_dt_aic <- function(markers_par, model_sr_all_mk, aics_sr_all_mk,
+make_dt_aic <- function(markers_auto, model_sr_all_mk, aics_sr_all_mk,
                         sr_allele_median_slope_all_mk, sr_allele_median_intercept_all_mk, sr_allele_median_sigma_all_mk,
                         sr_allele_rhat_slope_all_mk, sr_allele_rhat_intercept_all_mk, sr_allele_rhat_sigma_all_mk, sr_allele_rhat_lp_all_mk,
                         sr_lus_median_slope_all_mk, sr_lus_median_intercept_all_mk, sr_lus_median_sigma_all_mk,
                         sr_lus_rhat_slope_all_mk, sr_lus_rhat_intercept_all_mk, sr_lus_rhat_sigma_all_mk, sr_lus_rhat_lp_all_mk,
                         sr_multi_median_slope_all_mk, sr_multi_median_intercept_all_mk, sr_multi_median_sigma_all_mk, sr_multi_min_us_all_mk,
                         sr_multi_rhat_slope_all_mk, sr_multi_rhat_intercept_all_mk, sr_multi_rhat_sigma_all_mk, sr_multi_rhat_lp_all_mk){
-  n_mk <- length(markers_par)
+  n_mk <- length(markers_auto)
   sr_markers <- sr_models <- character(0)
   sr_aics <- sr_slopes <- sr_intercepts <- sr_sigmas <- sr_rhat_slopes <- sr_rhat_intercepts <- sr_rhat_sigmas <- sr_rhat_lps <- numeric(0)
   sr_min_us <- integer(0)
   for(i in 1:n_mk){
     if(model_sr_all_mk[i] == "Best"){
-      mk <- markers_par[i]
+      mk <- markers_auto[i]
       aics <- aics_sr_all_mk[[i]]
       if(!is.null(aics)){
         models_cand <- names(aics)
@@ -209,7 +209,7 @@ make_dt_aic <- function(markers_par, model_sr_all_mk, aics_sr_all_mk,
 #'
 #' @description The function to analyze BSR, FSR, or DSR data
 #' @param sr_type "BSR", "FSR", or "DSR"
-#' @param markers_par The vector of markers for parameters
+#' @param markers_auto The vector of autosomal markers
 #' @param model_sr_all_mk The vector of model settings of all markers
 #' @param model_sr_gen The stan model for locus-specific models with the slope parameter
 #' @param model_sr_together The stan model for multiple loci together
@@ -227,18 +227,18 @@ make_dt_aic <- function(markers_par, model_sr_all_mk, aics_sr_all_mk,
 #' @param min_n_motif_lus The minimum number of repeat motifs for considering the LUS model
 #' @param min_n_motif_multi The minimum number of repeat motifs for considering the multi-sequence model
 #' @param max_n_motif_multi The maximum number of repeat motifs for considering the multi-sequence model
-analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_gen, model_sr_together,
+analyze_bfdstr_main <- function(sr_type, markers_auto, model_sr_all_mk, model_sr_gen, model_sr_together,
                                 sr_data, parent_al_data, total_al_prod_data,
                                 lus_all_mk, reps_all_mk, seq_al_all_mk, seq_count_all_mk,
                                 n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi){
   # Define objects
-  n_mk <- length(markers_par)
+  n_mk <- length(markers_auto)
   sr_data_all_mk <- vector(mode = "list", length = n_mk)
-  names(sr_data_all_mk) <- markers_par
+  names(sr_data_all_mk) <- markers_auto
   sr_alcor_all_mk <- vector(mode = "list", length = n_mk)
-  names(sr_alcor_all_mk) <- markers_par
+  names(sr_alcor_all_mk) <- markers_auto
   aics_sr_all_mk <- vector(mode = "list", length = n_mk)
-  names(aics_sr_all_mk) <- markers_par
+  names(aics_sr_all_mk) <- markers_auto
   sr_allele_median_slope_all_mk <- sr_allele_median_intercept_all_mk <- sr_allele_median_sigma_all_mk <- rep(NA, n_mk)
   sr_allele_rhat_slope_all_mk <- sr_allele_rhat_intercept_all_mk <- sr_allele_rhat_sigma_all_mk <- sr_allele_rhat_lp_all_mk <- rep(NA, n_mk)
   sr_allele_trace_all_mk <- vector(mode = "list", length = n_mk)
@@ -280,7 +280,7 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
 
       # Allele model
       if(consider_sr["Allele"]){
-        cat(paste0("MCMC for the ", sr_type, " of the ", markers_par[id_mk], ": Allele model\n"))
+        cat(paste0("MCMC for the ", sr_type, " of the ", markers_auto[id_mk], ": Allele model\n"))
         data_list_sr_allele <- list(N = length(sr_one_mk), SR = sr_one_mk, XVal = sr_al_one_mk, Height = sr_h_one_mk)
         tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_sr_allele, n_warmup, n_sampling, n_chains, n_parallel_chains)
         log_likes[1] <- tmp$median_loglike
@@ -296,7 +296,7 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
 
       # LUS model
       if(consider_sr["LUS"]){
-        cat(paste0("MCMC for the ", sr_type, " of the ", markers_par[id_mk], ": LUS model\n"))
+        cat(paste0("MCMC for the ", sr_type, " of the ", markers_auto[id_mk], ": LUS model\n"))
         data_list_sr_lus <- list(N = length(sr_one_mk), SR = sr_one_mk, XVal = sr_lus_one_mk, Height = sr_h_one_mk)
         tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_sr_lus, n_warmup, n_sampling, n_chains, n_parallel_chains)
         log_likes[2] <- tmp$median_loglike
@@ -312,7 +312,7 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
 
       # Multi-sequence model
       if(consider_sr["Multi-sequence"]){
-        cat(paste0("MCMC for the ", sr_type, " of the ", markers_par[id_mk], ": Multi-sequence model\n"))
+        cat(paste0("MCMC for the ", sr_type, " of the ", markers_auto[id_mk], ": Multi-sequence model\n"))
         cand_min_us <- sort(unique(unlist(reps_one_mk)))
         cand_min_us <- cand_min_us[cand_min_us <= max_n_motif_multi]
         n_cand_min_us <- length(cand_min_us)
@@ -475,7 +475,7 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
   }
 
   # Make a data.table for results
-  dt_result <- data.table(Marker = markers_par,
+  dt_result <- data.table(Marker = markers_auto,
                           Model = sr_best_model_all_mk,
                           Myu = sr_best_median_myu_all_mk,
                           Slope = sr_best_median_slope_all_mk,
@@ -489,12 +489,12 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
                           Rhat_Likelihood = sr_best_rhat_lp_all_mk)
 
   ## sr: Make a data.table for corrected alleles
-  dt_alcor <- make_dt_alcor(markers_par, sr_best_model_all_mk,
+  dt_alcor <- make_dt_alcor(markers_auto, sr_best_model_all_mk,
                             sr_best_median_myu_all_mk, sr_best_median_slope_all_mk, sr_best_median_intercept_all_mk,
                             sr_alcor_all_mk)
 
   # Make a data.table for AIC
-  dt_aic <- make_dt_aic(markers_par, model_sr_all_mk, aics_sr_all_mk,
+  dt_aic <- make_dt_aic(markers_auto, model_sr_all_mk, aics_sr_all_mk,
                         sr_allele_median_slope_all_mk, sr_allele_median_intercept_all_mk, sr_allele_median_sigma_all_mk,
                         sr_allele_rhat_slope_all_mk, sr_allele_rhat_intercept_all_mk, sr_allele_rhat_sigma_all_mk, sr_allele_rhat_lp_all_mk,
                         sr_lus_median_slope_all_mk, sr_lus_median_intercept_all_mk, sr_lus_median_sigma_all_mk,
@@ -512,7 +512,7 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
 #' analyze_m2sr_main
 #'
 #' @description The function to analyze M2SR data
-#' @param markers_par The vector of markers for parameters
+#' @param markers_auto The vector of autosomal markers
 #' @param model_sr_all_mk The vector of model settings of all markers
 #' @param model_sr_uni The stan model for the uniform model
 #' @param model_sr_together The stan model for multiple loci together
@@ -524,12 +524,12 @@ analyze_bfdstr_main <- function(sr_type, markers_par, model_sr_all_mk, model_sr_
 #' @param n_sampling The number of simulations for sampling
 #' @param n_chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
-analyze_m2sr_main <- function(markers_par, model_sr_all_mk, model_sr_uni, model_sr_together,
+analyze_m2sr_main <- function(markers_auto, model_sr_all_mk, model_sr_uni, model_sr_together,
                               sr_data, parent_al_data, total_al_prod_data,
                               lus_all_mk,
                               n_warmup, n_sampling, n_chains, n_parallel_chains){
   # Define objects
-  n_mk <- length(markers_par)
+  n_mk <- length(markers_auto)
   sr_best_model_all_mk <- rep(NA, n_mk)
   sr_best_median_myu_all_mk <- sr_best_median_sigma_all_mk <- rep(NA, n_mk)
   sr_best_rhat_myu_all_mk <- sr_best_rhat_sigma_all_mk <- sr_best_rhat_lp_all_mk <- rep(NA, n_mk)
@@ -537,13 +537,13 @@ analyze_m2sr_main <- function(markers_par, model_sr_all_mk, model_sr_uni, model_
 
   # Locus-specific
   sr_data_all_mk <- vector(mode = "list", length = n_mk)
-  names(sr_data_all_mk) <- markers_par
+  names(sr_data_all_mk) <- markers_auto
   index_mk_specific_sr <- which(model_sr_all_mk == "Uniform")
   n_mk_specific_sr <- length(index_mk_specific_sr)
   if(n_mk_specific_sr > 0){
     for(i in 1:n_mk_specific_sr){
       id_mk <- index_mk_specific_sr[i]
-      cat(paste0("MCMC for the M2SR of the ", markers_par[id_mk], ": Uniform model\n"))
+      cat(paste0("MCMC for the M2SR of the ", markers_auto[id_mk], ": Uniform model\n"))
 
       # Extract data of one marker
       tmp <- extract_sr_use(sr_data[, id_mk], parent_al_data[, id_mk], total_al_prod_data[, id_mk], lus_all_mk[[id_mk]])
@@ -620,7 +620,7 @@ analyze_m2sr_main <- function(markers_par, model_sr_all_mk, model_sr_uni, model_
   }
 
   # Make a data.table for results
-  dt_result <- data.table(Marker = markers_par,
+  dt_result <- data.table(Marker = markers_auto,
                           Model = sr_best_model_all_mk,
                           Myu = sr_best_median_myu_all_mk,
                           Sigma = sr_best_median_sigma_all_mk,

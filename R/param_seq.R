@@ -28,16 +28,16 @@ calc_weighted_lus <- function(lus_one_al, count_one_al){
 #'
 #' @description The function to analyze sequence data
 #' @param dt_seq_init The initial data.table of sequence data
-#' @param markers The vector of markers to estimate parameters
-analyze_seq <- function(dt_seq_init, par_markers){
+#' @param markers_auto The vector of autosomal markers
+analyze_seq <- function(dt_seq_init, markers_auto){
   lus_all_mk <- list()
   reps_all_mk <- list()
   seq_al_all_mk <- list()
   seq_count_all_mk <- list()
 
-  for(i in 1:length(par_markers)){
+  for(i in 1:length(markers_auto)){
     # Extract data of one marker
-    dt_seq_one_mk <- dt_seq_init[Marker == par_markers[i]]
+    dt_seq_one_mk <- dt_seq_init[Marker == markers_auto[i]]
     alleles <- as.numeric(dt_seq_one_mk[, Allele])
     al_names <- sort(unique(alleles))
     counts <- dt_seq_one_mk[, Count]
@@ -62,10 +62,10 @@ analyze_seq <- function(dt_seq_init, par_markers){
     seq_count_all_mk[[i]] <- counts
   }
 
-  names(lus_all_mk) <- par_markers
-  names(reps_all_mk) <- par_markers
-  names(seq_al_all_mk) <- par_markers
-  names(seq_count_all_mk) <- par_markers
+  names(lus_all_mk) <- markers_auto
+  names(reps_all_mk) <- markers_auto
+  names(seq_al_all_mk) <- markers_auto
+  names(seq_count_all_mk) <- markers_auto
 
   return(list(lus_all_mk, reps_all_mk, seq_al_all_mk, seq_count_all_mk))
 }
