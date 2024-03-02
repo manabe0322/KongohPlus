@@ -10,8 +10,8 @@ analyze_m2sr_main(
   model_sr_uni,
   model_sr_together,
   sr_data,
-  allele_sr_data,
-  height_sr_data,
+  parent_al_data,
+  total_al_prod_data,
   lus_all_mk,
   n_warmup,
   n_sampling,
@@ -30,9 +30,9 @@ analyze_m2sr_main(
 
 \item{sr_data}{The minus 2-nt stutter ratios of all markers}
 
-\item{allele_sr_data}{The parent alleles for each stutter ratios of all markers}
+\item{parent_al_data}{The parent alleles for each stutter ratios of all markers}
 
-\item{height_sr_data}{The total allelic products of all markers}
+\item{total_al_prod_data}{The total allelic products of all markers}
 
 \item{lus_all_mk}{The information on the LUS values of all markers}
 

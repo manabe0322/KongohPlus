@@ -10,16 +10,16 @@ extract_kit_auto <- function(dt_kit){
 
 #' extract_dye
 #'
-#' @description The function to extract dyes from dt_kit_auto
-#' @param dt_kit_auto The data.table of the kit information on autosomal STRs
-#' @param markers_par A vector of the markers for estimating parameters
-extract_dye <- function(dt_kit_auto, markers_par){
-  setkey(dt_kit_auto, Marker)
-  n_mk <- length(markers_par)
+#' @description The function to extract dyes from dt_kit
+#' @param dt_kit The data.table of the kit information
+#' @param markers A vector of the markers
+extract_dye <- function(dt_kit, markers){
+  setkey(dt_kit, Marker)
+  n_mk <- length(markers)
   dyes_par <- rep("", n_mk)
   for(i in 1:n_mk){
-    dt_kit_auto_mk1 <- dt_kit_auto[markers_par[i]]
-    dyes_par[i] <- unique(dt_kit_auto_mk1[, Dye])
+    dt_kit_mk1 <- dt_kit[markers[i]]
+    dyes_par[i] <- unique(dt_kit_mk1[, Dye])
   }
   return(dyes_par)
 }
