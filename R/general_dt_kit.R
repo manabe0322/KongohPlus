@@ -16,10 +16,11 @@ extract_kit_auto <- function(dt_kit){
 extract_dye <- function(dt_kit, markers){
   setkey(dt_kit, Marker)
   n_mk <- length(markers)
-  dyes_par <- rep("", n_mk)
+  dyes <- rep("", n_mk)
   for(i in 1:n_mk){
     dt_kit_mk1 <- dt_kit[markers[i]]
-    dyes_par[i] <- unique(dt_kit_mk1[, Dye])
+    dyes[i] <- unique(dt_kit_mk1[, Dye])
   }
-  return(dyes_par)
+  names(dyes) <- markers
+  return(dyes)
 }
