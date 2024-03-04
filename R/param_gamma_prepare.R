@@ -45,60 +45,6 @@ prepare_eph_oph <- function(peak_list, height_list, gt_list, at_auto){
               "at_all" = at_all))
 }
 
-#' prepare_phr_data
-#'
-#' @description The function to prepare data of the peak height ratio
-#' @param peak_list The list of peaks
-#' @param height_list The list of peak heights
-#' @param gt_list The list of genotypes
-prepare_phr_data <- function(peak_list, height_list, gt_list){
-  n_sample <- length(peak_list)
-  n_mk <- length(peak_list[[1]])
-  phr_all <- mean_ph_all <- rep(NA, n_sample * n_mk)
-
-  for(i in 1:n_sample){
-    peak_list_one <- peak_list[[i]]
-    height_list_one <- height_list[[i]]
-    gt_list_one <- gt_list[[i]]
-
-    for(j in 1:n_mk){
-      gt <- gt_list_one[j, ]
-      if(gt[1] != gt[2] && abs(round(as.numeric(gt[1]) - as.numeric(gt[2]), 1)) != 1){
-        peaks <- peak_list_one[[j]]
-        heights <- height_list_one[[j]]
-
-        index_al <- which(is.element(peaks, gt))
-        if(length(index_al) == 2){
-          oph <- heights[index_al]
-          current_index <- n_mk * (i - 1) + j
-          phr_all[current_index] <- oph[2] / oph[1]
-          mean_ph_all[current_index] <- mean(oph)
-        }
-      }
-    }
-  }
-  phr_all <- phr_all[!is.na(phr_all)]
-  mean_ph_all <- mean_ph_all[!is.na(mean_ph_all)]
-
-  return(list("phr_all" = phr_all,
-              "mean_ph_all" = mean_ph_all))
-}
-
-#' calc_tph_all_data
-#'
-#' @description The function to calculate the average total peak heights of all data
-#' @param height_list The list of peak heights
-calc_tph_all_data <- function(height_list){
-  n_data <- length(height_list)
-  tph_all_data <- rep(0, n_data)
-  for(i in 1:n_data){
-    height_list_one_data <- height_list[[i]]
-    tph_per_mk <- sapply(height_list_one_data, sum)
-    tph_all_data[i] <- mean(tph_per_mk)
-  }
-  return(tph_all_data)
-}
-
 #' calc_eph_base
 #'
 #' @description The function to calculate the based expected peak heights

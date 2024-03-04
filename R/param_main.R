@@ -42,11 +42,11 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param dt_kit The data.table of information on the kit
 #' @param dt_kit_set The data.table of the kit-setting
 #' @param n_parallel_chains The number of parallel chains
-#' @param model_ae The stan model for AE
+#' @param model_ae The stan model for the locus-specific amplification efficiency
+#' @param model_phr The stan model for the peak height ratio
 #' @param model_sr_gen The stan model for the general stutter ratio
 #' @param model_sr_together The stan model for the stutter ratio when considering multiple loci together
 #' @param model_sr_uni The stan model for the uniform stutter ratio
-#' @param model_phr The stan model for the peak height ratio
 #' @param model_gamma The stan model for gamma distribution
 #' @param n_warmup The number of simulations for warm-up
 #' @param n_sampling The number of simulations for sampling
@@ -56,7 +56,7 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param min_n_motif_lus The minimum number of repeat motifs for considering the LUS model
 #' @param min_n_motif_multi The minimum number of repeat motifs for considering the multi-sequence model
 estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
-                                model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_phr, model_gamma,
+                                model_ae, model_phr, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
                                 n_warmup, n_sampling, n_chains,
                                 pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi = 10,
                                 n_parallel_chains = detectCores()){
@@ -101,9 +101,16 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
   gt_list <- tmp$gt_list
 
   # Prepare data for the locus-specific amplification efficiency
-  pae_data <- get_pae_data(height_list)
+  pae_data <- get_pae_data(peak_list, height_list, gt_list)
   index_pae_use <- which(apply(pae_data, 2, prod) > 0)
   pae_data_use <- pae_data[, index_pae_use, drop = FALSE]
+  tph_all_data <- calc_tph_all_data(height_list)
+  tph_data_use <- tph_all_data[index_pae_use]
+
+  # Prepare data for the peak height ratio
+  tmp <- get_phr_data(peak_list, height_list, gt_list)
+  phr_all <- tmp$phr_all
+  mean_ph_all <- tmp$mean_ph_all
 
   # Prepare data for the stutter ratios
   tmp <- get_sr_data(peak_list, height_list, gt_list, sr_consider_auto)
@@ -122,15 +129,14 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
   seq_al_auto <- tmp$seq_al_auto
   seq_count_auto <- tmp$seq_count_auto
 
-  # Prepare data for the gamma distribution
-  tph_all_data <- calc_tph_all_data(height_list)
-  oph_all_data <- unlist(height_list)
-  n_oph <- length(oph_all_data)
-
   # Perform the MCMC for the locus-specific amplification efficiency
   ae_result_list <- analyze_ae_main(markers_auto, model_ae,
-                                    pae_data,
+                                    pae_data_use, tph_data_use,
                                     n_warmup, n_sampling, n_chains, n_parallel_chains)
+
+  # Perform the MCMC for the peak height ratio
+  phr_result_list <- analyze_phr_main(markers_auto, model_phr, phr_all, mean_ph_all,
+                                      n_warmup, n_sampling, n_chains, n_parallel_chains)
 
   # Perform the MCMC for the back stutter ratio
   bsr_result_list <- analyze_bfdstr_main("BSR", markers_auto, meth_model_bsr_auto, model_sr_gen, model_sr_together,
@@ -158,12 +164,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
 
   #### Gamma parameter ####
 
-  cat("MCMC for the peak height ratio\n")
 
-  tmp <- prepare_phr_data(peak_list, height_list, gt_list)
-  phr_all <- tmp$phr_all
-  mean_ph_all <- tmp$mean_ph_all
-  data_list_phr <- list(N = length(phr_all), PHR = phr_all, Mean_Ph = mean_ph_all)
 
 
   cat("MCMC for the gamma parameter\n")
