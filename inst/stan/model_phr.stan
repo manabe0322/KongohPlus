@@ -5,11 +5,12 @@ data{
 }
 
 parameters{
+  real<lower = 0> myu;
   real<lower = 0> sigma;
 }
 
 model{
   for(i in 1:N){
-    PHR[i] ~ lognormal(0, sqrt(sigma / Mean_Ph[i]));
+    PHR[i] ~ lognormal(myu, sqrt(sigma / Mean_Ph[i]));
   }
 }
