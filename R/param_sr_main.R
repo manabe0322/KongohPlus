@@ -486,7 +486,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
                           Rhat_Slope = sr_best_rhat_slope_all_mk,
                           Rhat_Intercept = sr_best_rhat_intercept_all_mk,
                           Rhat_Sigma = sr_best_rhat_sigma_all_mk,
-                          Rhat_Likelihood = sr_best_rhat_lp_all_mk)
+                          Rhat_Lp = sr_best_rhat_lp_all_mk)
 
   ## sr: Make a data.table for corrected alleles
   dt_alcor <- make_dt_alcor(markers_auto, sr_best_model_all_mk,
@@ -626,7 +626,7 @@ analyze_m2sr_main <- function(markers_auto, meth_model_sr_auto, model_sr_uni, mo
                           Sigma = sr_best_median_sigma_all_mk,
                           Rhat_Myu = sr_best_rhat_myu_all_mk,
                           Rhat_Sigma = sr_best_rhat_sigma_all_mk,
-                          Rhat_Likelihood = sr_best_rhat_lp_all_mk)
+                          Rhat_Lp = sr_best_rhat_lp_all_mk)
 
   return(list(dt_result = dt_result,
               traceplot = sr_best_trace_all_mk,
