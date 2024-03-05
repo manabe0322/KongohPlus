@@ -7,6 +7,7 @@
 #' @importFrom DT datatable dataTableOutput formatRound formatSignif JS renderDataTable
 #' @importFrom gtools combinations permutations
 #' @importFrom magrittr %>%
+#' @importFrom MCMCpack rdirichlet
 #' @importFrom parallel detectCores
 #' @importFrom posterior as_draws_matrix rhat
 #' @importFrom Rcpp sourceCpp

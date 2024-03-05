@@ -19,6 +19,7 @@ Imports:
     DT, 
     gtools, 
     magrittr, 
+    MCMCpack, 
     parallel, 
     posterior, 
     Rcpp, 
