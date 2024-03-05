@@ -59,7 +59,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
                                 model_ae, model_phr, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
                                 n_warmup, n_sampling, n_chains,
                                 pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi = 10,
-                                n_parallel_chains = detectCores()){
+                                n_parallel_chains = detectCores(), n_simu = 2){
   # Extract information on the kit
   markers_all <- unique(dt_kit[, Marker])
   n_mk_all <- length(markers_all)
@@ -163,36 +163,34 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
                                         n_warmup, n_sampling, n_chains, n_parallel_chains)
 
   #### Gamma parameter ####
+  dt_result_ae <- ae_result_list$dt_result_ae
+  dt_result_phr <- phr_result_list$dt_result_phr
+  dt_result_bsr <- bsr_result_list$dt_result
+  dt_result_fsr <- fsr_result_list$dt_result
+  dt_result_dsr <- dsr_result_list$dt_result
+  dt_result_m2sr <- m2sr_result_list$dt_result
+  dt_alcor_bsr <- bsr_result_list$dt_alcor
+  dt_alcor_fsr <- fsr_result_list$dt_alcor
+  dt_alcor_dsr <- dsr_result_list$dt_alcor
 
+  tmp <- simulate_oph_eph_all_tph(pae_data_use, tph_data_use, gt_list[index_pae_use], markers_auto, sr_consider_auto,
+                                  dt_result_ae, dt_result_phr, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr,
+                                  dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr,
+                                  n_simu)
+  oph_simu <- unlist(tmp$rand_oph_auto_all_tph)
+  eph_simu <- unlist(tmp$eph_auto_all_tph)
 
+  index_not_na <- sort(intersect(which(!is.na(oph_simu)), which(!is.na(eph_simu))))
+  oph_simu <- oph_simu[index_not_na]
+  eph_simu <- eph_simu[index_not_na]
 
-
-  cat("MCMC for the gamma parameter\n")
-
-
-
-
-  # Calculate expected peak heights
-  #dt_result_ae <- ae_result_list$dt_result
-  #dt_result_bsr <- bsr_result_list$dt_result
-  #dt_result_fsr <- fsr_result_list$dt_result
-  #dt_result_dsr <- dsr_result_list$dt_result
-  #dt_result_m2sr <- m2sr_result_list$dt_result
-  #dt_alcor_bsr <- bsr_result_list$dt_alcor
-  #dt_alcor_fsr <- fsr_result_list$dt_alcor
-  #dt_alcor_dsr <- dsr_result_list$dt_alcor
-  #eph_all_data <- calc_eph_all_data(markers_auto, n_oph, tph_all_data, gt_list, peak_list,
-  #                                  dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr,
-  #                                  dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr)
-
-  # Remove data without sequence information (i.e., NA data)
-  #index_adopt <- which(!is.na(eph_all_data))
-  #oph_all_data <- oph_all_data[index_adopt]
-  #eph_all_data <- eph_all_data[index_adopt]
+  index_not_zero <- sort(intersect(which(oph_simu != 0), which(eph_simu != 0)))
+  oph_simu <- oph_simu[index_not_zero]
+  eph_simu <- eph_simu[index_not_zero]
 
   # Perform MCMC
-  #data_list_gamma <- list(N = length(oph_all_data), OPH = oph_all_data, EPH = eph_all_data)
-  tmp <- run_mcmc_gamma(model_gamma, data_list_gamma, n_warmup, n_sampling, n_chains, n_parallel_chains)
+  data_list_gamma <- list(N = length(oph_simu), OPH = oph_simu, EPH = eph_simu)
+  tmp <- run_mcmc_gamma(model_gamma, data_list_gamma, 1200, 300, n_chains, n_parallel_chains)
   dt_result_gamma <- data.table(Beta = tmp$median_beta,
                                 Rhat_Beta = tmp$rhat_beta,
                                 Rhat_Likelihood = tmp$rhat_lp)

@@ -283,7 +283,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
         cat(paste0("MCMC for the ", sr_type, " of the ", markers_auto[id_mk], ": Allele model\n"))
         data_list_sr_allele <- list(N = length(sr_one_mk), SR = sr_one_mk, XVal = sr_al_one_mk, Height = sr_h_one_mk)
         tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_sr_allele, n_warmup, n_sampling, n_chains, n_parallel_chains)
-        log_likes[1] <- tmp$median_loglike
+        log_likes[1] <- tmp$median_lp
         sr_allele_median_slope_all_mk[id_mk] <- tmp$median_slope
         sr_allele_median_intercept_all_mk[id_mk] <- tmp$median_intercept
         sr_allele_median_sigma_all_mk[id_mk] <- tmp$median_sigma
@@ -299,7 +299,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
         cat(paste0("MCMC for the ", sr_type, " of the ", markers_auto[id_mk], ": LUS model\n"))
         data_list_sr_lus <- list(N = length(sr_one_mk), SR = sr_one_mk, XVal = sr_lus_one_mk, Height = sr_h_one_mk)
         tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_sr_lus, n_warmup, n_sampling, n_chains, n_parallel_chains)
-        log_likes[2] <- tmp$median_loglike
+        log_likes[2] <- tmp$median_lp
         sr_lus_median_slope_all_mk[id_mk] <- tmp$median_slope
         sr_lus_median_intercept_all_mk[id_mk] <- tmp$median_intercept
         sr_lus_median_sigma_all_mk[id_mk] <- tmp$median_sigma
@@ -322,12 +322,12 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
           sr_ca_one_mk_cand[[j]] <- sr_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[j], reps_one_mk, seq_al_one_mk, seq_count_one_mk, sr_al_one_mk)
           data_list_sr_multi <- list(N = length(sr_one_mk), SR = sr_one_mk, XVal = sr_ca_one_mk, Height = sr_h_one_mk)
           result_sr_multi_cand[[j]] <- run_mcmc_sr_gen(model_sr_gen, data_list_sr_multi, n_warmup, n_sampling, n_chains, n_parallel_chains)
-          loglike_multi[j] <- result_sr_multi_cand[[j]]$median_loglike
+          loglike_multi[j] <- result_sr_multi_cand[[j]]$median_lp
         }
         index_max_like_multi <- which.max(loglike_multi)
         sr_ca_one_mk <- sr_ca_one_mk_cand[[index_max_like_multi]]
         tmp <- result_sr_multi_cand[[index_max_like_multi]]
-        log_likes[3] <- tmp$median_loglike
+        log_likes[3] <- tmp$median_lp
         sr_multi_median_slope_all_mk[id_mk] <- tmp$median_slope
         sr_multi_median_intercept_all_mk[id_mk] <- tmp$median_intercept
         sr_multi_median_sigma_all_mk[id_mk] <- tmp$median_sigma

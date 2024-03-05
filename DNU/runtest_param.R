@@ -25,12 +25,40 @@ dt_kit_set$Model_M2SR <- c(rep("Not consider", 16), "Uniform", "Not consider", "
 n_warmup <- 2000
 n_sampling <- 2000
 n_chains <- 4
+n_parallel_chains = detectCores()
 pu_auto <- TRUE
 pu_remove <- TRUE
 pu_dist <- 1
 at_sex <- 100
 min_n_motif_lus <- 2
 min_n_motif_multi <- 3
+max_n_motif_multi <- 10
+
+stan_models <- list.files(paste0(path_pack, "/inst/model"))
+if(!is.element("model_ae.rds", stan_models)){
+  model_ae <- cmdstan_model(paste0(path_pack, "/inst/stan/model_ae.stan"))
+  saveRDS(model_ae, paste0(path_pack, "/inst/model/model_ae.rds"))
+}
+if(!is.element("model_sr_gen.rds", stan_models)){
+  model_sr_gen <- cmdstan_model(paste0(path_pack, "/inst/stan/model_sr_gen.stan"))
+  saveRDS(model_sr_gen, paste0(path_pack, "/inst/model/model_sr_gen.rds"))
+}
+if(!is.element("model_sr_together.rds", stan_models)){
+  model_sr_together <- cmdstan_model(paste0(path_pack, "/inst/stan/model_sr_together.stan"))
+  saveRDS(model_sr_together, paste0(path_pack, "/inst/model/model_sr_together.rds"))
+}
+if(!is.element("model_sr_uni.rds", stan_models)){
+  model_sr_uni <- cmdstan_model(paste0(path_pack, "/inst/stan/model_sr_uni.stan"))
+  saveRDS(model_sr_uni, paste0(path_pack, "/inst/model/model_sr_uni.rds"))
+}
+if(!is.element("model_phr.rds", stan_models)){
+  model_phr <- cmdstan_model(paste0(path_pack, "/inst/stan/model_phr.stan"))
+  saveRDS(model_phr, paste0(path_pack, "/inst/model/model_phr.rds"))
+}
+if(!is.element("model_gamma.rds", stan_models)){
+  model_gamma <- cmdstan_model(paste0(path_pack, "/inst/stan/model_gamma.stan"))
+  saveRDS(model_gamma, paste0(path_pack, "/inst/model/model_gamma.rds"))
+}
 
 error_message <- check_est_par(dt_exp, dt_gt, dt_seq, dt_kit_set)
 
