@@ -105,3 +105,11 @@ determine_mpdeg <- function(sampling_data, n_sampling, n_chain, upper_rhat = 1.1
   return(list("mp_final" = mp_final,
               "deg_final" = deg_final))
 }
+
+# Determine the mixture proportions and the degradation parameters
+#if(any(rhat_mp >= 1.1)){
+#  sampling_data <- as_draws_matrix(draws)
+#  mpdeg_final <- determine_mpdeg(sampling_data, n_sampling = 300, n_chain = 4, upper_rhat = 1.1)
+#  mp <- mpdeg_final$mp_final
+#  deg <- mpdeg_final$deg_final
+#}

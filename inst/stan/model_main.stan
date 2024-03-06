@@ -81,7 +81,6 @@ transformed data{
 
 parameters{
   real<lower = Ltph, upper = Htph> tph;
-  //simplex[Hnc] mp;
   positive_ordered[Hnc] lambda;
   vector<lower = -0.05, upper = 0>[Hnc] deg;
   simplex[N_Mk] pae;
@@ -94,9 +93,8 @@ transformed parameters{
 model{
   tph ~ normal(tph_mean, tph_sd);
   target += gamma_lpdf(lambda | rep_vector(1, Hnc), 1);
-  //mp ~ dirichlet(rep_vector(1, Hnc));
   deg ~ normal(-0.025, 0.0125);
-  pae ~ dirichlet(AE_Alpha_All_Mk);
+  pae ~ dirichlet(tph * AE_Alpha_All_Mk);
 
   vector[N_Dedup1_All] eph_dedup1 = calc_eph_dedup1(tph, mp, deg, Hnc, N_Dedup1_All, Eph_Base, Index_Dedup1_Mcmc, Size_Dedup1_Mcmc);
 

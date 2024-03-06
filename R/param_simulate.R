@@ -1,7 +1,7 @@
-simulate_oph_eph <- function(pae_actual, tph, gt_s1, markers_auto, sr_consider_auto,
+simulate_oph_eph <- function(pae_actual, tph, gt_s1, markers_auto, at_auto, sr_consider_auto,
                              ae_alpha, phr_myu, phr_sigma, bsr_sigma, fsr_sigma, dsr_sigma, m2sr_myu, m2sr_sigma,
                              dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr,
-                             n_simu = 2){
+                             n_simu = 5){
   n_mk <- length(markers_auto)
 
   # Initial randomly generated OPH
@@ -13,9 +13,12 @@ simulate_oph_eph <- function(pae_actual, tph, gt_s1, markers_auto, sr_consider_a
   eph_start <- 0.5 * tph * n_mk * pae_actual
   eph_auto <- vector(mode = "list", length = n_mk)
   names(eph_auto) <- markers_auto
+
+  at_auto_simu <- vector(mode = "list", length = n_mk)
   for(i in 1:n_mk){
     # Determine peaks which are expected to be observed
     gt <- as.numeric(gt_s1[i, ])
+    at <- at_auto[i]
     sr_consider <- sr_consider_auto[i, ]
     cand_peak <- make_cand_peak(gt, sr_consider)
     n_peak <- length(cand_peak)
@@ -115,7 +118,7 @@ simulate_oph_eph <- function(pae_actual, tph, gt_s1, markers_auto, sr_consider_a
       rand_oph_m2s_2[, match(m2s[2], cand_peak)] <- rand_tap_al_2 * rand_m2sr_al_2 / rand_tmp_al_2
     }
     rand_oph_auto_mk <- rand_oph_al_1 + rand_oph_al_2 + rand_oph_bs_1 + rand_oph_bs_2 + rand_oph_fs_1 + rand_oph_fs_2 + rand_oph_ds_1 + rand_oph_ds_2 + rand_oph_m2s_1 + rand_oph_m2s_2
-    rand_oph_auto[[i]] <- as.vector(rand_oph_auto_mk)
+    rand_oph_auto_mk <- as.vector(rand_oph_auto_mk)
 
     # Calculate expected peak heights
     eph_start_mk <- eph_start[i]
@@ -140,16 +143,23 @@ simulate_oph_eph <- function(pae_actual, tph, gt_s1, markers_auto, sr_consider_a
       eph_m2s_2[match(m2s[2], cand_peak)] <- eph_start_mk * m2sr_myu[i] / tmp_al_2
     }
     eph_auto_mk <- eph_al_1 + eph_al_2 + eph_bs_1 + eph_bs_2 + eph_fs_1 + eph_fs_2 + eph_ds_1 + eph_ds_2 + eph_m2s_1 + eph_m2s_2
-    eph_auto[[i]] <- as.vector(sapply(eph_auto_mk, rep, n_simu))
+    eph_auto_mk <- as.vector(sapply(eph_auto_mk, rep, n_simu))
+
+    # Remove stutter peaks below AT
+    index_use <- sort(unique(c(which(rand_oph_auto_mk >= at), n_simu * (match(gt[1], cand_peak) - 1) + 1:n_simu, n_simu * (match(gt[2], cand_peak) - 1) + 1:n_simu)))
+    rand_oph_auto[[i]] <- rand_oph_auto_mk[index_use]
+    eph_auto[[i]] <- eph_auto_mk[index_use]
+    at_auto_simu[[i]] <- rep(at, length(index_use))
   }
   return(list("rand_oph_auto" = rand_oph_auto,
-              "eph_auto" = eph_auto))
+              "eph_auto" = eph_auto,
+              "at_auto_simu" = at_auto_simu))
 }
 
-simulate_oph_eph_all_tph <- function(pae_data_use, tph_data_use, gt_use, markers_auto, sr_consider_auto,
+simulate_oph_eph_all_tph <- function(pae_data_use, tph_data_use, gt_use, markers_auto, at_auto, sr_consider_auto,
                                      dt_result_ae, dt_result_phr, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr,
                                      dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr,
-                                     n_simu = 2){
+                                     n_simu = 5){
   # Extract parameters
   ae_alpha <- dt_result_ae[, Alpha]
   phr_myu <- dt_result_phr[, Myu]
@@ -170,15 +180,18 @@ simulate_oph_eph_all_tph <- function(pae_data_use, tph_data_use, gt_use, markers
   n_use <- length(tph_data_use)
   rand_oph_auto_all_tph <- vector(mode = "list", length = n_use)
   eph_auto_all_tph <- vector(mode = "list", length = n_use)
+  at_auto_simu_all_tph <- vector(mode = "list", length = n_use)
 
   for(i in 1:n_use){
-    tmp <- simulate_oph_eph(pae_data_use[, i], tph_use[i], gt_use[[i]], markers_auto, sr_consider_auto,
+    tmp <- simulate_oph_eph(pae_data_use[, i], tph_data_use[i], gt_use[[i]], markers_auto, at_auto, sr_consider_auto,
                             ae_alpha, phr_myu, phr_sigma, bsr_sigma, fsr_sigma, dsr_sigma, m2sr_myu, m2sr_sigma,
                             dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr,
                             n_simu)
     rand_oph_auto_all_tph[[i]] <- tmp$rand_oph_auto
     eph_auto_all_tph[[i]] <- tmp$eph_auto
+    at_auto_simu_all_tph[[i]] <- tmp$at_auto_simu
   }
   return(list("rand_oph_auto_all_tph" = rand_oph_auto_all_tph,
-              "eph_auto_all_tph" = eph_auto_all_tph))
+              "eph_auto_all_tph" = eph_auto_all_tph,
+              "at_auto_simu_all_tph" = at_auto_simu_all_tph))
 }

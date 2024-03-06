@@ -25,7 +25,8 @@ estimate_parameters(
   min_n_motif_lus,
   min_n_motif_multi,
   max_n_motif_multi = 10,
-  n_parallel_chains = detectCores()
+  n_parallel_chains = detectCores(),
+  n_simu = 2
 )
 }
 \arguments{

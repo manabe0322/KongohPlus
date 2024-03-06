@@ -173,23 +173,26 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
   dt_alcor_fsr <- fsr_result_list$dt_alcor
   dt_alcor_dsr <- dsr_result_list$dt_alcor
 
-  tmp <- simulate_oph_eph_all_tph(pae_data_use, tph_data_use, gt_list[index_pae_use], markers_auto, sr_consider_auto,
+  tmp <- simulate_oph_eph_all_tph(pae_data_use, tph_data_use, gt_list[index_pae_use], markers_auto, at_auto, sr_consider_auto,
                                   dt_result_ae, dt_result_phr, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr,
                                   dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr,
                                   n_simu)
   oph_simu <- unlist(tmp$rand_oph_auto_all_tph)
   eph_simu <- unlist(tmp$eph_auto_all_tph)
+  at_simu <- unlist(tmp$at_auto_simu_all_tph)
 
   index_not_na <- sort(intersect(which(!is.na(oph_simu)), which(!is.na(eph_simu))))
   oph_simu <- oph_simu[index_not_na]
   eph_simu <- eph_simu[index_not_na]
+  at_simu <- at_simu[index_not_na]
 
   index_not_zero <- sort(intersect(which(oph_simu != 0), which(eph_simu != 0)))
   oph_simu <- oph_simu[index_not_zero]
   eph_simu <- eph_simu[index_not_zero]
+  at_simu <- at_simu[index_not_zero]
 
   # Perform MCMC
-  data_list_gamma <- list(N = length(oph_simu), OPH = oph_simu, EPH = eph_simu)
+  data_list_gamma <- list(N = length(oph_simu), OPH = oph_simu, EPH = eph_simu, AT = at_simu)
   tmp <- run_mcmc_gamma(model_gamma, data_list_gamma, 1200, 300, n_chains, n_parallel_chains)
   dt_result_gamma <- data.table(Beta = tmp$median_beta,
                                 Rhat_Beta = tmp$rhat_beta,

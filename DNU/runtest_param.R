@@ -33,6 +33,7 @@ at_sex <- 100
 min_n_motif_lus <- 2
 min_n_motif_multi <- 3
 max_n_motif_multi <- 10
+n_simu <- 5
 
 stan_models <- list.files(paste0(path_pack, "/inst/model"))
 if(!is.element("model_ae.rds", stan_models)){
