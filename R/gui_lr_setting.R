@@ -579,7 +579,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
                          columnDefs = list(list(targets = c(0:8, 10:16), visible = FALSE))),
           rownames = FALSE
         ) %>%
-          formatRound(columns = c("Beta"), digits = 3)
+          formatRound(columns = c("Cv"), digits = 3)
       })
 
       observeEvent(input$act_analyze_lr, {

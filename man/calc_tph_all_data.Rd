@@ -10,5 +10,5 @@ calc_tph_all_data(height_list)
 \item{height_list}{The list of peak heights}
 }
 \description{
-The function to calculate the average total peak heights of all data
+The function to calculate the average heterozygote peak heights of all marker
 }

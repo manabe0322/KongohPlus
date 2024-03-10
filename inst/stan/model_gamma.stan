@@ -1,20 +1,16 @@
 data{
   int N;
   vector[N] OPH;
-  vector[N] EPH;
-  vector[N] AT;
+  vector[N] RPH;
+  vector[N] TPH;
 }
 
 parameters{
-  real<lower = 0, upper = 0.1> beta;
+  real<lower = 0, upper = 1> cv;
 }
 
 model{
   for(i in 1:N){
-    if(OPH[i] < AT[i]){
-      target += gamma_lcdf(AT[i] | EPH[i] * beta, beta);
-    }else{
-      OPH[i] ~ gamma(EPH[i] * beta, beta);
-    }
+    OPH[i] ~ gamma(pow(cv, -2) * RPH[i], 1 / (TPH[i] * pow(cv, 2)));
   }
 }

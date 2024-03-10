@@ -37,7 +37,7 @@ get_pae_data <- function(peak_list, height_list, gt_list){
 
 #' calc_tph_all_data
 #'
-#' @description The function to calculate the average total peak heights of all data
+#' @description The function to calculate the average heterozygote peak heights of all marker
 #' @param height_list The list of peak heights
 calc_tph_all_data <- function(height_list){
   n_data <- length(height_list)
@@ -45,7 +45,7 @@ calc_tph_all_data <- function(height_list){
   for(i in 1:n_data){
     height_list_one_data <- height_list[[i]]
     tph_per_mk <- sapply(height_list_one_data, sum)
-    tph_all_data[i] <- mean(tph_per_mk)
+    tph_all_data[i] <- mean(tph_per_mk) / 2
   }
   return(tph_all_data)
 }

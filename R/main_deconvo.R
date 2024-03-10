@@ -39,9 +39,6 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   m2sr_fltr <- gtc_fltr_value[gtc_fltr_type == "M2SR"]
   n_dropin_fltr <- gtc_fltr_value[gtc_fltr_type == "N_DropIn"]
   h_dropin_fltr <- gtc_fltr_value[gtc_fltr_type == "H_DropIn"]
-  #phr_fltr <- gtc_fltr_value[gtc_fltr_type == "PHR"]
-  #mr_fltr <- gtc_fltr_value[gtc_fltr_type == "MR"]
-  #st <- gtc_fltr_value[gtc_fltr_type == "ST"]
 
   # Extract methods to estimate genotype probabilities
   gtc_prob_param <- dt_gtc_prob[, Parameter]
@@ -54,7 +51,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   pop_prob_list <- tmp$pop_prob_list
 
   # Extract gamma parameter
-  gamma_beta <- extract_beta(dt_param)
+  cv <- extract_cv(dt_param)
 
   setkey(dt_alcor, Marker)
 
@@ -160,7 +157,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
         oph_tmp <- rep(heights, n_gtc)
         oph_mk <- oph_tmp[bool_duplicated_adopt]
         oph_dedup1_mk_adopt <- c(oph_dedup1_mk_adopt, oph_mk)
-        loglike_gtc_all_mp <- calc_loglike_gtc_all_mp(oph_sum, mp_cand, eph_base_mk, index_dedup1_mk_adopt_cpp, oph_mk, at, gamma_beta, di_alpha, di_beta, logprob_di, di_min, n_peak, n_gtc, index_dedup2_mk_adopt_cpp, gtc_logprob_mk)
+        loglike_gtc_all_mp <- calc_loglike_gtc_all_mp(oph_sum, mp_cand, eph_base_mk, index_dedup1_mk_adopt_cpp, oph_mk, at, cv, di_alpha, di_beta, logprob_di, di_min, n_peak, n_gtc, index_dedup2_mk_adopt_cpp, gtc_logprob_mk)
         loglike_gtc_all_mp <- matrix(unlist(loglike_gtc_all_mp), ncol = n_gtc, byrow = TRUE)
         index_tmp <- which(loglike_gtc_all_mp >= max(loglike_gtc_all_mp) - 10, arr.ind = TRUE)
         index_gtc_mk_mcmc <- c(index_gtc_mk_mcmc, unique(index_tmp[, 2]))
@@ -238,18 +235,8 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
                            Size_Dedup1_Mcmc = unlist(size_dedup1_mcmc) - min_size, Oph_Dedup1_Mcmc = unlist(oph_dedup1_mcmc),
                            N_Dedup2_All = sum(n_dedup2_mcmc), N_Dedup2_Mcmc = n_dedup2_mcmc, Index_Dedup2_Mcmc = unlist(index_dedup2_mcmc),
                            N_Peak_Adopt = n_peak_adopt, N_Gtc_Mcmc = n_gtc_mcmc, Gtc_Logprob_Mcmc = unlist(gtc_logprob_mcmc),
-                           At_All_Mk = at_all_mk, Beta = gamma_beta,
+                           At_All_Mk = at_all_mk, Cv = cv,
                            Di_Alpha = di_alpha, Di_Beta = di_beta, Logprob_Di = logprob_di, Di_Min = di_min)
-
-#    init_fun <- function(){
-#      mp_init_pre <- runif(hnc)
-#      mp_init <- sort(mp_init_pre, decreasing = TRUE) / sum(mp_init_pre)
-#      deg_init <- runif(hnc, -0.0025, 0)
-#      return(list(tph = max_tph / 3,
-#                  mp = mp_init,
-#                  deg = deg_init,
-#                  ae = ae_alpha_all_mk / sum(ae_alpha_all_mk)))
-#    }
 
     # Perform MCMC
     model_main <- readRDS(paste0(path_pack, "/model/model_main.rds"))
@@ -296,7 +283,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     index_dedup2_adopt_cpp[[i]] <- index_dedup2_adopt[[i]] - 1
   }
 
-  lpd_gtc_adopt <- calc_lpd_gtc_adopt(n_mk, tph, n_dedup1_adopt, unlist(oph_dedup1_adopt), eph_dedup1_adopt, at_all_mk, gamma_beta, di_alpha, di_beta, logprob_di, di_min, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp)
+  lpd_gtc_adopt <- calc_lpd_gtc_adopt(n_mk, tph, n_dedup1_adopt, unlist(oph_dedup1_adopt), eph_dedup1_adopt, at_all_mk, cv, di_alpha, di_beta, logprob_di, di_min, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp)
 
   dt_pg_list <- make_dt_pg_list(markers_auto, gtc_adopt, lpd_gtc_adopt, gtc_logprob_adopt, paste0("U", 1:hnc))
 

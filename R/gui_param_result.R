@@ -846,7 +846,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
             options = list(dom = "t", iDisplayLength = nrow(dt_result_gamma), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatRound(columns = c("Beta", "Rhat_Beta", "Rhat_Likelihood"), digits = 3)
+            formatRound(columns = c("Cv", "Rhat_Cv", "Rhat_Likelihood"), digits = 3)
         })
       }
     }

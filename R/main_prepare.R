@@ -113,14 +113,14 @@ extract_param_all_mk <- function(biparam_name, extparam_name, markers_auto, dt_p
   return(val_all_mk)
 }
 
-#' extract_beta
+#' extract_cv
 #'
-#' @description The function to extract the beta
+#' @description The function to extract the cv value
 #' @param dt_param The data.table of the parameters
-extract_beta <- function(dt_param){
+extract_cv <- function(dt_param){
   setkey(dt_param, Parameter)
   dt_gamma <- dt_param["Gamma"]
-  return(as.numeric(dt_gamma[, Beta]))
+  return(as.numeric(dt_gamma[, Cv]))
 }
 
 #' make_index_dedup2_mk
