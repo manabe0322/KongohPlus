@@ -1,23 +1,23 @@
 functions{
-  vector calc_eph_dedup1(real tph, vector mp, vector deg, int hnc, int n_dedup1_all, vector eph_base, array[,] int index_dedup1_mcmc, vector size_dedup1_mcmc){
+  vector calc_eph_dedup1(vector mp, vector deg, int hnc, int n_dedup1_all, vector eph_base, array[,] int index_dedup1_mcmc, vector size_dedup1_mcmc){
     vector[n_dedup1_all] eph_dedup1;
     eph_dedup1 = rep_vector(0, n_dedup1_all);
     for(i in 1:hnc){
       vector[n_dedup1_all] eph_base_c1 = eph_base[index_dedup1_mcmc[2 * i - 1, ]] + eph_base[index_dedup1_mcmc[2 * i, ]];
-      real tph_c1 = tph * mp[i];
+      real mp_c1 = mp[i];
       real deg_c1 = deg[i];
-      eph_dedup1 += eph_base_c1 * tph_c1 .* exp(deg_c1 * size_dedup1_mcmc);
+      eph_dedup1 += eph_base_c1 * mp_c1 .* exp(deg_c1 * size_dedup1_mcmc);
     }
     return eph_dedup1;
   }
 
-  real calc_lpd(real oph, real eph, real at, real beta, real di_alpha, real di_beta, real logprob_di, real di_min){
+  real calc_lpd(real tph, real oph, real eph, real at, real beta, real di_alpha, real di_beta, real logprob_di, real di_min){
     real lpd = 0;
     if(eph > 0){
       if(oph >= at){
-        lpd = gamma_lpdf(oph | eph * beta, beta);
+        lpd = gamma_lpdf(oph | pow(beta, -2) * eph, 1 / (tph * pow(beta, 2)));
       }else{
-        lpd = gamma_lcdf(at | eph * beta, beta);
+        lpd = gamma_lcdf(at | pow(beta, -2) * eph, 1 / (tph * pow(beta, 2)));
       }
     }else if(eph < 0){
       lpd = gamma_lpdf(oph - di_min | di_alpha, di_beta) + logprob_di;
@@ -25,10 +25,10 @@ functions{
     return lpd;
   }
 
-  vector calc_lpd_mk(int n_dedup_eph, vector oph_mk, vector eph_mk, real at, real beta, real di_alpha, real di_beta, real logprob_di, real di_min){
+  vector calc_lpd_mk(real tph, int n_dedup_eph, vector oph_mk, vector eph_mk, real at, real beta, real di_alpha, real di_beta, real logprob_di, real di_min){
     vector[n_dedup_eph] lpd_mk;
     for(i in 1:n_dedup_eph){
-      lpd_mk[i] = calc_lpd(oph_mk[i], eph_mk[i], at, beta, di_alpha, di_beta, logprob_di, di_min);
+      lpd_mk[i] = calc_lpd(tph, oph_mk[i], eph_mk[i], at, beta, di_alpha, di_beta, logprob_di, di_min);
     }
     return lpd_mk;
   }
@@ -96,7 +96,7 @@ model{
   deg ~ normal(-0.025, 0.0125);
   pae ~ dirichlet(tph * AE_Alpha_All_Mk);
 
-  vector[N_Dedup1_All] eph_dedup1 = calc_eph_dedup1(tph, mp, deg, Hnc, N_Dedup1_All, Eph_Base, Index_Dedup1_Mcmc, Size_Dedup1_Mcmc);
+  vector[N_Dedup1_All] eph_dedup1 = calc_eph_dedup1(mp, deg, Hnc, N_Dedup1_All, Eph_Base, Index_Dedup1_Mcmc, Size_Dedup1_Mcmc);
 
   int eph_start = 1;
   int dedup2_start = 1;
@@ -107,7 +107,7 @@ model{
     vector[n_dedup_eph] oph_mk = Oph_Dedup1_Mcmc[eph_start:(eph_start + n_dedup_eph - 1)];
     real at = At_All_Mk[i];
 
-    vector[n_dedup_eph] lpd_mk = calc_lpd_mk(n_dedup_eph, oph_mk, eph_mk, at, Beta, Di_Alpha, Di_Beta, Logprob_Di, Di_Min);
+    vector[n_dedup_eph] lpd_mk = calc_lpd_mk(tph, n_dedup_eph, oph_mk, eph_mk, at, Beta, Di_Alpha, Di_Beta, Logprob_Di, Di_Min);
 
     int n_dedup2 = N_Dedup2_Mcmc[i];
     int n_gtc = N_Gtc_Mcmc[i];

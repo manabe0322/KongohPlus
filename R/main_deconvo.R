@@ -290,13 +290,13 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   # Calculate likelihood
   index_dedup1_adopt_cpp <- asplit(index_dedup1_adopt - 1, 2) # C++ index
-  eph_dedup1_adopt <- calc_eph_dedup1_cpp(tph, mp, deg, hnc, sum(n_dedup1_adopt), unlist(eph_base), index_dedup1_adopt_cpp, unlist(size_dedup1_adopt))
+  eph_dedup1_adopt <- calc_eph_dedup1_cpp(mp, deg, hnc, sum(n_dedup1_adopt), unlist(eph_base), index_dedup1_adopt_cpp, unlist(size_dedup1_adopt))
   index_dedup2_adopt_cpp <- vector(mode = "list", length = n_mk)
   for(i in 1:n_mk){
     index_dedup2_adopt_cpp[[i]] <- index_dedup2_adopt[[i]] - 1
   }
 
-  lpd_gtc_adopt <- calc_lpd_gtc_adopt(n_mk, n_dedup1_adopt, unlist(oph_dedup1_adopt), eph_dedup1_adopt, at_all_mk, gamma_beta, di_alpha, di_beta, logprob_di, di_min, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp)
+  lpd_gtc_adopt <- calc_lpd_gtc_adopt(n_mk, tph, n_dedup1_adopt, unlist(oph_dedup1_adopt), eph_dedup1_adopt, at_all_mk, gamma_beta, di_alpha, di_beta, logprob_di, di_min, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp)
 
   dt_pg_list <- make_dt_pg_list(markers_auto, gtc_adopt, lpd_gtc_adopt, gtc_logprob_adopt, paste0("U", 1:hnc))
 

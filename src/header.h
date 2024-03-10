@@ -1,5 +1,5 @@
 #include <Rcpp.h>
-#include <cmath>      // round
+#include <cmath>      // round, pow
 #include <iostream>   // push_back
 #include <numeric>    // accumulate
 #include <string>
