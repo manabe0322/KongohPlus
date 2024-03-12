@@ -1,11 +1,10 @@
 perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, hnc,
                             warmup, sampling, chains, di_alpha = 1.22, di_beta = 0.0503, logprob_di = log(0.00335), di_min = 49){
+  # Start computation
+  start_time <- proc.time()
+
   # Extract the candidate mixture proportions
   mp_cand <- extract_mp_cand(hnc)
-  mp_cand_tmp <- mp_cand * 0
-  for(i in 1:hnc){
-    mp_cand_tmp[, i] <- mp_cand[, hnc - i + 1]
-  }
   mp_cand <- asplit(mp_cand, 1)
 
   # Extract autosomal markers
@@ -301,6 +300,10 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   dt_rhat <- data.table(Parameter = c("lp__", "tph", paste0("lambda", hnc:1), paste0("mp", hnc:1), paste0("deg", hnc:1), paste0("pae", 1:n_mk)),
                         Rhat = c(rhat_lp, rhat_tph, rhat_lambda[hnc:1], rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
 
+  # End computation
+  end_time <- proc.time()
+  comp_time <- end_time[3] - start_time[3]
+
   return(list("hnc" = hnc,
               "markers_auto" = markers_auto,
               "pop_al_list" = pop_al_list,
@@ -315,5 +318,6 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
               "lambda" = lambda,
               "dt_ae" = dt_ae,
               "dt_rhat" = dt_rhat,
-              "traceplot" = traceplot))
+              "traceplot" = traceplot,
+              "comp_time" = comp_time))
 }
