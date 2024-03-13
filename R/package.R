@@ -6,7 +6,6 @@
 #' @importFrom dplyr full_join
 #' @importFrom DT datatable dataTableOutput formatRound formatSignif JS renderDataTable
 #' @importFrom gtools combinations permutations
-#' @importFrom LaplacesDemon rdirichlet
 #' @importFrom magrittr %>%
 #' @importFrom parallel detectCores
 #' @importFrom posterior as_draws_matrix rhat
