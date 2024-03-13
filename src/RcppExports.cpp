@@ -10,9 +10,9 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// connect_eph_gtc
-std::vector<std::vector<int>> connect_eph_gtc(std::vector<double> gtc, std::vector<double> bs_gtc, std::vector<double> fs_gtc, std::vector<double> ds_gtc, std::vector<double> m2s_gtc, std::vector<double> peaks, std::vector<bool> sr_consider);
-RcppExport SEXP _KongohPlus_connect_eph_gtc(SEXP gtcSEXP, SEXP bs_gtcSEXP, SEXP fs_gtcSEXP, SEXP ds_gtcSEXP, SEXP m2s_gtcSEXP, SEXP peaksSEXP, SEXP sr_considerSEXP) {
+// connect_rph_gtc
+std::vector<std::vector<int>> connect_rph_gtc(std::vector<double> gtc, std::vector<double> bs_gtc, std::vector<double> fs_gtc, std::vector<double> ds_gtc, std::vector<double> m2s_gtc, std::vector<double> peaks, std::vector<bool> sr_consider);
+RcppExport SEXP _KongohPlus_connect_rph_gtc(SEXP gtcSEXP, SEXP bs_gtcSEXP, SEXP fs_gtcSEXP, SEXP ds_gtcSEXP, SEXP m2s_gtcSEXP, SEXP peaksSEXP, SEXP sr_considerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -23,13 +23,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<double> >::type m2s_gtc(m2s_gtcSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type peaks(peaksSEXP);
     Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
-    rcpp_result_gen = Rcpp::wrap(connect_eph_gtc(gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc, peaks, sr_consider));
+    rcpp_result_gen = Rcpp::wrap(connect_rph_gtc(gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc, peaks, sr_consider));
     return rcpp_result_gen;
 END_RCPP
 }
-// connect_eph_gtc_mk
-std::vector<std::vector<std::vector<int>>> connect_eph_gtc_mk(std::vector<std::vector<double>> cand_gt, std::vector<std::vector<int>> index_gt_comb_adopt, std::vector<double> peaks, std::vector<bool> sr_consider);
-RcppExport SEXP _KongohPlus_connect_eph_gtc_mk(SEXP cand_gtSEXP, SEXP index_gt_comb_adoptSEXP, SEXP peaksSEXP, SEXP sr_considerSEXP) {
+// connect_rph_gtc_mk
+std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::vector<double>> cand_gt, std::vector<std::vector<int>> index_gt_comb_adopt, std::vector<double> peaks, std::vector<bool> sr_consider);
+RcppExport SEXP _KongohPlus_connect_rph_gtc_mk(SEXP cand_gtSEXP, SEXP index_gt_comb_adoptSEXP, SEXP peaksSEXP, SEXP sr_considerSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -37,22 +37,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<std::vector<int>> >::type index_gt_comb_adopt(index_gt_comb_adoptSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type peaks(peaksSEXP);
     Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
-    rcpp_result_gen = Rcpp::wrap(connect_eph_gtc_mk(cand_gt, index_gt_comb_adopt, peaks, sr_consider));
-    return rcpp_result_gen;
-END_RCPP
-}
-// make_eph_base
-std::vector<double> make_eph_base(std::vector<double> peaks, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, double m2sr);
-RcppExport SEXP _KongohPlus_make_eph_base(SEXP peaksSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type peaks(peaksSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type bsrs(bsrsSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type fsrs(fsrsSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type dsrs(dsrsSEXP);
-    Rcpp::traits::input_parameter< double >::type m2sr(m2srSEXP);
-    rcpp_result_gen = Rcpp::wrap(make_eph_base(peaks, bsrs, fsrs, dsrs, m2sr));
+    rcpp_result_gen = Rcpp::wrap(connect_rph_gtc_mk(cand_gt, index_gt_comb_adopt, peaks, sr_consider));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -514,11 +499,25 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// make_rph_base
+std::vector<double> make_rph_base(std::vector<double> peaks, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, double m2sr);
+RcppExport SEXP _KongohPlus_make_rph_base(SEXP peaksSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type peaks(peaksSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type bsrs(bsrsSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type fsrs(fsrsSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type dsrs(dsrsSEXP);
+    Rcpp::traits::input_parameter< double >::type m2sr(m2srSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_rph_base(peaks, bsrs, fsrs, dsrs, m2sr));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_KongohPlus_connect_eph_gtc", (DL_FUNC) &_KongohPlus_connect_eph_gtc, 7},
-    {"_KongohPlus_connect_eph_gtc_mk", (DL_FUNC) &_KongohPlus_connect_eph_gtc_mk, 4},
-    {"_KongohPlus_make_eph_base", (DL_FUNC) &_KongohPlus_make_eph_base, 5},
+    {"_KongohPlus_connect_rph_gtc", (DL_FUNC) &_KongohPlus_connect_rph_gtc, 7},
+    {"_KongohPlus_connect_rph_gtc_mk", (DL_FUNC) &_KongohPlus_connect_rph_gtc_mk, 4},
     {"_KongohPlus_extract_subvec_int", (DL_FUNC) &_KongohPlus_extract_subvec_int, 3},
     {"_KongohPlus_extract_subvec_double", (DL_FUNC) &_KongohPlus_extract_subvec_double, 3},
     {"_KongohPlus_find_index_double", (DL_FUNC) &_KongohPlus_find_index_double, 2},
@@ -549,6 +548,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_loglike_gtc_all_mp", (DL_FUNC) &_KongohPlus_calc_loglike_gtc_all_mp, 15},
     {"_KongohPlus_calc_eph_dedup1_cpp", (DL_FUNC) &_KongohPlus_calc_eph_dedup1_cpp, 7},
     {"_KongohPlus_calc_lpd_gtc_adopt", (DL_FUNC) &_KongohPlus_calc_lpd_gtc_adopt, 14},
+    {"_KongohPlus_make_rph_base", (DL_FUNC) &_KongohPlus_make_rph_base, 5},
     {NULL, NULL, 0}
 };
 

@@ -4,10 +4,10 @@
 \alias{make_index_dedup2_mk}
 \title{make_index_dedup2_mk}
 \usage{
-make_index_dedup2_mk(index_eph_gtc, index_dedup1_mk)
+make_index_dedup2_mk(index_rph_gtc, index_dedup1_mk)
 }
 \arguments{
-\item{index_eph_gtc}{Information on the connection between eph_base and genotype combinations}
+\item{index_rph_gtc}{Information on the connection between rph_base and genotype combinations}
 
 \item{index_dedup1_mk}{Index for deduplication (pattern 1)}
 }
