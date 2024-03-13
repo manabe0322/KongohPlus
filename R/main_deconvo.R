@@ -17,6 +17,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   peaks_list <- tmp$peaks_list
   sizes_list <- tmp$sizes_list
   heights_list <- tmp$heights_list
+  min_size <- min(unlist(sizes_list))
 
   # Information on consideration of each stutter
   sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_param)
@@ -52,6 +53,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   # Define objects
   rph_base_all_mk <- vector(mode = "list", length = n_mk)
+  gtc_logprob_all_mk <- vector(mode = "list", length = n_mk)
   index_rph_gtc_all_mk <- vector(mode = "list", length = n_mk)
   index_dedup1_general_all_mk <- vector(mode = "list", length = n_mk)
   index_dedup1_dropout_all_mk <- vector(mode = "list", length = n_mk)
@@ -59,11 +61,17 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   index_dedup1_ignore_all_mk <- vector(mode = "list", length = n_mk)
   size_dedup1_general_all_mk <- vector(mode = "list", length = n_mk)
   size_dedup1_dropout_all_mk <- vector(mode = "list", length = n_mk)
+  size_dedup1_dropin_all_mk <- vector(mode = "list", length = n_mk)
+  size_dedup1_ignore_all_mk <- vector(mode = "list", length = n_mk)
   oph_dedup1_general_all_mk <- vector(mode = "list", length = n_mk)
+  oph_dedup1_dropout_all_mk <- vector(mode = "list", length = n_mk)
+  oph_dedup1_dropin_all_mk <- vector(mode = "list", length = n_mk)
+  oph_dedup1_ignore_all_mk <- vector(mode = "list", length = n_mk)
   lpd_di_all_mk <- vector(mode = "list", length = n_mk)
   n_peak_all_mk <- rep(NA, n_mk)
   n_gtc_all_mk <- rep(NA, n_mk)
   gtc_all_mk <- vector(mode = "list", length = n_mk)
+  max_tph <- 0
 
   for(i in 1:n_mk){
     # Extract peak data of one marker
@@ -72,6 +80,10 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     sizes <- sizes_list[[mk]]
     heights_all_rep <- heights_list[[mk]]
     heights <- heights_all_rep[[1]]
+    oph_sum <- sum(heights)
+    if(oph_sum > max_tph){
+      max_tph <- oph_sum
+    }
     n_peak_all_mk[i] <- n_peak <- length(peaks)
 
     # Extract parameters of one marker
@@ -118,7 +130,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
       # Calculate genotype probabilities
       n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
       gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = rep(0, hnc), n_obs)
-      gtc_logprob_mk <- log(gtc_prob_mk)
+      gtc_logprob_all_mk[[i]] <- log(gtc_prob_mk)
 
       # Connect rph_base and genotype combinations
       index_rph_gtc_cpp <- connect_rph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks, sr_consider)
@@ -152,7 +164,13 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
       size_dedup1_general_all_mk[[i]] <- size_dedup1_tmp[index_general]
       size_dedup1_dropout_all_mk[[i]] <- size_dedup1_tmp[index_dropout]
+      size_dedup1_dropin_all_mk[[i]] <- size_dedup1_tmp[index_dropin]
+      size_dedup1_ignore_all_mk[[i]] <- size_dedup1_tmp[index_ignore]
+
       oph_dedup1_general_all_mk[[i]] <- oph_dedup1_tmp[index_general]
+      oph_dedup1_dropout_all_mk[[i]] <- oph_dedup1_tmp[index_dropout]
+      oph_dedup1_dropin_all_mk[[i]] <- oph_dedup1_tmp[index_dropin]
+      oph_dedup1_ignore_all_mk[[i]] <- oph_dedup1_tmp[index_ignore]
 
       if(length(index_dropin) != 0){
         lpd_di_all_mk[[i]] <- log(dgamma(oph_dedup1_tmp[index_dropin] - di_min, di_alpha, di_beta)) + logprob_di
@@ -160,43 +178,65 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     }
   }
 
+  ## check n_gt_comb_all == 0
+
   n_rph_base_all_mk <- sapply(rph_base_all_mk, length)
   n_general_all_mk <- sapply(index_dedup1_general_all_mk, ncol)
   n_dropout_all_mk <- sapply(index_dedup1_dropout_all_mk, ncol)
   n_dropin_all_mk <- sapply(index_dedup1_dropin_all_mk, ncol)
   n_ignore_all_mk <- sapply(index_dedup1_ignore_all_mk, ncol)
-
   n_general_sum <- sum(n_general_all_mk)
   n_dropout_sum <- sum(n_dropout_all_mk)
   n_dropin_sum <- sum(n_dropin_all_mk)
   n_ignore_sum <- sum(n_ignore_all_mk)
+  n_dedup1_sum <- n_general_sum + n_dropout_sum + n_dropin_sum + n_ignore_sum
+  id_mk_dedup1 <- unlist(mapply(rep, rep(1:n_mk, 4), c(n_general_all_mk, n_dropout_all_mk, n_dropin_all_mk, n_ignore_all_mk)))
+  at_dropout <- unlist(mapply(rep, at_all_mk, n_dropout_all_mk))
+  lpd_di <- unlist(lpd_di_all_mk)
+  if(is.null(lpd_di)){
+    lpd_di <- numeric(0)
+  }
 
-  index_dedup1_all_mk <- matrix(NA, nrow = 2 * hnc, ncol = sum(c(n_general_sum, n_dropout_sum + n_dropin_sum + n_ignore_sum)))
+  # Arrange de-duplicated objects (pattern 1)
+  index_dedup1_all_mk <- matrix(NA, nrow = 2 * hnc, ncol = n_dedup1_sum)
+  size_dedup1_all_mk <- rep(NA, n_dedup1_sum)
+  oph_dedup1_all_mk <- rep(NA, n_dedup1_sum)
   index_general_start <- 1
   index_dropout_start <- n_general_sum + 1
   index_dropin_start <- n_general_sum + n_dropout_sum + 1
   index_ignore_start <- n_general_sum + n_dropout_sum + n_dropin_sum + 1
-
   sumup_index_dedup1 <- 0
   for(i in 1:n_mk){
     n_general <- n_general_all_mk[i]
     if(n_general != 0){
-      index_dedup1_all_mk[, index_general_start:(index_general_start + n_general - 1)] <- index_dedup1_general_all_mk[[i]] + sumup_index_dedup1
+      index_tmp <- index_general_start:(index_general_start + n_general - 1)
+      index_dedup1_all_mk[, index_tmp] <- index_dedup1_general_all_mk[[i]] + sumup_index_dedup1
+      size_dedup1_all_mk[index_tmp] <- size_dedup1_general_all_mk[[i]]
+      oph_dedup1_all_mk[index_tmp] <- oph_dedup1_general_all_mk[[i]]
     }
 
     n_dropout <- n_dropout_all_mk[i]
     if(n_dropout != 0){
-      index_dedup1_all_mk[, index_dropout_start:(index_dropout_start + n_dropout - 1)] <- index_dedup1_dropout_all_mk[[i]] + sumup_index_dedup1
+      index_tmp <- index_dropout_start:(index_dropout_start + n_dropout - 1)
+      index_dedup1_all_mk[, index_tmp] <- index_dedup1_dropout_all_mk[[i]] + sumup_index_dedup1
+      size_dedup1_all_mk[index_tmp] <- size_dedup1_dropout_all_mk[[i]]
+      oph_dedup1_all_mk[index_tmp] <- oph_dedup1_dropout_all_mk[[i]]
     }
 
     n_dropin <- n_dropin_all_mk[i]
     if(n_dropin != 0){
-      index_dedup1_all_mk[, index_dropin_start:(index_dropin_start + n_dropin - 1)] <- index_dedup1_dropin_all_mk[[i]] + sumup_index_dedup1
+      index_tmp <- index_dropin_start:(index_dropin_start + n_dropin - 1)
+      index_dedup1_all_mk[, index_tmp] <- index_dedup1_dropin_all_mk[[i]] + sumup_index_dedup1
+      size_dedup1_all_mk[index_tmp] <- size_dedup1_dropin_all_mk[[i]]
+      oph_dedup1_all_mk[index_tmp] <- oph_dedup1_dropin_all_mk[[i]]
     }
 
     n_ignore <- n_ignore_all_mk[i]
     if(n_ignore != 0){
-      index_dedup1_all_mk[, index_ignore_start:(index_ignore_start + n_ignore - 1)] <- index_dedup1_ignore_all_mk[[i]] + sumup_index_dedup1
+      index_tmp <- index_ignore_start:(index_ignore_start + n_ignore - 1)
+      index_dedup1_all_mk[, index_tmp] <- index_dedup1_ignore_all_mk[[i]] + sumup_index_dedup1
+      size_dedup1_all_mk[index_tmp] <- size_dedup1_ignore_all_mk[[i]]
+      oph_dedup1_all_mk[index_tmp] <- oph_dedup1_ignore_all_mk[[i]]
     }
 
     index_general_start <- index_general_start + n_general
@@ -206,8 +246,10 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     sumup_index_dedup1 <- sumup_index_dedup1 + n_rph_base_all_mk[i]
   }
 
+  # Define de-duplicated objects (pattern 2)
   n_dedup2_all_mk <- n_peak_all_mk * n_gtc_all_mk
-  index_dedup2_all_mk <- rep(NA, sum(n_dedup2_all_mk))
+  n_dedup2_sum <- sum(n_dedup2_all_mk)
+  index_dedup2_all_mk <- rep(NA, n_dedup2_sum)
   index_dedup2_start <- 1
   sumup_index_dedup2 <- 0
   for(i in 1:n_mk){
@@ -218,4 +260,47 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
     index_dedup2_start <- index_dedup2_start + n_dedup2
     sumup_index_dedup2 <- sumup_index_dedup2 + n_rph_base_all_mk[i]
   }
+
+  data_list_main <- list(hnc = hnc, n_mk = n_mk, ltph = max_tph / 4, htph = max_tph / 2,
+                         n_rph_base_sum = sum(n_rph_base_all_mk), rph_base_all_mk = unlist(rph_base_all_mk), ae_alpha_all_mk = ae_alpha_all_mk, cv = cv,
+                         n_dedup1_sum = n_dedup1_sum, index_dedup1_all_mk = index_dedup1_all_mk, size_dedup1_all_mk = size_dedup1_all_mk - min_size, oph_dedup1_all_mk = oph_dedup1_all_mk, id_mk_dedup1 = id_mk_dedup1,
+                         n_general_sum = n_general_sum, n_dropout_sum = n_dropout_sum, at_dropout = at_dropout, n_dropin_sum = n_dropin_sum, lpd_di = lpd_di,
+                         n_dedup2_sum = n_dedup2_sum, n_dedup2_all_mk = n_dedup2_all_mk, index_dedup2_all_mk = index_dedup2_all_mk,
+                         n_peak_all_mk = n_peak_all_mk, n_gtc_all_mk = n_gtc_all_mk, gtc_logprob_all_mk = unlist(gtc_logprob_all_mk))
+
+  # Perform MCMC
+  model_main <- readRDS(paste0(path_pack, "/model/model_main.rds"))
+  fit_main <- model_main$sample(
+    data_list_main,
+    iter_warmup = warmup,
+    iter_sampling = sampling,
+    chains = chains,
+    parallel_chains = detectCores()
+  )
+
+  # Trace plot
+  draws <- fit_main$draws()
+  draws %>% mcmc_trace(pars = c("lp__")) -> traceplot
+
+  # Extract parameters
+  fit_main_summary <- fit_main$summary()
+  variables <- fit_main_summary$variable
+  medians <- fit_main_summary$median
+  rhats <- fit_main_summary$rhat
+  tph <- medians[which(variables == "tph")]
+  lambda <- medians[grep("lambda", variables)]
+  mp <- medians[grep("mp", variables)]
+  deg <- medians[grep("deg", variables)]
+  pae <- medians[grep("pae", variables)]
+  ae <- n_mk * pae
+  rhat_lp <- rhats[which(variables == "lp__")]
+  rhat_tph <- rhats[which(variables == "tph")]
+  rhat_lambda <- rhats[grep("lambda", variables)]
+  rhat_mp <- rhats[grep("mp", variables)]
+  rhat_deg <- rhats[grep("deg", variables)]
+  rhat_pae <- rhats[grep("pae", variables)]
+
+  # End computation
+  end_time <- proc.time()
+  comp_time <- end_time[3] - start_time[3]
 }

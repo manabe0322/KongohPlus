@@ -34,6 +34,6 @@ di_min <- 49
 
 stan_models <- list.files(paste0(path_pack, "/model"))
 if(!is.element("model_main.rds", stan_models)){
-  model_main <- cmdstan_model(paste0(path_pack, "/inst/stan/model_main.stan"))
+  model_main <- cmdstan_model(paste0(path_pack, "/inst/stan/model_main.stan")) #cpp_options = list(stan_threads = TRUE)
   saveRDS(model_main, paste0(path_pack, "/inst/model/model_main.rds"))
 }
