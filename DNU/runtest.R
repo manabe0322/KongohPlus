@@ -27,6 +27,10 @@ hnc <- 2
 warmup <- 1200
 sampling <- 300
 chains <- 4
+di_alpha <- 1.22
+di_beta <- 0.0503
+logprob_di <- log(0.00335)
+di_min <- 49
 
 stan_models <- list.files(paste0(path_pack, "/model"))
 if(!is.element("model_main.rds", stan_models)){

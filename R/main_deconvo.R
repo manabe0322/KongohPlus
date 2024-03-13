@@ -54,6 +54,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
   setkey(dt_alcor, Marker)
 
+  # Define objects
   n_eph_base_adopt <- rep(0, n_mk)
   eph_base <- vector(mode = "list", length = n_mk)
   n_dedup1_adopt <- n_dedup1_mcmc <- rep(0, n_mk)
@@ -67,9 +68,9 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   gtc_logprob_adopt <- gtc_logprob_mcmc <- vector(mode = "list", length = n_mk)
   gtc_adopt <- vector(mode = "list", length = n_mk)
   names(gtc_adopt) <- markers_auto
-
   sumup_index_dedup1 <- 0
   max_tph <- 0
+
   for(i in 1:n_mk){
     # Extract peak data of one marker
     mk <- markers_auto[i]
@@ -124,7 +125,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
       # Calculate genotype probabilities
       n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
-      gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = c(0, 0), n_obs)
+      gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = rep(0, hnc), n_obs)
       gtc_logprob_mk <- log(gtc_prob_mk)
 
       # Connect eph_base and genotype combinations
