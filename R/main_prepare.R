@@ -126,10 +126,10 @@ extract_cv <- function(dt_param){
 #' make_index_dedup2_mk
 #'
 #' @description The function to make 'index_dedup2_mk'
-#' @param index_eph_gtc Information on the connection between eph_base and genotype combinations
+#' @param index_rph_gtc Information on the connection between rph_base and genotype combinations
 #' @param index_dedup1_mk Index for deduplication (pattern 1)
-make_index_dedup2_mk <- function(index_eph_gtc, index_dedup1_mk){
-  paste_index_eph_gtc <- apply(index_eph_gtc, 1, paste, collapse = "-")
+make_index_dedup2_mk <- function(index_rph_gtc, index_dedup1_mk){
+  paste_index_rph_gtc <- apply(index_rph_gtc, 1, paste, collapse = "-")
   paste_index_dedup1_mk <- apply(index_dedup1_mk, 1, paste, collapse = "-")
-  return(match(paste_index_eph_gtc, paste_index_dedup1_mk))
+  return(match(paste_index_rph_gtc, paste_index_dedup1_mk))
 }
