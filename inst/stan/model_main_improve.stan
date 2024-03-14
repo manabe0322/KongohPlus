@@ -12,26 +12,28 @@ functions{
 
   vector calc_lpd_general(int n_general_sum, vector oph_general, vector rph_general, real cv_m2, real cv_p2, real tph){
     vector[n_general_sum] lpd_general;
+    vector[n_general_sum] gamma_alpha = cv_m2 * rph_general;
     real gamma_beta = 1 / (tph * cv_p2);
     for(i in 1:n_general_sum){
-      lpd_general[i] = gamma_lpdf(oph_general[i] | cv_m2 * rph_general[i], gamma_beta);
+      lpd_general[i] = gamma_lpdf(oph_general[i] | gamma_alpha[i], gamma_beta);
     }
     return lpd_general;
   }
 
   vector calc_lpd_dropout(int n_dropout_sum, vector at_dropout, vector rph_dropout, real cv_m2, real cv_p2, real tph){
     vector[n_dropout_sum] lpd_dropout;
+    vector[n_dropout_sum] gamma_alpha = cv_m2 * rph_dropout;
     real gamma_beta = 1 / (tph * cv_p2);
     for(i in 1:n_dropout_sum){
-      lpd_dropout[i] = gamma_lcdf(at_dropout[i] | cv_m2 * rph_dropout[i], gamma_beta);
+      lpd_dropout[i] = gamma_lcdf(at_dropout[i] | gamma_alpha[i], gamma_beta);
     }
     return lpd_dropout;
   }
 
   row_vector calc_lpd_gtc(int n_peak, int n_gtc, matrix lpd_dedup2, row_vector gtc_logprob_mk){
     row_vector[n_peak] rv = rep_row_vector(1, n_peak);
-    row_vector[n_gtc] lpd_gtc = rv * lpd_dedup2;
-    return lpd_gtc + gtc_logprob_mk;
+    row_vector[n_gtc] lpd_gtc = rv * lpd_dedup2 + gtc_logprob_mk;
+    return lpd_gtc;
   }
 }
 
