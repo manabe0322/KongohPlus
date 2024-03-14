@@ -30,10 +30,10 @@ functions{
     return lpd_dropout;
   }
 
-  row_vector calc_lpd_gtc(int n_peak, int n_gtc, matrix lpd_dedup2, row_vector gtc_logprob_mk){
+  row_vector calc_loglike_gtc(int n_peak, int n_gtc, matrix lpd_dedup2, row_vector gtc_logprob_mk){
     row_vector[n_peak] rv = rep_row_vector(1, n_peak);
-    row_vector[n_gtc] lpd_gtc = rv * lpd_dedup2 + gtc_logprob_mk;
-    return lpd_gtc;
+    row_vector[n_gtc] loglike_gtc = rv * lpd_dedup2 + gtc_logprob_mk;
+    return loglike_gtc;
   }
 }
 
@@ -123,9 +123,9 @@ model{
     int n_dedup2 = n_dedup2_all_mk[i];
     matrix[n_peak, n_gtc] lpd_dedup2 = to_matrix(lpd_dedup2_all_mk[dedup2_start:(dedup2_start + n_dedup2 - 1)], n_peak, n_gtc);
     row_vector[n_gtc] gtc_logprob_mk = gtc_logprob_all_mk[gtc_start:(gtc_start + n_gtc - 1)];
-    row_vector[n_gtc] lpd_gtc = calc_lpd_gtc(n_peak, n_gtc, lpd_dedup2, gtc_logprob_mk);
+    row_vector[n_gtc] loglike_gtc = calc_loglike_gtc(n_peak, n_gtc, lpd_dedup2, gtc_logprob_mk);
 
-    target += log_sum_exp(lpd_gtc);
+    target += log_sum_exp(loglike_gtc);
 
     dedup2_start += n_dedup2;
     gtc_start += n_gtc;
