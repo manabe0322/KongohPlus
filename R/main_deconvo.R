@@ -67,7 +67,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   oph_dedup1_dropout_all_mk <- vector(mode = "list", length = n_mk)
   oph_dedup1_dropin_all_mk <- vector(mode = "list", length = n_mk)
   oph_dedup1_ignore_all_mk <- vector(mode = "list", length = n_mk)
-  lpd_di_all_mk <- vector(mode = "list", length = n_mk)
+  loglike_di_all_mk <- vector(mode = "list", length = n_mk)
   n_peak_all_mk <- rep(NA, n_mk)
   n_gtc_all_mk <- rep(NA, n_mk)
   gtc_all_mk <- vector(mode = "list", length = n_mk)
@@ -173,7 +173,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
       oph_dedup1_ignore_all_mk[[i]] <- oph_dedup1_tmp[index_ignore]
 
       if(length(index_dropin) != 0){
-        lpd_di_all_mk[[i]] <- log(dgamma(oph_dedup1_tmp[index_dropin] - di_min, di_alpha, di_beta)) + logprob_di
+        loglike_di_all_mk[[i]] <- log(dgamma(oph_dedup1_tmp[index_dropin] - di_min, di_alpha, di_beta)) + logprob_di
       }
     }
   }
@@ -192,9 +192,9 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   n_dedup1_sum <- n_general_sum + n_dropout_sum + n_dropin_sum + n_ignore_sum
   id_mk_dedup1 <- unlist(mapply(rep, rep(1:n_mk, 4), c(n_general_all_mk, n_dropout_all_mk, n_dropin_all_mk, n_ignore_all_mk)))
   at_dropout <- unlist(mapply(rep, at_all_mk, n_dropout_all_mk))
-  lpd_di <- unlist(lpd_di_all_mk)
-  if(is.null(lpd_di)){
-    lpd_di <- numeric(0)
+  loglike_di <- unlist(loglike_di_all_mk)
+  if(is.null(loglike_di)){
+    loglike_di <- numeric(0)
   }
 
   # Arrange de-duplicated objects (pattern 1)
@@ -264,7 +264,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   data_list_main <- list(hnc = hnc, n_mk = n_mk, ltph = max_tph / 4, htph = max_tph / 2,
                          n_rph_base_sum = sum(n_rph_base_all_mk), rph_base_all_mk = unlist(rph_base_all_mk), ae_alpha_all_mk = ae_alpha_all_mk, cv = cv,
                          n_dedup1_sum = n_dedup1_sum, index_dedup1_all_mk = index_dedup1_all_mk, size_dedup1_all_mk = size_dedup1_all_mk - min_size, oph_dedup1_all_mk = oph_dedup1_all_mk, id_mk_dedup1 = id_mk_dedup1,
-                         n_general_sum = n_general_sum, n_dropout_sum = n_dropout_sum, at_dropout = at_dropout, n_dropin_sum = n_dropin_sum, lpd_di = lpd_di,
+                         n_general_sum = n_general_sum, n_dropout_sum = n_dropout_sum, at_dropout = at_dropout, n_dropin_sum = n_dropin_sum, loglike_di = loglike_di,
                          n_dedup2_sum = n_dedup2_sum, n_dedup2_all_mk = n_dedup2_all_mk, index_dedup2_all_mk = index_dedup2_all_mk,
                          n_peak_all_mk = n_peak_all_mk, n_gtc_all_mk = n_gtc_all_mk, gtc_logprob_all_mk = unlist(gtc_logprob_all_mk))
 
@@ -299,6 +299,12 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   rhat_mp <- rhats[grep("mp", variables)]
   rhat_deg <- rhats[grep("deg", variables)]
   rhat_pae <- rhats[grep("pae", variables)]
+
+
+  index_dedup1_all_mk_cpp <- asplit(index_dedup1_all_mk - 1, 1) # C++ index
+  ae_dedup1_all_mk <- ae[id_mk_dedup1]
+  rph_dedup1_all_mk <- calc_rph_dedup1_cpp(mp, deg, hnc, n_dedup1_sum, unlist(rph_base_all_mk), index_dedup1_all_mk_cpp, unlist(size_dedup1_all_mk), ae_dedup1_all_mk)
+
 
   # End computation
   end_time <- proc.time()
