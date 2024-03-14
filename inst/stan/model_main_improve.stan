@@ -10,18 +10,20 @@ functions{
     return rph_dedup1;
   }
 
-  vector calc_lpd_general(int n_general_sum, vector oph_general, vector rph_general, real cv, real tph){
+  vector calc_lpd_general(int n_general_sum, vector oph_general, vector rph_general, real cv_m2, real cv_p2, real tph){
     vector[n_general_sum] lpd_general;
+    real gamma_beta = 1 / (tph * cv_p2);
     for(i in 1:n_general_sum){
-      lpd_general[i] = gamma_lpdf(oph_general[i] | pow(cv, -2) * rph_general[i], 1 / (tph * pow(cv, 2)));
+      lpd_general[i] = gamma_lpdf(oph_general[i] | cv_m2 * rph_general[i], gamma_beta);
     }
     return lpd_general;
   }
 
-  vector calc_lpd_dropout(int n_dropout_sum, vector at_dropout, vector rph_dropout, real cv, real tph){
+  vector calc_lpd_dropout(int n_dropout_sum, vector at_dropout, vector rph_dropout, real cv_m2, real cv_p2, real tph){
     vector[n_dropout_sum] lpd_dropout;
+    real gamma_beta = 1 / (tph * cv_p2);
     for(i in 1:n_dropout_sum){
-      lpd_dropout[i] = gamma_lcdf(at_dropout[i] | pow(cv, -2) * rph_dropout[i], 1 / (tph * pow(cv, 2)));
+      lpd_dropout[i] = gamma_lcdf(at_dropout[i] | cv_m2 * rph_dropout[i], gamma_beta);
     }
     return lpd_dropout;
   }
@@ -68,6 +70,8 @@ data{
 transformed data{
   real tph_mean = (ltph + htph) / 2;
   real tph_sd = (htph - ltph) / 2;
+  real cv_m2 = pow(cv, -2);
+  real cv_p2 = pow(cv, 2);
 }
 
 parameters{
@@ -96,12 +100,12 @@ model{
   if(n_general_sum != 0){
     vector[n_general_sum] oph_general = oph_dedup1_all_mk[1:n_general_sum];
     vector[n_general_sum] rph_general = rph_dedup1_all_mk[1:n_general_sum];
-    lpd_dedup1_all_mk[1:n_general_sum] = calc_lpd_general(n_general_sum, oph_general, rph_general, cv, tph);
+    lpd_dedup1_all_mk[1:n_general_sum] = calc_lpd_general(n_general_sum, oph_general, rph_general, cv_m2, cv_p2, tph);
   }
 
   if(n_dropout_sum != 0){
     vector[n_dropout_sum] rph_dropout = rph_dedup1_all_mk[(n_general_sum + 1):(n_general_sum + n_dropout_sum)];
-    lpd_dedup1_all_mk[(n_general_sum + 1):(n_general_sum + n_dropout_sum)] = calc_lpd_dropout(n_dropout_sum, at_dropout, rph_dropout, cv, tph);
+    lpd_dedup1_all_mk[(n_general_sum + 1):(n_general_sum + n_dropout_sum)] = calc_lpd_dropout(n_dropout_sum, at_dropout, rph_dropout, cv_m2, cv_p2, tph);
   }
 
   if(n_dropin_sum != 0){
