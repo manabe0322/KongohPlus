@@ -58,7 +58,7 @@ data{
   int n_dropout_sum;
   vector[n_dropout_sum] at_dropout;
   int n_dropin_sum;
-  vector[n_dropin_sum] lpd_di;
+  vector[n_dropin_sum] loglike_di;
 
   int n_dedup2_sum;
   array[n_mk] int n_dedup2_all_mk;
@@ -111,7 +111,7 @@ model{
   }
 
   if(n_dropin_sum != 0){
-    lpd_dedup1_all_mk[(n_general_sum + n_dropout_sum + 1):(n_general_sum + n_dropout_sum + n_dropin_sum)] = lpd_di;
+    lpd_dedup1_all_mk[(n_general_sum + n_dropout_sum + 1):(n_general_sum + n_dropout_sum + n_dropin_sum)] = loglike_di;
   }
 
   vector[n_dedup2_sum] lpd_dedup2_all_mk = lpd_dedup1_all_mk[index_dedup2_all_mk];
