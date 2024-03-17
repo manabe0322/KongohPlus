@@ -73,6 +73,8 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   gtc_all_mk <- vector(mode = "list", length = n_mk)
   max_tph <- 0
 
+  names(gtc_all_mk) <- markers_auto
+
   for(i in 1:n_mk){
     # Extract peak data of one marker
     mk <- markers_auto[i]
