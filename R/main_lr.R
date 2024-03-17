@@ -5,8 +5,8 @@ assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
   pop_al_list <- data_deconvo$pop_al_list
   pop_prob_list <- data_deconvo$pop_prob_list
   theta <- data_deconvo$theta
-  gtc_adopt <- data_deconvo$gtc_adopt
-  lpd_gtc_adopt <- data_deconvo$lpd_gtc_adopt
+  gtc_all_mk <- data_deconvo$gtc_all_mk
+  lpd_gtc_all_mk <- data_deconvo$lpd_gtc_all_mk
   dt_mpdeg <- data_deconvo$dt_mpdeg
 
   n_mk <- length(markers_auto)
@@ -27,7 +27,7 @@ assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
     prof_ref <- prof_ref_all[mk, ]
     pop_al <- pop_al_list[[mk]]
     pop_prob <- pop_prob_list[[mk]]
-    gtc_mk <- gtc_adopt[[mk]]
+    gtc_mk <- gtc_all_mk[[mk]]
 
     # Calculate genotype probabilities
     n_obs <- make_n_obs(pop_al, prof_ref)
@@ -40,7 +40,7 @@ assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
   log10like_tmp <- matrix(0, n_mk, n_hyp)
   combined_log10like_tmp <- rep(0, n_hyp)
   for(i in 1:n_hyp){
-    log10like_tmp[, i] <- log10like <- calc_log10like_all_mk(lpd_gtc_adopt, gtc_logprob_all[[i]])
+    log10like_tmp[, i] <- log10like <- calc_log10like_all_mk(lpd_gtc_all_mk, gtc_logprob_all[[i]])
     combined_log10like <- calc_combined_log10like(log10like)
     combined_log10like_tmp[i] <- combined_log10like
   }
@@ -56,7 +56,7 @@ assign_log10like <- function(data_deconvo, dt_ref, hyp, refs){
                              MP = dt_mpdeg[, MP],
                              Deg = dt_mpdeg[, Deg])
 
-  dt_pg_list_hyp <- make_dt_pg_list(markers_auto, gtc_adopt, lpd_gtc_adopt, gtc_logprob_all[[index_max_like]], label_contrib)
+  dt_pg_list_hyp <- make_dt_pg_list(markers_auto, gtc_all_mk, lpd_gtc_all_mk, gtc_logprob_all[[index_max_like]], label_contrib)
 
   return(list("log10like_adopt" = log10like_adopt,
               "combined_log10like_adopt" = combined_log10like_adopt,
