@@ -93,40 +93,20 @@ calc_gtc_prob_mk <- function(gtc_mk, pop_al, pop_prob, theta, prof_ref, hyp_id, 
     .Call(`_KongohPlus_calc_gtc_prob_mk`, gtc_mk, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs)
 }
 
-gamma_pdf <- function(value, alpha, beta) {
-    .Call(`_KongohPlus_gamma_pdf`, value, alpha, beta)
+calc_rph_dedup1_cpp <- function(mp, deg, hnc, n_dedup1_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, ae_dedup1_all_mk) {
+    .Call(`_KongohPlus_calc_rph_dedup1_cpp`, mp, deg, hnc, n_dedup1_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, ae_dedup1_all_mk)
 }
 
-gamma_cdf <- function(threshold, alpha, beta) {
-    .Call(`_KongohPlus_gamma_cdf`, threshold, alpha, beta)
+gamma_pdf <- function(value, shape, scale) {
+    .Call(`_KongohPlus_gamma_pdf`, value, shape, scale)
 }
 
-calc_lpd <- function(tph, oph, eph, at, cv, di_alpha, di_beta, logprob_di, di_min) {
-    .Call(`_KongohPlus_calc_lpd`, tph, oph, eph, at, cv, di_alpha, di_beta, logprob_di, di_min)
+gamma_cdf <- function(threshold, shape, scale) {
+    .Call(`_KongohPlus_gamma_cdf`, threshold, shape, scale)
 }
 
-calc_lpd_mk <- function(tph, oph_mk, eph_mk, at, cv, di_alpha, di_beta, logprob_di, di_min) {
-    .Call(`_KongohPlus_calc_lpd_mk`, tph, oph_mk, eph_mk, at, cv, di_alpha, di_beta, logprob_di, di_min)
-}
-
-calc_lpd_gtc <- function(tph, oph_mk, eph_mk, at, cv, di_alpha, di_beta, logprob_di, di_min, n_peak, n_gtc, index_dedup2_mk) {
-    .Call(`_KongohPlus_calc_lpd_gtc`, tph, oph_mk, eph_mk, at, cv, di_alpha, di_beta, logprob_di, di_min, n_peak, n_gtc, index_dedup2_mk)
-}
-
-calc_eph_mk <- function(mp, eph_base_mk, index_dedup1_mk) {
-    .Call(`_KongohPlus_calc_eph_mk`, mp, eph_base_mk, index_dedup1_mk)
-}
-
-calc_loglike_gtc_all_mp <- function(oph_sum, mp_cand, eph_base_mk, index_dedup1_mk, oph_mk, at, cv, di_alpha, di_beta, logprob_di, di_min, n_peak, n_gtc, index_dedup2_mk, gtc_logprob_mk) {
-    .Call(`_KongohPlus_calc_loglike_gtc_all_mp`, oph_sum, mp_cand, eph_base_mk, index_dedup1_mk, oph_mk, at, cv, di_alpha, di_beta, logprob_di, di_min, n_peak, n_gtc, index_dedup2_mk, gtc_logprob_mk)
-}
-
-calc_eph_dedup1_cpp <- function(mp, deg, hnc, n_dedup1, eph_base, index_dedup1, size_dedup1) {
-    .Call(`_KongohPlus_calc_eph_dedup1_cpp`, mp, deg, hnc, n_dedup1, eph_base, index_dedup1, size_dedup1)
-}
-
-calc_lpd_gtc_adopt <- function(n_mk, tph, n_dedup1_adopt, oph_dedup1, eph_dedup1, at_mk, cv, di_alpha, di_beta, logprob_di, di_min, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp) {
-    .Call(`_KongohPlus_calc_lpd_gtc_adopt`, n_mk, tph, n_dedup1_adopt, oph_dedup1, eph_dedup1, at_mk, cv, di_alpha, di_beta, logprob_di, di_min, n_peak_adopt, n_gtc_adopt, index_dedup2_adopt_cpp)
+calc_lpd_gtc_all_mk_cpp <- function(n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, ae_dedup1_all_mk, oph_dedup1_all_mk, at_dropout, loglike_di, cv, tph, index_dedup2_all_mk_cpp, n_dedup2_all_mk, n_peak_all_mk, n_gtc_all_mk) {
+    .Call(`_KongohPlus_calc_lpd_gtc_all_mk_cpp`, n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, ae_dedup1_all_mk, oph_dedup1_all_mk, at_dropout, loglike_di, cv, tph, index_dedup2_all_mk_cpp, n_dedup2_all_mk, n_peak_all_mk, n_gtc_all_mk)
 }
 
 make_rph_base <- function(peaks, bsrs, fsrs, dsrs, m2sr) {

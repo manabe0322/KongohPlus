@@ -52,14 +52,14 @@ std::vector<double> calc_lpd_dedup1_all_mk(int n_dedup1_sum,
   if(n_general_sum != 0){
     std::vector<double> oph_general = extract_subvec_double(oph_dedup1_all_mk, 0, n_general_sum - 1);
     std::vector<double> rph_general = extract_subvec_double(rph_dedup1_all_mk, 0, n_general_sum - 1);
-    for(int i = 0; i < n_general_sum, ++i){
+    for(int i = 0; i < n_general_sum; ++i){
       lpd_dedup1_all_mk[i] = log(gamma_pdf(oph_general[i], cv_m2 * rph_general[i], gamma_scale));
     }
   }
 
   if(n_dropout_sum != 0){
     std::vector<double> rph_dropout = extract_subvec_double(rph_dedup1_all_mk, n_general_sum, n_general_sum + n_dropout_sum - 1);
-    for(int i = 0; i < n_dropout_sum, ++i){
+    for(int i = 0; i < n_dropout_sum; ++i){
       lpd_dedup1_all_mk[n_general_sum + i] = log(gamma_cdf(at_dropout[i], cv_m2 * rph_dropout[i], gamma_scale));
     }
   }
@@ -77,7 +77,7 @@ std::vector<double> calc_lpd_dedup1_all_mk(int n_dedup1_sum,
 std::vector<double> calc_lpd_gtc_cpp(int n_peak,
                                      int n_gtc,
                                      std::vector<double> lpd_dedup1_all_mk,
-                                     std::vector<double> index_dedup2){
+                                     std::vector<int> index_dedup2){
   std::vector<double> lpd_gtc(n_gtc, 0);
   for(int i = 0; i < n_gtc; ++i){
     for(int j = 0; j < n_peak; ++j){
