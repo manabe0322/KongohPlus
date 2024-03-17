@@ -302,11 +302,47 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
 
 
   index_dedup1_all_mk_cpp <- asplit(index_dedup1_all_mk - 1, 1) # C++ index
+  index_dedup2_all_mk_cpp <- index_dedup2_all_mk - 1 # C++ index
   ae_dedup1_all_mk <- ae[id_mk_dedup1]
-  rph_dedup1_all_mk <- calc_rph_dedup1_cpp(mp, deg, hnc, n_dedup1_sum, unlist(rph_base_all_mk), index_dedup1_all_mk_cpp, unlist(size_dedup1_all_mk), ae_dedup1_all_mk)
+  lpd_gtc_all_mk <- calc_lpd_gtc_all_mk_cpp(n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum,
+                                            unlist(rph_base_all_mk), index_dedup1_all_mk_cpp, unlist(size_dedup1_all_mk), ae_dedup1_all_mk, oph_dedup1_all_mk,
+                                            at_dropout, loglike_di, cv, tph,
+                                            index_dedup2_all_mk_cpp, n_dedup2_all_mk, n_peak_all_mk, n_gtc_all_mk)
 
+  dt_pg_list <- make_dt_pg_list(markers_auto, gtc_all_mk, lpd_gtc_all_mk, gtc_logprob_all_mk, paste0("U", 1:hnc))
+
+  log10like_all_mk <- calc_log10like_all_mk(lpd_gtc_all_mk, gtc_logprob_all_mk)
+
+  dt_log10like <- make_dt_log10like(markers_auto, log10like_all_mk)
+
+  dt_mpdeg <- data.table(Contributor = paste0("U", 1:hnc),
+                         MP = mp[hnc:1],
+                         Deg = deg[hnc:1])
+
+  dt_ae <- data.table(Marker = markers_auto,
+                      AE = ae)
+
+  dt_rhat <- data.table(Parameter = c("lp__", "tph", paste0("lambda", hnc:1), paste0("mp", hnc:1), paste0("deg", hnc:1), paste0("pae", 1:n_mk)),
+                        Rhat = c(rhat_lp, rhat_tph, rhat_lambda[hnc:1], rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
 
   # End computation
   end_time <- proc.time()
   comp_time <- end_time[3] - start_time[3]
+
+  return(list("hnc" = hnc,
+              "markers_auto" = markers_auto,
+              "pop_al_list" = pop_al_list,
+              "pop_prob_list" = pop_prob_list,
+              "theta" = theta,
+              "gtc_all_mk" = gtc_all_mk,
+              "lpd_gtc_all_mk" = lpd_gtc_all_mk,
+              "dt_pg_list" = dt_pg_list,
+              "dt_log10like" = dt_log10like,
+              "dt_mpdeg" = dt_mpdeg,
+              "tph" = tph,
+              "lambda" = lambda,
+              "dt_ae" = dt_ae,
+              "dt_rhat" = dt_rhat,
+              "traceplot" = traceplot,
+              "comp_time" = comp_time))
 }
