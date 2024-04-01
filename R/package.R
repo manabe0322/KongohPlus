@@ -5,7 +5,7 @@
 #' @importFrom data.table as.data.table data.table copy fread setDT setkey
 #' @importFrom dplyr full_join
 #' @importFrom DT datatable dataTableOutput formatRound formatSignif JS renderDataTable
-#' @importFrom fresh bs_vars_button bs_vars_color bs_vars_global bs_vars_navbar create_theme use_theme
+#' @importFrom fresh bs_vars_color bs_vars_global create_theme use_theme
 #' @importFrom gtools combinations permutations
 #' @importFrom magrittr %>%
 #' @importFrom parallel detectCores

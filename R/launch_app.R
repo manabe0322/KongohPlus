@@ -10,26 +10,12 @@ KongohPlus <- function(bool_compile = TRUE){
 
   mytheme <- create_theme(
     theme = "cerulean",
-    bs_vars_navbar(
-      default_bg = "#2e8b57",
-      default_color = "#FFFFFF",
-      default_link_color = "#FFFFFF",
-      default_link_active_color = "#FFFFFF"
-    ),
-    bs_vars_button(
-      default_color = "#2e8b57",
-      primary_color = "#FFFFFF",
-      primary_bg = "#2e8b57"
-    ),
     bs_vars_global(
       text_color = "#333333"
     ),
     bs_vars_color(
       brand_primary = "#2e8b57"
     )
-#    bs_vars_wells(
-#      bg = "gray"
-#    )
   )
 
   # Compile stan codes
