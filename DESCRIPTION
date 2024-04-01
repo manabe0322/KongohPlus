@@ -17,14 +17,14 @@ Imports:
     data.table, 
     dplyr, 
     DT, 
+    fresh, 
     gtools, 
     magrittr, 
     parallel, 
     posterior, 
     Rcpp, 
     shinyFeedback,
-    shinyjs, 
-    shinythemes
+    shinyjs
 LinkingTo: 
     Rcpp
 Suggests: 

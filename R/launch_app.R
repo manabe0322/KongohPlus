@@ -8,6 +8,30 @@ KongohPlus <- function(bool_compile = TRUE){
   path_pack <- path.package("KongohPlus", quiet = FALSE)
   options(shiny.maxRequestSize = 500 * 1024^2)
 
+  mytheme <- create_theme(
+    theme = "cerulean",
+    bs_vars_navbar(
+      default_bg = "#2e8b57",
+      default_color = "#FFFFFF",
+      default_link_color = "#FFFFFF",
+      default_link_active_color = "#FFFFFF"
+    ),
+    bs_vars_button(
+      default_color = "#2e8b57",
+      primary_color = "#FFFFFF",
+      primary_bg = "#2e8b57"
+    ),
+    bs_vars_global(
+      text_color = "#333333"
+    ),
+    bs_vars_color(
+      brand_primary = "#2e8b57"
+    )
+#    bs_vars_wells(
+#      bg = "gray"
+#    )
+  )
+
   # Compile stan codes
   if(bool_compile){
     compile_stan_code(path_pack)
@@ -15,8 +39,8 @@ KongohPlus <- function(bool_compile = TRUE){
 
   ui <- fluidPage(useShinyjs(),
                   useShinyFeedback(),
-                  theme = shinytheme("cerulean"),
-                  tags$style(type = "text/css", "body{padding-top: 70px;}"),
+                  use_theme(mytheme),
+#                  tags$style(type = "text/css", "body{padding-top: 70px;}"),
 
                   navbarPage(title = paste0("KongohPlus ver. ", ver_soft),
                              id = "navbar",
