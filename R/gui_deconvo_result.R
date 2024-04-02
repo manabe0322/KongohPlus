@@ -29,7 +29,7 @@ deconvo_result_ui <- function(id){
                     br(),
                     actionButton(ns("act_proceed_lr"), label = "Likelihood ratio", class = "btn btn-primary btn-lg"),
                     br(),
-                    downloadButton(ns("act_report"), "Report")
+                    downloadButton(ns("download_report"), "Report")
              ),
              column(6,
                     wellPanel(
@@ -136,15 +136,13 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
           ))
         })
 
-        output$act_report <- downloadHandler(
+        output$download_report <- downloadHandler(
           filename = "report.html",
           content = function(file){
             report_tmp <- file.path(tempdir(), "report.Rmd")
-            file.copy(paste0(path_pack, "/report/report.Rmd"), report_tmp, overwrite = TRUE)
-
-            params <- list(hnc = hnc)
-
-            rmarkdown::render(report_tmp, output_file = file, params = params, envir = new.env(parent = globalenv()))
+            file.copy(paste0(path_pack, "/rmd/report.Rmd"), report_tmp, overwrite = TRUE)
+            params <- list(path_pack = path_pack, hnc = hnc)
+            render(report_tmp, output_file = file, params = params, envir = new.env(parent = globalenv()))
           }
         )
 

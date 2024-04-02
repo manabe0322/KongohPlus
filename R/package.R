@@ -11,7 +11,7 @@
 #' @importFrom parallel detectCores
 #' @importFrom posterior as_draws_matrix rhat
 #' @importFrom Rcpp sourceCpp
-#' @importFrom rmarkdown render
+#' @import rmarkdown
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
 #' @importFrom shinyjs disable disabled enable useShinyjs
 "_PACKAGE"

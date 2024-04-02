@@ -1,0 +1,21 @@
+---
+title: "Dynamic report"
+date: "`r Sys.Date()`"
+output: 
+  html_document:
+    css: "`r paste0(path_pack, '/rmd/style.css')`"
+params:
+  path_pack: NA
+  hnc: NA
+---
+
+## Estimated parameters
+
+- test
+
+## Number of contributors
+
+```{r}
+params$hnc
+```
+
