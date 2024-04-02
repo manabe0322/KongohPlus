@@ -27,7 +27,9 @@ deconvo_result_ui <- function(id){
                       actionButton(ns("act_traceplot_lp"), label = "Trace plot")
                     ),
                     br(),
-                    actionButton(ns("act_proceed_lr"), label = "Likelihood ratio", class = "btn btn-primary btn-lg")
+                    actionButton(ns("act_proceed_lr"), label = "Likelihood ratio", class = "btn btn-primary btn-lg"),
+                    br(),
+                    downloadButton(ns("act_report"), "Report")
              ),
              column(6,
                     wellPanel(
@@ -54,7 +56,7 @@ deconvo_result_ui <- function(id){
 #' deconvo_result_server
 #'
 #' @description The function to create the server module for results of deconvolution
-deconvo_result_server <- function(id, rv_deconvo){
+deconvo_result_server <- function(id, path_pack, rv_deconvo){
   moduleServer(
     id,
     function(input, output, session){
@@ -133,6 +135,18 @@ deconvo_result_server <- function(id, rv_deconvo){
             size = "l"
           ))
         })
+
+        output$act_report <- downloadHandler(
+          filename = "report.html",
+          content = function(file){
+            report_tmp <- file.path(tempdir(), "report.Rmd")
+            file.copy(paste0(path_pack, "/report/report.Rmd"), report_tmp, overwrite = TRUE)
+
+            params <- list(hnc = hnc)
+
+            rmarkdown::render(report_tmp, output_file = file, params = params, envir = new.env(parent = globalenv()))
+          }
+        )
 
         output$traceplot_lp <- renderPlot({
           traceplot

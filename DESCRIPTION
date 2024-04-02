@@ -23,6 +23,7 @@ Imports:
     parallel, 
     posterior, 
     Rcpp, 
+    rmarkdown, 
     shinyFeedback,
     shinyjs
 LinkingTo: 

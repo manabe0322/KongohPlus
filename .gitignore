@@ -4,3 +4,4 @@
 .Ruserdata
 inst/stan/**/*.exe
 inst/stan/**/*.EXE
+inst/report/**/*.html
