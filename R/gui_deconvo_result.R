@@ -62,6 +62,10 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
     function(input, output, session){
       data_deconvo <- rv_deconvo$data_deconvo
       if(!is.null(data_deconvo)){
+        dt_csp <- rv_deconvo$dt_csp
+        dt_ref <- rv_deconvo$dt_ref
+        dt_af <- rv_deconvo$dt_af
+
         hnc <- data_deconvo$hnc
         markers_auto <- data_deconvo$markers_auto
         dt_pg_list <- data_deconvo$dt_pg_list
@@ -141,7 +145,7 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
           content = function(file){
             report_tmp <- file.path(tempdir(), "report.Rmd")
             file.copy(paste0(path_pack, "/rmd/report.Rmd"), report_tmp, overwrite = TRUE)
-            params <- list(path_pack = path_pack, hnc = hnc)
+            params <- list(dt_csp = dt_csp, hnc = hnc)
             render(report_tmp, output_file = file, params = params, envir = new.env(parent = globalenv()))
           }
         )
