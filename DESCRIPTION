@@ -18,6 +18,7 @@ Imports:
     dplyr, 
     DT, 
     fresh, 
+    gluedown, 
     gtools, 
     magrittr, 
     parallel, 

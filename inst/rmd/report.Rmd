@@ -4,6 +4,7 @@ date: "`r Sys.Date()`"
 output: html_document
 params:
   dt_csp: NA
+  dt_ref: NA
   hnc: NA
 ---
 
@@ -46,30 +47,40 @@ p{
 
 ```{r setup, include = FALSE}
 library(data.table)
+library(gluedown)
 ```
+
+---
 
 ## Files
 
 ### Crime stain profile
 
-```{r echo = FALSE}
+```{r echo = FALSE, results='asis'}
 sn_csp <- unique(params$dt_csp[, SampleName])
-for(i in 1:length(sn_csp)){
-  sn_csp
-}
+md_bullet(sn_csp, marker = "-")
 ```
 
 ### Reference profile
 
+```{r echo = FALSE, results='asis'}
+sn_ref <- unique(params$dt_ref[, SampleName])
+md_bullet(sn_ref, marker = "-")
+```
+
 ### Allele frequency
+
+---
+
+## Conditions
+
+### Hypothesis
+
+---
+
+## Results
 
 ## Estimated parameters
 
 - test
-
-## Number of contributors
-
-```{r}
-params$hnc
-```
 
