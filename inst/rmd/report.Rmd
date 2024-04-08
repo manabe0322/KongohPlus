@@ -52,7 +52,7 @@ library(gluedown)
 
 ---
 
-## Files
+## Summary
 
 ### Crime stain profile
 
@@ -72,15 +72,61 @@ md_bullet(sn_ref, marker = "-")
 
 ---
 
-## Conditions
+## Deconvolution
 
-### Hypothesis
+### Mixture proportion and degradation parameter
+
+### Genotype combination
+
+### Genotype per contributor
+
+### Parameter and diagnostics
 
 ---
 
-## Results
+## Likelihood ratio
 
-## Estimated parameters
+### Hypothesis
 
-- test
+### LR
+
+---
+
+## Crime stain profile
+
+## Reference profile
+
+## Analysis method
+
+### Analytycal threshold
+
+### Allele probability
+
+- corrected method
+
+- unobserved allele
+
+### Expected locus-specific amplification efficiency
+
+- alpha times NL
+
+### Back stutter ratio
+
+### Forward stutter ratio
+
+### Double-back stutter ratio
+
+### Minus 2-nt stutter ratio
+
+### Filter to remove unrealistic genotype combination
+
+### Other parameter
+
+- theta
+
+- Gamma
+
+## Advanced setting
+
+
 
