@@ -289,6 +289,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   variables <- fit_main_summary$variable
   medians <- fit_main_summary$median
   rhats <- fit_main_summary$rhat
+  lp <- medians[which(variables == "lp__")]
   tph <- medians[which(variables == "tph")]
   lambda <- medians[grep("lambda", variables)]
   mp <- medians[grep("mp", variables)]
@@ -321,11 +322,11 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
                          MP = mp[hnc:1],
                          Deg = deg[hnc:1])
 
-  dt_ae <- data.table(Marker = markers_auto,
-                      AE = ae)
-
-  dt_rhat <- data.table(Parameter = c("lp__", "tph", paste0("lambda", hnc:1), paste0("mp", hnc:1), paste0("deg", hnc:1), paste0("pae", 1:n_mk)),
-                        Rhat = c(rhat_lp, rhat_tph, rhat_lambda[hnc:1], rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
+  dt_param <- data.table(Parameter = c("Log probability in stan", "Total peak height", rep("lambda", hnc), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
+                         Contributor = c("-", "-", paste0("U", 1:hnc), paste0("U", 1:hnc), paste0("U", 1:hnc), rep("-", n_mk)),
+                         Marker = c("-", "-", rep("-", 3 * hnc), markers_auto),
+                         Estimated_value = c(lp, tph, lambda[hnc:1], mp[hnc:1], deg[hnc:1], ae),
+                         Rhat = c(rhat_lp, rhat_tph, rhat_lambda[hnc:1], rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
 
   # End computation
   end_time <- proc.time()
@@ -341,10 +342,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
               "dt_pg_list" = dt_pg_list,
               "dt_log10like" = dt_log10like,
               "dt_mpdeg" = dt_mpdeg,
-              "tph" = tph,
-              "lambda" = lambda,
-              "dt_ae" = dt_ae,
-              "dt_rhat" = dt_rhat,
+              "dt_param" = dt_param,
               "traceplot" = traceplot,
               "comp_time" = comp_time))
 }

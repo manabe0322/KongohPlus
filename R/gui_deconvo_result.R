@@ -9,25 +9,16 @@ deconvo_result_ui <- function(id){
            fluidRow(
              column(3,
                     wellPanel(
-                      h4("Estimated parameter"),
+                      h4("Parameters for contributors"),
                       br(),
                       dataTableOutput(ns("dt_mpdeg")),
-                      br(),
-                      textOutput(ns("tph")),
-                      br(),
-                      textOutput(ns("lambda")),
-                      br(),
-                      actionButton(ns("act_ae"), label = "AE")
-                    ),
-                    wellPanel(
-                      h4("Diagnostics"),
-                      br(),
-                      actionButton(ns("act_rhat"), label = "Rhat"),
-                      br(),
-                      actionButton(ns("act_traceplot_lp"), label = "Trace plot")
                     ),
                     br(),
-                    actionButton(ns("act_proceed_lr"), label = "Likelihood ratio", class = "btn btn-primary btn-lg"),
+                    actionButton(ns("act_pardiag"), label = "Parameters and diagnostics"),
+                    br(),
+                    br(),
+                    actionButton(ns("act_traceplot_lp"), label = "Trace plot"),
+                    br(),
                     br(),
                     downloadButton(ns("download_report"), "Report")
              ),
@@ -71,62 +62,41 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
         dt_pg_list <- data_deconvo$dt_pg_list
         dt_log10like <- data_deconvo$dt_log10like
         dt_mpdeg <- data_deconvo$dt_mpdeg
-        tph <- data_deconvo$tph
-        lambda <- data_deconvo$lambda
-        dt_ae <- data_deconvo$dt_ae
-        dt_rhat <- data_deconvo$dt_rhat
+        dt_param <- data_deconvo$dt_param
         traceplot <- data_deconvo$traceplot
 
         output$dt_mpdeg <- renderDataTable(server = FALSE, {
           datatable(
             dt_mpdeg,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_mpdeg), ordering = FALSE, autowidth = TRUE),
-            rownames = FALSE
+            options = list(dom = "t", iDisplayLength = nrow(dt_param), ordering = FALSE, autowidth = TRUE),
+            rownames = FALSE,
+            colnames = c("Contributor", "Mixture proportion", "Degradation")
           ) %>%
             formatSignif(columns = c("MP", "Deg"), digits = 3)
         })
 
-        output$tph <- renderText({paste0("tph: ", round(tph, 0))})
-
-        output$lambda <- renderText({paste0("lambda: ", paste(round(lambda, 3), collapse = ", "))})
-
-        observeEvent(input$act_ae, {
+        observeEvent(input$act_pardiag, {
           showModal(modalDialog(
-            title = "AE",
-            dataTableOutput(session$ns("dt_ae")),
+            title = "Parameters and diagnostics",
+            dataTableOutput(session$ns("dt_param")),
             easyClose = TRUE,
-            footer = NULL
+            footer = NULL,
+            size = "l"
           ))
         })
 
-        output$dt_ae <- renderDataTable(server = FALSE, {
+        output$dt_param <- renderDataTable(server = FALSE, {
           datatable(
-            dt_ae,
+            dt_param,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_ae), ordering = FALSE, autoWidth = TRUE),
-            rownames = FALSE
+            options = list(dom = "t", iDisplayLength = nrow(dt_param), ordering = FALSE, autowidth = TRUE,
+                           columnDefs = list(list(width = "200px", targets = c(0)),
+                                             list(width = "150px", targets = c(1, 2, 3, 4)))),
+            rownames = FALSE,
+            colnames = c("Parameter", "Contributor", "Marker", "Estimated value", "Rhat")
           ) %>%
-            formatRound(columns = c("AE"), digits = 3)
-        })
-
-        observeEvent(input$act_rhat, {
-          showModal(modalDialog(
-            title = "Rhat",
-            dataTableOutput(session$ns("dt_rhat")),
-            easyClose = TRUE,
-            footer = NULL
-          ))
-        })
-
-        output$dt_rhat <- renderDataTable(server = FALSE, {
-          datatable(
-            dt_rhat,
-            selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_rhat), ordering = FALSE, autoWidth = TRUE),
-            rownames = FALSE
-          ) %>%
-            formatRound(columns = c("Rhat"), digits = 3)
+            formatSignif(columns = c("Estimated_value", "Rhat"), digits = 3)
         })
 
         observeEvent(input$act_traceplot_lp, {
