@@ -145,7 +145,7 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
           content = function(file){
             report_tmp <- file.path(tempdir(), "report.Rmd")
             file.copy(paste0(path_pack, "/rmd/report.Rmd"), report_tmp, overwrite = TRUE)
-            params <- list(dt_csp = dt_csp, dt_ref = dt_ref, hnc = hnc)
+            params <- list(dt_csp = dt_csp, dt_ref = dt_ref, hnc = hnc, markers_auto = markers_auto, dt_mpdeg = dt_mpdeg, dt_pg_list = dt_pg_list)
             render(report_tmp, output_file = file, params = params, envir = new.env(parent = globalenv()))
           }
         )

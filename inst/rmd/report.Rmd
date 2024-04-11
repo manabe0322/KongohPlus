@@ -6,6 +6,10 @@ params:
   dt_csp: NA
   dt_ref: NA
   hnc: NA
+  markers_auto: NA
+  dt_mpdeg: NA
+  dt_pg_list: NA
+  dt_log10like: NA
 ---
 
 ```{css, echo = FALSE}
@@ -47,7 +51,15 @@ p{
 
 ```{r setup, include = FALSE}
 library(data.table)
+library(DT)
 library(gluedown)
+library(magrittr)
+
+hnc <- params$hnc
+markers_auto <- params$markers_auto
+dt_mpdeg <- params$dt_mpdeg
+dt_pg_list <- params$dt_pg_list
+dt_log10like <- params$dt_log10like
 ```
 
 ---
@@ -76,7 +88,35 @@ md_bullet(sn_ref, marker = "-")
 
 ### Mixture proportion and degradation parameter
 
+```{r echo = FALSE}
+datatable(dt_mpdeg, 
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_mpdeg), ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE, 
+          colnames = c("Mixture proportion", "Degradation parameter")
+          ) %>%
+            formatSignif(columns = c("MP", "Deg"), digits = 3)
+```
+
 ### Genotype combination
+
+```{r echo = FALSE, results='asis'}
+n_mk <- length(markers_auto)
+for(i in 1:n_mk){
+  print(md_bullet(markers_auto[i], marker = "-"))
+  
+  dt_pg <- dt_pg_list[[i]]
+  print(htmltools::tagList(datatable(dt_pg_list[[i]],
+                                     selection = "none",
+                                     options = list(dom = "t", iDisplayLength = nrow(dt_pg), ordering = FALSE, autowidth = TRUE,
+                                     columnDefs = list(list(targets = c(hnc + 1, hnc + 2), visible = FALSE))),
+                                     rownames = FALSE
+                                     ) %>%
+                                     formatSignif(columns = c("Weight"), digits = 3)
+                           )
+        )
+}
+```
 
 ### Genotype per contributor
 
