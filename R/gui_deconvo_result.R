@@ -69,7 +69,7 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
           datatable(
             dt_mpdeg,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_param), ordering = FALSE, autowidth = TRUE),
+            options = list(dom = "t", iDisplayLength = nrow(dt_mpdeg), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE,
             colnames = c("Contributor", "Mixture proportion", "Degradation")
           ) %>%
@@ -115,7 +115,7 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
           content = function(file){
             report_tmp <- file.path(tempdir(), "report.Rmd")
             file.copy(paste0(path_pack, "/rmd/report.Rmd"), report_tmp, overwrite = TRUE)
-            params <- list(dt_csp = dt_csp, dt_ref = dt_ref, hnc = hnc, markers_auto = markers_auto, dt_mpdeg = dt_mpdeg, dt_pg_list = dt_pg_list)
+            params <- list(dt_csp = dt_csp, dt_ref = dt_ref, hnc = hnc, markers_auto = markers_auto, dt_mpdeg = dt_mpdeg, dt_param = dt_param, dt_pg_list = dt_pg_list, dt_log10like = dt_log10like)
             render(report_tmp, output_file = file, params = params, envir = new.env(parent = globalenv()))
           }
         )
@@ -135,7 +135,7 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
             datatable(
               dt_pg_list[[mk_select]],
               selection = list(mode = "single", target = "row"),
-              options = list(iDisplayLength = 25, ordering = FALSE, autowidth = TRUE,
+              options = list(iDisplayLength = 10, ordering = FALSE, autowidth = TRUE,
                              columnDefs = list(list(targets = c(hnc + 1, hnc + 2), visible = FALSE))),
               rownames = FALSE
             ) %>%

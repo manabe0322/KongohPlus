@@ -23,6 +23,10 @@ KongohPlus <- function(bool_compile = TRUE){
     compile_stan_code(path_pack)
   }
 
+  # Install and activate pandoc
+  pandoc_install()
+  pandoc_activate()
+
   ui <- fluidPage(useShinyjs(),
                   useShinyFeedback(),
                   use_theme(mytheme),

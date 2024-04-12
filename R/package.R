@@ -8,6 +8,7 @@
 #' @importFrom fresh bs_vars_color bs_vars_global create_theme use_theme
 #' @import gluedown
 #' @importFrom gtools combinations permutations
+#' @importFrom pandoc pandoc_activate pandoc_install
 #' @importFrom magrittr %>%
 #' @importFrom parallel detectCores
 #' @importFrom posterior as_draws_matrix rhat

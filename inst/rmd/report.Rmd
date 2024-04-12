@@ -7,6 +7,8 @@ params:
   dt_ref: NA
   hnc: NA
   markers_auto: NA
+  dt_mpdeg: NA
+  dt_param: NA
   dt_pg_list: NA
   dt_log10like: NA
 ---
@@ -54,8 +56,12 @@ library(DT)
 library(gluedown)
 library(magrittr)
 
+dt_csp <- params$dt_csp
+dt_ref <- params$dt_ref
 hnc <- params$hnc
 markers_auto <- params$markers_auto
+dt_mpdeg <- params$dt_mpdeg
+dt_param <- params$dt_param
 dt_pg_list <- params$dt_pg_list
 dt_log10like <- params$dt_log10like
 ```
@@ -86,6 +92,16 @@ md_bullet(sn_ref, marker = "-")
 
 ### Mixture proportion and degradation parameter
 
+```{r echo = FALSE}
+datatable(dt_mpdeg,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_mpdeg), ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE,
+          colnames = c("Contributor", "Mixture proportion", "Degradation")
+          ) %>%
+            formatSignif(columns = c("MP", "Deg"), digits = 3)
+```
+
 ### Genotype combination
 
 ```{r echo = FALSE, results='asis'}
@@ -96,7 +112,7 @@ for(i in 1:n_mk){
   dt_pg <- dt_pg_list[[i]]
   print(htmltools::tagList(datatable(dt_pg_list[[i]],
                                      selection = "none",
-                                     options = list(dom = "t", iDisplayLength = nrow(dt_pg), ordering = FALSE, autowidth = TRUE,
+                                     options = list(dom = "tp", iDisplayLength = 10, ordering = FALSE, autowidth = TRUE,
                                      columnDefs = list(list(targets = c(hnc + 1, hnc + 2), visible = FALSE))),
                                      rownames = FALSE
                                      ) %>%
@@ -110,13 +126,30 @@ for(i in 1:n_mk){
 
 ### Parameter and diagnostics
 
+```{r echo = FALSE}
+datatable(dt_param,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_param), ordering = FALSE, autowidth = TRUE,
+                         columnDefs = list(list(width = "200px", targets = c(0)),
+                                           list(width = "150px", targets = c(1, 2, 3, 4)))),
+          rownames = FALSE,
+          colnames = c("Parameter", "Contributor", "Marker", "Estimated value", "Rhat")
+          ) %>%
+            formatSignif(columns = c("Estimated_value", "Rhat"), digits = 3)
+```
+
 ---
 
-## Likelihood ratio
+## Likelihood
 
-### Hypothesis
-
-### LR
+```{r echo = FALSE}
+datatable(dt_log10like,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_log10like), ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+          ) %>%
+            formatSignif(columns = c("Log10_Likelihood"), digits = 3)
+```
 
 ---
 
