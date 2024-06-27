@@ -5,7 +5,6 @@
 #' @importFrom data.table as.data.table data.table copy fread setDT setkey
 #' @importFrom dplyr full_join
 #' @importFrom DT datatable dataTableOutput formatRound formatSignif JS renderDataTable
-#' @importFrom fresh bs_vars_color bs_vars_global create_theme use_theme
 #' @import gluedown
 #' @importFrom gtools combinations permutations
 #' @importFrom instantiate stan_package_model
@@ -17,6 +16,7 @@
 #' @import rmarkdown
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
 #' @importFrom shinyjs disable disabled enable useShinyjs
+#' @importFrom shinythemes shinytheme
 "_PACKAGE"
 
 #' @useDynLib KongohPlus, .registration = TRUE

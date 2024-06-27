@@ -9,9 +9,9 @@ load_ui <- function(id){
            br(),
            sidebarLayout(
              sidebarPanel(width = 3,
-                          fileInput(ns("file_csp"), label = tags$p("Crime stain profile", style = "color:#2e8b57;"), accept = ".csv", buttonLabel = "Load"),
-                          fileInput(ns("file_ref"), label = tags$p("Reference profile", style = "color:#2e8b57;"), accept = ".csv", buttonLabel = "Load"),
-                          fileInput(ns("file_af"), label = tags$p("Allele frequency", style = "color:#2e8b57;"), accept = ".csv", buttonLabel = "Load"),
+                          fileInput(ns("file_csp"), label = "Crime stain profile", accept = ".csv", buttonLabel = "Load"),
+                          fileInput(ns("file_ref"), label = "Reference profile", accept = ".csv", buttonLabel = "Load"),
+                          fileInput(ns("file_af"), label = "Allele frequency", accept = ".csv", buttonLabel = "Load"),
                           br(),
                           actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg"),
                           br(),

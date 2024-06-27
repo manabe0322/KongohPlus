@@ -8,30 +8,20 @@ KongohPlus <- function(bool_compile = TRUE){
   path_pack <- path.package("KongohPlus", quiet = FALSE)
   options(shiny.maxRequestSize = 500 * 1024^2)
 
-  mytheme <- create_theme(
-    theme = "cerulean",
-    bs_vars_global(
-      text_color = "#333333"
-    ),
-    bs_vars_color(
-      brand_primary = "#2e8b57"
-    )
-  )
-
   # Install and activate pandoc
   pandoc_install()
   pandoc_activate()
 
-  ui <- fluidPage(useShinyjs(),
+  ui <- fluidPage(theme = shinytheme("cerulean"),
+                  useShinyjs(),
                   useShinyFeedback(),
-                  use_theme(mytheme),
-#                  tags$style(type = "text/css", "body{padding-top: 70px;}"),
+                  tags$style(type = "text/css", "body{padding-top: 70px;}"),
 
                   navbarPage(title = paste0("KongohPlus ver. ", ver_soft),
                              id = "navbar",
                              position = c("fixed-top"),
 
-                             load_ui("load"),
+                             file_setting_ui("file_setting"),
 
                              deconvo_ui("deconvo"),
 
@@ -59,7 +49,7 @@ KongohPlus <- function(bool_compile = TRUE){
   )
 
   server <- function(input, output, session){
-    rv_file <- load_server("load", session)
+    rv_file <- file_setting_server("file_setting", path_pack)
     rv_deconvo <- deconvo_server("deconvo", path_pack, rv_file)
     lr_server("lr", path_pack, rv_file, rv_deconvo)
 
