@@ -271,7 +271,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
                          n_peak_all_mk = n_peak_all_mk, n_gtc_all_mk = n_gtc_all_mk, gtc_logprob_all_mk = unlist(gtc_logprob_all_mk))
 
   # Perform MCMC
-  model_main <- readRDS(paste0(path_pack, "/model/model_main.rds"))
+  model_main <- stan_package_model(name = "model_main", package = "KongohPlus")
   fit_main <- model_main$sample(
     data_list_main,
     iter_warmup = warmup,

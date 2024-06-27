@@ -413,12 +413,12 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           # Load the MCMC models
-          model_ae <- readRDS(paste0(path_pack, "/model/model_ae.rds"))
-          model_sr_gen <- readRDS(paste0(path_pack, "/model/model_sr_gen.rds"))
-          model_sr_together <- readRDS(paste0(path_pack, "/model/model_sr_together.rds"))
-          model_sr_uni <- readRDS(paste0(path_pack, "/model/model_sr_uni.rds"))
-          model_phr <- readRDS(paste0(path_pack, "/model/model_phr.rds"))
-          model_gamma <- readRDS(paste0(path_pack, "/model/model_gamma.rds"))
+          model_ae <- stan_package_model(name = "model_ae", package = "KongohPlus")
+          model_sr_gen <- stan_package_model(name = "model_sr_gen", package = "KongohPlus")
+          model_sr_together <- stan_package_model(name = "model_sr_together", package = "KongohPlus")
+          model_sr_uni <- stan_package_model(name = "model_sr_uni", package = "KongohPlus")
+          model_phr <- stan_package_model(name = "model_phr", package = "KongohPlus")
+          model_gamma <- stan_package_model(name = "model_gamma", package = "KongohPlus")
 
           results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
                                                  model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_phr, model_gamma,

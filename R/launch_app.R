@@ -18,11 +18,6 @@ KongohPlus <- function(bool_compile = TRUE){
     )
   )
 
-  # Compile stan codes
-  if(bool_compile){
-    compile_stan_code(path_pack)
-  }
-
   # Install and activate pandoc
   pandoc_install()
   pandoc_activate()

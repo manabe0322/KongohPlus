@@ -1,7 +1,7 @@
 Package: KongohPlus
 Type: Package
 Title: Probabilistic genotyping software based on a quantitative continuous model
-Version: 0.2.0
+Version: 0.3.0
 Author: Sho Manabe <manabesh@hirakata.kmu.ac.jp>
 Maintainer: Sho Manabe <manabesh@hirakata.kmu.ac.jp>
 Description: Probabilistic genotyping software based on a quantitative continuous model.
@@ -9,7 +9,7 @@ License: What license is it under?
 Encoding: UTF-8
 LazyData: true
 Depends:
-    R (>= 4.3.3), 
+    R (>= 4.4.0), 
     shiny
 Imports:
     bayesplot, 
@@ -20,6 +20,7 @@ Imports:
     fresh, 
     gluedown, 
     gtools, 
+    instantiate, 
     magrittr, 
     parallel, 
     pandoc, 
@@ -34,3 +35,5 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 RoxygenNote: 7.3.1
+Additional_repositories:
+    https://mc-stan.org/r-packages/
