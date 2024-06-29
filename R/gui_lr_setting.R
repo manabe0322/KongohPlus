@@ -18,6 +18,7 @@ lr_setting_ui <- function(id){
                           br(),
                           actionButton(ns("act_advance_lr"), label = "Advanced setting"),
                           br(),
+                          br(),
                           actionButton(ns("act_analyze_lr"), label = "Analyze", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 9,
@@ -170,19 +171,19 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
       })
 
       output$hp <- renderUI({
-        checkboxGroupInput(session$ns("hp"), label = tags$p("Prosecutor hypothesis", style = "color:#2e8b57;"), choices = rv_lr_setting$refs)
+        checkboxGroupInput(session$ns("hp"), label = h4("Prosecutor hypothesis"), choices = rv_lr_setting$refs)
       })
 
       output$hd <- renderUI({
-        checkboxGroupInput(session$ns("hd"), label = tags$p("Defense hypothesis", style = "color:#2e8b57;"), choices = rv_lr_setting$refs)
+        checkboxGroupInput(session$ns("hd"), label = h4("Defense hypothesis"), choices = rv_lr_setting$refs)
       })
 
       observeEvent(input$act_advance_lr, {
         showModal(modalDialog(
-          title = tags$p("Advanced setting", style = "color:#2e8b57;"),
+          title = "Advanced setting",
           fluidRow(
             column(6,
-                   tags$p("MCMC conditions", style = "font-size:16px; color:#2e8b57;"),
+                   h4("MCMC conditions"),
                    numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_lr_setting$warmup),
                    numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_lr_setting$sampling),
                    numericInput(session$ns("chains"), label = "Number of chains", value = rv_lr_setting$chains)
@@ -252,7 +253,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
       output$anameth_lr <- renderUI({
         anameth_all <- list.files(paste0(path_pack, "/extdata/anameth"))
         anameth_all <- gsub(".{4}$", "", anameth_all)
-        selectInput(session$ns("anameth_lr"), label = tags$p("Analysis method", style = "color:#2e8b57;"), choices = anameth_all, selected = anameth_all[1])
+        selectInput(session$ns("anameth_lr"), label = h4("Analysis method"), choices = anameth_all, selected = anameth_all[1])
       })
 
       observeEvent(input$anameth_lr, {

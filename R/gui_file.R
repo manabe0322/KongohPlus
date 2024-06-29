@@ -1,17 +1,15 @@
-#' load_ui
+#' file_ui
 #'
 #' @description The function to create the ui module for loading files
-load_ui <- function(id){
+file_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("Load",
-           titlePanel("Load data"),
-           br(),
+  tabPanel("File",
            sidebarLayout(
              sidebarPanel(width = 3,
-                          fileInput(ns("file_csp"), label = "Crime stain profile", accept = ".csv", buttonLabel = "Load"),
-                          fileInput(ns("file_ref"), label = "Reference profile", accept = ".csv", buttonLabel = "Load"),
-                          fileInput(ns("file_af"), label = "Allele frequency", accept = ".csv", buttonLabel = "Load"),
+                          fileInput(ns("file_csp"), label = h4("Crime stain profile"), accept = ".csv", buttonLabel = "Load"),
+                          fileInput(ns("file_ref"), label = h4("Reference profile"), accept = ".csv", buttonLabel = "Load"),
+                          fileInput(ns("file_af"), label = h4("Allele frequency"), accept = ".csv", buttonLabel = "Load"),
                           br(),
                           actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg"),
                           br(),
@@ -23,10 +21,15 @@ load_ui <- function(id){
                        tabsetPanel(id = ns("tabset_load_file"),
                                    type = "tabs",
                                    tabPanel("Crime stain profile",
-                                            dataTableOutput(ns("dt_csp"))
+                                            div(style = "width: 100%; height: 750px; overflow: scroll; font-size: 75%;",
+                                                dataTableOutput(ns("dt_csp"))
+                                            )
                                    ),
                                    tabPanel("Reference profile",
-                                            dataTableOutput(ns("dt_ref"))
+                                            div(
+                                              style = "width: 100%; height: 750px; overflow: scroll;",
+                                              dataTableOutput(ns("dt_ref"))
+                                            )
                                    ),
                                    tabPanel("Allele frequency",
                                             dataTableOutput(ns("dt_af"))
@@ -37,10 +40,10 @@ load_ui <- function(id){
   )
 }
 
-#' load_server
+#' file_server
 #'
 #' @description The function to create the server module for loading files
-load_server <- function(id, session_top){
+file_server <- function(id, session_top){
   moduleServer(
     id,
     function(input, output, session){
@@ -84,20 +87,48 @@ load_server <- function(id, session_top){
 
       # Display the crime stain profile
       output$dt_csp <- renderDataTable(server = FALSE, {
-        datatable(
-          rv_file$dt_csp,
-          selection = "none",
-          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
-          rownames = FALSE
-        )
+        dt_csp <- rv_file$dt_csp
+        if(!is.null(dt_csp)){
+          dt_csp_display <- copy(dt_csp)
+          dt_csp_display$SampleName <- as.factor(dt_csp_display$SampleName)
+          dt_csp_display$Marker <- as.factor(dt_csp_display$Marker)
+          name_dt_csp <- names(dt_csp_display)
+          index_sn <- which(name_dt_csp == "SampleName") - 1
+          index_mk <- which(name_dt_csp == "Marker") - 1
+          index_search_disable <- setdiff(0:(ncol(dt_csp_display) - 1), c(index_sn, index_mk))
+
+          datatable(
+            dt_csp_display,
+            filter = "top",
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_csp_display), ordering = FALSE, autowidth = TRUE,
+                           columnDefs = list(list(targets = index_search_disable, searchable = FALSE))),
+            rownames = FALSE
+          ) %>%
+            formatStyle(columns = c(index_sn, index_mk), width = '200px')
+        }
       })
 
       # Display the reference profile
       output$dt_ref <- renderDataTable(server = FALSE, {
+        dt_ref <- rv_file$dt_ref
+        if(is.null(dt_ref)){
+          dt_ref_display <- NULL
+          index_search_disable <- integer(0)
+        }else{
+          dt_ref_display <- copy(dt_ref)
+          dt_ref_display$SampleName <- as.factor(dt_ref_display$SampleName)
+          dt_ref_display$Marker <- as.factor(dt_ref_display$Marker)
+          name_dt_ref <- names(dt_ref_display)
+          index_search_disable <- setdiff(1:ncol(dt_ref_display), c(which(name_dt_ref == "SampleName"), which(name_dt_ref == "Marker"))) - 1
+        }
+
         datatable(
-          rv_file$dt_ref,
+          dt_ref_display,
+          filter = "top",
           selection = "none",
-          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          options = list(dom = "t", iDisplayLength = nrow(dt_ref_display), ordering = FALSE, autowidth = TRUE,
+                         columnDefs = list(list(targets = index_search_disable, searchable = FALSE))),
           rownames = FALSE
         )
       })

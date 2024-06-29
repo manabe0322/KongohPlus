@@ -6,12 +6,22 @@ change_data_type_csp <- function(dt_csp){
   names(dt_csp) <- gsub(" ", "", names(dt_csp))
 
   name_dt_csp <- names(dt_csp)
+  index_use <- c(which(name_dt_csp == "SampleName"), which(name_dt_csp == "Marker"), grep("Allele", name_dt_csp), grep("Height", name_dt_csp))
+  dt_csp <- dt_csp[, index_use, with = FALSE]
+
+  name_dt_csp <- names(dt_csp)
   col_char <- c("SampleName", "Marker", name_dt_csp[grep("Allele", name_dt_csp)])
   dt_csp[, (col_char) := lapply(.SD, as.character), .SDcols = col_char]
   col_numeric <- c(name_dt_csp[grep("Size", name_dt_csp)], name_dt_csp[grep("Height", name_dt_csp)])
   dt_csp[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
 
   dt_csp[which(dt_csp == "", arr.ind = TRUE)] <- NA
+
+  # Remove columns with all NA data
+  tmp <- lapply(dt_csp, is.na)
+  index_col_with_not_na <- which(!sapply(tmp, all))
+  index_keep <- sort(unique(c(which(name_dt_csp == "SampleName"), which(name_dt_csp == "Marker"), index_col_with_not_na)))
+  dt_csp <- dt_csp[, index_keep, with = FALSE]
 
   return(dt_csp)
 }

@@ -34,17 +34,13 @@ file_setting_ui <- function(id){
              column(4,
                     wellPanel(
                       h2("Likelihood ratio"),
-#                      uiOutput(ns("use_deconvo")),
-#                      uiOutput(ns("hp")),
-#                      numericInput(ns("noc_lr_hp"), label = "Number of contributors", value = 1),
-#                      uiOutput(ns("hd")),
-#                      numericInput(ns("noc_lr_hd"), label = "Number of contributors", value = 1),
-#                      br(),
-#                      uiOutput(ns("anameth_lr")),
-#                      br(),
-#                      actionButton(ns("act_advance_lr"), label = "Advanced setting"),
-#                      br(),
-#                      actionButton(ns("act_analyze_lr"), label = "Analyze", class = "btn btn-primary btn-lg")
+                      uiOutput(ns("use_deconvo")),
+                      uiOutput(ns("hp")),
+                      numericInput(ns("noc_lr_hp"), label = "Number of contributors", value = 1),
+                      uiOutput(ns("hd")),
+                      numericInput(ns("noc_lr_hd"), label = "Number of contributors", value = 1),
+                      br(),
+                      actionButton(ns("act_analyze_lr"), label = "Analyze", class = "btn btn-primary btn-lg")
                     )
              )
            )
@@ -79,9 +75,9 @@ file_setting_server <- function(id, path_pack){
       rv_file_setting$dt_m2sr <- NULL
       rv_file_setting$dt_gamma <- NULL
 
-      rv_file_setting$warmup <- NULL
-      rv_file_setting$sampling <- NULL
-      rv_file_setting$chains <- NULL
+      rv_file_setting$warmup <- 1200
+      rv_file_setting$sampling <- 300
+      rv_file_setting$chains <- 4
 
       # Load the crime stain profile
       observeEvent(input$file_csp, {

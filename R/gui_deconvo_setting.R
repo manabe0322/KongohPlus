@@ -8,11 +8,12 @@ deconvo_setting_ui <- function(id){
            br(),
            sidebarLayout(
              sidebarPanel(width = 3,
-                          numericInput(ns("noc_deconvo"), label = "Number of contributors", value = 1),
+                          numericInput(ns("noc_deconvo"), label = h4("Number of contributors"), value = 1),
                           br(),
                           uiOutput(ns("anameth_deconvo")),
                           br(),
                           actionButton(ns("act_advance_deconvo"), label = "Advanced setting"),
+                          br(),
                           br(),
                           actionButton(ns("act_analyze_deconvo"), label = "Analyze", class = "btn btn-primary btn-lg")
              ),
@@ -120,10 +121,10 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
 
       observeEvent(input$act_advance_deconvo, {
         showModal(modalDialog(
-          title = tags$p("Advanced setting", style = "color:#2e8b57;"),
+          title = "Advanced setting",
           fluidRow(
             column(6,
-                   tags$p("MCMC conditions", style = "font-size:16px; color:#2e8b57;"),
+                   h4("MCMC conditions"),
                    numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_deconvo_setting$warmup),
                    numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_deconvo_setting$sampling),
                    numericInput(session$ns("chains"), label = "Number of chains", value = rv_deconvo_setting$chains)
@@ -191,7 +192,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
       output$anameth_deconvo <- renderUI({
         anameth_all <- list.files(paste0(path_pack, "/extdata/anameth"))
         anameth_all <- gsub(".{4}$", "", anameth_all)
-        selectInput(session$ns("anameth_deconvo"), label = tags$p("Analysis method", style = "color:#2e8b57;"), choices = anameth_all, selected = anameth_all[1])
+        selectInput(session$ns("anameth_deconvo"), label = h4("Analysis method"), choices = anameth_all, selected = anameth_all[1])
       })
 
       observeEvent(input$anameth_deconvo, {

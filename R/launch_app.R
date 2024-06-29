@@ -21,7 +21,7 @@ KongohPlus <- function(bool_compile = TRUE){
                              id = "navbar",
                              position = c("fixed-top"),
 
-                             file_setting_ui("file_setting"),
+                             file_ui("file"),
 
                              deconvo_ui("deconvo"),
 
@@ -49,7 +49,7 @@ KongohPlus <- function(bool_compile = TRUE){
   )
 
   server <- function(input, output, session){
-    rv_file <- file_setting_server("file_setting", path_pack)
+    rv_file <- file_server("file", session)
     rv_deconvo <- deconvo_server("deconvo", path_pack, rv_file)
     lr_server("lr", path_pack, rv_file, rv_deconvo)
 
