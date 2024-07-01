@@ -21,17 +21,24 @@ file_ui <- function(id){
                        tabsetPanel(id = ns("tabset_load_file"),
                                    type = "tabs",
                                    tabPanel("Crime stain profile",
-                                            div(style = "width: 100%; height: 750px; overflow: scroll; font-size: 75%;",
-                                                dataTableOutput(ns("dt_csp"))
-                                            )
+                                            tags$head(
+                                              tags$style(HTML("table {table-layout: fixed;")),
+                                              tags$style(".datatables .display {margin-left: 0;}")
+                                            ),
+                                            dataTableOutput(ns("dt_csp"))
                                    ),
                                    tabPanel("Reference profile",
-                                            div(
-                                              style = "width: 100%; height: 750px; overflow: scroll;",
-                                              dataTableOutput(ns("dt_ref"))
-                                            )
+                                            tags$head(
+                                              tags$style(HTML("table {table-layout: fixed;")),
+                                              tags$style(".datatables .display {margin-left: 0;}")
+                                            ),
+                                            dataTableOutput(ns("dt_ref"))
                                    ),
                                    tabPanel("Allele frequency",
+                                            tags$head(
+                                              tags$style(HTML("table {table-layout: fixed;")),
+                                              tags$style(".datatables .display {margin-left: 0;}")
+                                            ),
                                             dataTableOutput(ns("dt_af"))
                                    )
                        )
@@ -101,44 +108,45 @@ file_server <- function(id, session_top){
             dt_csp_display,
             filter = "top",
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_csp_display), ordering = FALSE, autowidth = TRUE,
-                           columnDefs = list(list(targets = index_search_disable, searchable = FALSE))),
+            options = list(dom = "t", iDisplayLength = nrow(dt_csp_display), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "650px",
+                           columnDefs = list(list(targets = index_search_disable, searchable = FALSE, width = "40px"),
+                                             list(targets = c(index_sn, index_mk), width = "100px"))),
             rownames = FALSE
-          ) %>%
-            formatStyle(columns = c(index_sn, index_mk), width = '200px')
+          )
         }
       })
 
       # Display the reference profile
       output$dt_ref <- renderDataTable(server = FALSE, {
         dt_ref <- rv_file$dt_ref
-        if(is.null(dt_ref)){
-          dt_ref_display <- NULL
-          index_search_disable <- integer(0)
-        }else{
+        if(!is.null(dt_ref)){
           dt_ref_display <- copy(dt_ref)
           dt_ref_display$SampleName <- as.factor(dt_ref_display$SampleName)
           dt_ref_display$Marker <- as.factor(dt_ref_display$Marker)
           name_dt_ref <- names(dt_ref_display)
-          index_search_disable <- setdiff(1:ncol(dt_ref_display), c(which(name_dt_ref == "SampleName"), which(name_dt_ref == "Marker"))) - 1
-        }
+          index_sn <- which(name_dt_ref == "SampleName") - 1
+          index_mk <- which(name_dt_ref == "Marker") - 1
+          index_search_disable <- setdiff(0:(ncol(dt_ref_display) - 1), c(index_sn, index_mk))
 
-        datatable(
-          dt_ref_display,
-          filter = "top",
-          selection = "none",
-          options = list(dom = "t", iDisplayLength = nrow(dt_ref_display), ordering = FALSE, autowidth = TRUE,
-                         columnDefs = list(list(targets = index_search_disable, searchable = FALSE))),
-          rownames = FALSE
-        )
+          datatable(
+            dt_ref_display,
+            filter = "top",
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_ref_display), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "650px",
+                           columnDefs = list(list(targets = index_search_disable, searchable = FALSE, width = "40px"),
+                                             list(targets = c(index_sn, index_mk), width = "100px"))),
+            rownames = FALSE
+          )
+        }
       })
 
       # Display the allele frequency
       output$dt_af <- renderDataTable(server = FALSE, {
+        dt_af <- rv_file$dt_af
         datatable(
-          rv_file$dt_af,
+          dt_af,
           selection = "none",
-          options = list(iDisplayLength = 50, ordering = FALSE, autowidth = TRUE),
+          options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "650px"),
           rownames = FALSE
         )
       })
