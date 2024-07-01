@@ -5,8 +5,6 @@ deconvo_ui <- function(id){
   ns <- NS(id)
 
   tabPanel("Deconvolution",
-           titlePanel("Deconvolution"),
-           br(),
            tabsetPanel(id = ns("tabset_deconvo"),
                        type = "tabs",
                        deconvo_setting_ui(ns("deconvo_setting")),

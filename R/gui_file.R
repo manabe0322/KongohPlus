@@ -112,7 +112,7 @@ file_server <- function(id, session_top){
                            columnDefs = list(list(targets = index_search_disable, searchable = FALSE, width = "40px"),
                                              list(targets = c(index_sn, index_mk), width = "100px"))),
             rownames = FALSE
-          )
+          )# %>% formatStyle(0, target = "row", lineHeight = "75%")
         }
       })
 
@@ -136,7 +136,7 @@ file_server <- function(id, session_top){
                            columnDefs = list(list(targets = index_search_disable, searchable = FALSE, width = "40px"),
                                              list(targets = c(index_sn, index_mk), width = "100px"))),
             rownames = FALSE
-          )
+          )# %>% formatStyle(0, target = "row", lineHeight = "75%")
         }
       })
 
@@ -146,9 +146,11 @@ file_server <- function(id, session_top){
         datatable(
           dt_af,
           selection = "none",
-          options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "650px"),
+          extensions = c("FixedColumns", "FixedHeader"),
+          options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "650px",
+                         fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0)),
           rownames = FALSE
-        )
+        )# %>% formatStyle(0, target = "row", lineHeight = "75%")
       })
 
       observeEvent(input$act_deconvo, {

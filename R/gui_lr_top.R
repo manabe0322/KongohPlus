@@ -5,8 +5,6 @@ lr_ui <- function(id){
   ns <- NS(id)
 
   tabPanel("Likelihood ratio",
-           titlePanel("Likelihood ratio"),
-           br(),
            tabsetPanel(id = ns("tabset_lr"),
                        type = "tabs",
                        lr_setting_ui(ns("lr_setting")),
