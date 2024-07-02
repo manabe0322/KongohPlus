@@ -3,7 +3,7 @@
 #' @description Main window
 #' @usage KongohPlus()
 #' @export
-KongohPlus <- function(bool_compile = TRUE){
+KongohPlus <- function(){
   ver_soft <- packageVersion("KongohPlus")
   path_pack <- path.package("KongohPlus", quiet = FALSE)
   options(shiny.maxRequestSize = 500 * 1024^2)
