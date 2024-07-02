@@ -46,6 +46,29 @@ anameth_server <- function(id, path_pack){
       rv_anameth <- reactiveValues()
       rv_anameth$dt_info_anameth <- create_dt_info_anameth(path_pack)
 
+      ##############################
+      # Make a new analysis method #
+      ##############################
+
+      observeEvent(input$act_anameth_new, {
+        showModal(modalDialog(
+          title = "Make a new analysis method",
+          textInput(session$ns("input_name_new_anameth"), label = "Enter a name of the new analysis method", value = NULL),
+          tabsetPanel(id = session$ns("tabset_new_anameth"),
+                      type = "tabs",
+                      tabPanel("Kit & Parameter"),
+                      tabPanel("AT"),
+                      tabPanel("Allele probability"),
+                      tabPanel("Drop-in")
+          ),
+          footer = tagList(
+            actionButton(session$ns("act_new_anameth_save"), "Save"),
+            modalButton("Cancel")
+          ),
+          size = "l"
+        ))
+      }, ignoreInit = TRUE)
+
       output$dt_info_anameth <- renderDataTable({
         dt_info_anameth <- rv_anameth$dt_info_anameth
         datatable(
