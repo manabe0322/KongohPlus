@@ -37,9 +37,8 @@ KongohPlus <- function(bool_compile = TRUE){
                              ),
 
                              navbarMenu("Setting",
-                                        tabPanel("Analysis method"),
-                                        tabPanel("Allele repeat correction"),
-                                        tabPanel("Typing kit")
+                                        anameth_ui("anameth"),
+                                        kit_ui("kit")
                              ),
 
                              tabPanel("Example files"),
@@ -54,6 +53,8 @@ KongohPlus <- function(bool_compile = TRUE){
     lr_server("lr", path_pack, rv_file, rv_deconvo)
 
     est_par_server("est_par", path_pack)
+    anameth_server("anameth", path_pack)
+    kit_server("kit", path_pack)
   }
 
   shinyApp(ui, server)
