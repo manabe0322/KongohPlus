@@ -39,6 +39,16 @@ anameth_server <- function(id, path_pack){
     id,
     function(input, output, session){
 
+      numericColumn <- function(len, col, ...){
+        inputs <- character(len)
+        for(i in seq_len(len)){
+          inputs[i] <- as.character(
+            numericInput(paste0("numeric_", col, "_", i), label = NULL, ...)
+          )
+        }
+        return(inputs)
+      }
+
       ######################################
       # Define the initial reactive values #
       ######################################
@@ -52,22 +62,78 @@ anameth_server <- function(id, path_pack){
 
       observeEvent(input$act_anameth_new, {
         showModal(modalDialog(
-          title = "Make a new analysis method",
-          textInput(session$ns("input_name_new_anameth"), label = "Enter a name of the new analysis method", value = NULL),
+          title = "Create a new analysis method",
+          textInput(session$ns("anameth_new_input_name"), label = "Enter a name of the new analysis method", value = NULL),
           tabsetPanel(id = session$ns("tabset_new_anameth"),
                       type = "tabs",
-                      tabPanel("Kit & Parameter"),
-                      tabPanel("AT"),
-                      tabPanel("Allele probability"),
-                      tabPanel("Drop-in")
+                      tabPanel("Parameter & Kit",
+                               br(),
+                               uiOutput(session$ns("anameth_new_param")),
+                               br(),
+                               h4("Kit"),
+                               textOutput(session$ns("anameth_new_kit"))
+                      ),
+                      tabPanel("AT",
+                               br(),
+                               dataTableOutput(session$ns("anameth_new_at"))
+                      ),
+                      tabPanel("Allele probability",
+                               br()
+                      ),
+                      tabPanel("Allele repeat correction",
+                               br()
+                      ),
+                      tabPanel("Drop-in",
+                               br()
+                      )
           ),
           footer = tagList(
-            actionButton(session$ns("act_new_anameth_save"), "Save"),
+            #actionButton(session$ns("act_new_anameth_save"), "Save"),
             modalButton("Cancel")
           ),
           size = "l"
         ))
       }, ignoreInit = TRUE)
+
+      output$anameth_new_param <- renderUI({
+        param_all <- list.files(paste0(path_pack, "/extdata/param"))
+        param_all <- gsub(".{4}$", "", param_all)
+        selectInput(session$ns("anameth_new_param"), label = h4("Parameter data"), choices = param_all)
+      })
+
+      observeEvent(input$anameth_new_param, {
+        anameth_new_param <- input$anameth_new_param
+        if(is.null(anameth_new_param)){
+          output$anameth_new_kit <- renderText({"NA"})
+        }else{
+          # Set the kit name
+          anameth_new_param <- input$anameth_new_param
+          dt_par_select <- fread(paste0(path_pack, "/extdata/param/", anameth_new_param, ".csv"))
+          kit_par <- dt_par_select$Kit[1]
+          output$anameth_new_kit <- renderText({paste0(kit_par)})
+
+          dt_kit_select <- fread(paste0(path_pack, "/extdata/kit/", kit_par, ".csv"))
+          markers <- unique(dt_kit_select$Marker[dt_kit_select$Chr == "Auto"])
+          n_mk <- length(markers)
+
+          # Create a data.table for the AT
+          output$anameth_new_at <- renderDataTable(server = FALSE, {
+            dt_anameth_new_at <- data.table(Marker = markers)
+            dt_anameth_new_at$AT <- numericColumn(n_mk, 2, value = 100, width = "75%")
+            datatable(
+              dt_anameth_new_at,
+              selection = "none",
+              options = list(dom = "t", iDisplayLength = nrow(dt_anameth_new_at), ordering = FALSE, autoWidth = TRUE),
+              rownames = FALSE,
+              escape = FALSE
+            )
+          })
+        }
+      })
+
+
+
+
 
       output$dt_info_anameth <- renderDataTable({
         dt_info_anameth <- rv_anameth$dt_info_anameth

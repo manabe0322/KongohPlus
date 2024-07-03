@@ -10,10 +10,11 @@ calc_aic <- function(log_like, n_par){
 #' make_dt_par
 #'
 #' @description The function to make a data.table for estimated parameters
-make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr, dt_result_gamma){
+make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr, dt_result_gamma, kit_par){
   markers <- dt_result_ae[, Marker]
   n_mk <- length(markers)
-  dt_par <- data.table(Marker = c(rep(markers, 5), NA),
+  dt_par <- data.table(Kit = rep(kit_par, 5 * n_mk + 1),
+                       Marker = c(rep(markers, 5), NA),
                        Parameter = c(rep("AE", n_mk), rep("BSR", n_mk), rep("FSR", n_mk), rep("DSR", n_mk), rep("M2SR", n_mk), "Gamma"),
                        Model = c(rep("Dirichlet", n_mk), dt_result_bsr[, Model], dt_result_fsr[, Model], dt_result_dsr[, Model], dt_result_m2sr[, Model], "Gamma"),
                        Alpha = c(dt_result_ae[, Alpha], rep(NA, 4 * n_mk + 1)),
@@ -41,6 +42,7 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param dt_seq The data.table of the sequence data
 #' @param dt_kit The data.table of information on the kit
 #' @param dt_kit_set The data.table of the kit-setting
+#' @param kit_par Kit name
 #' @param n_parallel_chains The number of parallel chains
 #' @param model_ae The stan model for the locus-specific amplification efficiency
 #' @param model_phr The stan model for the peak height ratio
@@ -55,7 +57,7 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param at_sex The analytical threshold of the sex-chromosomal markers
 #' @param min_n_motif_lus The minimum number of repeat motifs for considering the LUS model
 #' @param min_n_motif_multi The minimum number of repeat motifs for considering the multi-sequence model
-estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
+estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_par,
                                 model_ae, model_phr, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
                                 n_warmup, n_sampling, n_chains,
                                 pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi = 10,
@@ -188,7 +190,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set,
 
   #### Results of estimated parameters ####
 
-  dt_par <- make_dt_par(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr, dt_result_gamma)
+  dt_par <- make_dt_par(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_dsr, dt_result_m2sr, dt_result_gamma, kit_par)
 
   return(list("markers_auto" = markers_auto,
               "ae_result_list" = ae_result_list,
