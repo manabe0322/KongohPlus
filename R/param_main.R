@@ -21,16 +21,16 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
                        Myu = c(rep(NA, n_mk), dt_result_bsr[, Myu], dt_result_fsr[, Myu], dt_result_dsr[, Myu], dt_result_m2sr[, Myu], NA),
                        Slope = c(rep(NA, n_mk), dt_result_bsr[, Slope], dt_result_fsr[, Slope], dt_result_dsr[, Slope], rep(NA, n_mk), NA),
                        Intercept = c(rep(NA, n_mk), dt_result_bsr[, Intercept], dt_result_fsr[, Intercept], dt_result_dsr[, Intercept], rep(NA, n_mk), NA),
-                       Sigma = c(dt_result_ae[, Sigma], dt_result_bsr[, Sigma], dt_result_fsr[, Sigma], dt_result_dsr[, Sigma], dt_result_m2sr[, Sigma], NA),
+                       Sigma = c(rep(NA, n_mk), dt_result_bsr[, Sigma], dt_result_fsr[, Sigma], dt_result_dsr[, Sigma], dt_result_m2sr[, Sigma], NA),
                        MinUS = c(rep(NA, n_mk), dt_result_bsr[, MinUS], dt_result_fsr[, MinUS], dt_result_dsr[, MinUS], rep(NA, n_mk), NA),
                        Cv = c(rep(NA, 5 * n_mk), dt_result_gamma[, Cv]),
                        Rhat_Alpha = c(dt_result_ae[, Rhat_Alpha], rep(NA, 4 * n_mk + 1)),
                        Rhat_Myu = c(rep(NA, n_mk), dt_result_bsr[, Rhat_Myu], dt_result_fsr[, Rhat_Myu], dt_result_dsr[, Rhat_Myu], dt_result_m2sr[, Rhat_Myu], NA),
                        Rhat_Slope = c(rep(NA, n_mk), dt_result_bsr[, Rhat_Slope], dt_result_fsr[, Rhat_Slope], dt_result_dsr[, Rhat_Slope], rep(NA, n_mk), NA),
                        Rhat_Intercept = c(rep(NA, n_mk), dt_result_bsr[, Rhat_Intercept], dt_result_fsr[, Rhat_Intercept], dt_result_dsr[, Rhat_Intercept], rep(NA, n_mk), NA),
-                       Rhat_Sigma = c(dt_result_ae[, Rhat_Sigma], dt_result_bsr[, Rhat_Sigma], dt_result_fsr[, Rhat_Sigma], dt_result_dsr[, Rhat_Sigma], dt_result_m2sr[, Rhat_Sigma], NA),
+                       Rhat_Sigma = c(rep(NA, n_mk), dt_result_bsr[, Rhat_Sigma], dt_result_fsr[, Rhat_Sigma], dt_result_dsr[, Rhat_Sigma], dt_result_m2sr[, Rhat_Sigma], NA),
                        Rhat_Cv = c(rep(NA, 5 * n_mk), dt_result_gamma[, Rhat_Cv]),
-                       Rhat_Likelihood = c(dt_result_ae[, Rhat_Likelihood], dt_result_bsr[, Rhat_Likelihood], dt_result_fsr[, Rhat_Likelihood], dt_result_dsr[, Rhat_Likelihood], dt_result_m2sr[, Rhat_Likelihood], dt_result_gamma[, Rhat_Likelihood]))
+                       Rhat_Lp = c(dt_result_ae[, Rhat_Lp], dt_result_bsr[, Rhat_Lp], dt_result_fsr[, Rhat_Lp], dt_result_dsr[, Rhat_Lp], dt_result_m2sr[, Rhat_Lp], dt_result_gamma[, Rhat_Lp]))
   return(dt_par)
 }
 
@@ -60,7 +60,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_p
                                 model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
                                 n_warmup, n_sampling, n_chains,
                                 pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi = 10,
-                                n_parallel_chains = detectCores(), n_simu = 2){
+                                n_parallel_chains = detectCores()){
   # Extract information on the kit
   markers_all <- unique(dt_kit[, Marker])
   n_mk_all <- length(markers_all)
@@ -126,10 +126,9 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_p
   seq_count_auto <- tmp$seq_count_auto
 
   # Perform the MCMC for the locus-specific amplification efficiency
-  #ae_result_list <- analyze_ae_main(markers_auto, model_ae,
-  #                                  pae_data_use, tph_data_use,
-  #                                  n_warmup, n_sampling, n_chains, n_parallel_chains)
-  print(model_ae)
+  ae_result_list <- analyze_ae_main(markers_auto, model_ae,
+                                    pae_data_use, tph_data_use,
+                                    n_warmup, n_sampling, n_chains, n_parallel_chains)
 
   # Perform the MCMC for the back stutter ratio
   bsr_result_list <- analyze_bfdstr_main("BSR", markers_auto, meth_model_bsr_auto, model_sr_gen, model_sr_together,
@@ -156,7 +155,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_p
                                         n_warmup, n_sampling, n_chains, n_parallel_chains)
 
   dt_result_ae <- ae_result_list$dt_result_ae
-  dt_result_phr <- phr_result_list$dt_result_phr
   dt_result_bsr <- bsr_result_list$dt_result
   dt_result_fsr <- fsr_result_list$dt_result
   dt_result_dsr <- dsr_result_list$dt_result
@@ -180,7 +178,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_p
   tmp <- run_mcmc_gamma(model_gamma, data_list_gamma, n_warmup, n_sampling, n_chains, n_parallel_chains)
   dt_result_gamma <- data.table(Cv = tmp$median_cv,
                                 Rhat_Cv = tmp$rhat_cv,
-                                Rhat_Likelihood = tmp$rhat_lp)
+                                Rhat_Lp = tmp$rhat_lp)
   gamma_result_list <- list(dt_result = dt_result_gamma,
                             traceplot = tmp$traceplot)
 

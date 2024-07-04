@@ -708,7 +708,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
             options = list(dom = "t", iDisplayLength = nrow(dt_aic_bsr), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatRound(columns = c("AIC", "Slope", "Intercept", "Rhat_Slope", "Rhat_Intercept", "Rhat_Sigma", "Rhat_Likelihood"), digits = 3) %>%
+            formatRound(columns = c("AIC", "Slope", "Intercept", "Rhat_Slope", "Rhat_Intercept", "Rhat_Sigma", "Rhat_Lp"), digits = 3) %>%
             formatRound(columns = c("Sigma", "MinUS"), digits = 0)
         })
 
@@ -721,7 +721,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
             options = list(dom = "t", iDisplayLength = nrow(dt_aic_fsr), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatRound(columns = c("AIC", "Slope", "Intercept", "Rhat_Slope", "Rhat_Intercept", "Rhat_Sigma", "Rhat_Likelihood"), digits = 3) %>%
+            formatRound(columns = c("AIC", "Slope", "Intercept", "Rhat_Slope", "Rhat_Intercept", "Rhat_Sigma", "Rhat_Lp"), digits = 3) %>%
             formatRound(columns = c("Sigma", "MinUS"), digits = 0)
         })
 
@@ -734,7 +734,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
             options = list(dom = "t", iDisplayLength = nrow(dt_aic_dsr), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatRound(columns = c("AIC", "Slope", "Intercept", "Rhat_Slope", "Rhat_Intercept", "Rhat_Sigma", "Rhat_Likelihood"), digits = 3) %>%
+            formatRound(columns = c("AIC", "Slope", "Intercept", "Rhat_Slope", "Rhat_Intercept", "Rhat_Sigma", "Rhat_Lp"), digits = 3) %>%
             formatRound(columns = c("Sigma", "MinUS"), digits = 0)
         })
 
@@ -787,7 +787,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
             options = list(dom = "t", iDisplayLength = nrow(dt_result_ae), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatRound(columns = c("Alpha", "Rhat_Alpha", "Rhat_Likelihood"), digits = 3)
+            formatRound(columns = c("Alpha", "Rhat_Alpha", "Rhat_Lp"), digits = 3)
         })
 
         # Display the result for BSR
@@ -798,7 +798,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
             options = list(dom = "t", iDisplayLength = nrow(dt_result_bsr), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatRound(columns = c("Myu", "Slope", "Intercept", "Rhat_Myu", "Rhat_Slope", "Rhat_Intercept", "Rhat_Sigma", "Rhat_Likelihood"), digits = 3) %>%
+            formatRound(columns = c("Myu", "Slope", "Intercept", "Rhat_Myu", "Rhat_Slope", "Rhat_Intercept", "Rhat_Sigma", "Rhat_Lp"), digits = 3) %>%
             formatRound(columns = c("Sigma", "MinUS"), digits = 0)
         })
 
@@ -810,7 +810,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
             options = list(dom = "t", iDisplayLength = nrow(dt_result_fsr), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatRound(columns = c("Myu", "Slope", "Intercept", "Rhat_Myu", "Rhat_Slope", "Rhat_Intercept", "Rhat_Sigma", "Rhat_Likelihood"), digits = 3) %>%
+            formatRound(columns = c("Myu", "Slope", "Intercept", "Rhat_Myu", "Rhat_Slope", "Rhat_Intercept", "Rhat_Sigma", "Rhat_Lp"), digits = 3) %>%
             formatRound(columns = c("Sigma", "MinUS"), digits = 0)
         })
 
@@ -822,7 +822,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
             options = list(dom = "t", iDisplayLength = nrow(dt_result_dsr), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatRound(columns = c("Myu", "Slope", "Intercept", "Rhat_Myu", "Rhat_Slope", "Rhat_Intercept", "Rhat_Sigma", "Rhat_Likelihood"), digits = 3) %>%
+            formatRound(columns = c("Myu", "Slope", "Intercept", "Rhat_Myu", "Rhat_Slope", "Rhat_Intercept", "Rhat_Sigma", "Rhat_Lp"), digits = 3) %>%
             formatRound(columns = c("Sigma", "MinUS"), digits = 0)
         })
 
@@ -834,7 +834,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
             options = list(dom = "t", iDisplayLength = nrow(dt_result_m2sr), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatRound(columns = c("Myu", "Rhat_Myu", "Rhat_Sigma", "Rhat_Likelihood"), digits = 3) %>%
+            formatRound(columns = c("Myu", "Rhat_Myu", "Rhat_Sigma", "Rhat_Lp"), digits = 3) %>%
             formatRound(columns = c("Sigma"), digits = 0)
         })
 
@@ -846,7 +846,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
             options = list(dom = "t", iDisplayLength = nrow(dt_result_gamma), ordering = FALSE, autowidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatRound(columns = c("Cv", "Rhat_Cv", "Rhat_Likelihood"), digits = 3)
+            formatRound(columns = c("Cv", "Rhat_Cv", "Rhat_Lp"), digits = 3)
         })
       }
     }

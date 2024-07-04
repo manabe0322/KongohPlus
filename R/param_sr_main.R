@@ -458,7 +458,9 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
     sr_best_rhat_myu_all_mk[index_mk_together_sr] <- tmp$rhat_myus
     sr_best_rhat_sigma_all_mk[index_mk_together_sr] <- tmp$rhat_sigma
     sr_best_rhat_lp_all_mk[index_mk_together_sr] <- tmp$rhat_lp
-    sr_best_trace_all_mk[index_mk_together_sr] <- tmp$traceplot
+    for(i in 1:n_mk_together_sr){
+      sr_best_trace_all_mk[index_mk_together_sr[i]] <- tmp$traceplot
+    }
   }
 
   # Not consider
@@ -610,7 +612,9 @@ analyze_m2sr_main <- function(markers_auto, meth_model_sr_auto, model_sr_uni, mo
     sr_best_rhat_myu_all_mk[index_mk_together_sr] <- tmp$rhat_myus
     sr_best_rhat_sigma_all_mk[index_mk_together_sr] <- tmp$rhat_sigma
     sr_best_rhat_lp_all_mk[index_mk_together_sr] <- tmp$rhat_lp
-    sr_best_trace_all_mk[index_mk_together_sr] <- tmp$traceplot
+    for(i in 1:n_mk_together_sr){
+      sr_best_trace_all_mk[index_mk_together_sr[i]] <- tmp$traceplot
+    }
   }
 
   # Not consider
