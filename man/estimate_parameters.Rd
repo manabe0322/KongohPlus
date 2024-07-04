@@ -10,6 +10,7 @@ estimate_parameters(
   dt_seq,
   dt_kit,
   dt_kit_set,
+  kit_par,
   model_ae,
   model_phr,
   model_sr_gen,
@@ -39,6 +40,8 @@ estimate_parameters(
 \item{dt_kit}{The data.table of information on the kit}
 
 \item{dt_kit_set}{The data.table of the kit-setting}
+
+\item{kit_par}{Kit name}
 
 \item{model_ae}{The stan model for the locus-specific amplification efficiency}
 

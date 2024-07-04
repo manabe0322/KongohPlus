@@ -38,6 +38,7 @@ KongohPlus <- function(){
 
                              navbarMenu("Setting",
                                         anameth_ui("anameth"),
+                                        sr_ui("sr"),
                                         kit_ui("kit")
                              ),
 
@@ -54,6 +55,7 @@ KongohPlus <- function(){
 
     est_par_server("est_par", path_pack)
     anameth_server("anameth", path_pack)
+    sr_server("sr", path_pack)
     kit_server("kit", path_pack)
   }
 

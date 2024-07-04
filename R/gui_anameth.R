@@ -55,6 +55,7 @@ anameth_server <- function(id, path_pack){
 
       rv_anameth <- reactiveValues()
       rv_anameth$dt_info_anameth <- create_dt_info_anameth(path_pack)
+      rv_anameth$dt_at_new <- NULL
 
       ##############################
       # Make a new analysis method #
@@ -78,13 +79,22 @@ anameth_server <- function(id, path_pack){
                                dataTableOutput(session$ns("anameth_new_at"))
                       ),
                       tabPanel("Allele probability",
-                               br()
-                      ),
-                      tabPanel("Allele repeat correction",
-                               br()
+                               br(),
+                               selectInput(session$ns("anameth_new_alprob"), label = h4("Method"), choices = c("Dirichlet distribution", "Observed frequency")),
+                               br(),
+                               numericInput(session$ns("anameth_new_maf"), label = h4("Minimum allele frequency"), value = 0),
+                               br(),
+                               numericInput(session$ns("anameth_new_theta"), label = h4("Theta correction"), value = 0)
                       ),
                       tabPanel("Drop-in",
-                               br()
+                               br(),
+                               numericInput(session$ns("anameth_new_di_prob"), label = h4("Probability of drop-in"), value = 0.00335),
+                               br(),
+                               numericInput(session$ns("anameth_new_di_alpha"), label = h4("Shape parameter"), value = 1.22),
+                               br(),
+                               numericInput(session$ns("anameth_new_di_beta"), label = h4("Rate parameter"), value = 0.0503),
+                               br(),
+                               numericInput(session$ns("anameth_new_di_beta"), label = h4("Minimum drop-in peak height"), value = 50)
                       )
           ),
           footer = tagList(
@@ -117,9 +127,14 @@ anameth_server <- function(id, path_pack){
           n_mk <- length(markers)
 
           # Create a data.table for the AT
+          dt_at_new <- data.table(Marker = markers) # For saved data
+          dt_anameth_new_at <- copy(dt_at_new) # For displayed data
+          dt_at_new$AT <- 100
+          rv_anameth$dt_at_new <- dt_at_new
+          dt_anameth_new_at$AT <- numericColumn(n_mk, 2, value = 100, width = "75%")
+
+          # Display a data.table for the AT
           output$anameth_new_at <- renderDataTable(server = FALSE, {
-            dt_anameth_new_at <- data.table(Marker = markers)
-            dt_anameth_new_at$AT <- numericColumn(n_mk, 2, value = 100, width = "75%")
             datatable(
               dt_anameth_new_at,
               selection = "none",
@@ -129,6 +144,23 @@ anameth_server <- function(id, path_pack){
             )
           })
         }
+      })
+
+      # Change the state of the numericInput for the MAF
+      observeEvent(input$anameth_new_alprob, {
+        if(input$anameth_new_alprob == "Dirichlet distribution"){
+          disable("anameth_new_maf")
+        }else{
+          enable("anameth_new_maf")
+        }
+      })
+
+      # Update AT
+      observeEvent(input[["anameth_new_at_cell_edit"]], {
+        info <- input[["anameth_new_at_cell_edit"]]
+        dt_at_new <- rv_anameth$dt_at_new
+        dt_at_new[[info[1, "col"]]][info[1, "row"]] <- info[1, "value"]
+        rv_anameth$dt_at_new <- dt_at_new
       })
 
 

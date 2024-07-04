@@ -10,7 +10,8 @@ make_dt_par(
   dt_result_fsr,
   dt_result_dsr,
   dt_result_m2sr,
-  dt_result_gamma
+  dt_result_gamma,
+  kit_par
 )
 }
 \description{
