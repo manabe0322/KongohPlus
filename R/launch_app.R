@@ -41,8 +41,6 @@ KongohPlus <- function(){
                                         tabPanel("Validation mode")
                              ),
 
-                             tabPanel("Example files"),
-
                              tabPanel("Manual")
                   )
   )
