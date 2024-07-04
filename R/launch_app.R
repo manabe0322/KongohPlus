@@ -29,17 +29,16 @@ KongohPlus <- function(){
 
                              tabPanel("Project"),
 
-                             navbarMenu("Tools",
-                                        tabPanel("Example files"),
-                                        tabPanel("Support manual interpretation"),
-                                        est_par_ui("est_par"),
-                                        tabPanel("Validation mode")
-                             ),
-
                              navbarMenu("Setting",
                                         anameth_ui("anameth"),
                                         sr_ui("sr"),
                                         kit_ui("kit")
+                             ),
+
+                             navbarMenu("Tools",
+                                        tabPanel("Example files"),
+                                        est_par_ui("est_par"),
+                                        tabPanel("Validation mode")
                              ),
 
                              tabPanel("Example files"),
