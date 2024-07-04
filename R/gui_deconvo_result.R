@@ -125,7 +125,7 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
         })
 
         output$mk_pg <- renderUI({
-          selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_auto, selected = markers_auto[1])
+          selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_auto, selected = markers_auto[1], selectize = FALSE)
         })
 
         observeEvent(input$mk_pg, {

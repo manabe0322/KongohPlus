@@ -253,7 +253,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
       output$anameth_lr <- renderUI({
         anameth_all <- list.files(paste0(path_pack, "/extdata/anameth"))
         anameth_all <- gsub(".{4}$", "", anameth_all)
-        selectInput(session$ns("anameth_lr"), label = h4("Analysis method"), choices = anameth_all, selected = anameth_all[1])
+        selectInput(session$ns("anameth_lr"), label = h4("Analysis method"), choices = anameth_all, selected = anameth_all[1], selectize = FALSE)
       })
 
       observeEvent(input$anameth_lr, {
@@ -335,7 +335,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
 
         showModal(modalDialog(
           title = "Back stutter ratio",
-          selectInput(session$ns("mk_bsr"), label = h4("Marker"), choices = markers, selected = markers[1]),
+          selectInput(session$ns("mk_bsr"), label = h4("Marker"), choices = markers, selected = markers[1], selectize = FALSE),
           h4("Parameter"),
           dataTableOutput(session$ns("dt_param_bsr")),
           br(),
@@ -400,7 +400,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
 
         showModal(modalDialog(
           title = "Forward stutter ratio",
-          selectInput(session$ns("mk_fsr"), label = h4("Marker"), choices = markers, selected = markers[1]),
+          selectInput(session$ns("mk_fsr"), label = h4("Marker"), choices = markers, selected = markers[1], selectize = FALSE),
           h4("Parameter"),
           dataTableOutput(session$ns("dt_param_fsr")),
           br(),
@@ -465,7 +465,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
 
         showModal(modalDialog(
           title = "Double-back stutter ratio",
-          selectInput(session$ns("mk_dsr"), label = h4("Marker"), choices = markers, selected = markers[1]),
+          selectInput(session$ns("mk_dsr"), label = h4("Marker"), choices = markers, selected = markers[1], selectize = FALSE),
           h4("Parameter"),
           dataTableOutput(session$ns("dt_param_dsr")),
           br(),
@@ -530,7 +530,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
 
         showModal(modalDialog(
           title = "Minus 2-nt stutter ratio",
-          selectInput(session$ns("mk_m2sr"), label = h4("Marker"), choices = markers, selected = markers[1]),
+          selectInput(session$ns("mk_m2sr"), label = h4("Marker"), choices = markers, selected = markers[1], selectize = FALSE),
           dataTableOutput(session$ns("dt_param_m2sr")),
           easyClose = TRUE,
           footer = NULL

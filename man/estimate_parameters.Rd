@@ -12,7 +12,6 @@ estimate_parameters(
   dt_kit_set,
   kit_par,
   model_ae,
-  model_phr,
   model_sr_gen,
   model_sr_together,
   model_sr_uni,
@@ -44,8 +43,6 @@ estimate_parameters(
 \item{kit_par}{Kit name}
 
 \item{model_ae}{The stan model for the locus-specific amplification efficiency}
-
-\item{model_phr}{The stan model for the peak height ratio}
 
 \item{model_sr_gen}{The stan model for the general stutter ratio}
 

@@ -190,7 +190,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
       output$anameth_deconvo <- renderUI({
         anameth_all <- list.files(paste0(path_pack, "/extdata/anameth"))
         anameth_all <- gsub(".{4}$", "", anameth_all)
-        selectInput(session$ns("anameth_deconvo"), label = h4("Analysis method"), choices = anameth_all, selected = anameth_all[1])
+        selectInput(session$ns("anameth_deconvo"), label = h4("Analysis method"), choices = anameth_all, selected = anameth_all[1], selectize = FALSE)
       })
 
       observeEvent(input$anameth_deconvo, {

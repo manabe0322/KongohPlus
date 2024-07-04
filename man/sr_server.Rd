@@ -4,7 +4,7 @@
 \alias{sr_server}
 \title{sr_server}
 \usage{
-sr_server(id)
+sr_server(id, path_pack)
 }
 \description{
 The function to create the server module for the stutter ratio

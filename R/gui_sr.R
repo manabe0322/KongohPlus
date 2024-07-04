@@ -38,7 +38,7 @@ sr_ui <- function(id){
 #' sr_server
 #'
 #' @description The function to create the server module for the stutter ratio
-sr_server <- function(id){
+sr_server <- function(id, path_pack){
   moduleServer(
     id,
     function(input, output, session){

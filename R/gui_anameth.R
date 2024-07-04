@@ -80,7 +80,7 @@ anameth_server <- function(id, path_pack){
                       ),
                       tabPanel("Allele probability",
                                br(),
-                               selectInput(session$ns("anameth_new_alprob"), label = h4("Method"), choices = c("Dirichlet distribution", "Observed frequency")),
+                               selectInput(session$ns("anameth_new_alprob"), label = h4("Method"), choices = c("Dirichlet distribution", "Observed frequency"), selectize = FALSE),
                                br(),
                                numericInput(session$ns("anameth_new_maf"), label = h4("Minimum allele frequency"), value = 0),
                                br(),
@@ -108,7 +108,7 @@ anameth_server <- function(id, path_pack){
       output$anameth_new_param <- renderUI({
         param_all <- list.files(paste0(path_pack, "/extdata/param"))
         param_all <- gsub(".{4}$", "", param_all)
-        selectInput(session$ns("anameth_new_param"), label = h4("Parameter data"), choices = param_all)
+        selectInput(session$ns("anameth_new_param"), label = h4("Parameter data"), choices = param_all, selectize = FALSE)
       })
 
       observeEvent(input$anameth_new_param, {

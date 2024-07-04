@@ -95,11 +95,11 @@ lr_result_server <- function(id, rv_lr){
         })
 
         output$hyp_pg <- renderUI({
-          selectInput(session$ns("hyp_pg"), label = "Hypothesis", choices = c("Hp", "Hd"), selected = "Hp")
+          selectInput(session$ns("hyp_pg"), label = "Hypothesis", choices = c("Hp", "Hd"), selected = "Hp", selectize = FALSE)
         })
 
         output$mk_pg <- renderUI({
-          selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_auto, selected = markers_auto[1])
+          selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_auto, selected = markers_auto[1], selectize = FALSE)
         })
 
         observeEvent(input$hyp_pg, {

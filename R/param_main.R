@@ -43,9 +43,7 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param dt_kit The data.table of information on the kit
 #' @param dt_kit_set The data.table of the kit-setting
 #' @param kit_par Kit name
-#' @param n_parallel_chains The number of parallel chains
 #' @param model_ae The stan model for the locus-specific amplification efficiency
-#' @param model_phr The stan model for the peak height ratio
 #' @param model_sr_gen The stan model for the general stutter ratio
 #' @param model_sr_together The stan model for the stutter ratio when considering multiple loci together
 #' @param model_sr_uni The stan model for the uniform stutter ratio
@@ -57,8 +55,9 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param at_sex The analytical threshold of the sex-chromosomal markers
 #' @param min_n_motif_lus The minimum number of repeat motifs for considering the LUS model
 #' @param min_n_motif_multi The minimum number of repeat motifs for considering the multi-sequence model
+#' @param n_parallel_chains The number of parallel chains
 estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_par,
-                                model_ae, model_phr, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
+                                model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
                                 n_warmup, n_sampling, n_chains,
                                 pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi = 10,
                                 n_parallel_chains = detectCores(), n_simu = 2){
@@ -127,9 +126,10 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_p
   seq_count_auto <- tmp$seq_count_auto
 
   # Perform the MCMC for the locus-specific amplification efficiency
-  ae_result_list <- analyze_ae_main(markers_auto, model_ae,
-                                    pae_data_use, tph_data_use,
-                                    n_warmup, n_sampling, n_chains, n_parallel_chains)
+  #ae_result_list <- analyze_ae_main(markers_auto, model_ae,
+  #                                  pae_data_use, tph_data_use,
+  #                                  n_warmup, n_sampling, n_chains, n_parallel_chains)
+  print(model_ae)
 
   # Perform the MCMC for the back stutter ratio
   bsr_result_list <- analyze_bfdstr_main("BSR", markers_auto, meth_model_bsr_auto, model_sr_gen, model_sr_together,

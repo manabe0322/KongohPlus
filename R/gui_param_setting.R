@@ -148,7 +148,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       output$seq_data <- renderUI({
         ns <- session$ns
         seq_files <- list.files(paste0(path_pack, "/extdata/seq"))
-        selectInput(ns("seq_data"), label = h4("Sequence data"), choices = seq_files, selected = seq_files[1], multiple = FALSE)
+        selectInput(ns("seq_data"), label = h4("Sequence data"), choices = seq_files, selected = seq_files[1], multiple = FALSE, selectize = FALSE)
       })
 
       observeEvent(input$seq_data, {
@@ -203,7 +203,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       output$kit_par <- renderUI({
         kit_names <- list.files(paste0(path_pack, "/extdata/kit"))
         kit_names <- gsub(".csv", "", kit_names)
-        selectInput(session$ns("kit_par"), label = h4("Kit"), choices = kit_names, selected = kit_names[1], multiple = FALSE)
+        selectInput(session$ns("kit_par"), label = h4("Kit"), choices = kit_names, selected = kit_names[1], multiple = FALSE, selectize = FALSE)
       })
 
       # Output data.table
@@ -418,7 +418,6 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           model_sr_gen <- stan_package_model(name = "model_sr_gen", package = "KongohPlus")
           model_sr_together <- stan_package_model(name = "model_sr_together", package = "KongohPlus")
           model_sr_uni <- stan_package_model(name = "model_sr_uni", package = "KongohPlus")
-          model_phr <- stan_package_model(name = "model_phr", package = "KongohPlus")
           model_gamma <- stan_package_model(name = "model_gamma", package = "KongohPlus")
 
           results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_par,
