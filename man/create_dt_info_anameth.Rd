@@ -6,6 +6,9 @@
 \usage{
 create_dt_info_anameth(path_pack)
 }
+\arguments{
+\item{path_pack}{The package path}
+}
 \description{
 The function to create the data.table for information on the analysis methods
 }
