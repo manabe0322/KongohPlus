@@ -216,9 +216,48 @@ anameth_server <- function(id, path_pack){
         removeModal()
       })
 
+      ###########################
+      # Edit an analysis method #
+      ###########################
 
+      observeEvent(input$act_anameth_edit, {
+        pos_select <- input$dt_info_anameth_rows_selected
+        if(isTruthy(pos_select)){
 
+        }else{
+          showModal(modalDialog(title = "Error", "Select an analysis method!", easyClose = TRUE, footer = NULL))
+        }
+      })
 
+      #############################
+      # Delete an analysis method #
+      #############################
+
+      observeEvent(input$act_anameth_delete, {
+        pos_select <- input$dt_info_anameth_rows_selected
+        if(isTruthy(pos_select)){
+
+        }else{
+          showModal(modalDialog(title = "Error", "Select an analysis method!", easyClose = TRUE, footer = NULL))
+        }
+      })
+
+      ###########################
+      # Copy an analysis method #
+      ###########################
+
+      observeEvent(input$act_anameth_copy, {
+        pos_select <- input$dt_info_anameth_rows_selected
+        if(isTruthy(pos_select)){
+
+        }else{
+          showModal(modalDialog(title = "Error", "Select an analysis method!", easyClose = TRUE, footer = NULL))
+        }
+      })
+
+      ##############################################
+      # Display information on the analysis method #
+      ##############################################
 
       output$dt_info_anameth <- renderDataTable({
         dt_info_anameth <- rv_anameth$dt_info_anameth
