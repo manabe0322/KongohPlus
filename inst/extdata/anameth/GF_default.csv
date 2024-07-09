@@ -29,9 +29,9 @@ Genotype_filter,BSR,0.3
 Genotype_filter,FSR,0.15
 Genotype_filter,DSR,0.05
 Genotype_filter,M2SR,0.05
+Genotype_filter,N_Dropin,2
+Genotype_filter,H_Dropin,300
 Drop-in,Probability,0.00335
 Drop-in,Shape,1.22
 Drop-in,Rate,0.0503
-Drop-in,Min_height,50
-Drop-in,Max_height,300
-Drop-in,Max_number,2
+Drop-in,MT,50
