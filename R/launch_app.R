@@ -32,7 +32,8 @@ KongohPlus <- function(){
                              navbarMenu("Setting",
                                         anameth_ui("anameth"),
                                         sr_ui("sr"),
-                                        kit_ui("kit")
+                                        kit_ui("kit"),
+                                        size_ui("size")
                              ),
 
                              navbarMenu("Tools",
@@ -54,6 +55,7 @@ KongohPlus <- function(){
     anameth_server("anameth", path_pack)
     sr_server("sr", path_pack)
     kit_server("kit", path_pack)
+    size_server("size", path_pack)
   }
 
   shinyApp(ui, server)

@@ -18,7 +18,9 @@ sr_ui <- function(id){
            br(),
            sidebarLayout(
              sidebarPanel(width = 2,
-                          uiOutput(ns("anameth_sr")),
+                          uiOutput(ns("select_param_sr")),
+                          br(),
+                          uiOutput(ns("select_marker_sr")),
                           br(),
                           actionButton(ns("act_sr_edit"), "Edit"),
                           br(),
@@ -42,10 +44,18 @@ sr_server <- function(id, path_pack){
   moduleServer(
     id,
     function(input, output, session){
-      output$anameth_sr <- renderUI({
-        anameth_all <- list.files(paste0(path_pack, "/extdata/anameth"))
-        anameth_all <- gsub(".{4}$", "", anameth_all)
-        selectInput(session$ns("anameth_sr"), label = h4("Analysis method"), choices = anameth_all, selected = anameth_all[1])
+      output$select_param_sr <- renderUI({
+        param_all <- list.files(paste0(path_pack, "/extdata/param"))
+        param_all <- gsub(".{6}$", "", param_all)
+        selectInput(session$ns("select_param_sr"), label = h4("Parameter data"), choices = param_all, selected = param_all[1])
+      })
+
+      observeEvent(input$select_param_sr, {
+        output$select_marker_sr <- renderUI({
+          load(paste0(path_pack, "/extdata/param/", input$select_param_sr, ".Rdata"))
+          markers_sr <- unique(dt_alcor_combined$Marker)
+          selectInput(session$ns("select_marker_sr"), label = h4("Marker"), choices = markers_sr, selected = markers_sr[1])
+        })
       })
     }
   )
