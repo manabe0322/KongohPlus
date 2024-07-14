@@ -1,22 +1,3 @@
-#' extract_mp_cand
-#'
-#' @description The function to extract the candidate mixture proportions
-#' @param hnc The hypothesized number of contributors
-extract_mp_cand <- function(hnc){
-  if(hnc == 1){
-    mp_cand <- mp_cand_1p
-  }else if(hnc == 2){
-    mp_cand <- mp_cand_2p
-  }else if(hnc == 3){
-    mp_cand <- mp_cand_3p
-  }else if(hnc == 4){
-    mp_cand <- mp_cand_4p
-  }else{
-    mp_cand <- NULL
-  }
-  return(mp_cand)
-}
-
 #' extract_at_all_mk
 #'
 #' @description The function to extract ATs of all markers
