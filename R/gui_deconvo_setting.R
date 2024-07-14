@@ -246,7 +246,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          data_deconvo <- perform_deconvo(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_par, dt_alcor_combined, dt_al_prob, dt_gt_fltr, dt_dropin,
+          data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_at, dt_par, dt_alcor_combined, dt_al_prob, dt_gt_fltr, dt_dropin,
                                           hnc_deconvo, warmup, sampling, chains)
           rv_deconvo$data_deconvo <- data_deconvo
           rv_deconvo$dt_csp <- dt_csp

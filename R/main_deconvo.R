@@ -1,4 +1,4 @@
-perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_par, dt_alcor, dt_al_prob, dt_gt_fltr, dt_dropin,
+perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_at, dt_par, dt_alcor, dt_al_prob, dt_gt_fltr, dt_dropin,
                             hnc, warmup, sampling, chains){
   # Start computation
   start_time <- proc.time()
