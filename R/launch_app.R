@@ -25,7 +25,7 @@ KongohPlus <- function(){
 
                              deconvo_ui("deconvo"),
 
-                             lr_ui("lr"),
+                             #lr_ui("lr"),
 
                              tabPanel("Project"),
 
@@ -47,7 +47,7 @@ KongohPlus <- function(){
 
   server <- function(input, output, session){
     rv_file <- file_server("file", session)
-    #rv_deconvo <- deconvo_server("deconvo", path_pack, rv_file)
+    rv_deconvo <- deconvo_server("deconvo", path_pack, rv_file)
     #lr_server("lr", path_pack, rv_file, rv_deconvo)
 
     est_par_server("est_par", path_pack)

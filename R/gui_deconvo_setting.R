@@ -22,7 +22,7 @@ deconvo_setting_ui <- function(id){
                          #tags$style(HTML("table {table-layout: fixed; td > div.form-group > div.checkbox {margin:0px; bottom:10px;} td > div.form-group {position:absolute;}")),
                          tags$style(".datatables .display {margin-left: 0;}")
                        ),
-                       dataTableOutput(ns("dt_info_mk_display"))
+                       dataTableOutput(ns("dt_info_mk_display_deconvo"))
              )
            )
   )
@@ -62,23 +62,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
       rv_deconvo_setting$dt_csp <- NULL
       rv_deconvo_setting$dt_ref <- NULL
       rv_deconvo_setting$dt_af <- NULL
-      rv_deconvo_setting$anameth <- NULL
-      #rv_deconvo_setting$dt_anameth <- NULL
-      rv_deconvo_setting$dt_kit <- NULL
+      rv_deconvo_setting$dt_anameth <- NULL
       rv_deconvo_setting$dt_at <- NULL
-
       rv_deconvo_setting$dt_info_mk <- NULL
-
-      rv_deconvo_setting$dt_param <- NULL
-      rv_deconvo_setting$dt_alcor <- NULL
-      rv_deconvo_setting$gtc_fltr <- NULL
-      rv_deconvo_setting$gtc_prob <- NULL
-      #rv_deconvo_setting$dt_ae <- NULL
-      #rv_deconvo_setting$dt_bsr <- NULL
-      #rv_deconvo_setting$dt_fsr <- NULL
-      #rv_deconvo_setting$dt_dsr <- NULL
-      #rv_deconvo_setting$dt_m2sr <- NULL
-      #rv_deconvo_setting$dt_gamma <- NULL
       rv_deconvo_setting$warmup <- 1200
       rv_deconvo_setting$sampling <- 300
       rv_deconvo_setting$chains <- 4
@@ -91,7 +77,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
       rv_deconvo$anameth <- NULL
       rv_deconvo$dt_kit <- NULL
       rv_deconvo$dt_at <- NULL
-      rv_deconvo$dt_param <- NULL
+      rv_deconvo$dt_mcmc <- NULL
       rv_deconvo$dt_alcor <- NULL
       rv_deconvo$dt_gtc_fltr <- NULL
       rv_deconvo$dt_gtc_prob <- NULL
@@ -189,28 +175,17 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
 
       output$anameth_deconvo <- renderUI({
         anameth_all <- list.files(paste0(path_pack, "/extdata/anameth"))
-        anameth_all <- gsub(".{5}$", "", anameth_all)
+        anameth_all <- gsub(".{4}$", "", anameth_all)
         selectInput(session$ns("anameth_deconvo"), label = h4("Analysis method"), choices = anameth_all, selected = anameth_all[1], selectize = FALSE)
       })
 
       observeEvent(input$anameth_deconvo, {
         # Load the selected analysis method
-        anameth <- input$anameth_deconvo
-        rv_deconvo_setting$anameth <- anameth
-        dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", anameth, ".csv"))
+        rv_deconvo_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", input$anameth_deconvo, ".csv"))
 
-        # Extract data per column
-        folders <- dt_anameth[, Folder]
-        names <- dt_anameth[, Name]
-
-        # Load each data.table
-        rv_deconvo_setting$dt_kit <- fread(paste0(path_pack, "/extdata/kit/", names[folders == "kit"], ".csv"))
-        rv_deconvo_setting$dt_at <- dt_at <- fread(paste0(path_pack, "/extdata/at/", names[folders == "at"], ".csv"))
-        rv_deconvo_setting$dt_param <- fread(paste0(path_pack, "/extdata/param/", names[folders == "param"], ".csv"))
-        rv_deconvo_setting$dt_alcor <- fread(paste0(path_pack, "/extdata/alcor/", names[folders == "alcor"], ".csv"))
-        rv_deconvo_setting$dt_gtc_fltr <- dt_gtc_fltr <- fread(paste0(path_pack, "/extdata/gtc_fltr/", names[folders == "gtc_fltr"], ".csv"))
-        rv_deconvo_setting$dt_gtc_prob <- dt_gtc_prob <- fread(paste0(path_pack, "/extdata/gtc_prob/", names[folders == "gtc_prob"], ".csv"))
-
+        # Create a data.table for information on markers
+        rv_deconvo_setting$dt_at <- dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
+                                                        AT = dt_anameth$Value[dt_anameth$Category == "AT"])
         dt_info_mk <- copy(dt_at)
         dt_info_mk <- cbind(
           Ignore = rep(FALSE, nrow(dt_info_mk)),
@@ -218,27 +193,28 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         )
         rv_deconvo_setting$dt_info_mk <- dt_info_mk
 
-        dt_info_mk_display <- copy(dt_at)
-        dt_info_mk_display <- cbind(
-          Ignore = shinyInput(checkboxInput, nrow(dt_info_mk_display), "checkb"),
-          dt_info_mk_display
+        # Create a displayed data.table for information on markers
+        dt_info_mk_display_deconvo <- copy(dt_at)
+        dt_info_mk_display_deconvo <- cbind(
+          Ignore = shinyInput(checkboxInput, nrow(dt_info_mk_display_deconvo), "checkb"),
+          dt_info_mk_display_deconvo
         )
 
-        output$dt_info_mk_display <- renderDataTable(server = FALSE, {
+        output$dt_info_mk_display_deconvo <- renderDataTable(server = FALSE, {
           datatable(
-            dt_info_mk_display,
+            dt_info_mk_display_deconvo,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_info_mk_display), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "650px",
+            options = list(dom = "t", iDisplayLength = nrow(dt_info_mk_display_deconvo), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "650px",
                            columnDefs = list(list(targets = 0:2, width = "100px"))),
             rownames = FALSE,
             escape = FALSE,
-            callback = JS(js("dt_info_mk_display", session$ns))
+            callback = JS(js("dt_info_mk_display_deconvo", session$ns))
           )# %>% formatStyle(0, target = "row", lineHeight = "75%")
         })
       })
 
-      observeEvent(input[["dt_info_mk_display_cell_edit"]], {
-        info <- input[["dt_info_mk_display_cell_edit"]]
+      observeEvent(input[["dt_info_mk_display_deconvo_cell_edit"]], {
+        info <- input[["dt_info_mk_display_deconvo_cell_edit"]]
         dt_info_mk <- rv_deconvo_setting$dt_info_mk
         dt_info_mk[[info[1, "col"]]][info[1, "row"]] <- info[1, "value"]
         rv_deconvo_setting$dt_info_mk <- dt_info_mk
@@ -250,32 +226,36 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         dt_csp <- rv_deconvo_setting$dt_csp
         dt_ref <- rv_deconvo_setting$dt_ref
         dt_af <- rv_deconvo_setting$dt_af
-        anameth <- rv_deconvo_setting$anameth
-        dt_kit <- rv_deconvo_setting$dt_kit
-        dt_at <- rv_deconvo_setting$dt_at
-        dt_param <- rv_deconvo_setting$dt_param
-        dt_alcor <- rv_deconvo_setting$dt_alcor
-        dt_gtc_fltr <- rv_deconvo_setting$dt_gtc_fltr
-        dt_gtc_prob <- rv_deconvo_setting$dt_gtc_prob
+        dt_anameth <- rv_deconvo_setting$dt_anameth
         warmup <- rv_deconvo_setting$warmup
         sampling <- rv_deconvo_setting$sampling
         chains <- rv_deconvo_setting$chains
 
+        dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Value[dt_anameth$Category == "Kit"], ".csv"))
+        dt_at <- rv_deconvo_setting$dt_at
+        load(paste0(path_pack, "/extdata/param/", dt_anameth$Value[dt_anameth$Category == "Parameter"], ".Rdata"))
+        dt_al_prob <- data.table(Subcategory = dt_amameth$Subcategory[dt_anameth$Category == "Allele_probability"],
+                                 Value = dt_amameth$Value[dt_anameth$Category == "Allele_probability"])
+        dt_gt_fltr <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype_filter"],
+                                 Value = dt_anameth$Value[dt_anameth$Category == "Genotype_filter"])
+        dt_dropin <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Drop-in"],
+                                Value = dt_anameth$Value[dt_anameth$Category == "Drop-in"])
+
         # Check input files and setting
-        error_message <- check_main_file(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor, method = "deconvo")
+        error_message <- check_main_file(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor_combined, method = "deconvo")
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          data_deconvo <- perform_deconvo(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, hnc_deconvo,
-                                          warmup, sampling, chains)
+          data_deconvo <- perform_deconvo(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_par, dt_alcor_combined, dt_al_prob, dt_gt_fltr, dt_dropin,
+                                          hnc_deconvo, warmup, sampling, chains)
           rv_deconvo$data_deconvo <- data_deconvo
           rv_deconvo$dt_csp <- dt_csp
           rv_deconvo$dt_ref <- dt_ref
           rv_deconvo$dt_af <- dt_af
-          rv_deconvo$anameth <- anameth
+          #rv_deconvo$anameth <- anameth
           rv_deconvo$dt_kit <- dt_kit
           rv_deconvo$dt_at <- dt_at
-          rv_deconvo$dt_param <- dt_param
+          rv_deconvo$dt_mcmc <- dt_mcmc
           rv_deconvo$dt_alcor <- dt_alcor
           rv_deconvo$dt_gtc_fltr <- dt_gtc_fltr
           rv_deconvo$dt_gtc_prob <- dt_gtc_prob

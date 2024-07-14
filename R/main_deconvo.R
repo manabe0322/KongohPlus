@@ -1,5 +1,5 @@
-perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, dt_alcor, dt_gtc_fltr, dt_gtc_prob, hnc,
-                            warmup, sampling, chains, di_alpha = 1.22, di_beta = 0.0503, logprob_di = log(0.00335), di_min = 49){
+perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_par, dt_alcor, dt_al_prob, dt_gt_fltr, dt_dropin,
+                            hnc, warmup, sampling, chains){
   # Start computation
   start_time <- proc.time()
 
@@ -7,6 +7,8 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers_auto <- unique(dt_kit_auto[, Marker])
   n_mk <- length(markers_auto)
+
+  # Number of replicates
   n_rep <- length(unique(dt_csp[, SampleName]))
 
   # Extract AT
@@ -20,34 +22,44 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
   min_size <- min(unlist(sizes_list))
 
   # Information on consideration of each stutter
-  sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_param)
+  sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_par)
 
   # Extract parameters for AE and M2SR
-  ae_alpha_all_mk <- extract_param_all_mk("AE", "Alpha", markers_auto, dt_param)
-  m2sr_all_mk <- extract_param_all_mk("M2SR", "Myu", markers_auto, dt_param)
+  ae_alpha_all_mk <- extract_param_all_mk("AE", "Alpha", markers_auto, dt_par)
+  m2sr_all_mk <- extract_param_all_mk("M2SR", "Myu", markers_auto, dt_par)
 
-  # Extract filters to remove unrealistic genotype combinations
-  gtc_fltr_type <- dt_gtc_fltr[, Type]
-  gtc_fltr_value <- dt_gtc_fltr[, Value]
-  bsr_fltr <- gtc_fltr_value[gtc_fltr_type == "BSR"]
-  fsr_fltr <- gtc_fltr_value[gtc_fltr_type == "FSR"]
-  dsr_fltr <- gtc_fltr_value[gtc_fltr_type == "DSR"]
-  m2sr_fltr <- gtc_fltr_value[gtc_fltr_type == "M2SR"]
-  n_dropin_fltr <- gtc_fltr_value[gtc_fltr_type == "N_DropIn"]
-  h_dropin_fltr <- gtc_fltr_value[gtc_fltr_type == "H_DropIn"]
-
-  # Extract methods to estimate genotype probabilities
-  gtc_prob_param <- dt_gtc_prob[, Parameter]
-  gtc_prob_value <- dt_gtc_prob[, Value]
-  theta <- as.numeric(gtc_prob_value[gtc_prob_param == "Theta"])
+  # Extract methods to estimate allele probabilities
+  al_prob_subcategory <- dt_al_prob[, Subcategory]
+  al_prob_value <- dt_al_prob[, Value]
+  method_al_prob <- al_prob_value[al_prob_subcategory == "Method"]
+  maf <- as.numeric(al_prob_value[al_prob_subcategory == "Maf"])
+  theta <- as.numeric(al_prob_value[al_prob_param == "Theta"])
 
   # Set allele probabilities
-  tmp <- set_al_prob(markers_auto, dt_af, peaks_list)
+  tmp <- set_al_prob(markers_auto, dt_af, peaks_list, method_al_prob, maf)
   pop_al_list <- tmp$pop_al_list
   pop_prob_list <- tmp$pop_prob_list
 
+  # Extract filters to remove unrealistic genotype combinations
+  gt_fltr_subcategory <- dt_gt_fltr[, Subcategory]
+  gt_fltr_value <- as.numeric(dt_gt_fltr[, Value])
+  bsr_fltr <- gt_fltr_value[gt_fltr_subcategory == "BSR"]
+  fsr_fltr <- gt_fltr_value[gt_fltr_subcategory == "FSR"]
+  dsr_fltr <- gt_fltr_value[gt_fltr_subcategory == "DSR"]
+  m2sr_fltr <- gt_fltr_value[gt_fltr_subcategory == "M2SR"]
+  n_dropin_fltr <- gt_fltr_value[gt_fltr_subcategory == "N_Dropin"]
+  h_dropin_fltr <- gt_fltr_value[gt_fltr_subcategory == "H_Dropin"]
+
+  # Extract drop-in parameters
+  dropin_subcategory <- dt_dropin[, Subcategory]
+  dropin_value <- as.numeric(dt_dropin[, Value])
+  logprob_di <- log(dropin_value[dropin_subcategory == "Probability"])
+  shape_di <- dropin_value[dropin_subcategory == "Shape"]
+  rate_di <- dropin_value[dropin_subcategory == "Rate"]
+  mt_di <- dropin_value[dropin_subcategory == "MT"]
+
   # Extract gamma parameter
-  cv <- extract_cv(dt_param)
+  cv <- as.numeric(dt_par$Cv[dt_par$Parameter == "Gamma"])
 
   setkey(dt_alcor, Marker)
 
@@ -175,7 +187,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
       oph_dedup1_ignore_all_mk[[i]] <- oph_dedup1_tmp[index_ignore]
 
       if(length(index_dropin) != 0){
-        loglike_di_all_mk[[i]] <- log(dgamma(oph_dedup1_tmp[index_dropin] - di_min, di_alpha, di_beta)) + logprob_di
+        loglike_di_all_mk[[i]] <- log(dgamma(oph_dedup1_tmp[index_dropin] - mt_di + 1, shape_di, rate_di)) + logprob_di
       }
     }
   }
@@ -322,11 +334,11 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
                          MP = mp[hnc:1],
                          Deg = deg[hnc:1])
 
-  dt_param <- data.table(Parameter = c("Log probability in stan", "Total peak height", rep("lambda", hnc), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
-                         Contributor = c("-", "-", paste0("U", 1:hnc), paste0("U", 1:hnc), paste0("U", 1:hnc), rep("-", n_mk)),
-                         Marker = c("-", "-", rep("-", 3 * hnc), markers_auto),
-                         Estimated_value = c(lp, tph, lambda[hnc:1], mp[hnc:1], deg[hnc:1], ae),
-                         Rhat = c(rhat_lp, rhat_tph, rhat_lambda[hnc:1], rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
+  dt_mcmc <- data.table(Parameter = c("Log probability in stan", "Total peak height", rep("lambda", hnc), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
+                        Contributor = c("-", "-", paste0("U", 1:hnc), paste0("U", 1:hnc), paste0("U", 1:hnc), rep("-", n_mk)),
+                        Marker = c("-", "-", rep("-", 3 * hnc), markers_auto),
+                        Estimated_value = c(lp, tph, lambda[hnc:1], mp[hnc:1], deg[hnc:1], ae),
+                        Rhat = c(rhat_lp, rhat_tph, rhat_lambda[hnc:1], rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
 
   # End computation
   end_time <- proc.time()
@@ -342,7 +354,7 @@ perform_deconvo <- function(path_pack, dt_csp, dt_af, dt_kit, dt_at, dt_param, d
               "dt_pg_list" = dt_pg_list,
               "dt_log10like" = dt_log10like,
               "dt_mpdeg" = dt_mpdeg,
-              "dt_param" = dt_param,
+              "dt_mcmc" = dt_mcmc,
               "traceplot" = traceplot,
               "comp_time" = comp_time))
 }
