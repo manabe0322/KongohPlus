@@ -198,6 +198,7 @@ anameth_server <- function(id, path_pack){
 
             # Extract autosomal markers
             dt_kit_select <- fread(paste0(path_pack, "/extdata/kit/", anameth_new_kit, ".csv"))
+            dt_kit_select <- change_data_type_kit(dt_kit_select)
             markers <- unique(dt_kit_select$Marker[dt_kit_select$Chr == "Auto"])
             n_mk <- length(markers)
 

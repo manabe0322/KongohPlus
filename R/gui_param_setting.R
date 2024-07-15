@@ -166,7 +166,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       react_dt_kit_set0 <- reactive({
         # Extract autosomal markers
         kit <- input$kit_par
-        rv_output$dt_kit <- dt_kit <- fread(paste0(path_pack, "/extdata/kit/", kit, ".csv"))
+        dt_kit <- fread(paste0(path_pack, "/extdata/kit/", kit, ".csv"))
+        rv_output$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
         dt_kit_auto <- extract_kit_auto(dt_kit)
         markers_par <- unique(dt_kit_auto[, Marker])
         dyes_par <- extract_dye(dt_kit_auto, markers_par)

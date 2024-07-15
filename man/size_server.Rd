@@ -4,7 +4,7 @@
 \alias{size_server}
 \title{size_server}
 \usage{
-size_server(id)
+size_server(id, path_pack)
 }
 \description{
 The function to create the server module for the allele sizes

@@ -36,6 +36,7 @@ create_dt_info_kit <- function(path_pack){
     info_dye <- info_auto_mk <- info_sex_mk <- rep("", n_kit)
     for(i in 1:n_kit){
       dt_kit_1 <- fread(paste0(path_pack, "/extdata/kit/", fn_kit[i]))
+      dt_kit_1 <- change_data_type_kit(dt_kit_1)
       info_dye[i] <- length(unique(dt_kit_1$Dye))
       info_auto_mk[i] <- length(unique(dt_kit_1$Marker[dt_kit_1$Chr == "Auto"]))
       info_sex_mk[i] <- length(unique(dt_kit_1$Marker[dt_kit_1$Chr == "Sex"]))

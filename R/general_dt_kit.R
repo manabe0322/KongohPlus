@@ -1,3 +1,15 @@
+#' change_data_type_kit
+#'
+#' @description The function to change data type of dt_kit
+#' @param dt_kit The data.table of the information on the kit
+change_data_type_kit <- function(dt_kit){
+  col_char <- c("Marker", "Dye", "Chr", "Allele")
+  dt_kit[, (col_char) := lapply(.SD, as.character), .SDcols = col_char]
+  col_numeric <- c("Length_of_the_repeat_unit", "Size")
+  dt_kit[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
+  return(dt_kit)
+}
+
 #' extract_kit_auto
 #'
 #' @description The function to extract information on the autosomal markers from the data.table of the information on the kit

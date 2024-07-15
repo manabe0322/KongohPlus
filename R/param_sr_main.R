@@ -98,6 +98,13 @@ make_dt_alcor_combined <- function(dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr){
   dt_alcor_combined <- copy(dt_alcor_bsr)
   dt_alcor_combined <- full_join(dt_alcor_combined, dt_alcor_fsr, by = c("Marker", "Allele"))
   dt_alcor_combined <- full_join(dt_alcor_combined, dt_alcor_dsr, by = c("Marker", "Allele"))
+
+  # Change the data type in each column
+  col_char <- c("Marker", "Model_BSR", "Allele", "Model_FSR", "Model_DSR")
+  dt_alcor_combined[, (col_char) := lapply(.SD, as.character), .SDcols = col_char]
+  col_numeric <- c("Corrected_BSR", "Average_BSR", "Corrected_FSR", "Average_FSR", "Corrected_DSR", "Average_DSR")
+  dt_alcor_combined[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
+
   return(dt_alcor_combined)
 }
 

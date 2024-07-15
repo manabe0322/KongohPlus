@@ -232,6 +232,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         chains <- rv_deconvo_setting$chains
 
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Value[dt_anameth$Category == "Kit"], ".csv"))
+        dt_kit <- change_data_type_kit(dt_kit)
         dt_at <- rv_deconvo_setting$dt_at
         load(paste0(path_pack, "/extdata/param/", dt_anameth$Value[dt_anameth$Category == "Parameter"], ".Rdata"))
         dt_al_prob <- data.table(Subcategory = dt_amameth$Subcategory[dt_anameth$Category == "Allele_probability"],
