@@ -303,6 +303,75 @@ size_server <- function(id, path_pack){
         }, ignoreInit = TRUE)
       })
 
+      #########################
+      # Delete an allele size #
+      #########################
+
+      observeEvent(input$act_size_delete, {
+        pos_select <- input$dt_info_size_rows_selected
+        if(isTruthy(pos_select)){
+          showModal(modalDialog(
+            title = "Delete an allele size",
+            "Click Ok button to delete the selected allele size.",
+            footer = tagList(
+              actionButton(session$ns("act_delete_size_ok"), "Ok"),
+              modalButton("Cancel")
+            ),
+            size = "l"
+          ))
+
+          observeEvent(input$act_delete_size_ok, {
+            dt_kit <- rv_size$dt_kit
+            dt_info_size <- rv_size$dt_info_size
+            kit <- input$select_kit_size
+            marker <- input$select_marker_size
+
+            info_marker <- dt_info_size$Marker
+            info_dye <- dt_info_size$Dye
+            info_rep <- dt_info_size$Length_of_the_repeat_unit
+            info_chr <- dt_info_size$Chr
+            info_allele <- dt_info_size$Allele
+            info_size <- dt_info_size$Size
+
+            if(length(info_marker) == 1){
+              dt_info_size_delete <- data.table(Marker = info_marker,
+                                                Dye = info_dye,
+                                                Length_of_the_repeat_unit = info_rep,
+                                                Chr = info_chr,
+                                                Allele = "",
+                                                Size = NA)
+            }else{
+              dt_info_size_delete <- data.table(Marker = info_marker[- pos_select],
+                                                Dye = info_dye[- pos_select],
+                                                Length_of_the_repeat_unit = info_rep[- pos_select],
+                                                Chr = info_chr[- pos_select],
+                                                Allele = info_allele[- pos_select],
+                                                Size = info_size[- pos_select])
+            }
+            rv_size$dt_info_size_delete <- dt_info_size_delete
+
+            # Update dt_kit
+            index_target <- which(dt_kit$Marker == marker)
+            if(index_target[1] == 1){
+              dt_kit_other_mk <- dt_kit[dt_kit$Marker != marker, ]
+              dt_kit_delete <- rbind(dt_info_size_delete, dt_kit_other_mk)
+            }else if(index_target[length(index_target)] == nrow(dt_kit)){
+              dt_kit_other_mk <- dt_kit[dt_kit$Marker != marker, ]
+              dt_kit_delete <- rbind(dt_kit_other_mk, dt_info_size_delete)
+            }else{
+              dt_kit_other_mk_1 <- dt_kit[1:(index_target[1] - 1), ]
+              dt_kit_other_mk_2 <- dt_kit[(index_target[length(index_target)] + 1):nrow(dt_kit), ]
+              dt_kit_delete <- rbind(dt_kit_other_mk_1, dt_info_size_delete, dt_kit_other_mk_2)
+            }
+            write.csv(dt_kit_delete, paste0(path_pack, "/extdata/kit/", kit, ".csv"), row.names = FALSE)
+            rv_size$dt_kit <- dt_kit_delete
+
+          }, ignoreInit = TRUE)
+        }else{
+          showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
+        }
+      })
+
       #######################################
       # Display information on allele sizes #
       #######################################

@@ -465,7 +465,6 @@ anameth_server <- function(id, path_pack){
           ))
 
           observeEvent(input$act_delete_anameth_ok, {
-            pos_select <- input$dt_info_anameth_rows_selected
             dt_info_anameth <- rv_anameth$dt_info_anameth
             file.remove(paste0(path_pack, "/extdata/anameth/", dt_info_anameth$Name[pos_select], ".csv"))
             rv_anameth$dt_info_anameth <- dt_info_anameth[-pos_select, ]
