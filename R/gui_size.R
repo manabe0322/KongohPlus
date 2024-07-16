@@ -316,8 +316,7 @@ size_server <- function(id, path_pack){
             selection = list(mode = "single", target = "row"),
             options = list(dom = "t", iDisplayLength = nrow(dt_info_size), ordering = FALSE, autoWidth = TRUE),
             rownames = FALSE
-          ) %>%
-            formatRound(columns = c("Size"), digits = 2)
+          )
         }
       })
     }
