@@ -88,6 +88,10 @@ size_server <- function(id, path_pack){
       rv_size$dt_info_size <- create_init_dt_info_size(path_pack)
       rv_size$dt_kit <- load_first_dt_kit(path_pack)
 
+      #################################################################
+      # Define selectInput and update information on the allele sizes #
+      #################################################################
+
       output$select_kit_size <- renderUI({
         kit_all <- list.files(paste0(path_pack, "/extdata/kit"))
         kit_all <- gsub(".{4}$", "", kit_all)
@@ -114,13 +118,14 @@ size_server <- function(id, path_pack){
 
       observeEvent(input$act_size_edit, {
         pos_select <- input$dt_info_size_rows_selected
-        dt_kit <- rv_size$dt_kit
-        dt_info_size <- rv_size$dt_info_size
-        kit <- input$select_kit_size
-        marker <- input$select_marker_size
-        chr <- dt_info_size$Chr[1]
-        allele <- dt_info_size$Allele[pos_select]
         if(isTruthy(pos_select)){
+          dt_kit <- rv_size$dt_kit
+          dt_info_size <- rv_size$dt_info_size
+          kit <- input$select_kit_size
+          marker <- input$select_marker_size
+          chr <- dt_info_size$Chr[1]
+          allele <- dt_info_size$Allele[pos_select]
+
           showModal(modalDialog(
             sidebarLayout(
               sidebarPanel(width = 3,
@@ -152,9 +157,9 @@ size_server <- function(id, path_pack){
 
             # Update information on allele sizes
             dt_info_size$Size[pos_select] <- size_edit
+            rv_size$dt_info_size <- dt_info_size
 
             # Update dt_kit
-            rv_size$dt_info_size <- dt_info_size
             index_target <- intersect(which(dt_kit$Marker == marker), which(dt_kit$Allele == allele))
             dt_kit$Size[index_target] <- size_edit
             rv_size$dt_kit <- dt_kit
@@ -193,6 +198,7 @@ size_server <- function(id, path_pack){
             ),
             mainPanel(width = 9,
                       textInput(session$ns("allele_add"), label = h4("Allele"), value = ""),
+                      br(),
                       numericInput(session$ns("size_add"), label = h4("Allele size"), value = NULL)
             )
           ),
