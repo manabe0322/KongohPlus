@@ -258,7 +258,7 @@ size_server <- function(id, path_pack){
             # Change data type of alleles (numeric to character)
             alleles_char <- rep("", n_al)
             for(i in 1:n_al){
-              al_1 <- as.numeric(alleles[i])
+              al_1 <- alleles[i]
               if(al_1 %% 1 == 0){
                 alleles_char[i] <- as.character(round(al_1, 0))
               }else{
@@ -354,7 +354,7 @@ size_server <- function(id, path_pack){
                                                 Allele = info_allele[- pos_select],
                                                 Size = info_size[- pos_select])
             }
-            rv_size$dt_info_size_delete <- dt_info_size_delete
+            rv_size$dt_info_size <- dt_info_size_delete
 
             # Update dt_kit
             index_target <- which(dt_kit$Marker == marker)
@@ -372,6 +372,7 @@ size_server <- function(id, path_pack){
             write.csv(dt_kit_delete, paste0(path_pack, "/extdata/kit/", kit, ".csv"), row.names = FALSE)
             rv_size$dt_kit <- dt_kit_delete
 
+            removeModal()
           }, ignoreInit = TRUE)
         }else{
           showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))

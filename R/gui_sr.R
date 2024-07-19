@@ -147,32 +147,37 @@ sr_server <- function(id, path_pack){
             ),
             size = "l"
           ))
-
-          observeEvent(input$act_edit_sr_save, {
-            bsr_edit <- input$bsr_edit
-            fsr_edit <- input$fsr_edit
-            dsr_edit <- input$dsr_edit
-
-            # Update information on the stutter ratio
-            dt_info_sr$Average_BSR[pos_select] <- bsr_edit
-            dt_info_sr$Average_FSR[pos_select] <- fsr_edit
-            dt_info_sr$Average_DSR[pos_select] <- dsr_edit
-            rv_sr$dt_info_sr <- dt_info_sr
-
-            # Update dt_alcor_combined
-            load(paste0(path_pack, "/extdata/param/", param, ".Rdata"))
-            index_target <- intersect(which(dt_alcor_combined$Marker == marker), which(dt_alcor_combined$Allele == allele))
-            dt_alcor_combined$Average_BSR[index_target] <- bsr_edit
-            dt_alcor_combined$Average_FSR[index_target] <- fsr_edit
-            dt_alcor_combined$Average_DSR[index_target] <- dsr_edit
-            save(list = c("dt_par", "dt_alcor_combined"), file = paste0(path_pack, "/extdata/param/", param, ".Rdata"))
-
-            removeModal()
-          }, ignoreInit = TRUE)
         }else{
           showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
         }
       })
+
+      observeEvent(input$act_edit_sr_save, {
+        pos_select <- input$dt_info_sr_rows_selected
+        dt_info_sr <- rv_sr$dt_info_sr
+        param <- input$select_param_sr
+        marker <- input$select_marker_sr
+        allele <- dt_info_sr$Allele[pos_select]
+        bsr_edit <- input$bsr_edit
+        fsr_edit <- input$fsr_edit
+        dsr_edit <- input$dsr_edit
+
+        # Update information on the stutter ratio
+        dt_info_sr$Average_BSR[pos_select] <- bsr_edit
+        dt_info_sr$Average_FSR[pos_select] <- fsr_edit
+        dt_info_sr$Average_DSR[pos_select] <- dsr_edit
+        rv_sr$dt_info_sr <- dt_info_sr
+
+        # Update dt_alcor_combined
+        load(paste0(path_pack, "/extdata/param/", param, ".Rdata"))
+        index_target <- intersect(which(dt_alcor_combined$Marker == marker), which(dt_alcor_combined$Allele == allele))
+        dt_alcor_combined$Average_BSR[index_target] <- bsr_edit
+        dt_alcor_combined$Average_FSR[index_target] <- fsr_edit
+        dt_alcor_combined$Average_DSR[index_target] <- dsr_edit
+        save(list = c("dt_par", "dt_alcor_combined"), file = paste0(path_pack, "/extdata/param/", param, ".Rdata"))
+
+        removeModal()
+      }, ignoreInit = TRUE)
 
       ######################################
       # Add the stutter ratio of an allele #
@@ -203,76 +208,162 @@ sr_server <- function(id, path_pack){
             )
           ),
           footer = tagList(
-            disabled(actionButton(session$ns("act_add_sr_save"), "Save")),
+            actionButton(session$ns("act_add_sr_save"), "Save"),
             modalButton("Cancel")
           ),
           size = "l"
         ))
-
-        observeEvent(input$act_add_sr_save, {
-          allele_add <- input$allele_add
-          bsr_add <- input$bsr_add
-          fsr_add <- input$fsr_add
-          dsr_add <- input$dsr_add
-
-          info_allele_add <- c(dt_info_sr$Allele, allele_add)
-          info_bsr_add <- c(dt_info_sr$Average_BSR, bsr_add)
-          info_fsr_add <- c(dt_info_sr$Average_FSR, fsr_add)
-          info_dsr_add <- c(dt_info_sr$Average_DSR, dsr_add)
-
-          # Sort alleles
-          alleles <- as.numeric(info_allele_add)
-          index_sort <- order(alleles)
-          alleles <- alleles[index_sort]
-          info_bsr_add <- info_bsr_add[index_sort]
-          info_fsr_add <- info_fsr_add[index_sort]
-          info_dsr_add <- info_dsr_add[index_sort]
-
-          # Change data type of alleles (numeric to character)
-          n_al <- length(alleles)
-          alleles_char <- rep("", n_al)
-          for(i in 1:n_al){
-            al_1 <- as.numeric(alleles[i])
-            if(al_1 %% 1 == 0){
-              alleles_char[i] <- as.character(round(al_1, 0))
-            }else{
-              alleles_char[i] <- as.character(round(al_1, 1))
-            }
-          }
-
-          # Update information on the stutter ratio
-          dt_info_sr_add <- data.table(Allele = alleles_char,
-                                       Average_BSR = info_bsr_add,
-                                       Average_FSR = info_fsr_add,
-                                       Average_DSR = info_dsr_add)
-          rv_sr$dt_info_sr <- dt_info_sr_add
-
-          # Update dt_alcor_combined
-          ######### dt_alcor_combined_mk
-          load(paste0(path_pack, "/extdata/param/", param, ".Rdata"))
-          index_target <- which(dt_alcor_combined$Marker == marker)
-          if(index_target[1] == 1){
-            dt_alcor_combined_other_mk <- dt_alcor_combined[dtalcor_combined$Marker != marker, ]
-            dt_alcor_combined <- rbind(dt_alcor_combined_mk, dt_alcor_combined_other_mk)
-          }else if(index_target[length(index_target)] == nrow(dt_alcor_combined)){
-            dt_alcor_combined_other_mk <- dt_alcor_combined[dtalcor_combined$Marker != marker, ]
-            dt_alcor_combined <- rbind(dt_alcor_combined_other_mk, dt_alcor_combined_mk)
-          }else{
-            dt_alcor_combined_other_mk_1 <- dt_alcor_combined[1:(index_target[1] - 1), ]
-            dt_alcor_combined_other_mk_2 <- dt_alcor_combined[(index_target[length(index_target)] + 1):nrow(dt_alcor_combined), ]
-            dt_alcor_combined <- rbind(dt_alcor_combined_other_mk_1, dt_alcor_combined_mk, dt_alcor_combined_other_mk_2)
-          }
-          save(list = c("dt_par", "dt_alcor_combined"), file = paste0(path_pack, "/extdata/param/", param, ".Rdata"))
-
-          removeModal()
-        }, ignoreInit = TRUE)
       })
+
+      observeEvent(input$act_add_sr_save, {
+        dt_info_sr <- rv_sr$dt_info_sr
+        param <- input$select_param_sr
+        marker <- input$select_marker_sr
+        allele_add <- input$allele_add
+        bsr_add <- input$bsr_add
+        fsr_add <- input$fsr_add
+        dsr_add <- input$dsr_add
+
+        info_allele_add <- c(dt_info_sr$Allele, allele_add)
+        info_bsr_add <- c(dt_info_sr$Average_BSR, bsr_add)
+        info_fsr_add <- c(dt_info_sr$Average_FSR, fsr_add)
+        info_dsr_add <- c(dt_info_sr$Average_DSR, dsr_add)
+
+        # Sort alleles
+        alleles <- as.numeric(info_allele_add)
+        index_sort <- order(alleles)
+        alleles <- alleles[index_sort]
+        info_bsr_add <- info_bsr_add[index_sort]
+        info_fsr_add <- info_fsr_add[index_sort]
+        info_dsr_add <- info_dsr_add[index_sort]
+
+        # Change data type of alleles (numeric to character)
+        n_al <- length(alleles)
+        alleles_char <- rep("", n_al)
+        for(i in 1:n_al){
+          al_1 <- alleles[i]
+          if(al_1 %% 1 == 0){
+            alleles_char[i] <- as.character(round(al_1, 0))
+          }else{
+            alleles_char[i] <- as.character(round(al_1, 1))
+          }
+        }
+
+        # Update information on the stutter ratio
+        dt_info_sr_add <- data.table(Allele = alleles_char,
+                                     Average_BSR = info_bsr_add,
+                                     Average_FSR = info_fsr_add,
+                                     Average_DSR = info_dsr_add)
+        rv_sr$dt_info_sr <- dt_info_sr_add
+
+        # Update dt_alcor_combined
+        load(paste0(path_pack, "/extdata/param/", param, ".Rdata"))
+        index_allele_add <- which(alleles == allele_add)
+        dt_alcor_combined_mk <- dt_alcor_combined[dt_alcor_combined$Marker == marker, ]
+        marker_alcor <- rep(marker, n_al)
+        model_bsr_alcor <- rep(dt_alcor_combined_mk$Model_BSR[1], n_al)
+        model_bsr_alcor[index_allele_add] <- "Manual"
+        model_fsr_alcor <- rep(dt_alcor_combined_mk$Model_FSR[1], n_al)
+        model_fsr_alcor[index_allele_add] <- "Manual"
+        model_dsr_alcor <- rep(dt_alcor_combined_mk$Model_DSR[1], n_al)
+        model_dsr_alcor[index_allele_add] <- "Manual"
+
+        if(index_allele_add == 1){
+          corrected_bsr_alcor <- c(NA, dt_alcor_combined_mk$Corrected_BSR[2:n_al])
+          corrected_fsr_alcor <- c(NA, dt_alcor_combined_mk$Corrected_FSR[2:n_al])
+          corrected_dsr_alcor <- c(NA, dt_alcor_combined_mk$Corrected_DSR[2:n_al])
+        }else if(index_allele_add == n_al){
+          corrected_bsr_alcor <- c(dt_alcor_combined_mk$Corrected_BSR[1:(n_al - 1)], NA)
+          corrected_fsr_alcor <- c(dt_alcor_combined_mk$Corrected_FSR[1:(n_al - 1)], NA)
+          corrected_dsr_alcor <- c(dt_alcor_combined_mk$Corrected_DSR[1:(n_al - 1)], NA)
+        }else{
+          corrected_bsr_alcor <- c(dt_alcor_combined_mk$Corrected_BSR[1:(index_allele_add - 1)], NA, dt_alcor_combined_mk$Corrected_BSR[(index_allele_add + 1):n_al])
+          corrected_fsr_alcor <- c(dt_alcor_combined_mk$Corrected_FSR[1:(index_allele_add - 1)], NA, dt_alcor_combined_mk$Corrected_FSR[(index_allele_add + 1):n_al])
+          corrected_dsr_alcor <- c(dt_alcor_combined_mk$Corrected_DSR[1:(index_allele_add - 1)], NA, dt_alcor_combined_mk$Corrected_DSR[(index_allele_add + 1):n_al])
+        }
+
+        dt_alcor_combined_mk_add <- data.table(Marker = marker_alcor,
+                                               Model_BSR = model_bsr_alcor,
+                                               Allele = alleles_char,
+                                               Corrected_BSR = corrected_bsr_alcor,
+                                               Average_BSR = info_bsr_add,
+                                               Model_FSR = model_fsr_alcor,
+                                               Corrected_FSR = corrected_fsr_alcor,
+                                               Average_FSR = info_fsr_add,
+                                               Model_DSR = model_dsr_alcor,
+                                               Corrected_DSR = corrected_dsr_alcor,
+                                               Average_DSR = info_dsr_add)
+
+        index_target <- which(dt_alcor_combined$Marker == marker)
+        if(index_target[1] == 1){
+          dt_alcor_combined_other_mk <- dt_alcor_combined[dt_alcor_combined$Marker != marker, ]
+          dt_alcor_combined <- rbind(dt_alcor_combined_mk_add, dt_alcor_combined_other_mk)
+        }else if(index_target[length(index_target)] == nrow(dt_alcor_combined)){
+          dt_alcor_combined_other_mk <- dt_alcor_combined[dt_alcor_combined$Marker != marker, ]
+          dt_alcor_combined <- rbind(dt_alcor_combined_other_mk, dt_alcor_combined_mk_add)
+        }else{
+          dt_alcor_combined_other_mk_1 <- dt_alcor_combined[1:(index_target[1] - 1), ]
+          dt_alcor_combined_other_mk_2 <- dt_alcor_combined[(index_target[length(index_target)] + 1):nrow(dt_alcor_combined), ]
+          dt_alcor_combined <- rbind(dt_alcor_combined_other_mk_1, dt_alcor_combined_mk_add, dt_alcor_combined_other_mk_2)
+        }
+        save(list = c("dt_par", "dt_alcor_combined"), file = paste0(path_pack, "/extdata/param/", param, ".Rdata"))
+
+        removeModal()
+      }, ignoreInit = TRUE)
 
       #########################################
       # Delete the stutter ratio of an allele #
       #########################################
 
+      observeEvent(input$act_sr_delete, {
+        pos_select <- input$dt_info_sr_rows_selected
 
+        if(isTruthy(pos_select)){
+          showModal(modalDialog(
+            title = "Delete the stutter ratio of an allele",
+            "Click Ok button to delete the stutter ratio of the selected allele.",
+            footer = tagList(
+              actionButton(session$ns("act_delete_sr_ok"), "Ok"),
+              modalButton("Cancel")
+            ),
+            size = "l"
+          ))
+        }else{
+          showModal(modalDialog(title = "Error", "Select a row!", easyClose = TRUE, footer = NULL))
+        }
+      })
+
+      observeEvent(input$act_delete_sr_ok, {
+        pos_select <- input$dt_info_sr_rows_selected
+        dt_info_sr <- rv_sr$dt_info_sr
+        param <- input$select_param_sr
+        marker <- input$select_marker_sr
+
+        # Update information on the stutter ratio
+        rv_sr$dt_info_sr <- dt_info_sr[- pos_select, ]
+
+        # Update dt_alcor_combined
+        load(paste0(path_pack, "/extdata/param/", param, ".Rdata"))
+        dt_alcor_combined_mk_delete <- copy(dt_alcor_combined)
+        dt_alcor_combined_mk_delete <- dt_alcor_combined_mk_delete[dt_alcor_combined_mk_delete$Marker == marker, ]
+        dt_alcor_combined_mk_delete <- dt_alcor_combined_mk_delete[- pos_select, ]
+
+        index_target <- which(dt_alcor_combined$Marker == marker)
+        if(index_target[1] == 1){
+          dt_alcor_combined_other_mk <- dt_alcor_combined[dt_alcor_combined$Marker != marker, ]
+          dt_alcor_combined <- rbind(dt_alcor_combined_mk_delete, dt_alcor_combined_other_mk)
+        }else if(index_target[length(index_target)] == nrow(dt_alcor_combined)){
+          dt_alcor_combined_other_mk <- dt_alcor_combined[dt_alcor_combined$Marker != marker, ]
+          dt_alcor_combined <- rbind(dt_alcor_combined_other_mk, dt_alcor_combined_mk_delete)
+        }else{
+          dt_alcor_combined_other_mk_1 <- dt_alcor_combined[1:(index_target[1] - 1), ]
+          dt_alcor_combined_other_mk_2 <- dt_alcor_combined[(index_target[length(index_target)] + 1):nrow(dt_alcor_combined), ]
+          dt_alcor_combined <- rbind(dt_alcor_combined_other_mk_1, dt_alcor_combined_mk_delete, dt_alcor_combined_other_mk_2)
+        }
+        save(list = c("dt_par", "dt_alcor_combined"), file = paste0(path_pack, "/extdata/param/", param, ".Rdata"))
+
+        removeModal()
+      }, ignoreInit = TRUE)
 
       ############################################
       # Display information on the stutter ratio #
