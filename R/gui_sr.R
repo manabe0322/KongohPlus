@@ -4,15 +4,6 @@
 sr_ui <- function(id){
   ns <- NS(id)
 
-  # Analysis method毎に以下の機能をつける
-  # ローカス毎にデータテーブル
-  # 値を修正するモーダル
-  # 値を追加するモーダル
-  # 値を消す機能
-  # alcorにあるデータにおける各SRのmodel名は、マニュアルで追加・修正したものについては"Manual"等に変更する
-  # 今後: ファイルを取り込み、一括で上書きする機能をつける
-  # 今後: 内挿・外挿により推定する機能をつける
-
   tabPanel("Average stutter ratio",
            titlePanel("Average stutter ratio"),
            br(),

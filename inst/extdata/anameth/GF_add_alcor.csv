@@ -23,7 +23,7 @@ AT,D1S1656,100
 AT,D12S391,100
 AT,D2S1338,100
 Allele_probability,Method,Dirichlet
-Allele_probability,Maf,
+Allele_probability,Maf,0
 Allele_probability,Theta,0
 Genotype_filter,BSR,0.3
 Genotype_filter,FSR,0.15
