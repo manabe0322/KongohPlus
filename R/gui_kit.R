@@ -67,6 +67,20 @@ kit_server <- function(id, path_pack){
       rv_kit <- reactiveValues()
       rv_kit$dt_info_kit <- create_dt_info_kit(path_pack)
 
+
+
+      # New
+      ## side-panel
+        # Edit marker -> set marker name, dye, and Chr (Auto or sex)
+        # Add marker  -> set marker name, dye, and Chr (Auto or sex)
+        # Delete marker
+      ## main-panel
+        # data.table
+          # Marker
+          # Dye
+          # Chr (Auto or sex)
+
+
       ##############################################
       # Display information on the analysis method #
       ##############################################
