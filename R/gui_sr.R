@@ -323,7 +323,7 @@ sr_server <- function(id, path_pack){
             title = "Delete the stutter ratio of an allele",
             "Click Ok button to delete the stutter ratio of the selected allele.",
             footer = tagList(
-              actionButton(session$ns("act_delete_sr_ok"), "Ok"),
+              actionButton(session$ns("act_delete_sr_ok"), "OK"),
               modalButton("Cancel")
             ),
             size = "l"
