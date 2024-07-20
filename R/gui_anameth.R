@@ -25,7 +25,7 @@ anameth_ui <- function(id){
                          tags$style(HTML("table {table-layout: fixed;")),
                          tags$style(".datatables .display {margin-left: 0;}")
                        ),
-                       dataTableOutput(ns("dt_info_anameth"))
+                       dataTableOutput(ns("display_info_amameth"))
              )
            )
   )
@@ -112,10 +112,10 @@ anameth_server <- function(id, path_pack){
 
       rv_anameth <- reactiveValues()
       rv_anameth$dt_info_anameth <- create_dt_info_anameth(path_pack)
+      rv_anameth$dt_anameth <- NULL
+
       rv_anameth$anameth_new_kit <- NULL
       rv_anameth$dt_at_new <- NULL
-      rv_anameth$anameth_edit_parameter <- NULL
-      rv_anameth$anameth_edit_kit <- NULL
       rv_anameth$dt_at_edit <- NULL
 
       ##############################
@@ -285,29 +285,18 @@ anameth_server <- function(id, path_pack){
       ###########################
 
       observeEvent(input$act_anameth_edit, {
-        pos_select <- input$dt_info_anameth_rows_selected
+        pos_select <- input$display_info_amameth_rows_selected
         if(isTruthy(pos_select)){
           # Load the selected analysis method
           dt_info_anameth <- rv_anameth$dt_info_anameth
           anameth_select <- dt_info_anameth$Name[pos_select]
-          dt_anameth_select <- fread(paste0(path_pack, "/extdata/anameth/", anameth_select, ".csv"))
+          rv_anameth$dt_anameth <- dt_anameth_select <- fread(paste0(path_pack, "/extdata/anameth/", anameth_select, ".csv"))
 
           # Set the parameter name
-          rv_anameth$anameth_edit_parameter <- parameter_name <- dt_anameth_select$Value[dt_anameth_select$Category == "Parameter"]
+          parameter_name <- dt_anameth_select$Value[dt_anameth_select$Category == "Parameter"]
 
           # Set the kit name
-          rv_anameth$anameth_edit_kit <- kit_name <- dt_anameth_select$Value[dt_anameth_select$Category == "Kit"]
-
-          # Extract autosomal markers
-          markers <- dt_anameth_select$Subcategory[dt_anameth_select$Category == "AT"]
-          n_mk <- length(markers)
-
-          # Create a data.table for the AT
-          dt_at_edit <- data.table(Marker = markers) # For saved data
-          dt_at_edit_display <- copy(dt_at_edit) # For displayed data
-          dt_at_edit$AT <- as.numeric(dt_anameth_select$Value[dt_anameth_select$Category == "AT"])
-          rv_anameth$dt_at_edit <- dt_at_edit
-          dt_at_edit_display$AT <- numericColumn(n_mk, 2, val = dt_at_edit$AT, width = "75%")
+          kit_name <- dt_anameth_select$Value[dt_anameth_select$Category == "Kit"]
 
           # Extract values for the allele probability
           alprob_method <- dt_anameth_select$Value[dt_anameth_select$Category == "Allele_probability" & dt_anameth_select$Subcategory == "Method"]
@@ -384,75 +373,81 @@ anameth_server <- function(id, path_pack){
             ),
             size = "l"
           ))
-
-          output$anameth_edit_at <- renderDataTable(server = FALSE, {
-            datatable(
-              dt_at_edit_display,
-              selection = "none",
-              options = list(dom = "t", iDisplayLength = nrow(dt_at_edit_display), ordering = FALSE, autoWidth = TRUE),
-              rownames = FALSE,
-              escape = FALSE,
-              callback = JS(js("anameth_edit_at", 2))
-            )
-          })
-
-          # Update AT
-          observeEvent(input[["anameth_edit_at_cell_edit"]], {
-            info <- input[["anameth_edit_at_cell_edit"]]
-            dt_at_edit <- rv_anameth$dt_at_edit
-            dt_at_edit[[info[1, "col"]]][info[1, "row"]] <- info[1, "value"]
-            rv_anameth$dt_at_edit <- dt_at_edit
-          })
-
-          # Save the analysis method
-          observeEvent(input$act_edit_anameth_save, {
-            # Extract settings
-            anameth_edit_input_name <- input$anameth_edit_input_name
-            anameth_edit_parameter <- rv_anameth$anameth_edit_parameter
-            anameth_edit_kit <- rv_anameth$anameth_edit_kit
-            dt_at_edit <- rv_anameth$dt_at_edit
-            markers <- dt_at_edit$Marker
-            ats <- dt_at_edit$AT
-            anameth_edit_alprob <- input$anameth_edit_alprob
-            anameth_edit_maf <- input$anameth_edit_maf
-            anameth_edit_theta <- input$anameth_edit_theta
-            anameth_edit_gt_fltr_bsr <- input$anameth_edit_gt_fltr_bsr
-            anameth_edit_gt_fltr_fsr <- input$anameth_edit_gt_fltr_fsr
-            anameth_edit_gt_fltr_dsr <- input$anameth_edit_gt_fltr_dsr
-            anameth_edit_gt_fltr_m2sr <- input$anameth_edit_gt_fltr_m2sr
-            anameth_edit_gt_fltr_n_di <- input$anameth_edit_gt_fltr_n_di
-            anameth_edit_gt_fltr_h_di <- input$anameth_edit_gt_fltr_h_di
-            anameth_edit_di_prob <- input$anameth_edit_di_prob
-            anameth_edit_di_shape <- input$anameth_edit_di_shape
-            anameth_edit_di_rate <- input$anameth_edit_di_rate
-            anameth_edit_di_mt <- input$anameth_edit_di_mt
-
-            # Create a data.table for the new analysis method
-            dt_anameth_new <- data.table(Category = c("Parameter", "Kit", rep("AT", length(markers)), rep("Allele_probability", 3), rep("Genotype_filter", 6), rep("Drop-in", 4)),
-                                         Subcategory = c("", "", markers, "Method", "Maf", "Theta", "BSR", "FSR", "DSR", "M2SR", "N_Dropin", "H_Dropin", "Probability", "Shape", "Rate", "MT"),
-                                         Value = c(anameth_edit_parameter, anameth_edit_kit, ats,
-                                                   anameth_edit_alprob, anameth_edit_maf, anameth_edit_theta,
-                                                   anameth_edit_gt_fltr_bsr, anameth_edit_gt_fltr_fsr, anameth_edit_gt_fltr_dsr, anameth_edit_gt_fltr_m2sr, anameth_edit_gt_fltr_n_di, anameth_edit_gt_fltr_h_di,
-                                                   anameth_edit_di_prob, anameth_edit_di_shape, anameth_edit_di_rate, anameth_edit_di_mt))
-            file.remove(paste0(path_pack, "/extdata/anameth/", anameth_select, ".csv"))
-            write.csv(dt_anameth_new, paste0(path_pack, "/extdata/anameth/", anameth_edit_input_name, ".csv"), row.names = FALSE)
-
-            # Update information on the analysis methods
-            rv_anameth$dt_info_anameth <- create_dt_info_anameth(path_pack)
-
-            removeModal()
-          }, ignoreInit = TRUE)
         }else{
           showModal(modalDialog(title = "Error", "Select an analysis method!", easyClose = TRUE, footer = NULL))
         }
       })
+
+      output$anameth_edit_at <- renderDataTable(server = FALSE, {
+        # Extract autosomal markers
+        dt_anameth_select <- rv_anameth$dt_anameth
+        markers <- dt_anameth_select$Subcategory[dt_anameth_select$Category == "AT"]
+        n_mk <- length(markers)
+
+        # Create a data.table for the AT
+        dt_at_edit <- data.table(Marker = markers) # For saved data
+        dt_at_edit_display <- copy(dt_at_edit) # For displayed data
+        dt_at_edit$AT <- as.numeric(dt_anameth_select$Value[dt_anameth_select$Category == "AT"])
+        rv_anameth$dt_at_edit <- dt_at_edit
+        dt_at_edit_display$AT <- numericColumn(n_mk, 2, val = dt_at_edit$AT, width = "75%")
+
+        datatable(
+          dt_at_edit_display,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_at_edit_display), ordering = FALSE, autoWidth = TRUE),
+          rownames = FALSE,
+          escape = FALSE,
+          callback = JS(js("anameth_edit_at", 2))
+        )
+      })
+
+      # Update AT
+      observeEvent(input[["anameth_edit_at_cell_edit"]], {
+        info <- input[["anameth_edit_at_cell_edit"]]
+        dt_at_edit <- rv_anameth$dt_at_edit
+        dt_at_edit[[info[1, "col"]]][info[1, "row"]] <- info[1, "value"]
+        rv_anameth$dt_at_edit <- dt_at_edit
+      })
+
+      # Save the analysis method
+      observeEvent(input$act_edit_anameth_save, {
+        # Extract settings
+        pos_select <- input$display_info_amameth_rows_selected
+        dt_info_anameth <- rv_anameth$dt_info_anameth
+        anameth_select <- dt_info_anameth$Name[pos_select]
+
+        anameth_edit_input_name <- input$anameth_edit_input_name
+        dt_anameth_select <- rv_anameth$dt_anameth
+        parameter_name <- dt_anameth_select$Value[dt_anameth_select$Category == "Parameter"]
+        kit_name <- dt_anameth_select$Value[dt_anameth_select$Category == "Kit"]
+
+        dt_at_edit <- rv_anameth$dt_at_edit
+        markers <- dt_at_edit$Marker
+        ats <- dt_at_edit$AT
+
+        # Create a data.table for the new analysis method
+        dt_anameth_new <- data.table(Category = c("Parameter", "Kit", rep("AT", length(markers)), rep("Allele_probability", 3), rep("Genotype_filter", 6), rep("Drop-in", 4)),
+                                     Subcategory = c("", "", markers, "Method", "Maf", "Theta", "BSR", "FSR", "DSR", "M2SR", "N_Dropin", "H_Dropin", "Probability", "Shape", "Rate", "MT"),
+                                     Value = c(parameter_name, kit_name, ats,
+                                               input$anameth_edit_alprob, input$anameth_edit_maf, input$anameth_edit_theta,
+                                               input$anameth_edit_gt_fltr_bsr, input$anameth_edit_gt_fltr_fsr, input$anameth_edit_gt_fltr_dsr, input$anameth_edit_gt_fltr_m2sr,
+                                               input$anameth_edit_gt_fltr_n_di, input$anameth_edit_gt_fltr_h_di,
+                                               input$anameth_edit_di_prob, input$anameth_edit_di_shape, input$anameth_edit_di_rate, input$anameth_edit_di_mt))
+        file.remove(paste0(path_pack, "/extdata/anameth/", anameth_select, ".csv"))
+        write.csv(dt_anameth_new, paste0(path_pack, "/extdata/anameth/", anameth_edit_input_name, ".csv"), row.names = FALSE)
+
+        # Update information on the analysis methods
+        rv_anameth$dt_info_anameth <- create_dt_info_anameth(path_pack)
+
+        removeModal()
+      }, ignoreInit = TRUE)
 
       #############################
       # Delete an analysis method #
       #############################
 
       observeEvent(input$act_anameth_delete, {
-        pos_select <- input$dt_info_anameth_rows_selected
+        pos_select <- input$display_info_amameth_rows_selected
         if(isTruthy(pos_select)){
           showModal(modalDialog(
             title = "Delete an analysis method",
@@ -463,24 +458,25 @@ anameth_server <- function(id, path_pack){
             ),
             size = "l"
           ))
-
-          observeEvent(input$act_delete_anameth_ok, {
-            dt_info_anameth <- rv_anameth$dt_info_anameth
-            file.remove(paste0(path_pack, "/extdata/anameth/", dt_info_anameth$Name[pos_select], ".csv"))
-            rv_anameth$dt_info_anameth <- dt_info_anameth[-pos_select, ]
-            removeModal()
-          }, ignoreInit = TRUE)
         }else{
           showModal(modalDialog(title = "Error", "Select an analysis method!", easyClose = TRUE, footer = NULL))
         }
       })
+
+      observeEvent(input$act_delete_anameth_ok, {
+        pos_select <- input$display_info_amameth_rows_selected
+        dt_info_anameth <- rv_anameth$dt_info_anameth
+        file.remove(paste0(path_pack, "/extdata/anameth/", dt_info_anameth$Name[pos_select], ".csv"))
+        rv_anameth$dt_info_anameth <- dt_info_anameth[-pos_select, ]
+        removeModal()
+      }, ignoreInit = TRUE)
 
       ###########################
       # Copy an analysis method #
       ###########################
 
       observeEvent(input$act_anameth_copy, {
-        pos_select <- input$dt_info_anameth_rows_selected
+        pos_select <- input$display_info_amameth_rows_selected
         if(isTruthy(pos_select)){
           # Update information on the analysis method
           dt_info_anameth <- rv_anameth$dt_info_anameth
@@ -503,7 +499,7 @@ anameth_server <- function(id, path_pack){
       # Display information on the analysis method #
       ##############################################
 
-      output$dt_info_anameth <- renderDataTable({
+      output$display_info_amameth <- renderDataTable({
         dt_info_anameth <- rv_anameth$dt_info_anameth
         datatable(
           dt_info_anameth,
