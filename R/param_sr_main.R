@@ -243,7 +243,7 @@ make_dt_aic <- function(markers_auto, meth_model_sr_auto, aics_sr_all_mk,
                        Rhat_Slope = sr_rhat_slopes,
                        Rhat_Intercept = sr_rhat_intercepts,
                        Rhat_Sigma = sr_rhat_sigmas,
-                       Rhat_Likelihood = sr_rhat_lps
+                       Rhat_Lp = sr_rhat_lps
                        )
   return(dt_aic)
 }
