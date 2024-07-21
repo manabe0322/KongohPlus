@@ -1,21 +1,17 @@
-perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_at, dt_par, dt_alcor, dt_al_prob, dt_gt_fltr, dt_dropin,
+perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_alcor, dt_al_prob, dt_gt_fltr, dt_dropin,
                             hnc, warmup, sampling, chains){
   # Start computation
   start_time <- proc.time()
-
-  # Extract autosomal markers
-  dt_kit_auto <- extract_kit_auto(dt_kit)
-  markers_auto <- unique(dt_kit_auto[, Marker])
-  n_mk <- length(markers_auto)
 
   # Number of replicates
   n_rep <- length(unique(dt_csp[, SampleName]))
 
   # Extract AT
-  at_all_mk <- extract_at_all_mk(markers_auto, dt_at)
+  markers_use <- dt_info_mk$Marker[!dt_info_mk$Ignore]
+  ats_use <- dt_info_mk$Marker[!dt_info_mk$Ignore]
 
   # Extract peak data from crime stain profiles
-  tmp <- make_peak_data(dt_csp, dt_kit_auto, markers_auto, at_all_mk)
+  tmp <- make_peak_data(dt_csp, dt_kit_auto, markers_use, at_all_mk)
   peaks_list <- tmp$peaks_list
   sizes_list <- tmp$sizes_list
   heights_list <- tmp$heights_list
