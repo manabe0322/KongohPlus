@@ -1,66 +1,12 @@
-#' check_csp_alcor
-#'
-#' @description The function to check whether the corrected alleles for all peaks are registered or not
-#' @param dt_csp The data.table of the crime stain profiles
-#' @param dt_at The data.table of the analytical threshold
-#' @param dt_alcor The data.table of the corrected alleles
-#' @param markers_auto A vector of the autosomal markers
-check_csp_alcor <- function(dt_csp, dt_at, dt_alcor, markers_auto){
-  error_message_alcor <- ""
-
-  names_csp <- names(dt_csp)
-  index_allele <- grep("Allele", names_csp)
-  index_height <- grep("Height", names_csp)
-
-  n_mk <- length(markers_auto)
-
-  setkey(dt_csp, SampleName)
-  sn_all_csp <- unique(dt_csp[, SampleName])
-
-  setkey(dt_at, Marker)
-  setkey(dt_alcor, Marker)
-
-  for(i in 1:length(sn_all_csp)){
-    sn1_csp <- sn_all_csp[i]
-    dt_csp_sn1 <- dt_csp[sn1_csp]
-    setkey(dt_csp_sn1, Marker)
-    for(j in 1:n_mk){
-      mk <- markers_auto[j]
-      dt_csp_sn1_mk1 <- dt_csp_sn1[mk]
-      peaks <- as.numeric(dt_csp_sn1_mk1[, index_allele, with = FALSE])
-      peaks <- peaks[!is.na(peaks)]
-      heights <- as.numeric(dt_csp_sn1_mk1[, index_height, with = FALSE])
-      heights <- heights[!is.na(heights)]
-
-      dt_at_mk1 <- dt_at[mk]
-      at <- as.numeric(dt_at_mk1[, AT])
-      peaks <- peaks[heights >= at]
-
-      dt_alcor_mk1 <- dt_alcor[mk]
-      sr_models <- unique(c(dt_alcor_mk1[, Model_BSR], dt_alcor_mk1[, Model_FSR], dt_alcor_mk1[, Model_DSR]))
-      if(any(sr_models != "Not consider")){
-        alleles <- as.numeric(dt_alcor_mk1[, Allele])
-        bool_not_register <- !is.element(peaks, alleles)
-        if(any(bool_not_register)){
-          error_message_alcor <- paste0(error_message_alcor, "  - ", mk, ": ", paste(peaks[bool_not_register], collapse = ", "), "<br>")
-        }
-      }
-    }
-  }
-  return(error_message_alcor)
-}
-
 #' check_main_file
 #'
 #' @description The function to check the main files
 #' @param dt_csp The data.table of the crime stain profiles
 #' @param dt_ref The data.table of the reference profiles
 #' @param dt_af The data.table of the allele frequencies
-#' @param dt_kit The data.table of the kit information
-#' @param dt_at The data.table of the analytical threshold
-#' @param dt_alcor The data.table of the corrected alleles
+#' @param markers_auto A character vector of the autosomal markers
 #' @param method 'deconvo' (deconvolution) or 'lr' (likelihood ratio)
-check_main_file <- function(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor, method = "deconvo"){
+check_main_file <- function(dt_csp, dt_ref, dt_af, markers_auto, method){
   error_message <- ""
   bool_load_all <- TRUE
 
@@ -81,10 +27,6 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor, meth
   }
 
   if(bool_load_all){
-    # Extract autosomal markers
-    dt_kit_auto <- extract_kit_auto(dt_kit)
-    markers_auto <- unique(dt_kit_auto[, Marker])
-
     setkey(dt_csp, SampleName)
     sn_all_csp <- unique(dt_csp[, SampleName])
     for(i in 1:length(sn_all_csp)){
@@ -106,15 +48,66 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor, meth
         }
       }
     }
+  }
 
-    # Check whether the corrected alleles for all peaks are registered or not
-    if(error_message == ""){
-      error_message_alcor <- check_csp_alcor(dt_csp, dt_at, dt_alcor, markers_auto)
-      if(error_message_alcor != ""){
-        error_message <- paste0(error_message, "Average stutter ratios of the following alleles are not registered!<br>", error_message_alcor)
+  return(error_message)
+}
+
+#' check_csp_alcor
+#'
+#' @description The function to check whether the corrected alleles for all peaks are registered or not
+#' @param dt_csp The data.table of the crime stain profiles
+#' @param dt_info_mk The data.table of the information on the ignored marker and the analytical thresholds for each marker
+#' @param dt_alcor_combined The data.table of the corrected alleles
+check_csp_alcor <- function(dt_csp, dt_info_mk, dt_alcor_combined){
+  message_alcor <- ""
+
+  markers_use <- dt_info_mk$Marker[!dt_info_mk$Ignore]
+  n_mk <- length(markers_use)
+
+  if(n_mk == 0){
+    message_alcor <- "error"
+  }else{
+    names_csp <- names(dt_csp)
+    index_allele <- grep("Allele", names_csp)
+    index_height <- grep("Height", names_csp)
+
+    setkey(dt_csp, SampleName)
+    sn_all_csp <- unique(dt_csp[, SampleName])
+
+    setkey(dt_info_mk, Marker)
+    setkey(dt_alcor_combined, Marker)
+
+    n_warning_mk <- 0
+    for(i in 1:length(sn_all_csp)){
+      sn1_csp <- sn_all_csp[i]
+      dt_csp_sn1 <- dt_csp[sn1_csp]
+      setkey(dt_csp_sn1, Marker)
+      for(j in 1:n_mk){
+        mk <- markers_use[j]
+        dt_csp_sn1_mk1 <- dt_csp_sn1[mk]
+        peaks <- as.character(dt_csp_sn1_mk1[, index_allele, with = FALSE])
+        heights <- as.numeric(dt_csp_sn1_mk1[, index_height, with = FALSE])
+        peaks <- peaks[!is.na(heights)]
+        heights <- heights[!is.na(heights)]
+
+        dt_info_mk1 <- dt_info_mk[mk]
+        at <- as.numeric(dt_info_mk1[, AT])
+        peaks <- peaks[heights >= at]
+
+        dt_alcor_combined_mk1 <- dt_alcor_combined[mk]
+        alleles_registerd <- dt_alcor_combined_mk1$Allele
+
+        if(!all(is.element(peaks, alleles_registerd))){
+          n_warning_mk <- n_warning_mk + 1
+          if(n_warning_mk == 1){
+            message_alcor <- "Stutter ratios of the following alleles are regarded as zero.<br>"
+          }
+          message_alcor <- paste0(message_alcor, "  - ", mk, ": ", paste(peaks[!is.element(peaks, alleles_registerd)], collapse = ", "), "<br>")
+        }
       }
     }
   }
 
-  return(error_message)
+  return(message_alcor)
 }

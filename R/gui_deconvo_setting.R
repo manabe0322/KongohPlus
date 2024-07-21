@@ -18,10 +18,6 @@ deconvo_setting_ui <- function(id){
                           actionButton(ns("act_analyze_deconvo"), label = "Analyze", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 9,
-                       tags$head(
-                         #tags$style(HTML("table {table-layout: fixed; td > div.form-group > div.checkbox {margin:0px; bottom:10px;} td > div.form-group {position:absolute;}")),
-                         tags$style(".datatables .display {margin-left: 0;}")
-                       ),
                        dataTableOutput(ns("dt_info_mk_display_deconvo"))
              )
            )
@@ -63,7 +59,6 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
       rv_deconvo_setting$dt_ref <- NULL
       rv_deconvo_setting$dt_af <- NULL
       rv_deconvo_setting$dt_anameth <- NULL
-      rv_deconvo_setting$dt_at <- NULL
       rv_deconvo_setting$dt_info_mk <- NULL
       rv_deconvo_setting$warmup <- 1200
       rv_deconvo_setting$sampling <- 300
@@ -184,8 +179,8 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         rv_deconvo_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", input$anameth_deconvo, ".csv"))
 
         # Create a data.table for information on markers
-        rv_deconvo_setting$dt_at <- dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
-                                                        AT = dt_anameth$Value[dt_anameth$Category == "AT"])
+        dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
+                            AT = dt_anameth$Value[dt_anameth$Category == "AT"])
         dt_info_mk <- copy(dt_at)
         dt_info_mk <- cbind(
           Ignore = rep(FALSE, nrow(dt_info_mk)),
@@ -204,7 +199,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
           datatable(
             dt_info_mk_display_deconvo,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_info_mk_display_deconvo), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "650px",
+            options = list(dom = "t", iDisplayLength = nrow(dt_info_mk_display_deconvo), ordering = FALSE, autoWidth = TRUE,
                            columnDefs = list(list(targets = 0:2, width = "100px"))),
             rownames = FALSE,
             escape = FALSE,
@@ -231,40 +226,54 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         sampling <- rv_deconvo_setting$sampling
         chains <- rv_deconvo_setting$chains
 
+        # Extract information on the kit
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Value[dt_anameth$Category == "Kit"], ".csv"))
         dt_kit <- change_data_type_kit(dt_kit)
-        dt_at <- rv_deconvo_setting$dt_at
+        dt_kit_auto <- extract_kit_auto(dt_kit)
+        markers_auto <- unique(dt_kit_auto[, Marker])
+
         load(paste0(path_pack, "/extdata/param/", dt_anameth$Value[dt_anameth$Category == "Parameter"], ".Rdata"))
-        dt_al_prob <- data.table(Subcategory = dt_amameth$Subcategory[dt_anameth$Category == "Allele_probability"],
-                                 Value = dt_amameth$Value[dt_anameth$Category == "Allele_probability"])
+        dt_al_prob <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Allele_probability"],
+                                 Value = dt_anameth$Value[dt_anameth$Category == "Allele_probability"])
         dt_gt_fltr <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype_filter"],
                                  Value = dt_anameth$Value[dt_anameth$Category == "Genotype_filter"])
         dt_dropin <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Drop-in"],
                                 Value = dt_anameth$Value[dt_anameth$Category == "Drop-in"])
 
-        # Check input files and setting
-        error_message <- check_main_file(dt_csp, dt_ref, dt_af, dt_kit, dt_at, dt_alcor_combined, method = "deconvo")
+        dt_info_mk <- rv_deconvo_setting$dt_info_mk
+
+        # Check input files
+        error_message <- check_main_file(dt_csp, dt_ref, dt_af, markers_auto, method = "deconvo")
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_at, dt_par, dt_alcor_combined, dt_al_prob, dt_gt_fltr, dt_dropin,
-                                          hnc_deconvo, warmup, sampling, chains)
-          rv_deconvo$data_deconvo <- data_deconvo
-          rv_deconvo$dt_csp <- dt_csp
-          rv_deconvo$dt_ref <- dt_ref
-          rv_deconvo$dt_af <- dt_af
-          #rv_deconvo$anameth <- anameth
-          rv_deconvo$dt_kit <- dt_kit
-          rv_deconvo$dt_at <- dt_at
-          rv_deconvo$dt_mcmc <- dt_mcmc
-          rv_deconvo$dt_alcor <- dt_alcor
-          rv_deconvo$dt_gtc_fltr <- dt_gtc_fltr
-          rv_deconvo$dt_gtc_prob <- dt_gtc_prob
-          rv_deconvo$warmup <- warmup
-          rv_deconvo$sampling <- sampling
-          rv_deconvo$chains <- chains
+          # Check registration of the stutter ratio
+          message_alcor <- check_csp_alcor(dt_csp, dt_info_mk, dt_alcor_combined)
 
-          updateTabsetPanel(session = session_deconvo_top, inputId = "tabset_deconvo", selected = "Result")
+          if(message_alcor == "error"){
+            showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
+          }else{
+            #data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_at, dt_par, dt_alcor_combined, dt_al_prob, dt_gt_fltr, dt_dropin,
+            #                                hnc_deconvo, warmup, sampling, chains)
+            #          rv_deconvo$data_deconvo <- data_deconvo
+            #          rv_deconvo$dt_csp <- dt_csp
+            #          rv_deconvo$dt_ref <- dt_ref
+            #          rv_deconvo$dt_af <- dt_af
+            #rv_deconvo$anameth <- anameth
+            #          rv_deconvo$dt_kit <- dt_kit
+            #          rv_deconvo$dt_at <- dt_at
+            #          rv_deconvo$dt_mcmc <- dt_mcmc
+            #          rv_deconvo$dt_alcor <- dt_alcor
+            #          rv_deconvo$dt_gtc_fltr <- dt_gtc_fltr
+            #          rv_deconvo$dt_gtc_prob <- dt_gtc_prob
+            #          rv_deconvo$warmup <- warmup
+            #          rv_deconvo$sampling <- sampling
+            #          rv_deconvo$chains <- chains
+
+            # Keep message_alcor
+
+            #          updateTabsetPanel(session = session_deconvo_top, inputId = "tabset_deconvo", selected = "Result")
+          }
         }
       })
 

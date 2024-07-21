@@ -4,15 +4,7 @@
 \alias{check_main_file}
 \title{check_main_file}
 \usage{
-check_main_file(
-  dt_csp,
-  dt_ref,
-  dt_af,
-  dt_kit,
-  dt_at,
-  dt_alcor,
-  method = "deconvo"
-)
+check_main_file(dt_csp, dt_ref, dt_af, markers_auto, method)
 }
 \arguments{
 \item{dt_csp}{The data.table of the crime stain profiles}
@@ -21,11 +13,7 @@ check_main_file(
 
 \item{dt_af}{The data.table of the allele frequencies}
 
-\item{dt_kit}{The data.table of the kit information}
-
-\item{dt_at}{The data.table of the analytical threshold}
-
-\item{dt_alcor}{The data.table of the corrected alleles}
+\item{markers_auto}{A character vector of the autosomal markers}
 
 \item{method}{'deconvo' (deconvolution) or 'lr' (likelihood ratio)}
 }

@@ -4,16 +4,14 @@
 \alias{check_csp_alcor}
 \title{check_csp_alcor}
 \usage{
-check_csp_alcor(dt_csp, dt_at, dt_alcor, markers_auto)
+check_csp_alcor(dt_csp, dt_info_mk, dt_alcor_combined)
 }
 \arguments{
 \item{dt_csp}{The data.table of the crime stain profiles}
 
-\item{dt_at}{The data.table of the analytical threshold}
+\item{dt_info_mk}{The data.table of the information on the ignored marker and the analytical thresholds for each marker}
 
-\item{dt_alcor}{The data.table of the corrected alleles}
-
-\item{markers_auto}{A vector of the autosomal markers}
+\item{dt_alcor_combined}{The data.table of the corrected alleles}
 }
 \description{
 The function to check whether the corrected alleles for all peaks are registered or not
