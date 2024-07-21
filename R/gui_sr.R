@@ -35,8 +35,8 @@ create_init_dt_info_sr <- function(path_pack){
   param_all <- list.files(paste0(path_pack, "/extdata/param"))
   if(length(param_all) != 0){
     load(paste0(path_pack, "/extdata/param/", param_all[1]))
-    marker <- dt_alcor_combined$Marker[1]
-    dt_info_sr <- create_dt_info_sr(dt_alcor_combined, marker)
+    marker <- dt_sr$Marker[1]
+    dt_info_sr <- create_dt_info_sr(dt_sr, marker)
   }else{
     dt_info_sr <- NULL
   }
@@ -46,12 +46,12 @@ create_init_dt_info_sr <- function(path_pack){
 #' create_dt_info_sr
 #'
 #' @description The function to create the data.table for information on the stutter ratio
-create_dt_info_sr <- function(dt_alcor_combined, marker){
-  index_mk <- which(dt_alcor_combined$Marker == marker)
-  dt_info_sr <- data.table(Allele = dt_alcor_combined$Allele[index_mk],
-                           Average_BSR = dt_alcor_combined$Average_BSR[index_mk],
-                           Average_FSR = dt_alcor_combined$Average_FSR[index_mk],
-                           Average_DSR = dt_alcor_combined$Average_DSR[index_mk])
+create_dt_info_sr <- function(dt_sr, marker){
+  index_mk <- which(dt_sr$Marker == marker)
+  dt_info_sr <- data.table(Allele = dt_sr$Allele[index_mk],
+                           Average_BSR = dt_sr$Average_BSR[index_mk],
+                           Average_FSR = dt_sr$Average_FSR[index_mk],
+                           Average_DSR = dt_sr$Average_DSR[index_mk])
 
   # Change data type
   col_char <- c("Allele")
@@ -87,7 +87,7 @@ sr_server <- function(id, path_pack){
 
       observeEvent(input$select_param_sr, {
         load(paste0(path_pack, "/extdata/param/", input$select_param_sr, ".Rdata"))
-        markers_sr <- unique(dt_alcor_combined$Marker)
+        markers_sr <- unique(dt_sr$Marker)
 
         output$select_marker_sr <- renderUI({
           selectInput(session$ns("select_marker_sr"), label = h4("Marker"), choices = markers_sr, selected = markers_sr[1], selectize = FALSE)
@@ -96,7 +96,7 @@ sr_server <- function(id, path_pack){
 
       observeEvent(input$select_marker_sr, {
         load(paste0(path_pack, "/extdata/param/", input$select_param_sr, ".Rdata"))
-        rv_sr$dt_info_sr <- create_dt_info_sr(dt_alcor_combined, input$select_marker_sr)
+        rv_sr$dt_info_sr <- create_dt_info_sr(dt_sr, input$select_marker_sr)
       })
 
       #######################################
@@ -159,13 +159,13 @@ sr_server <- function(id, path_pack){
         dt_info_sr$Average_DSR[pos_select] <- dsr_edit
         rv_sr$dt_info_sr <- dt_info_sr
 
-        # Update dt_alcor_combined
+        # Update dt_sr
         load(paste0(path_pack, "/extdata/param/", param, ".Rdata"))
-        index_target <- intersect(which(dt_alcor_combined$Marker == marker), which(dt_alcor_combined$Allele == allele))
-        dt_alcor_combined$Average_BSR[index_target] <- bsr_edit
-        dt_alcor_combined$Average_FSR[index_target] <- fsr_edit
-        dt_alcor_combined$Average_DSR[index_target] <- dsr_edit
-        save(list = c("dt_par", "dt_alcor_combined"), file = paste0(path_pack, "/extdata/param/", param, ".Rdata"))
+        index_target <- intersect(which(dt_sr$Marker == marker), which(dt_sr$Allele == allele))
+        dt_sr$Average_BSR[index_target] <- bsr_edit
+        dt_sr$Average_FSR[index_target] <- fsr_edit
+        dt_sr$Average_DSR[index_target] <- dsr_edit
+        save(list = c("dt_par", "dt_sr"), file = paste0(path_pack, "/extdata/param/", param, ".Rdata"))
 
         removeModal()
       }, ignoreInit = TRUE)
@@ -247,33 +247,33 @@ sr_server <- function(id, path_pack){
                                      Average_DSR = info_dsr_add)
         rv_sr$dt_info_sr <- dt_info_sr_add
 
-        # Update dt_alcor_combined
+        # Update dt_sr
         load(paste0(path_pack, "/extdata/param/", param, ".Rdata"))
         index_allele_add <- which(alleles == allele_add)
-        dt_alcor_combined_mk <- dt_alcor_combined[dt_alcor_combined$Marker == marker, ]
+        dt_sr_mk <- dt_sr[dt_sr$Marker == marker, ]
         marker_alcor <- rep(marker, n_al)
-        model_bsr_alcor <- rep(dt_alcor_combined_mk$Model_BSR[1], n_al)
+        model_bsr_alcor <- rep(dt_sr_mk$Model_BSR[1], n_al)
         model_bsr_alcor[index_allele_add] <- "Manual"
-        model_fsr_alcor <- rep(dt_alcor_combined_mk$Model_FSR[1], n_al)
+        model_fsr_alcor <- rep(dt_sr_mk$Model_FSR[1], n_al)
         model_fsr_alcor[index_allele_add] <- "Manual"
-        model_dsr_alcor <- rep(dt_alcor_combined_mk$Model_DSR[1], n_al)
+        model_dsr_alcor <- rep(dt_sr_mk$Model_DSR[1], n_al)
         model_dsr_alcor[index_allele_add] <- "Manual"
 
         if(index_allele_add == 1){
-          corrected_bsr_alcor <- c(NA, dt_alcor_combined_mk$Corrected_BSR[2:n_al])
-          corrected_fsr_alcor <- c(NA, dt_alcor_combined_mk$Corrected_FSR[2:n_al])
-          corrected_dsr_alcor <- c(NA, dt_alcor_combined_mk$Corrected_DSR[2:n_al])
+          corrected_bsr_alcor <- c(NA, dt_sr_mk$Corrected_BSR[2:n_al])
+          corrected_fsr_alcor <- c(NA, dt_sr_mk$Corrected_FSR[2:n_al])
+          corrected_dsr_alcor <- c(NA, dt_sr_mk$Corrected_DSR[2:n_al])
         }else if(index_allele_add == n_al){
-          corrected_bsr_alcor <- c(dt_alcor_combined_mk$Corrected_BSR[1:(n_al - 1)], NA)
-          corrected_fsr_alcor <- c(dt_alcor_combined_mk$Corrected_FSR[1:(n_al - 1)], NA)
-          corrected_dsr_alcor <- c(dt_alcor_combined_mk$Corrected_DSR[1:(n_al - 1)], NA)
+          corrected_bsr_alcor <- c(dt_sr_mk$Corrected_BSR[1:(n_al - 1)], NA)
+          corrected_fsr_alcor <- c(dt_sr_mk$Corrected_FSR[1:(n_al - 1)], NA)
+          corrected_dsr_alcor <- c(dt_sr_mk$Corrected_DSR[1:(n_al - 1)], NA)
         }else{
-          corrected_bsr_alcor <- c(dt_alcor_combined_mk$Corrected_BSR[1:(index_allele_add - 1)], NA, dt_alcor_combined_mk$Corrected_BSR[(index_allele_add + 1):n_al])
-          corrected_fsr_alcor <- c(dt_alcor_combined_mk$Corrected_FSR[1:(index_allele_add - 1)], NA, dt_alcor_combined_mk$Corrected_FSR[(index_allele_add + 1):n_al])
-          corrected_dsr_alcor <- c(dt_alcor_combined_mk$Corrected_DSR[1:(index_allele_add - 1)], NA, dt_alcor_combined_mk$Corrected_DSR[(index_allele_add + 1):n_al])
+          corrected_bsr_alcor <- c(dt_sr_mk$Corrected_BSR[1:(index_allele_add - 1)], NA, dt_sr_mk$Corrected_BSR[(index_allele_add + 1):n_al])
+          corrected_fsr_alcor <- c(dt_sr_mk$Corrected_FSR[1:(index_allele_add - 1)], NA, dt_sr_mk$Corrected_FSR[(index_allele_add + 1):n_al])
+          corrected_dsr_alcor <- c(dt_sr_mk$Corrected_DSR[1:(index_allele_add - 1)], NA, dt_sr_mk$Corrected_DSR[(index_allele_add + 1):n_al])
         }
 
-        dt_alcor_combined_mk_add <- data.table(Marker = marker_alcor,
+        dt_sr_mk_add <- data.table(Marker = marker_alcor,
                                                Model_BSR = model_bsr_alcor,
                                                Allele = alleles_char,
                                                Corrected_BSR = corrected_bsr_alcor,
@@ -285,19 +285,19 @@ sr_server <- function(id, path_pack){
                                                Corrected_DSR = corrected_dsr_alcor,
                                                Average_DSR = info_dsr_add)
 
-        index_target <- which(dt_alcor_combined$Marker == marker)
+        index_target <- which(dt_sr$Marker == marker)
         if(index_target[1] == 1){
-          dt_alcor_combined_other_mk <- dt_alcor_combined[dt_alcor_combined$Marker != marker, ]
-          dt_alcor_combined <- rbind(dt_alcor_combined_mk_add, dt_alcor_combined_other_mk)
-        }else if(index_target[length(index_target)] == nrow(dt_alcor_combined)){
-          dt_alcor_combined_other_mk <- dt_alcor_combined[dt_alcor_combined$Marker != marker, ]
-          dt_alcor_combined <- rbind(dt_alcor_combined_other_mk, dt_alcor_combined_mk_add)
+          dt_sr_other_mk <- dt_sr[dt_sr$Marker != marker, ]
+          dt_sr <- rbind(dt_sr_mk_add, dt_sr_other_mk)
+        }else if(index_target[length(index_target)] == nrow(dt_sr)){
+          dt_sr_other_mk <- dt_sr[dt_sr$Marker != marker, ]
+          dt_sr <- rbind(dt_sr_other_mk, dt_sr_mk_add)
         }else{
-          dt_alcor_combined_other_mk_1 <- dt_alcor_combined[1:(index_target[1] - 1), ]
-          dt_alcor_combined_other_mk_2 <- dt_alcor_combined[(index_target[length(index_target)] + 1):nrow(dt_alcor_combined), ]
-          dt_alcor_combined <- rbind(dt_alcor_combined_other_mk_1, dt_alcor_combined_mk_add, dt_alcor_combined_other_mk_2)
+          dt_sr_other_mk_1 <- dt_sr[1:(index_target[1] - 1), ]
+          dt_sr_other_mk_2 <- dt_sr[(index_target[length(index_target)] + 1):nrow(dt_sr), ]
+          dt_sr <- rbind(dt_sr_other_mk_1, dt_sr_mk_add, dt_sr_other_mk_2)
         }
-        save(list = c("dt_par", "dt_alcor_combined"), file = paste0(path_pack, "/extdata/param/", param, ".Rdata"))
+        save(list = c("dt_par", "dt_sr"), file = paste0(path_pack, "/extdata/param/", param, ".Rdata"))
 
         removeModal()
       }, ignoreInit = TRUE)
@@ -333,25 +333,25 @@ sr_server <- function(id, path_pack){
         # Update information on the stutter ratio
         rv_sr$dt_info_sr <- dt_info_sr[- pos_select, ]
 
-        # Update dt_alcor_combined
+        # Update dt_sr
         load(paste0(path_pack, "/extdata/param/", param, ".Rdata"))
-        dt_alcor_combined_mk_delete <- copy(dt_alcor_combined)
-        dt_alcor_combined_mk_delete <- dt_alcor_combined_mk_delete[dt_alcor_combined_mk_delete$Marker == marker, ]
-        dt_alcor_combined_mk_delete <- dt_alcor_combined_mk_delete[- pos_select, ]
+        dt_sr_mk_delete <- copy(dt_sr)
+        dt_sr_mk_delete <- dt_sr_mk_delete[dt_sr_mk_delete$Marker == marker, ]
+        dt_sr_mk_delete <- dt_sr_mk_delete[- pos_select, ]
 
-        index_target <- which(dt_alcor_combined$Marker == marker)
+        index_target <- which(dt_sr$Marker == marker)
         if(index_target[1] == 1){
-          dt_alcor_combined_other_mk <- dt_alcor_combined[dt_alcor_combined$Marker != marker, ]
-          dt_alcor_combined <- rbind(dt_alcor_combined_mk_delete, dt_alcor_combined_other_mk)
-        }else if(index_target[length(index_target)] == nrow(dt_alcor_combined)){
-          dt_alcor_combined_other_mk <- dt_alcor_combined[dt_alcor_combined$Marker != marker, ]
-          dt_alcor_combined <- rbind(dt_alcor_combined_other_mk, dt_alcor_combined_mk_delete)
+          dt_sr_other_mk <- dt_sr[dt_sr$Marker != marker, ]
+          dt_sr <- rbind(dt_sr_mk_delete, dt_sr_other_mk)
+        }else if(index_target[length(index_target)] == nrow(dt_sr)){
+          dt_sr_other_mk <- dt_sr[dt_sr$Marker != marker, ]
+          dt_sr <- rbind(dt_sr_other_mk, dt_sr_mk_delete)
         }else{
-          dt_alcor_combined_other_mk_1 <- dt_alcor_combined[1:(index_target[1] - 1), ]
-          dt_alcor_combined_other_mk_2 <- dt_alcor_combined[(index_target[length(index_target)] + 1):nrow(dt_alcor_combined), ]
-          dt_alcor_combined <- rbind(dt_alcor_combined_other_mk_1, dt_alcor_combined_mk_delete, dt_alcor_combined_other_mk_2)
+          dt_sr_other_mk_1 <- dt_sr[1:(index_target[1] - 1), ]
+          dt_sr_other_mk_2 <- dt_sr[(index_target[length(index_target)] + 1):nrow(dt_sr), ]
+          dt_sr <- rbind(dt_sr_other_mk_1, dt_sr_mk_delete, dt_sr_other_mk_2)
         }
-        save(list = c("dt_par", "dt_alcor_combined"), file = paste0(path_pack, "/extdata/param/", param, ".Rdata"))
+        save(list = c("dt_par", "dt_sr"), file = paste0(path_pack, "/extdata/param/", param, ".Rdata"))
 
         removeModal()
       }, ignoreInit = TRUE)

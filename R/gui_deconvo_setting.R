@@ -248,12 +248,12 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           # Check registration of the stutter ratio
-          message_alcor <- check_csp_alcor(dt_csp, dt_info_mk, dt_alcor_combined)
+          message_alcor <- check_csp_alcor(dt_csp, dt_info_mk, dt_sr)
 
           if(message_alcor == "error"){
             showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
           }else{
-            #data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_alcor_combined, dt_al_prob, dt_gt_fltr, dt_dropin,
+            #data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
             #                                hnc_deconvo, warmup, sampling, chains)
             #          rv_deconvo$data_deconvo <- data_deconvo
             #          rv_deconvo$dt_csp <- dt_csp
