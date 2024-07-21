@@ -51,7 +51,8 @@ create_dt_info_sr <- function(dt_sr, marker){
   dt_info_sr <- data.table(Allele = dt_sr$Allele[index_mk],
                            Average_BSR = dt_sr$Average_BSR[index_mk],
                            Average_FSR = dt_sr$Average_FSR[index_mk],
-                           Average_DSR = dt_sr$Average_DSR[index_mk])
+                           Average_DSR = dt_sr$Average_DSR[index_mk],
+                           Average_M2SR = dt_sr$Average_M2SR[index_mk])
 
   # Change data type
   col_char <- c("Allele")
@@ -129,7 +130,9 @@ sr_server <- function(id, path_pack){
                         br(),
                         numericInput(session$ns("fsr_edit"), label = h4("Average forward stutter ratio"), value = dt_info_sr$Average_FSR[pos_select]),
                         br(),
-                        numericInput(session$ns("dsr_edit"), label = h4("Average double-back stutter ratio"), value = dt_info_sr$Average_DSR[pos_select])
+                        numericInput(session$ns("dsr_edit"), label = h4("Average double-back stutter ratio"), value = dt_info_sr$Average_DSR[pos_select]),
+                        br(),
+                        numericInput(session$ns("m2sr_edit"), label = h4("Average minus 2-nt stutter ratio"), value = dt_info_sr$Average_M2SR[pos_select])
               )
             ),
             footer = tagList(
@@ -152,11 +155,13 @@ sr_server <- function(id, path_pack){
         bsr_edit <- input$bsr_edit
         fsr_edit <- input$fsr_edit
         dsr_edit <- input$dsr_edit
+        m2sr_edit <- input$m2sr_edit
 
         # Update information on the stutter ratio
         dt_info_sr$Average_BSR[pos_select] <- bsr_edit
         dt_info_sr$Average_FSR[pos_select] <- fsr_edit
         dt_info_sr$Average_DSR[pos_select] <- dsr_edit
+        dt_info_sr$Average_M2SR[pos_select] <- m2sr_edit
         rv_sr$dt_info_sr <- dt_info_sr
 
         # Update dt_sr
@@ -165,6 +170,7 @@ sr_server <- function(id, path_pack){
         dt_sr$Average_BSR[index_target] <- bsr_edit
         dt_sr$Average_FSR[index_target] <- fsr_edit
         dt_sr$Average_DSR[index_target] <- dsr_edit
+        dt_sr$Average_M2SR[index_target] <- m2sr_edit
         save(list = c("dt_par", "dt_sr"), file = paste0(path_pack, "/extdata/param/", param, ".Rdata"))
 
         removeModal()
@@ -195,7 +201,9 @@ sr_server <- function(id, path_pack){
                       br(),
                       numericInput(session$ns("fsr_add"), label = h4("Average forward stutter ratio"), value = NULL),
                       br(),
-                      numericInput(session$ns("dsr_add"), label = h4("Average double-back stutter ratio"), value = NULL)
+                      numericInput(session$ns("dsr_add"), label = h4("Average double-back stutter ratio"), value = NULL),
+                      br(),
+                      numericInput(session$ns("m2sr_add"), label = h4("Average minus 2-nt stutter ratio"), value = NULL)
             )
           ),
           footer = tagList(
@@ -214,11 +222,13 @@ sr_server <- function(id, path_pack){
         bsr_add <- input$bsr_add
         fsr_add <- input$fsr_add
         dsr_add <- input$dsr_add
+        m2sr_add <- input$m2sr_add
 
         info_allele_add <- c(dt_info_sr$Allele, allele_add)
         info_bsr_add <- c(dt_info_sr$Average_BSR, bsr_add)
         info_fsr_add <- c(dt_info_sr$Average_FSR, fsr_add)
         info_dsr_add <- c(dt_info_sr$Average_DSR, dsr_add)
+        info_m2sr_add <- c(dt_info_sr$Average_M2SR, m2sr_add)
 
         # Sort alleles
         alleles <- as.numeric(info_allele_add)
@@ -227,6 +237,7 @@ sr_server <- function(id, path_pack){
         info_bsr_add <- info_bsr_add[index_sort]
         info_fsr_add <- info_fsr_add[index_sort]
         info_dsr_add <- info_dsr_add[index_sort]
+        info_m2sr_add <- info_m2sr_add[index_sort]
 
         # Change data type of alleles (numeric to character)
         n_al <- length(alleles)
@@ -244,7 +255,8 @@ sr_server <- function(id, path_pack){
         dt_info_sr_add <- data.table(Allele = alleles_char,
                                      Average_BSR = info_bsr_add,
                                      Average_FSR = info_fsr_add,
-                                     Average_DSR = info_dsr_add)
+                                     Average_DSR = info_dsr_add,
+                                     Average_M2SR = info_m2sr_add)
         rv_sr$dt_info_sr <- dt_info_sr_add
 
         # Update dt_sr
@@ -258,6 +270,8 @@ sr_server <- function(id, path_pack){
         model_fsr_alcor[index_allele_add] <- "Manual"
         model_dsr_alcor <- rep(dt_sr_mk$Model_DSR[1], n_al)
         model_dsr_alcor[index_allele_add] <- "Manual"
+        model_m2sr_alcor <- rep(dt_sr_mk$Model_M2SR[1], n_al)
+        model_m2sr_alcor[index_allele_add] <- "Manual"
 
         if(index_allele_add == 1){
           corrected_bsr_alcor <- c(NA, dt_sr_mk$Corrected_BSR[2:n_al])
@@ -274,16 +288,18 @@ sr_server <- function(id, path_pack){
         }
 
         dt_sr_mk_add <- data.table(Marker = marker_alcor,
-                                               Model_BSR = model_bsr_alcor,
-                                               Allele = alleles_char,
-                                               Corrected_BSR = corrected_bsr_alcor,
-                                               Average_BSR = info_bsr_add,
-                                               Model_FSR = model_fsr_alcor,
-                                               Corrected_FSR = corrected_fsr_alcor,
-                                               Average_FSR = info_fsr_add,
-                                               Model_DSR = model_dsr_alcor,
-                                               Corrected_DSR = corrected_dsr_alcor,
-                                               Average_DSR = info_dsr_add)
+                                   Allele = alleles_char,
+                                   Model_BSR = model_bsr_alcor,
+                                   Corrected_BSR = corrected_bsr_alcor,
+                                   Average_BSR = info_bsr_add,
+                                   Model_FSR = model_fsr_alcor,
+                                   Corrected_FSR = corrected_fsr_alcor,
+                                   Average_FSR = info_fsr_add,
+                                   Model_DSR = model_dsr_alcor,
+                                   Corrected_DSR = corrected_dsr_alcor,
+                                   Average_DSR = info_dsr_add,
+                                   Model_M2SR = model_m2sr_alcor,
+                                   Average_M2SR = info_m2sr_add)
 
         index_target <- which(dt_sr$Marker == marker)
         if(index_target[1] == 1){
