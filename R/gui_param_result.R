@@ -79,7 +79,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
         gamma_result_list <- results_est_par$gamma_result_list
 
         # Extract the combined data.table for corrected alleles
-        dt_alcor_combined <- results_est_par$dt_alcor_combined
+        dt_sr <- results_est_par$dt_sr
 
         # Extract the results of estimated parameters
         dt_par <- results_est_par$dt_par
@@ -772,7 +772,7 @@ est_par_result_server <- function(id, path_pack, rv_output){
 
         observeEvent(input$act_download_par, {
           proj_par <- input$proj_par
-          save(list = c("dt_par", "dt_alcor_combined"), file = paste0(path_pack, "/extdata/param/", proj_par, ".Rdata"))
+          save(list = c("dt_par", "dt_sr"), file = paste0(path_pack, "/extdata/param/", proj_par, ".Rdata"))
           #write.csv(dt_par, paste0(path_pack, "/extdata/param/param_", proj_par, ".csv"), row.names = FALSE)
           #write.csv(dt_alcor_combined, paste0(path_pack, "/extdata/alcor/alcor_", proj_par, ".csv"), row.names = FALSE)
           removeModal()

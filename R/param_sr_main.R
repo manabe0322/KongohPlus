@@ -108,6 +108,42 @@ make_dt_alcor_combined <- function(dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr){
   return(dt_alcor_combined)
 }
 
+#' make_dt_sr
+#'
+#' @description The function to make a data.table for the stutter ratio
+#' @param dt_alcor_combined The data.table of the corrected alleles of BSR, FSR, and DSR
+#' @param dt_result_m2sr The data.table of the results for M2SR
+make_dt_sr <- function(dt_alcor_combined, dt_result_m2sr){
+  index_consider_m2sr <- which(dt_result_m2sr$Model != "Not consider")
+  markers_m2sr_consider <- dt_result_m2sr$Marker[index_consider_m2sr]
+  models_m2sr_consider <- dt_result_m2sr$Model[index_consider_m2sr]
+  myus_m2sr_consider <- dt_result_m2sr$Myu[index_consider_m2sr]
+
+  n_data_alcor <- nrow(dt_alcor_combined)
+  model_m2sr_alcor <- rep("Not consider", n_data_alcor)
+  value_m2sr_alcor <- rep(0, n_data_alcor)
+  for(i in 1:length(markers_m2sr_consider)){
+    index_mk_m2sr <- which(dt_alcor_combined$Marker == markers_m2sr_consider[i])
+    model_m2sr_alcor[index_mk_m2sr] <- models_m2sr_consider[i]
+    value_m2sr_alcor[index_mk_m2sr] <- myus_m2sr_consider[i]
+  }
+
+  dt_sr <- data.table(Marker = dt_alcor_combined$Marker,
+                      Allele = dt_alcor_combined$Allele,
+                      Model_BSR = dt_alcor_combined$Model_BSR,
+                      Corrected_BSR = dt_alcor_combined$Corrected_BSR,
+                      Average_BSR = dt_alcor_combined$Average_BSR,
+                      Model_FSR = dt_alcor_combined$Model_FSR,
+                      Corrected_FSR = dt_alcor_combined$Corrected_FSR,
+                      Average_FSR = dt_alcor_combined$Average_FSR,
+                      Model_DSR = dt_alcor_combined$Model_DSR,
+                      Corrected_DSR = dt_alcor_combined$Corrected_DSR,
+                      Average_DSR = dt_alcor_combined$Average_DSR,
+                      Model_M2SR = model_m2sr_alcor,
+                      Average_M2SR = value_m2sr_alcor)
+  return(dt_sr)
+}
+
 #' make_dt_aic
 #'
 #' @description The function to make a data.table for information on AIC values and parameters of the candidate models

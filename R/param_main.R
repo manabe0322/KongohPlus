@@ -182,9 +182,10 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_p
   gamma_result_list <- list(dt_result = dt_result_gamma,
                             traceplot = tmp$traceplot)
 
-  #### Combine corrected alleles ####
+  #### Data.table for stutter ratios ####
 
   dt_alcor_combined <- make_dt_alcor_combined(dt_alcor_bsr, dt_alcor_fsr, dt_alcor_dsr)
+  dt_sr <- make_dt_sr(dt_alcor_combined, dt_result_m2sr)
 
   #### Results of estimated parameters ####
 
@@ -197,6 +198,6 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_p
               "dsr_result_list" = dsr_result_list,
               "m2sr_result_list" = m2sr_result_list,
               "gamma_result_list" = gamma_result_list,
-              "dt_alcor_combined" = dt_alcor_combined,
+              "dt_sr" = dt_sr,
               "dt_par" = dt_par))
 }
