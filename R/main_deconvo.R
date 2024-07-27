@@ -19,9 +19,6 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
     heights_list <- tmp$heights_list
     min_size <- min(unlist(sizes_list))
 
-    # Information on consideration of each stutter
-    #sr_consider_all_mk
-
     # Extract parameters for AE
     ae_alpha_all_mk <- dt_par$Alpha[dt_par$Parameter == "AE"]
     ae_alpha_use <- ae_alpha_all_mk[is.element(dt_par$Marker[dt_par$Parameter == "AE"], markers_use)]
@@ -94,6 +91,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
       sizes <- sizes_list[[mk]]
       heights_all_rep <- heights_list[[mk]]
       heights <- heights_all_rep[[1]]
+      n_peak_use[i] <- n_peak <- length(peaks)
 
       # Update the maximum of the total peak height per marker
       oph_sum <- sum(heights)
@@ -103,23 +101,34 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
 
       # Extract parameters of one marker
       at <- ats_use[i]
-      #sr_consider <- sr_consider_all_mk[mk, ]
       dt_sr_mk <- dt_sr[mk]
-      sr_alleles <- dt_sr_mk[, Allele]
-      bsrs <- dt_sr_mk[, Average_BSR]
-      fsrs <- dt_sr_mk[, Average_FSR]
-      dsrs <- dt_sr_mk[, Average_DSR]
-      m2srs <- dt_sr_mk[, Average_M2SR]
+      sr_alleles_mk <- as.numeric(dt_sr_mk[, Allele])
+      bsrs_mk <- dt_sr_mk[, Average_BSR]
+      fsrs_mk <- dt_sr_mk[, Average_FSR]
+      dsrs_mk <- dt_sr_mk[, Average_DSR]
+      m2srs_mk <- dt_sr_mk[, Average_M2SR]
+      index_sr <- match(peaks, sr_alleles_mk)
+      bsrs <- fsrs <- dsrs <- m2srs <- rep(0, n_peak)
+      for(i in 1:length(index_sr)){
+        if(!is.na(index_sr[i])){
+          bsrs[i] <- bsrs_mk[index_sr[i]]
+          fsrs[i] <- fsrs_mk[index_sr[i]]
+          dsrs[i] <- dsrs_mk[index_sr[i]]
+          m2srs[i] <- m2srs_mk[index_sr[i]]
+        }
+      }
+
+      # Information on consideration of each stutter
+      sr_consider <- c(!all(is.element(bsrs, 0)), !all(is.element(fsrs, 0)), !all(is.element(dsrs, 0)), !all(is.element(m2srs, 0)))
 
       # Extract allele probabilities
       pop_al <- pop_al_list[[mk]]
       pop_prob <- pop_prob_list[[mk]]
 
       # The base of the relative peak heights
-      rph_base_use[[i]] <- rph_base_mk <- make_rph_base(peaks, bsrs, fsrs, dsrs, m2sr)
+      rph_base_use[[i]] <- rph_base_mk <- make_rph_base(peaks, bsrs, fsrs, dsrs, m2srs)
 
       # All candidate genotypes of one contributor
-      n_peak_use[i] <- n_peak <- length(peaks)
       cand_gt <- combinations(n = n_peak, r = 2, v = peaks, repeats.allowed = TRUE)
       cand_gt <- asplit(cand_gt, 1)
 
