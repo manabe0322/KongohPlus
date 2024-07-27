@@ -4,10 +4,10 @@
 \alias{set_al_prob}
 \title{set_al_prob}
 \usage{
-set_al_prob(markers_auto, dt_af, peaks_list, method_al_prob, maf)
+set_al_prob(markers_use, dt_af, peaks_list, method_al_prob, maf)
 }
 \arguments{
-\item{markers_auto}{A vector of the autosomal markers}
+\item{markers_use}{A vector of the autosomal markers used}
 
 \item{dt_af}{The data.table of the allele frequencies}
 

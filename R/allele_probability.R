@@ -65,17 +65,17 @@ add_al_prob_drop <- function(al_csp, pop_al, pop_prob){
 #' set_al_prob
 #'
 #' @description The function to set allele probabilities
-#' @param markers_auto A vector of the autosomal markers
+#' @param markers_use A vector of the autosomal markers used
 #' @param dt_af The data.table of the allele frequencies
 #' @param peaks_list The peak list of all markers
 #' @param method_al_prob The method to correct allele probabilities (Dirichlet or Observed)
 #' @param maf The minimum allele frequency
-set_al_prob <- function(markers_auto, dt_af, peaks_list, method_al_prob, maf){
-  n_mk <- length(markers_auto)
+set_al_prob <- function(markers_use, dt_af, peaks_list, method_al_prob, maf){
+  n_mk <- length(markers_use)
   pop_al_all <- dt_af[, Allele]
   pop_al_list <- pop_prob_list <- vector(mode = "list", length = n_mk)
   for(i in 1:n_mk){
-    mk <- markers_auto[i]
+    mk <- markers_use[i]
     pop_freq <- as.numeric(unlist(dt_af[, mk, with = FALSE]))
     pop_al <- pop_al_all[!is.na(pop_freq)]
     pop_freq <- pop_freq[!is.na(pop_freq)]
@@ -98,8 +98,8 @@ set_al_prob <- function(markers_auto, dt_af, peaks_list, method_al_prob, maf){
     pop_prob_list[[i]] <- pop_prob[index_target]
   }
 
-  names(pop_al_list) <- markers_auto
-  names(pop_prob_list) <- markers_auto
+  names(pop_al_list) <- markers_use
+  names(pop_prob_list) <- markers_use
   return(list("pop_al_list" = pop_al_list,
               "pop_prob_list" = pop_prob_list))
 }
