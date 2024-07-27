@@ -4,7 +4,7 @@
 \alias{create_dt_info_sr}
 \title{create_dt_info_sr}
 \usage{
-create_dt_info_sr(dt_alcor_combined, marker)
+create_dt_info_sr(dt_sr, marker)
 }
 \description{
 The function to create the data.table for information on the stutter ratio
