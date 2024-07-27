@@ -109,7 +109,7 @@ calc_lpd_gtc_all_mk_cpp <- function(n_mk, mp, deg, hnc, n_dedup1_sum, n_general_
     .Call(`_KongohPlus_calc_lpd_gtc_all_mk_cpp`, n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, ae_dedup1_all_mk, oph_dedup1_all_mk, at_dropout, loglike_di, cv, tph, index_dedup2_all_mk_cpp, n_dedup2_all_mk, n_peak_all_mk, n_gtc_all_mk)
 }
 
-make_rph_base <- function(peaks, bsrs, fsrs, dsrs, m2sr) {
-    .Call(`_KongohPlus_make_rph_base`, peaks, bsrs, fsrs, dsrs, m2sr)
+make_rph_base <- function(peaks, bsrs, fsrs, dsrs, m2srs) {
+    .Call(`_KongohPlus_make_rph_base`, peaks, bsrs, fsrs, dsrs, m2srs)
 }
 

@@ -5,7 +5,7 @@ std::vector<double> make_rph_base(std::vector<double> peaks,
                                   std::vector<double> bsrs,
                                   std::vector<double> fsrs,
                                   std::vector<double> dsrs,
-                                  double m2sr){
+                                  std::vector<double> m2srs){
   int n_peaks = peaks.size();
   std::vector<double> bs_all = calc_bs(peaks);
   std::vector<double> fs_all = calc_fs(peaks);
@@ -18,6 +18,7 @@ std::vector<double> make_rph_base(std::vector<double> peaks,
     double bsr = bsrs[i];
     double fsr = fsrs[i];
     double dsr = dsrs[i];
+    double m2sr = m2srs[i];
 
     rph_base[i] = 1 / (1 + bsr + fsr + dsr + m2sr);
 
