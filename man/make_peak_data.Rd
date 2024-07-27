@@ -4,16 +4,16 @@
 \alias{make_peak_data}
 \title{make_peak_data}
 \usage{
-make_peak_data(dt_csp, dt_kit_auto, markers_auto, at_mk)
+make_peak_data(dt_csp, dt_kit_auto, markers_use, ats_use)
 }
 \arguments{
 \item{dt_csp}{The data.table of the crime stain profiles}
 
 \item{dt_kit_auto}{The data.table of the kit information for autosomal STRs}
 
-\item{markers_auto}{A vector of the autosomal markers}
+\item{markers_use}{A vector of the autosomal markers used}
 
-\item{at_mk}{A vector of the analytical thresholds for each marker}
+\item{ats_use}{A vector of the analytical thresholds for each marker}
 }
 \description{
 The function to make peak data

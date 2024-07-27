@@ -35,9 +35,9 @@ simple_linear_regression <- function(x, y){
 #' @description The function to make peak data
 #' @param dt_csp The data.table of the crime stain profiles
 #' @param dt_kit_auto The data.table of the kit information for autosomal STRs
-#' @param markers_auto A vector of the autosomal markers
-#' @param at_mk A vector of the analytical thresholds for each marker
-make_peak_data <- function(dt_csp, dt_kit_auto, markers_auto, at_mk){
+#' @param markers_use A vector of the autosomal markers used
+#' @param ats_use A vector of the analytical thresholds for each marker
+make_peak_data <- function(dt_csp, dt_kit_auto, markers_use, ats_use){
   # Column indices for alleles, sizes, and heights
   names_csp <- names(dt_csp)
   index_allele <- grep("Allele", names_csp)
@@ -46,7 +46,7 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_auto, at_mk){
 
   name_csp_all <- unique(dt_csp[, SampleName])
   n_rep <- length(name_csp_all)
-  n_mk <- length(markers_auto)
+  n_mk <- length(markers_use)
 
   setkey(dt_kit_auto, Marker)
   setkey(dt_csp, Marker)
@@ -54,8 +54,8 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_auto, at_mk){
   peaks_list <- sizes_list <- heights_list <- vector(mode = "list", length = n_rep)
 
   for(i in 1:n_mk){
-    mk <- markers_auto[i]
-    at <- at_mk[i]
+    mk <- markers_use[i]
+    at <- ats_use[i]
     dt_kit_auto_mk <- dt_kit_auto[mk]
     dt_csp_mk <- dt_csp[mk]
     setkey(dt_csp_mk, SampleName)
@@ -116,9 +116,9 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_auto, at_mk){
     heights_list[[i]] <- heights_all_rep_list
   }
 
-  names(peaks_list) <- markers_auto
-  names(sizes_list) <- markers_auto
-  names(heights_list) <- markers_auto
+  names(peaks_list) <- markers_use
+  names(sizes_list) <- markers_use
+  names(heights_list) <- markers_use
   return(list("peaks_list" = peaks_list,
               "sizes_list" = sizes_list,
               "heights_list" = heights_list))
