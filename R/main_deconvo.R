@@ -18,11 +18,11 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
   min_size <- min(unlist(sizes_list))
 
   # Information on consideration of each stutter
-  sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_par)
+  #sr_consider_all_mk <- make_sr_consider_all_mk(markers_auto, dt_par)
 
-  # Extract parameters for AE and M2SR
-  ae_alpha_all_mk <- extract_param_all_mk("AE", "Alpha", markers_auto, dt_par)
-  m2sr_all_mk <- extract_param_all_mk("M2SR", "Myu", markers_auto, dt_par)
+  # Extract parameters for AE
+  ae_alpha_all_mk <- dt_par$Alpha[dt_par$Parameter == "AE"]
+  #m2sr_all_mk <- extract_param_all_mk("M2SR", "Myu", markers_auto, dt_par)
 
   # Extract methods to estimate allele probabilities
   al_prob_subcategory <- dt_al_prob[, Subcategory]

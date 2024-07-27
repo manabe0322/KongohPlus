@@ -77,23 +77,6 @@ make_sr_consider_all_mk <- function(markers_auto, dt_param){
   return(sr_consider_all_mk)
 }
 
-#' extract_param_all_mk
-#'
-#' @description The function to extract minus 2-nt stutter ratios of all markers
-#' @param biparam_name A biological parameter name
-#' @param extparam_name The extracted parameter name
-#' @param markers_auto A vector of the autosomal markers
-#' @param dt_param The data.table of the parameters
-extract_param_all_mk <- function(biparam_name, extparam_name, markers_auto, dt_param){
-  setkey(dt_param, Parameter)
-  dt_param_target <- dt_param[biparam_name]
-  val_all_mk <- unlist(dt_param_target[, extparam_name, with = FALSE])
-  val_all_mk <- val_all_mk[match(markers_auto, dt_param_target[, Marker])]
-  val_all_mk[is.na(val_all_mk)] <- 0
-  names(val_all_mk) <- markers_auto
-  return(val_all_mk)
-}
-
 #' make_index_dedup2_mk
 #'
 #' @description The function to make 'index_dedup2_mk'
