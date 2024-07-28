@@ -320,11 +320,11 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
 
     index_dedup1_use_cpp <- asplit(index_dedup1_use - 1, 1) # C++ index
     index_dedup2_use_cpp <- index_dedup2_use - 1 # C++ index
-    ae_dedup1_all_mk <- ae[id_mk_dedup1]
-    lpd_gtc_use <- calc_lpd_gtc_use_cpp(n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum,
-                                        unlist(rph_base_use), index_dedup1_use_cpp, unlist(size_dedup1_use), ae_dedup1_all_mk, oph_dedup1_use,
-                                        at_dropout, loglike_di, cv, tph,
-                                        index_dedup2_use_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
+    ae_dedup1_use <- ae[id_mk_dedup1]
+    lpd_gtc_use <- calc_lpd_gtc_all_mk_cpp(n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum,
+                                           unlist(rph_base_use), index_dedup1_use_cpp, unlist(size_dedup1_use), ae_dedup1_use, oph_dedup1_use,
+                                           at_dropout, loglike_di, cv, tph,
+                                           index_dedup2_use_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
 
     dt_pg_list <- make_dt_pg_list(markers_use, gtc_use, lpd_gtc_use, gtc_logprob_use, paste0("U", 1:hnc))
 
