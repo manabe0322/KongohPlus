@@ -180,7 +180,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
 
         # Create a data.table for information on markers
         dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
-                            AT = dt_anameth$Value[dt_anameth$Category == "AT"])
+                            AT = as.numeric(dt_anameth$Value[dt_anameth$Category == "AT"]))
         dt_info_mk <- copy(dt_at)
         dt_info_mk <- cbind(
           Ignore = rep(FALSE, nrow(dt_info_mk)),
@@ -255,24 +255,24 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
           }else{
             data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
                                             hnc_deconvo, warmup, sampling, chains)
-            #          rv_deconvo$data_deconvo <- data_deconvo
-            #          rv_deconvo$dt_csp <- dt_csp
-            #          rv_deconvo$dt_ref <- dt_ref
-            #          rv_deconvo$dt_af <- dt_af
+            rv_deconvo$data_deconvo <- data_deconvo
+            rv_deconvo$dt_csp <- dt_csp
+            rv_deconvo$dt_ref <- dt_ref
+            rv_deconvo$dt_af <- dt_af
             #rv_deconvo$anameth <- anameth
-            #          rv_deconvo$dt_kit <- dt_kit
-            #          rv_deconvo$dt_at <- dt_at
+            #rv_deconvo$dt_kit <- dt_kit
+            #rv_deconvo$dt_at <- dt_at
             #          rv_deconvo$dt_mcmc <- dt_mcmc
             #          rv_deconvo$dt_alcor <- dt_alcor
             #          rv_deconvo$dt_gtc_fltr <- dt_gtc_fltr
             #          rv_deconvo$dt_gtc_prob <- dt_gtc_prob
-            #          rv_deconvo$warmup <- warmup
-            #          rv_deconvo$sampling <- sampling
-            #          rv_deconvo$chains <- chains
+            #rv_deconvo$warmup <- warmup
+            #rv_deconvo$sampling <- sampling
+            #rv_deconvo$chains <- chains
 
             # Keep message_alcor
 
-            #          updateTabsetPanel(session = session_deconvo_top, inputId = "tabset_deconvo", selected = "Result")
+            updateTabsetPanel(session = session_deconvo_top, inputId = "tabset_deconvo", selected = "Result")
           }
         }
       })
