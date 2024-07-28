@@ -103,6 +103,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// calc_bs_one
+double calc_bs_one(double al);
+RcppExport SEXP _KongohPlus_calc_bs_one(SEXP alSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type al(alSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_bs_one(al));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calc_bs
 std::vector<double> calc_bs(std::vector<double> alleles);
 RcppExport SEXP _KongohPlus_calc_bs(SEXP allelesSEXP) {
@@ -111,6 +122,17 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::vector<double> >::type alleles(allelesSEXP);
     rcpp_result_gen = Rcpp::wrap(calc_bs(alleles));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calc_fs_one
+double calc_fs_one(double al);
+RcppExport SEXP _KongohPlus_calc_fs_one(SEXP alSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type al(alSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_fs_one(al));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -125,6 +147,17 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// calc_ds_one
+double calc_ds_one(double al);
+RcppExport SEXP _KongohPlus_calc_ds_one(SEXP alSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type al(alSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_ds_one(al));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calc_ds
 std::vector<double> calc_ds(std::vector<double> alleles);
 RcppExport SEXP _KongohPlus_calc_ds(SEXP allelesSEXP) {
@@ -133,6 +166,17 @@ BEGIN_RCPP
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::vector<double> >::type alleles(allelesSEXP);
     rcpp_result_gen = Rcpp::wrap(calc_ds(alleles));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calc_m2s_one
+double calc_m2s_one(double al);
+RcppExport SEXP _KongohPlus_calc_m2s_one(SEXP alSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type al(alSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_m2s_one(al));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -156,6 +200,22 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<double> >::type alleles(allelesSEXP);
     Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
     rcpp_result_gen = Rcpp::wrap(make_cand_peak(alleles, sr_consider));
+    return rcpp_result_gen;
+END_RCPP
+}
+// make_detectable_peak
+std::vector<double> make_detectable_peak(std::vector<double> gtc, std::vector<double> peaks, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, std::vector<double> m2srs);
+RcppExport SEXP _KongohPlus_make_detectable_peak(SEXP gtcSEXP, SEXP peaksSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type gtc(gtcSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type peaks(peaksSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type bsrs(bsrsSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type fsrs(fsrsSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type dsrs(dsrsSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type m2srs(m2srsSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_detectable_peak(gtc, peaks, bsrs, fsrs, dsrs, m2srs));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -433,11 +493,16 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_find_index_double", (DL_FUNC) &_KongohPlus_find_index_double, 2},
     {"_KongohPlus_setdiff_double", (DL_FUNC) &_KongohPlus_setdiff_double, 2},
     {"_KongohPlus_setdiff_int", (DL_FUNC) &_KongohPlus_setdiff_int, 2},
+    {"_KongohPlus_calc_bs_one", (DL_FUNC) &_KongohPlus_calc_bs_one, 1},
     {"_KongohPlus_calc_bs", (DL_FUNC) &_KongohPlus_calc_bs, 1},
+    {"_KongohPlus_calc_fs_one", (DL_FUNC) &_KongohPlus_calc_fs_one, 1},
     {"_KongohPlus_calc_fs", (DL_FUNC) &_KongohPlus_calc_fs, 1},
+    {"_KongohPlus_calc_ds_one", (DL_FUNC) &_KongohPlus_calc_ds_one, 1},
     {"_KongohPlus_calc_ds", (DL_FUNC) &_KongohPlus_calc_ds, 1},
+    {"_KongohPlus_calc_m2s_one", (DL_FUNC) &_KongohPlus_calc_m2s_one, 1},
     {"_KongohPlus_calc_m2s", (DL_FUNC) &_KongohPlus_calc_m2s, 1},
     {"_KongohPlus_make_cand_peak", (DL_FUNC) &_KongohPlus_make_cand_peak, 2},
+    {"_KongohPlus_make_detectable_peak", (DL_FUNC) &_KongohPlus_make_detectable_peak, 6},
     {"_KongohPlus_search_index_dropin", (DL_FUNC) &_KongohPlus_search_index_dropin, 2},
     {"_KongohPlus_judge_gtc_dropin", (DL_FUNC) &_KongohPlus_judge_gtc_dropin, 6},
     {"_KongohPlus_remove_dropin", (DL_FUNC) &_KongohPlus_remove_dropin, 3},

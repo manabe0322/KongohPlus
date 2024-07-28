@@ -1,6 +1,43 @@
 #include "header.h"
 
 // [[Rcpp::export]]
+std::vector<double> make_detectable_peak(std::vector<double> gtc,
+                                         std::vector<double> peaks,
+                                         std::vector<double> bsrs,
+                                         std::vector<double> fsrs,
+                                         std::vector<double> dsrs,
+                                         std::vector<double> m2srs){
+  std::vector<double> cand_peak = gtc;
+  int n_al = gtc.size();
+  for(int i = 0; i < n_al; ++i){
+    double al = gtc[i];
+    int index_al = find_index_double(al, peaks);
+    if(bsrs[index_al] != 0){
+      double bs = calc_bs_one(al);
+      cand_peak.push_back(bs);
+    }
+    if(fsrs[index_al] != 0){
+      double fs = calc_fs_one(al);
+      cand_peak.push_back(fs);
+    }
+    if(dsrs[index_al] != 0){
+      double ds = calc_ds_one(al);
+      cand_peak.push_back(ds);
+    }
+    if(m2srs[index_al] != 0){
+      double m2s = calc_m2s_one(al);
+      cand_peak.push_back(m2s);
+    }
+  }
+
+  std::sort(cand_peak.begin(), cand_peak.end());
+  decltype(cand_peak)::iterator result = std::unique(cand_peak.begin(), cand_peak.end());
+  cand_peak.erase(result, cand_peak.end());
+
+  return(cand_peak);
+}
+
+// [[Rcpp::export]]
 std::vector<int> search_index_dropin(std::vector<double> peaks_rm99,
                                      std::vector<double> cand_peak){
   int n_peaks_rm99 = peaks_rm99.size();

@@ -67,14 +67,27 @@ std::vector<int> setdiff_int(std::vector<int> vec_int1, std::vector<int> vec_int
 }
 
 // [[Rcpp::export]]
+double calc_bs_one(double al){
+  double tmp = al - 1;
+  double bs_one = round(tmp * 10) / 10;
+  return(bs_one);
+}
+
+// [[Rcpp::export]]
 std::vector<double> calc_bs(std::vector<double> alleles){
   int n_al = alleles.size();
   std::vector<double> bs = std::vector<double>(n_al);
   for(int i = 0; i < n_al; ++i){
-    double tmp = alleles[i] - 1;
-    bs[i] = round(tmp * 10) / 10;
+    bs[i] = calc_bs_one(alleles[i]);
   }
   return(bs);
+}
+
+// [[Rcpp::export]]
+double calc_fs_one(double al){
+  double tmp = al + 1;
+  double fs_one = round(tmp * 10) / 10;
+  return(fs_one);
 }
 
 // [[Rcpp::export]]
@@ -82,10 +95,16 @@ std::vector<double> calc_fs(std::vector<double> alleles){
   int n_al = alleles.size();
   std::vector<double> fs = std::vector<double>(n_al);
   for(int i = 0; i < n_al; ++i){
-    double tmp = alleles[i] + 1;
-    fs[i] = round(tmp * 10) / 10;
+    fs[i] = calc_fs_one(alleles[i]);
   }
   return(fs);
+}
+
+// [[Rcpp::export]]
+double calc_ds_one(double al){
+  double tmp = al - 2;
+  double ds_one = round(tmp * 10) / 10;
+  return(ds_one);
 }
 
 // [[Rcpp::export]]
@@ -93,10 +112,23 @@ std::vector<double> calc_ds(std::vector<double> alleles){
   int n_al = alleles.size();
   std::vector<double> ds = std::vector<double>(n_al);
   for(int i = 0; i < n_al; ++i){
-    double tmp = alleles[i] - 2;
-    ds[i] = round(tmp * 10) / 10;
+    ds[i] = calc_ds_one(alleles[i]);
   }
   return(ds);
+}
+
+// [[Rcpp::export]]
+double calc_m2s_one(double al){
+  double residual = fmod(al, 1);
+  double m2s_one = 0;
+  if(residual < 0.15){
+    double tmp = al - 0.8;
+    m2s_one = round(tmp * 10) / 10;
+  }else{
+    double tmp = al - 0.2;
+    m2s_one = round(tmp * 10) / 10;
+  }
+  return(m2s_one);
 }
 
 // [[Rcpp::export]]
@@ -104,15 +136,7 @@ std::vector<double> calc_m2s(std::vector<double> alleles){
   int n_al = alleles.size();
   std::vector<double> m2s = std::vector<double>(n_al);
   for(int i = 0; i < n_al; ++i){
-    double al = alleles[i];
-    double residual = fmod(al, 1);
-    if(residual < 0.15){
-      double tmp = al - 0.8;
-      m2s[i] = round(tmp * 10) / 10;
-    }else{
-      double tmp = al - 0.2;
-      m2s[i] = round(tmp * 10) / 10;
-    }
+    m2s[i] = calc_m2s_one(alleles[i]);
   }
   return(m2s);
 }

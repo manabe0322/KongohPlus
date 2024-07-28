@@ -29,16 +29,32 @@ setdiff_int <- function(vec_int1, vec_int2) {
     .Call(`_KongohPlus_setdiff_int`, vec_int1, vec_int2)
 }
 
+calc_bs_one <- function(al) {
+    .Call(`_KongohPlus_calc_bs_one`, al)
+}
+
 calc_bs <- function(alleles) {
     .Call(`_KongohPlus_calc_bs`, alleles)
+}
+
+calc_fs_one <- function(al) {
+    .Call(`_KongohPlus_calc_fs_one`, al)
 }
 
 calc_fs <- function(alleles) {
     .Call(`_KongohPlus_calc_fs`, alleles)
 }
 
+calc_ds_one <- function(al) {
+    .Call(`_KongohPlus_calc_ds_one`, al)
+}
+
 calc_ds <- function(alleles) {
     .Call(`_KongohPlus_calc_ds`, alleles)
+}
+
+calc_m2s_one <- function(al) {
+    .Call(`_KongohPlus_calc_m2s_one`, al)
 }
 
 calc_m2s <- function(alleles) {
@@ -47,6 +63,10 @@ calc_m2s <- function(alleles) {
 
 make_cand_peak <- function(alleles, sr_consider) {
     .Call(`_KongohPlus_make_cand_peak`, alleles, sr_consider)
+}
+
+make_detectable_peak <- function(gtc, peaks, bsrs, fsrs, dsrs, m2srs) {
+    .Call(`_KongohPlus_make_detectable_peak`, gtc, peaks, bsrs, fsrs, dsrs, m2srs)
 }
 
 search_index_dropin <- function(peaks_rm99, cand_peak) {
