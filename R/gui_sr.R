@@ -381,7 +381,7 @@ sr_server <- function(id, path_pack){
         if(!is.null(dt_info_sr)){
           datatable(
             dt_info_sr,
-            colnames = c("Allele", "Average back stutter ratio", "Average forward stutter ratio", "Average double-back stutter ratio"),
+            colnames = c("Allele", "Average back stutter ratio", "Average forward stutter ratio", "Average double-back stutter ratio", "Average minus 2-nt stutter ratio"),
             selection = list(mode = "single", target = "row"),
             options = list(dom = "t", iDisplayLength = nrow(dt_info_sr), ordering = FALSE, autoWidth = TRUE),
             rownames = FALSE
