@@ -7,43 +7,45 @@ std::vector<double> make_detectable_peak(std::vector<double> gtc,
                                          std::vector<double> fsrs,
                                          std::vector<double> dsrs,
                                          std::vector<double> m2srs){
-  std::vector<double> cand_peak = gtc;
+  std::vector<double> detectable_peak = gtc;
   int n_al = gtc.size();
   for(int i = 0; i < n_al; ++i){
     double al = gtc[i];
     int index_al = find_index_double(al, peaks);
-    if(bsrs[index_al] != 0){
-      double bs = calc_bs_one(al);
-      cand_peak.push_back(bs);
-    }
-    if(fsrs[index_al] != 0){
-      double fs = calc_fs_one(al);
-      cand_peak.push_back(fs);
-    }
-    if(dsrs[index_al] != 0){
-      double ds = calc_ds_one(al);
-      cand_peak.push_back(ds);
-    }
-    if(m2srs[index_al] != 0){
-      double m2s = calc_m2s_one(al);
-      cand_peak.push_back(m2s);
+    if(index_al != -1){
+      if(bsrs[index_al] != 0){
+        double bs = calc_bs_one(al);
+        detectable_peak.push_back(bs);
+      }
+      if(fsrs[index_al] != 0){
+        double fs = calc_fs_one(al);
+        detectable_peak.push_back(fs);
+      }
+      if(dsrs[index_al] != 0){
+        double ds = calc_ds_one(al);
+        detectable_peak.push_back(ds);
+      }
+      if(m2srs[index_al] != 0){
+        double m2s = calc_m2s_one(al);
+        detectable_peak.push_back(m2s);
+      }
     }
   }
 
-  std::sort(cand_peak.begin(), cand_peak.end());
-  decltype(cand_peak)::iterator result = std::unique(cand_peak.begin(), cand_peak.end());
-  cand_peak.erase(result, cand_peak.end());
+  std::sort(detectable_peak.begin(), detectable_peak.end());
+  decltype(detectable_peak)::iterator result = std::unique(detectable_peak.begin(), detectable_peak.end());
+  detectable_peak.erase(result, detectable_peak.end());
 
-  return(cand_peak);
+  return(detectable_peak);
 }
 
 // [[Rcpp::export]]
 std::vector<int> search_index_dropin(std::vector<double> peaks_rm99,
-                                     std::vector<double> cand_peak){
+                                     std::vector<double> detectable_peak){
   int n_peaks_rm99 = peaks_rm99.size();
   std::vector<int> index_dropin;
   for(int i = 0; i < n_peaks_rm99; ++i){
-    int index_peak = find_index_double(peaks_rm99[i], cand_peak);
+    int index_peak = find_index_double(peaks_rm99[i], detectable_peak);
     if(index_peak == -1){
       index_dropin.push_back(i);
     }
@@ -54,7 +56,7 @@ std::vector<int> search_index_dropin(std::vector<double> peaks_rm99,
 // [[Rcpp::export]]
 bool judge_gtc_dropin(std::vector<double> peaks_rm99,
                       std::vector<double> heights_rm99,
-                      std::vector<double> cand_peak,
+                      std::vector<double> detectable_peak,
                       std::vector<int> index_dropin,
                       int n_dropin_fltr,
                       double h_dropin_fltr){
@@ -188,15 +190,19 @@ bool judge_gtc(std::vector<double> gtc,
                std::vector<double> peaks_rm99,
                std::vector<double> heights_rm99,
                std::vector<bool> sr_consider,
+               std::vector<double> bsrs,
+               std::vector<double> fsrs,
+               std::vector<double> dsrs,
+               std::vector<double> m2srs,
                double bsr_fltr,
                double fsr_fltr,
                double dsr_fltr,
                double m2sr_fltr,
                int n_dropin_fltr,
                double h_dropin_fltr){
-  std::vector<double> cand_peak = make_cand_peak(gtc, sr_consider);
-  std::vector<int> index_dropin = search_index_dropin(peaks_rm99, cand_peak);
-  bool adopt_gtc = judge_gtc_dropin(peaks_rm99, heights_rm99, cand_peak, index_dropin, n_dropin_fltr, h_dropin_fltr);
+  std::vector<double> detectable_peak = make_detectable_peak(gtc, peaks, bsrs, fsrs, dsrs, m2srs);
+  std::vector<int> index_dropin = search_index_dropin(peaks_rm99, detectable_peak);
+  bool adopt_gtc = judge_gtc_dropin(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr);
 
   if(adopt_gtc){
     std::vector<std::vector<double>> tmp = remove_dropin(peaks_rm99, heights_rm99, index_dropin);
@@ -214,6 +220,10 @@ std::vector<std::vector<int>> judge_gtc_mk(std::vector<std::vector<double>> cand
                                            std::vector<double> peaks,
                                            std::vector<std::vector<double>> heights_all_rep,
                                            std::vector<bool> sr_consider,
+                                           std::vector<double> bsrs,
+                                           std::vector<double> fsrs,
+                                           std::vector<double> dsrs,
+                                           std::vector<double> m2srs,
                                            double bsr_fltr,
                                            double fsr_fltr,
                                            double dsr_fltr,
@@ -251,7 +261,9 @@ std::vector<std::vector<int>> judge_gtc_mk(std::vector<std::vector<double>> cand
     for(int j = 0; j < n_rep; ++j){
       std::vector<double> heights = heights_all_rep.at(j);
       std::vector<double> heights_rm99 = heights_all_rep_rm99.at(j);
-      adopt_gtc = judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr);
+      adopt_gtc = judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99,
+                            sr_consider, bsrs, fsrs, dsrs, m2srs,
+                            bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr);
       if(!adopt_gtc){
         break;
       }

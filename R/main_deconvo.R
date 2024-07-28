@@ -138,7 +138,9 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
       index_gtc_cpp <- asplit(index_gtc_cpp, 1)
 
       # Indices of genotypes of each contributor in each adopted genotype combination
-      index_gtc_adopt_cpp <- judge_gtc_mk(cand_gt, index_gtc_cpp, peaks, heights_all_rep, sr_consider, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+      index_gtc_adopt_cpp <- judge_gtc_mk(cand_gt, index_gtc_cpp, peaks, heights_all_rep,
+                                          sr_consider, bsrs, fsrs, dsrs, m2srs,
+                                          bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
       n_gtc_use[i] <- n_gtc <- length(index_gtc_adopt_cpp)
 
       if(n_gtc != 0){
