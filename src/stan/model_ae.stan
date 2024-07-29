@@ -2,7 +2,6 @@ data{
   int N;
   int N_Mk;
   matrix[N_Mk, N] PAE;
-  vector[N] Tph;
 }
 
 parameters{
@@ -11,6 +10,6 @@ parameters{
 
 model{
   for(i in 1:N){
-    PAE[, i] ~ dirichlet(Tph[i] * alpha);
+    PAE[, i] ~ dirichlet(alpha);
   }
 }

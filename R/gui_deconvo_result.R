@@ -58,11 +58,11 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
         dt_af <- rv_deconvo$dt_af
 
         hnc <- data_deconvo$hnc
-        markers_auto <- data_deconvo$markers_auto
+        markers_use <- data_deconvo$markers_use
         dt_pg_list <- data_deconvo$dt_pg_list
         dt_log10like <- data_deconvo$dt_log10like
         dt_mpdeg <- data_deconvo$dt_mpdeg
-        dt_param <- data_deconvo$dt_param
+        dt_mcmc <- data_deconvo$dt_mcmc
         traceplot <- data_deconvo$traceplot
 
         output$dt_mpdeg <- renderDataTable(server = FALSE, {
@@ -79,18 +79,18 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
         observeEvent(input$act_pardiag, {
           showModal(modalDialog(
             title = "Parameters and diagnostics",
-            dataTableOutput(session$ns("dt_param")),
+            dataTableOutput(session$ns("dt_mcmc")),
             easyClose = TRUE,
             footer = NULL,
             size = "l"
           ))
         })
 
-        output$dt_param <- renderDataTable(server = FALSE, {
+        output$dt_mcmc <- renderDataTable(server = FALSE, {
           datatable(
-            dt_param,
+            dt_mcmc,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_param), ordering = FALSE, autowidth = TRUE,
+            options = list(dom = "t", iDisplayLength = nrow(dt_mcmc), ordering = FALSE, autowidth = TRUE,
                            columnDefs = list(list(width = "200px", targets = c(0)),
                                              list(width = "150px", targets = c(1, 2, 3, 4)))),
             rownames = FALSE,
@@ -115,7 +115,7 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
           content = function(file){
             report_tmp <- file.path(tempdir(), "report.Rmd")
             file.copy(paste0(path_pack, "/rmd/report.Rmd"), report_tmp, overwrite = TRUE)
-            params <- list(dt_csp = dt_csp, dt_ref = dt_ref, hnc = hnc, markers_auto = markers_auto, dt_mpdeg = dt_mpdeg, dt_param = dt_param, dt_pg_list = dt_pg_list, dt_log10like = dt_log10like)
+            params <- list(dt_csp = dt_csp, dt_ref = dt_ref, hnc = hnc, markers_use = markers_use, dt_mpdeg = dt_mpdeg, dt_mcmc = dt_mcmc, dt_pg_list = dt_pg_list, dt_log10like = dt_log10like)
             render(report_tmp, output_file = file, params = params, envir = new.env(parent = globalenv()))
           }
         )
@@ -125,7 +125,7 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
         })
 
         output$mk_pg <- renderUI({
-          selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_auto, selected = markers_auto[1], selectize = FALSE)
+          selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_use, selected = markers_use[1], selectize = FALSE)
         })
 
         observeEvent(input$mk_pg, {
@@ -136,10 +136,10 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
               dt_pg_list[[mk_select]],
               selection = list(mode = "single", target = "row"),
               options = list(iDisplayLength = 10, ordering = FALSE, autowidth = TRUE,
-                             columnDefs = list(list(targets = c(hnc + 1, hnc + 2), visible = FALSE))),
+                             columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
               rownames = FALSE
             ) %>%
-              formatSignif(columns = c("Weight"), digits = 3)
+              formatSignif(columns = c("post_prob"), digits = 3)
           })
         })
 

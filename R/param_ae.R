@@ -56,18 +56,16 @@ calc_tph_all_data <- function(height_list){
 #' @param markers_auto The vector of autosomal markers
 #' @param model_ae The stan model for AE
 #' @param pae_data_use The data of the proportion of the AE which is used for MCMC
-#' @param tph_data_use The data of the total peak height which is used for MCMC
 #' @param n_warmup The number of simulations for warm-up
 #' @param n_sampling The number of simulations for sampling
 #' @param n_chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
-analyze_ae_main <- function(markers_auto, model_ae,
-                            pae_data_use, tph_data_use,
+analyze_ae_main <- function(markers_auto, model_ae, pae_data_use,
                             n_warmup, n_sampling, n_chains, n_parallel_chains){
 
   cat("MCMC for the locus-specific amplification efficiency\n")
   n_mk <- length(markers_auto)
-  data_list_ae <- list(N = ncol(pae_data_use), N_Mk = nrow(pae_data_use), PAE = pae_data_use, Tph = tph_data_use)
+  data_list_ae <- list(N = ncol(pae_data_use), N_Mk = nrow(pae_data_use), PAE = pae_data_use)
   tmp <- run_mcmc_ae(model_ae, data_list_ae, n_mk, n_warmup, n_sampling, n_chains, n_parallel_chains)
   median_alpha <- tmp$median_alpha
   rhat_alpha <- tmp$rhat_alpha

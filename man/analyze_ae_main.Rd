@@ -8,7 +8,6 @@ analyze_ae_main(
   markers_auto,
   model_ae,
   pae_data_use,
-  tph_data_use,
   n_warmup,
   n_sampling,
   n_chains,
@@ -21,8 +20,6 @@ analyze_ae_main(
 \item{model_ae}{The stan model for AE}
 
 \item{pae_data_use}{The data of the proportion of the AE which is used for MCMC}
-
-\item{tph_data_use}{The data of the total peak height which is used for MCMC}
 
 \item{n_warmup}{The number of simulations for warm-up}
 

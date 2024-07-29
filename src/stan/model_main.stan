@@ -90,7 +90,7 @@ transformed parameters{
 model{
   tph ~ normal(tph_mean, tph_sd);
   target += gamma_lpdf(lambda | rep_vector(1, hnc), 1);
-  deg ~ normal(-0.025, 0.0125);
+  deg ~ normal(0, 0.015);
   pae ~ dirichlet(tph * ae_alpha_use);
 
   vector[n_dedup1_sum] ae_dedup1_use = n_mk * pae[id_mk_dedup1];

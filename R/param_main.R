@@ -126,8 +126,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_p
   seq_count_auto <- tmp$seq_count_auto
 
   # Perform the MCMC for the locus-specific amplification efficiency
-  ae_result_list <- analyze_ae_main(markers_auto, model_ae,
-                                    pae_data_use, tph_data_use,
+  ae_result_list <- analyze_ae_main(markers_auto, model_ae, pae_data_use,
                                     n_warmup, n_sampling, n_chains, n_parallel_chains)
 
   # Perform the MCMC for the back stutter ratio
