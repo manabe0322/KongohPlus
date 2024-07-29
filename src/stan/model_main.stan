@@ -78,20 +78,20 @@ transformed data{
 
 parameters{
   real<lower = ltph, upper = htph> tph;
-  positive_ordered[hnc] lambda;
+  ordered[hnc] lambda;
   vector<lower = -0.05, upper = 0>[hnc] deg;
   simplex[n_mk] pae;
 }
 
 transformed parameters{
-  simplex[hnc] mp = lambda / sum(lambda);
+  simplex[hnc] mp; // = lambda / sum(lambda);
+  mp = softmax(lambda);
 }
 
 model{
-  tph ~ normal(tph_mean, tph_sd);
-  target += gamma_lpdf(lambda | rep_vector(1, hnc), 1);
-  deg ~ normal(0, 0.015);
-  pae ~ dirichlet(tph * ae_alpha_use);
+  lambda ~ normal(0, 5);
+  //target += gamma_lpdf(lambda | 1, 1);
+  pae ~ dirichlet(rep_vector(1, n_mk));
 
   vector[n_dedup1_sum] ae_dedup1_use = n_mk * pae[id_mk_dedup1];
 
