@@ -185,29 +185,31 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
           # Indices of each peak type
           rph_dedup1_tmp <- matrix(rph_base_mk[index_dedup1_tmp], nrow = 2 * hnc)
           rph_dedup1_tmp <- apply(rph_dedup1_tmp, 2, sum)
-          index_ignore <- which(rph_dedup1_tmp == 0)
-          index_dropin <- which(rph_dedup1_tmp < 0)
           index_oph0 <- which(oph_dedup1_tmp == 0)
-          index_dropout <- setdiff(index_oph0, index_ignore)
+          #index_ignore <- which(rph_dedup1_tmp == 0)
+          index_ignore <- c(which(rph_dedup1_tmp == 0), intersect(which(rph_dedup1_tmp < 0), index_oph0))
+          #index_dropin <- which(rph_dedup1_tmp < 0)
+          index_dropin <- setdiff(which(rph_dedup1_tmp < 0), index_ignore)
+          index_dropout <- setdiff(index_oph0, c(index_ignore, index_dropin))
           index_general <- setdiff(1:length(rph_dedup1_tmp), c(index_ignore, index_dropin, index_dropout))
 
-          index_dedup1_general_use[[i]][[j]] <- index_dedup1_tmp[, index_general, drop = FALSE]
-          index_dedup1_dropout_use[[i]][[j]] <- index_dedup1_tmp[, index_dropout, drop = FALSE]
-          index_dedup1_dropin_use[[i]][[j]] <- index_dedup1_tmp[, index_dropin, drop = FALSE]
-          index_dedup1_ignore_use[[i]][[j]] <- index_dedup1_tmp[, index_ignore, drop = FALSE]
+          index_dedup1_general_use[[j]][[i]] <- index_dedup1_tmp[, index_general, drop = FALSE]
+          index_dedup1_dropout_use[[j]][[i]] <- index_dedup1_tmp[, index_dropout, drop = FALSE]
+          index_dedup1_dropin_use[[j]][[i]] <- index_dedup1_tmp[, index_dropin, drop = FALSE]
+          index_dedup1_ignore_use[[j]][[i]] <- index_dedup1_tmp[, index_ignore, drop = FALSE]
 
-          size_dedup1_general_use[[i]][[j]] <- size_dedup1_tmp[index_general]
-          size_dedup1_dropout_use[[i]][[j]] <- size_dedup1_tmp[index_dropout]
-          size_dedup1_dropin_use[[i]][[j]] <- size_dedup1_tmp[index_dropin]
-          size_dedup1_ignore_use[[i]][[j]] <- size_dedup1_tmp[index_ignore]
+          size_dedup1_general_use[[j]][[i]] <- size_dedup1_tmp[index_general]
+          size_dedup1_dropout_use[[j]][[i]] <- size_dedup1_tmp[index_dropout]
+          size_dedup1_dropin_use[[j]][[i]] <- size_dedup1_tmp[index_dropin]
+          size_dedup1_ignore_use[[j]][[i]] <- size_dedup1_tmp[index_ignore]
 
-          oph_dedup1_general_use[[i]][[j]] <- oph_dedup1_tmp[index_general]
-          oph_dedup1_dropout_use[[i]][[j]] <- oph_dedup1_tmp[index_dropout]
-          oph_dedup1_dropin_use[[i]][[j]] <- oph_dedup1_tmp[index_dropin]
-          oph_dedup1_ignore_use[[i]][[j]] <- oph_dedup1_tmp[index_ignore]
+          oph_dedup1_general_use[[j]][[i]] <- oph_dedup1_tmp[index_general]
+          oph_dedup1_dropout_use[[j]][[i]] <- oph_dedup1_tmp[index_dropout]
+          oph_dedup1_dropin_use[[j]][[i]] <- oph_dedup1_tmp[index_dropin]
+          oph_dedup1_ignore_use[[j]][[i]] <- oph_dedup1_tmp[index_ignore]
 
           if(length(index_dropin) != 0){
-            loglike_di_use[[i]][[j]] <- log(dgamma(oph_dedup1_tmp[index_dropin] - mt_di + 1, shape_di, rate_di)) + logprob_di
+            loglike_di_use[[j]][[i]] <- log(dgamma(oph_dedup1_tmp[index_dropin] - mt_di + 1, shape_di, rate_di)) + logprob_di
           }
         }
       }
@@ -361,33 +363,33 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
         n_general <- n_general_use_2nd[i]
         if(n_general != 0){
           index_tmp <- index_general_start:(index_general_start + n_general - 1)
-          index_dedup1_use_2nd[, index_tmp] <- index_dedup1_general_use[[1]][[i]] + sumup_index_dedup1
-          size_dedup1_use_2nd[index_tmp] <- size_dedup1_general_use[[1]][[i]]
-          oph_dedup1_use_2nd[index_tmp] <- oph_dedup1_general_use[[1]][[i]]
+          index_dedup1_use_2nd[, index_tmp] <- index_dedup1_general_use[[2]][[i]] + sumup_index_dedup1
+          size_dedup1_use_2nd[index_tmp] <- size_dedup1_general_use[[2]][[i]]
+          oph_dedup1_use_2nd[index_tmp] <- oph_dedup1_general_use[[2]][[i]]
         }
 
         n_dropout <- n_dropout_use_2nd[i]
         if(n_dropout != 0){
           index_tmp <- index_dropout_start:(index_dropout_start + n_dropout - 1)
-          index_dedup1_use_2nd[, index_tmp] <- index_dedup1_dropout_use[[1]][[i]] + sumup_index_dedup1
-          size_dedup1_use_2nd[index_tmp] <- size_dedup1_dropout_use[[1]][[i]]
-          oph_dedup1_use_2nd[index_tmp] <- oph_dedup1_dropout_use[[1]][[i]]
+          index_dedup1_use_2nd[, index_tmp] <- index_dedup1_dropout_use[[2]][[i]] + sumup_index_dedup1
+          size_dedup1_use_2nd[index_tmp] <- size_dedup1_dropout_use[[2]][[i]]
+          oph_dedup1_use_2nd[index_tmp] <- oph_dedup1_dropout_use[[2]][[i]]
         }
 
         n_dropin <- n_dropin_use_2nd[i]
         if(n_dropin != 0){
           index_tmp <- index_dropin_start:(index_dropin_start + n_dropin - 1)
-          index_dedup1_use_2nd[, index_tmp] <- index_dedup1_dropin_use[[1]][[i]] + sumup_index_dedup1
-          size_dedup1_use_2nd[index_tmp] <- size_dedup1_dropin_use[[1]][[i]]
-          oph_dedup1_use_2nd[index_tmp] <- oph_dedup1_dropin_use[[1]][[i]]
+          index_dedup1_use_2nd[, index_tmp] <- index_dedup1_dropin_use[[2]][[i]] + sumup_index_dedup1
+          size_dedup1_use_2nd[index_tmp] <- size_dedup1_dropin_use[[2]][[i]]
+          oph_dedup1_use_2nd[index_tmp] <- oph_dedup1_dropin_use[[2]][[i]]
         }
 
         n_ignore <- n_ignore_use_2nd[i]
         if(n_ignore != 0){
           index_tmp <- index_ignore_start:(index_ignore_start + n_ignore - 1)
-          index_dedup1_use_2nd[, index_tmp] <- index_dedup1_ignore_use[[1]][[i]] + sumup_index_dedup1
-          size_dedup1_use_2nd[index_tmp] <- size_dedup1_ignore_use[[1]][[i]]
-          oph_dedup1_use_2nd[index_tmp] <- oph_dedup1_ignore_use[[1]][[i]]
+          index_dedup1_use_2nd[, index_tmp] <- index_dedup1_ignore_use[[2]][[i]] + sumup_index_dedup1
+          size_dedup1_use_2nd[index_tmp] <- size_dedup1_ignore_use[[2]][[i]]
+          oph_dedup1_use_2nd[index_tmp] <- oph_dedup1_ignore_use[[2]][[i]]
         }
 
         index_general_start <- index_general_start + n_general
