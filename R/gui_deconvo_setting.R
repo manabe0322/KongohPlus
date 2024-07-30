@@ -156,9 +156,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         req(input$sampling)
         req(input$chains)
 
-        isolate(warmup <- input$warmup)
-        isolate(sampling <- input$sampling)
-        isolate(chains <- input$chains)
+        warmup <- input$warmup
+        sampling <- input$sampling
+        chains <- input$chains
 
         if(all(is.integer(warmup), is.integer(sampling), is.integer(chains))){
           rv_deconvo_setting$warmup <- warmup
