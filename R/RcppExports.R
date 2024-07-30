@@ -113,8 +113,8 @@ calc_gtc_prob_mk <- function(gtc_mk, pop_al, pop_prob, theta, prof_ref, hyp_id, 
     .Call(`_KongohPlus_calc_gtc_prob_mk`, gtc_mk, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs)
 }
 
-calc_rph_dedup1_cpp <- function(mp, deg, hnc, n_dedup1_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, min_size, ae_dedup1_all_mk) {
-    .Call(`_KongohPlus_calc_rph_dedup1_cpp`, mp, deg, hnc, n_dedup1_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, min_size, ae_dedup1_all_mk)
+calc_rph_dedup1_cpp <- function(mp, deg, hnc, n_dedup1_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, mean_size, ae_dedup1_all_mk) {
+    .Call(`_KongohPlus_calc_rph_dedup1_cpp`, mp, deg, hnc, n_dedup1_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, mean_size, ae_dedup1_all_mk)
 }
 
 gamma_pdf <- function(value, shape, scale) {
@@ -125,8 +125,8 @@ gamma_cdf <- function(threshold, shape, scale) {
     .Call(`_KongohPlus_gamma_cdf`, threshold, shape, scale)
 }
 
-calc_lpd_gtc_all_mk_cpp <- function(n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, min_size, ae_dedup1_all_mk, oph_dedup1_all_mk, at_dropout, loglike_di, cv, tph, index_dedup2_all_mk_cpp, n_dedup2_all_mk, n_peak_all_mk, n_gtc_all_mk) {
-    .Call(`_KongohPlus_calc_lpd_gtc_all_mk_cpp`, n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, min_size, ae_dedup1_all_mk, oph_dedup1_all_mk, at_dropout, loglike_di, cv, tph, index_dedup2_all_mk_cpp, n_dedup2_all_mk, n_peak_all_mk, n_gtc_all_mk)
+calc_lpd_gtc_all_mk_cpp <- function(n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, mean_size, ae_dedup1_all_mk, oph_dedup1_all_mk, at_dropout, loglike_di, cv, tph, index_dedup2_all_mk_cpp, n_dedup2_all_mk, n_peak_all_mk, n_gtc_all_mk) {
+    .Call(`_KongohPlus_calc_lpd_gtc_all_mk_cpp`, n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, mean_size, ae_dedup1_all_mk, oph_dedup1_all_mk, at_dropout, loglike_di, cv, tph, index_dedup2_all_mk_cpp, n_dedup2_all_mk, n_peak_all_mk, n_gtc_all_mk)
 }
 
 make_rph_base <- function(peaks, bsrs, fsrs, dsrs, m2srs) {

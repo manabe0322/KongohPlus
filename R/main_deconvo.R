@@ -17,7 +17,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
     peaks_list <- tmp$peaks_list
     sizes_list <- tmp$sizes_list
     heights_list <- tmp$heights_list
-    min_size <- min(unlist(sizes_list))
+    mean_size <- mean(dt_kit_auto$Size)
 
     # Extract parameters for AE
     ae_alpha_all_mk <- dt_par$Alpha[dt_par$Parameter == "AE"]
@@ -310,7 +310,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
                              n_dedup1_sum = n_dedup1_sum_1st,
                              index_dedup1_use = index_dedup1_use_1st,
                              size_dedup1_use = size_dedup1_use_1st,
-                             min_size = min_size,
+                             mean_size = mean_size,
                              oph_dedup1_use = oph_dedup1_use_1st,
                              id_mk_dedup1 = id_mk_dedup1_1st,
                              n_general_sum = n_general_sum_1st,
@@ -363,7 +363,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
       index_dedup2_use_cpp <- index_dedup2_use_1st - 1 # C++ index
       ae_dedup1_use <- ae[id_mk_dedup1_1st]
       lpd_gtc_use <- calc_lpd_gtc_all_mk_cpp(n_mk, mp, deg, hnc, n_dedup1_sum_1st, n_general_sum_1st, n_dropout_sum_1st, n_dropin_sum_1st,
-                                             unlist(rph_base_use), index_dedup1_use_cpp, unlist(size_dedup1_use_1st), min_size, ae_dedup1_use, oph_dedup1_use_1st,
+                                             unlist(rph_base_use), index_dedup1_use_cpp, unlist(size_dedup1_use_1st), mean_size, ae_dedup1_use, oph_dedup1_use_1st,
                                              at_dropout_1st, loglike_di_1st, cv, tph,
                                              index_dedup2_use_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
       log10like_use <- calc_log10like_use(gtc_logprob_use, lpd_gtc_use)
@@ -464,9 +464,10 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
                              rph_base_use = unlist(rph_base_use),
                              ae_alpha_use = ae_alpha_use,
                              cv = cv,
+                             mean_size = mean_size,
                              n_dedup1_sum_1st = n_dedup1_sum_1st,
                              index_dedup1_use_1st = index_dedup1_use_1st,
-                             size_dedup1_use_1st = size_dedup1_use_1st - min_size,
+                             size_dedup1_use_1st = size_dedup1_use_1st,
                              oph_dedup1_use_1st = oph_dedup1_use_1st,
                              id_mk_dedup1_1st = id_mk_dedup1_1st,
                              n_general_sum_1st = n_general_sum_1st,
@@ -476,7 +477,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
                              loglike_di_1st = loglike_di_1st,
                              n_dedup1_sum_2nd = n_dedup1_sum_2nd,
                              index_dedup1_use_2nd = index_dedup1_use_2nd,
-                             size_dedup1_use_2nd = size_dedup1_use_2nd - min_size,
+                             size_dedup1_use_2nd = size_dedup1_use_2nd,
                              oph_dedup1_use_2nd = oph_dedup1_use_2nd,
                              id_mk_dedup1_2nd = id_mk_dedup1_2nd,
                              n_general_sum_2nd = n_general_sum_2nd,
@@ -532,14 +533,14 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
       index_dedup2_use_cpp_1st <- index_dedup2_use_1st - 1 # C++ index
       ae_dedup1_use_1st <- ae[id_mk_dedup1_1st]
       lpd_gtc_use_1st <- calc_lpd_gtc_all_mk_cpp(n_mk, mp, deg, hnc, n_dedup1_sum_1st, n_general_sum_1st, n_dropout_sum_1st, n_dropin_sum_1st,
-                                                 unlist(rph_base_use), index_dedup1_use_cpp_1st, unlist(size_dedup1_use_1st) - min_size, ae_dedup1_use_1st, oph_dedup1_use_1st,
+                                                 unlist(rph_base_use), index_dedup1_use_cpp_1st, unlist(size_dedup1_use_1st), mean_size, ae_dedup1_use_1st, oph_dedup1_use_1st,
                                                  at_dropout_1st, loglike_di_1st, cv, tph_1st,
                                                  index_dedup2_use_cpp_1st, n_dedup2_use, n_peak_use, n_gtc_use)
       index_dedup1_use_cpp_2nd <- asplit(index_dedup1_use_2nd - 1, 1) # C++ index
       index_dedup2_use_cpp_2nd <- index_dedup2_use_2nd - 1 # C++ index
       ae_dedup1_use_2nd <- ae[id_mk_dedup1_2nd]
       lpd_gtc_use_2nd <- calc_lpd_gtc_all_mk_cpp(n_mk, mp, deg, hnc, n_dedup1_sum_2nd, n_general_sum_2nd, n_dropout_sum_2nd, n_dropin_sum_2nd,
-                                                 unlist(rph_base_use), index_dedup1_use_cpp_2nd, unlist(size_dedup1_use_2nd) - min_size, ae_dedup1_use_2nd, oph_dedup1_use_2nd,
+                                                 unlist(rph_base_use), index_dedup1_use_cpp_2nd, unlist(size_dedup1_use_2nd), mean_size, ae_dedup1_use_2nd, oph_dedup1_use_2nd,
                                                  at_dropout_2nd, loglike_di_2nd, cv, tph_2nd,
                                                  index_dedup2_use_cpp_2nd, n_dedup2_use, n_peak_use, n_gtc_use)
       log10like_use <- calc_log10like_use(gtc_logprob_use, lpd_gtc_use_1st, lpd_gtc_use_2nd)
