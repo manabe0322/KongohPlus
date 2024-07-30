@@ -8,6 +8,7 @@ std::vector<double> calc_rph_dedup1_cpp(std::vector<double> mp,
                                         std::vector<double> rph_base_all_mk,
                                         std::vector<std::vector<int>> index_dedup1_all_mk_cpp,
                                         std::vector<double> size_dedup1_all_mk,
+                                        double min_size,
                                         std::vector<double> ae_dedup1_all_mk){
   std::vector<double> rph_dedup1_all_mk(n_dedup1_sum, 0);
   for(int i = 0; i < hnc; ++i){
@@ -16,8 +17,8 @@ std::vector<double> calc_rph_dedup1_cpp(std::vector<double> mp,
     std::vector<int> ind_dedup1_al1 = index_dedup1_all_mk_cpp.at(2 * i);
     std::vector<int> ind_dedup1_al2 = index_dedup1_all_mk_cpp.at(2 * i + 1);
     for(int j = 0; j < n_dedup1_sum; ++j){
-      rph_dedup1_all_mk[j] += rph_base_all_mk[ind_dedup1_al1[j]] * mp_c1 * exp(deg_c1 * size_dedup1_all_mk[j]) * ae_dedup1_all_mk[j];
-      rph_dedup1_all_mk[j] += rph_base_all_mk[ind_dedup1_al2[j]] * mp_c1 * exp(deg_c1 * size_dedup1_all_mk[j]) * ae_dedup1_all_mk[j];
+      rph_dedup1_all_mk[j] += rph_base_all_mk[ind_dedup1_al1[j]] * mp_c1 * std::pow(deg_c1, (size_dedup1_all_mk[j] - min_size) / min_size) * ae_dedup1_all_mk[j];
+      rph_dedup1_all_mk[j] += rph_base_all_mk[ind_dedup1_al2[j]] * mp_c1 * std::pow(deg_c1, (size_dedup1_all_mk[j] - min_size) / min_size) * ae_dedup1_all_mk[j];
     }
   }
   return(rph_dedup1_all_mk);
@@ -100,6 +101,7 @@ std::vector<std::vector<double>> calc_lpd_gtc_all_mk_cpp(int n_mk,
                                                          std::vector<double> rph_base_all_mk,
                                                          std::vector<std::vector<int>> index_dedup1_all_mk_cpp,
                                                          std::vector<double> size_dedup1_all_mk,
+                                                         double min_size,
                                                          std::vector<double> ae_dedup1_all_mk,
                                                          std::vector<double> oph_dedup1_all_mk,
                                                          std::vector<double> at_dropout,
@@ -111,7 +113,7 @@ std::vector<std::vector<double>> calc_lpd_gtc_all_mk_cpp(int n_mk,
                                                          std::vector<int> n_peak_all_mk,
                                                          std::vector<int> n_gtc_all_mk){
 
-  std::vector<double> rph_dedup1_all_mk = calc_rph_dedup1_cpp(mp, deg, hnc, n_dedup1_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, ae_dedup1_all_mk);
+  std::vector<double> rph_dedup1_all_mk = calc_rph_dedup1_cpp(mp, deg, hnc, n_dedup1_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, min_size, ae_dedup1_all_mk);
 
   std::vector<double> lpd_dedup1_all_mk = calc_lpd_dedup1_all_mk(n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum,
                                                                  oph_dedup1_all_mk, rph_dedup1_all_mk, at_dropout, loglike_di, cv, tph);

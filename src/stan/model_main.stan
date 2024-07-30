@@ -1,11 +1,11 @@
 functions{
-  vector calc_rph_dedup1(vector mp, vector deg, int hnc, int n_dedup1_sum, vector rph_base_use, array[,] int index_dedup1_use, vector size_dedup1_use, vector ae_dedup1_use){
+  vector calc_rph_dedup1(vector mp, vector deg, int hnc, int n_dedup1_sum, vector rph_base_use, array[,] int index_dedup1_use, vector size_dedup1_use, real min_size, vector ae_dedup1_use){
     vector[n_dedup1_sum] rph_dedup1 = rep_vector(0, n_dedup1_sum);
     for(i in 1:hnc){
       vector[n_dedup1_sum] rph_base_use_c1 = rph_base_use[index_dedup1_use[2 * i - 1, ]] + rph_base_use[index_dedup1_use[2 * i, ]];
       real mp_c1 = mp[i];
       real deg_c1 = deg[i];
-      rph_dedup1 += rph_base_use_c1 * mp_c1 .* exp(deg_c1 * size_dedup1_use) .* ae_dedup1_use;
+      rph_dedup1 += rph_base_use_c1 * mp_c1 .* deg_c1^((size_dedup1_use - min_size) / min_size) .* ae_dedup1_use;
     }
     return rph_dedup1;
   }
@@ -51,6 +51,7 @@ data{
   int n_dedup1_sum;
   array[2 * hnc, n_dedup1_sum] int index_dedup1_use;
   vector[n_dedup1_sum] size_dedup1_use;
+  real min_size;
   vector[n_dedup1_sum] oph_dedup1_use;
   array[n_dedup1_sum] int id_mk_dedup1;
 
@@ -79,7 +80,7 @@ transformed data{
 parameters{
   real<lower = ltph, upper = htph> tph;
   ordered[hnc] lambda;
-  vector<lower = -0.05, upper = 0>[hnc] deg;
+  vector<lower = 0.1, upper = 1>[hnc] deg;
   simplex[n_mk] pae;
 }
 
@@ -89,13 +90,14 @@ transformed parameters{
 }
 
 model{
+  tph ~ normal(tph_mean, tph_sd);
   lambda ~ normal(0, 10);
   //target += gamma_lpdf(lambda | 1, 1);
   pae ~ dirichlet(rep_vector(1, n_mk));
 
   vector[n_dedup1_sum] ae_dedup1_use = n_mk * pae[id_mk_dedup1];
 
-  vector[n_dedup1_sum] rph_dedup1_use = calc_rph_dedup1(mp, deg, hnc, n_dedup1_sum, rph_base_use, index_dedup1_use, size_dedup1_use, ae_dedup1_use);
+  vector[n_dedup1_sum] rph_dedup1_use = calc_rph_dedup1(mp, deg, hnc, n_dedup1_sum, rph_base_use, index_dedup1_use, size_dedup1_use, min_size, ae_dedup1_use);
 
   vector[n_dedup1_sum] lpd_dedup1_use = rep_vector(0, n_dedup1_sum);
 
