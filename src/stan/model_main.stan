@@ -89,7 +89,7 @@ transformed parameters{
 }
 
 model{
-  lambda ~ normal(0, 5);
+  lambda ~ normal(0, 10);
   //target += gamma_lpdf(lambda | 1, 1);
   pae ~ dirichlet(rep_vector(1, n_mk));
 
