@@ -17,9 +17,9 @@ pick_al_size(
 )
 }
 \arguments{
-\item{dt_exp_one}{The data.table of the experimental data of one sample with 'setkey' for Marker}
+\item{dt_exp_one}{The data.table of the experimental data of one sample with 'setindex' for Marker}
 
-\item{dt_gt_one}{The data.table of the genotype data of one sample with 'setkey' for Marker}
+\item{dt_gt_one}{The data.table of the genotype data of one sample with 'setindex' for Marker}
 
 \item{markers_all}{All markers}
 
