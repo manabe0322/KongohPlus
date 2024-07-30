@@ -331,8 +331,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
         iter_warmup = warmup,
         iter_sampling = sampling,
         chains = chains,
-        parallel_chains = detectCores(),
-        adapt_delta = 0.95
+        parallel_chains = detectCores()
       )
 
       # Trace plot
