@@ -48,22 +48,22 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_use, ats_use){
   n_rep <- length(name_csp_all)
   n_mk <- length(markers_use)
 
-  setkey(dt_kit_auto, Marker)
-  setkey(dt_csp, Marker)
+  setindex(dt_kit_auto, Marker)
+  setindex(dt_csp, Marker)
 
   peaks_list <- sizes_list <- heights_list <- vector(mode = "list", length = n_rep)
 
   for(i in 1:n_mk){
     mk <- markers_use[i]
     at <- ats_use[i]
-    dt_kit_auto_mk <- dt_kit_auto[mk]
-    dt_csp_mk <- dt_csp[mk]
-    setkey(dt_csp_mk, SampleName)
+    dt_kit_auto_mk <- dt_kit_auto[Marker == mk]
+    dt_csp_mk <- dt_csp[Marker == mk]
+    setindex(dt_csp_mk, SampleName)
     peaks_list_mk <- heights_list_mk <- vector(mode = "list", length = n_rep)
     for(j in 1:n_rep){
       # Extract information on peaks of a marker in one replicate
       rep1 <- name_csp_all[j]
-      dt_csp_mk_rep1 <- dt_csp_mk[rep1]
+      dt_csp_mk_rep1 <- dt_csp_mk[SampleName == rep1]
       peaks <- as.numeric(dt_csp_mk_rep1[, index_allele, with = FALSE])
       peaks <- peaks[!is.na(peaks)]
       heights <- as.numeric(dt_csp_mk_rep1[, index_height, with = FALSE])

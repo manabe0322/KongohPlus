@@ -79,10 +79,10 @@ make_data_gamma <- function(markers_auto, gt_use, peak_use, pae_data_use, tph_da
   n_gt <- length(gt_use)
   n_mk <- length(markers_auto)
 
-  setkey(dt_alcor_bsr, Marker)
-  setkey(dt_alcor_fsr, Marker)
-  setkey(dt_alcor_dsr, Marker)
-  setkey(dt_result_m2sr, Marker)
+  setindex(dt_alcor_bsr, Marker)
+  setindex(dt_alcor_fsr, Marker)
+  setindex(dt_alcor_dsr, Marker)
+  setindex(dt_result_m2sr, Marker)
 
   rphs_gamma <- tphs_gamma <- vector(mode = "list", length = n_gt)
 
@@ -99,16 +99,16 @@ make_data_gamma <- function(markers_auto, gt_use, peak_use, pae_data_use, tph_da
       peaks <- peak_s1[[j]]
       ae_actual <- n_mk * pae_s1[j]
       mk <- markers_auto[j]
-      dt_alcor_bsr_mk <- dt_alcor_bsr[mk]
+      dt_alcor_bsr_mk <- dt_alcor_bsr[Marker == mk]
       bsr_allele <- dt_alcor_bsr_mk[, Allele]
       bsr_average <- dt_alcor_bsr_mk[, Average_SR]
-      dt_alcor_fsr_mk <- dt_alcor_fsr[mk]
+      dt_alcor_fsr_mk <- dt_alcor_fsr[Marker == mk]
       fsr_allele <- dt_alcor_fsr_mk[, Allele]
       fsr_average <- dt_alcor_fsr_mk[, Average_SR]
-      dt_alcor_dsr_mk <- dt_alcor_dsr[mk]
+      dt_alcor_dsr_mk <- dt_alcor_dsr[Marker == mk]
       dsr_allele <- dt_alcor_dsr_mk[, Allele]
       dsr_average <- dt_alcor_dsr_mk[, Average_SR]
-      dt_result_m2sr_mk <- dt_result_m2sr[mk]
+      dt_result_m2sr_mk <- dt_result_m2sr[Marker == mk]
       m2sr_myu <- as.numeric(dt_result_m2sr_mk[, Myu])
 
       rphs_gamma_s1[[j]] <- calc_rphs(gt_s1[j, ], peaks, ae_actual, sr_consider_auto[j, ], bsr_allele, bsr_average, fsr_allele, fsr_average, dsr_allele, dsr_average, m2sr_myu)

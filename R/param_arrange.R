@@ -1,8 +1,8 @@
 #' pick_al_size
 #'
 #' @description The function to pick up allele sizes
-#' @param dt_exp_one The data.table of the experimental data of one sample with 'setkey' for Marker
-#' @param dt_gt_one The data.table of the genotype data of one sample with 'setkey' for Marker
+#' @param dt_exp_one The data.table of the experimental data of one sample with 'setindex' for Marker
+#' @param dt_gt_one The data.table of the genotype data of one sample with 'setindex' for Marker
 #' @param markers_all All markers
 #' @param at_all_mk Analytical thresholds of all markers
 #' @param dye_all_mk Dyes of all markers
@@ -162,14 +162,14 @@ arrange_exp_data <- function(dt_exp, dt_gt,
 
   n_mk_auto <- length(markers_auto)
 
-  setkey(dt_exp, SampleName)
-  setkey(dt_gt, SampleName)
+  setindex(dt_exp, SampleName)
+  setindex(dt_gt, SampleName)
 
   for(i in 1:length(sample_names)){
-    dt_exp_one <- dt_exp[sample_names[i]]
-    dt_gt_one <- dt_gt[sample_names[i]]
-    setkey(dt_exp_one, Marker)
-    setkey(dt_gt_one, Marker)
+    dt_exp_one <- dt_exp[SampleName == sample_names[i]]
+    dt_gt_one <- dt_gt[SampleName == sample_names[i]]
+    setindex(dt_exp_one, Marker)
+    setindex(dt_gt_one, Marker)
 
     # Pick up allele sizes
     if(pu_remove){
@@ -190,7 +190,7 @@ arrange_exp_data <- function(dt_exp, dt_gt,
     for(j in 1:n_mk_auto){
       # Extract data of one marker
       mk <- markers_auto[j]
-      dt_exp_one_mk <- dt_exp_one[mk]
+      dt_exp_one_mk <- dt_exp_one[Marker == mk]
       peaks <- as.character(dt_exp_one_mk[, index_exp_peak, with = FALSE])
       sizes <- as.numeric(dt_exp_one_mk[, index_exp_size, with = FALSE])
       heights <- as.numeric(dt_exp_one_mk[, index_exp_height, with = FALSE])
@@ -208,7 +208,7 @@ arrange_exp_data <- function(dt_exp, dt_gt,
       heights <- heights[index_above_at]
 
       # Extract the genotype of one marker
-      dt_gt_one_mk <- dt_gt_one[mk]
+      dt_gt_one_mk <- dt_gt_one[Marker == mk]
       gt <- as.character(dt_gt_one_mk[, index_gt_allele, with = FALSE])
       gt_one[j, ] <- gt
 

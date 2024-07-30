@@ -500,8 +500,8 @@ est_par_result_server <- function(id, path_pack, rv_output){
               if(is.element(adopt_model_bsr, c("Allele", "LUS", "Multi-sequence"))){
                 bool_make_dt <- TRUE
                 mk <- markers_auto[row_index_select]
-                setkey(dt_alcor_bsr, Marker)
-                dt_alcor_bsr_mk <- dt_alcor_bsr[mk]
+                setindex(dt_alcor_bsr, Marker)
+                dt_alcor_bsr_mk <- dt_alcor_bsr[Marker == mk]
                 alleles <- dt_alcor_bsr_mk[, Allele]
                 alcors <- dt_alcor_bsr_mk[, Corrected]
                 average_srs <- dt_alcor_bsr_mk[, Average_SR]
@@ -522,8 +522,8 @@ est_par_result_server <- function(id, path_pack, rv_output){
               if(is.element(adopt_model_fsr, c("Allele", "LUS", "Multi-sequence"))){
                 bool_make_dt <- TRUE
                 mk <- markers_auto[row_index_select]
-                setkey(dt_alcor_fsr, Marker)
-                dt_alcor_fsr_mk <- dt_alcor_fsr[mk]
+                setindex(dt_alcor_fsr, Marker)
+                dt_alcor_fsr_mk <- dt_alcor_fsr[Marker == mk]
                 alleles <- dt_alcor_fsr_mk[, Allele]
                 alcors <- dt_alcor_fsr_mk[, Corrected]
                 average_srs <- dt_alcor_fsr_mk[, Average_SR]
@@ -544,8 +544,8 @@ est_par_result_server <- function(id, path_pack, rv_output){
               if(is.element(adopt_model_dsr, c("Allele", "LUS", "Multi-sequence"))){
                 bool_make_dt <- TRUE
                 mk <- markers_auto[row_index_select]
-                setkey(dt_alcor_dsr, Marker)
-                dt_alcor_dsr_mk <- dt_alcor_dsr[mk]
+                setindex(dt_alcor_dsr, Marker)
+                dt_alcor_dsr_mk <- dt_alcor_dsr[Marker == mk]
                 alleles <- dt_alcor_dsr_mk[, Allele]
                 alcors <- dt_alcor_dsr_mk[, Corrected]
                 average_srs <- dt_alcor_dsr_mk[, Average_SR]
@@ -607,8 +607,8 @@ est_par_result_server <- function(id, path_pack, rv_output){
               mk <- markers_auto[row_index_select]
               markers_aic <- dt_aic_bsr[, Marker]
               if(is.element(mk, markers_aic)){
-                setkey(dt_aic_bsr, Marker)
-                dt_aic_bsr_mk <- dt_aic_bsr[mk]
+                setindex(dt_aic_bsr, Marker)
+                dt_aic_bsr_mk <- dt_aic_bsr[Marker == mk]
                 dt_aic_bsr_mk[, Marker := NULL]
                 rv_dt_aic$bsr <- dt_aic_bsr_mk
 
@@ -640,8 +640,8 @@ est_par_result_server <- function(id, path_pack, rv_output){
               mk <- markers_auto[row_index_select]
               markers_aic <- dt_aic_fsr[, Marker]
               if(is.element(mk, markers_aic)){
-                setkey(dt_aic_fsr, Marker)
-                dt_aic_fsr_mk <- dt_aic_fsr[mk]
+                setindex(dt_aic_fsr, Marker)
+                dt_aic_fsr_mk <- dt_aic_fsr[Marker == mk]
                 dt_aic_fsr_mk[, Marker := NULL]
                 rv_dt_aic$fsr <- dt_aic_fsr_mk
 
@@ -673,8 +673,8 @@ est_par_result_server <- function(id, path_pack, rv_output){
               mk <- markers_auto[row_index_select]
               markers_aic <- dt_aic_dsr[, Marker]
               if(is.element(mk, markers_aic)){
-                setkey(dt_aic_dsr, Marker)
-                dt_aic_dsr_mk <- dt_aic_dsr[mk]
+                setindex(dt_aic_dsr, Marker)
+                dt_aic_dsr_mk <- dt_aic_dsr[Marker == mk]
                 dt_aic_dsr_mk[, Marker := NULL]
                 rv_dt_aic$dsr <- dt_aic_dsr_mk
 

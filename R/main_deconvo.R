@@ -56,8 +56,8 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
     rate_di <- dropin_value[dropin_subcategory == "Rate"]
     mt_di <- dropin_value[dropin_subcategory == "MT"]
 
-    # Setkey of data.table
-    setkey(dt_sr, Marker)
+    # setindex of data.table
+    setindex(dt_sr, Marker)
 
     # Define objects
     rph_base_use <- vector(mode = "list", length = n_mk)
@@ -109,7 +109,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
 
       # Extract parameters of one marker
       at <- ats_use[i]
-      dt_sr_mk <- dt_sr[mk]
+      dt_sr_mk <- dt_sr[Marker == mk]
       sr_alleles_mk <- as.numeric(dt_sr_mk[, Allele])
       bsrs_mk <- dt_sr_mk[, Average_BSR]
       fsrs_mk <- dt_sr_mk[, Average_FSR]

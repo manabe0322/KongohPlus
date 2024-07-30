@@ -14,7 +14,7 @@ make_prof_ref_all <- function(dt_ref, markers_auto){
   index_al2 <- 2 * 1:n_ref
   for(i in 1:n_mk){
     mk <- markers_auto[i]
-    dt_ref_one_mk <- dt_ref[mk]
+    dt_ref_one_mk <- dt_ref[Marker == mk]
     prof_ref_all[i, index_al1] <- as.numeric(dt_ref_one_mk[, Allele1])
     prof_ref_all[i, index_al2] <- as.numeric(dt_ref_one_mk[, Allele2])
   }

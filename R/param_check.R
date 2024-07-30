@@ -5,14 +5,14 @@
 #' @param markers_par The target markers for estimating parameters
 check_dt_mk_est_par <- function(dt, markers_par){
   # Extract sample names
-  setkey(dt, SampleName)
+  setindex(dt, SampleName)
   sample_names <- unique(dt[, SampleName])
   n_sample <- length(sample_names)
 
   # Check sample names with inappropriate marker sets
   bool_sn_problem <- rep(FALSE, n_sample)
   for(i in 1:n_sample){
-    dt_one_sample <- dt[sample_names[i]]
+    dt_one_sample <- dt[SampleName == sample_names[i]]
     markers_one_sample <- dt_one_sample[, Marker]
     bool_sn_problem[i] <- !all(is.element(markers_par, markers_one_sample))
   }

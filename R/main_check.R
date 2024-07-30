@@ -27,22 +27,22 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, markers_auto, method){
   }
 
   if(bool_load_all){
-    setkey(dt_csp, SampleName)
+    setindex(dt_csp, SampleName)
     sn_all_csp <- unique(dt_csp[, SampleName])
     for(i in 1:length(sn_all_csp)){
       sn1_csp <- sn_all_csp[i]
-      dt_csp_sn1 <- dt_csp[sn1_csp]
+      dt_csp_sn1 <- dt_csp[SampleName == sn1_csp]
       if(!all(is.element(markers_auto, dt_csp_sn1[, Marker]))){
         error_message <- paste0(error_message, "Marker set of the crime stain profile '", sn1_csp, "' is not correct!<br>")
       }
     }
 
     if(method == "lr"){
-      setkey(dt_ref, SampleName)
+      setindex(dt_ref, SampleName)
       sn_all_ref <- unique(dt_ref[, SampleName])
       for(i in 1:length(sn_all_ref)){
         sn1_ref <- sn_all_ref[i]
-        dt_ref_sn1 <- dt_ref[sn1_ref]
+        dt_ref_sn1 <- dt_ref[SampleName == sn1_ref]
         if(!all(is.element(markers_auto, dt_ref_sn1[, Marker]))){
           error_message <- paste0(error_message, "Marker set of the reference profile '", sn1_ref, "' is not correct!<br>")
         }
@@ -58,8 +58,8 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, markers_auto, method){
 #' @description The function to check whether the corrected alleles for all peaks are registered or not
 #' @param dt_csp The data.table of the crime stain profiles
 #' @param dt_info_mk The data.table of the information on the ignored marker and the analytical thresholds for each marker
-#' @param dt_alcor_combined The data.table of the corrected alleles
-check_csp_alcor <- function(dt_csp, dt_info_mk, dt_alcor_combined){
+#' @param dt_sr The data.table of the stutter ratios
+check_csp_alcor <- function(dt_csp, dt_info_mk, dt_sr){
   message_alcor <- ""
 
   markers_use <- dt_info_mk$Marker[!dt_info_mk$Ignore]
@@ -72,31 +72,31 @@ check_csp_alcor <- function(dt_csp, dt_info_mk, dt_alcor_combined){
     index_allele <- grep("Allele", names_csp)
     index_height <- grep("Height", names_csp)
 
-    setkey(dt_csp, SampleName)
+    setindex(dt_csp, SampleName)
     sn_all_csp <- unique(dt_csp[, SampleName])
 
-    setkey(dt_info_mk, Marker)
-    setkey(dt_alcor_combined, Marker)
+    setindex(dt_info_mk, Marker)
+    setindex(dt_sr, Marker)
 
     n_warning_mk <- 0
     for(i in 1:length(sn_all_csp)){
       sn1_csp <- sn_all_csp[i]
-      dt_csp_sn1 <- dt_csp[sn1_csp]
-      setkey(dt_csp_sn1, Marker)
+      dt_csp_sn1 <- dt_csp[SampleName == sn1_csp]
+      setindex(dt_csp_sn1, Marker)
       for(j in 1:n_mk){
         mk <- markers_use[j]
-        dt_csp_sn1_mk1 <- dt_csp_sn1[mk]
+        dt_csp_sn1_mk1 <- dt_csp_sn1[Marker == mk]
         peaks <- as.character(dt_csp_sn1_mk1[, index_allele, with = FALSE])
         heights <- as.numeric(dt_csp_sn1_mk1[, index_height, with = FALSE])
         peaks <- peaks[!is.na(heights)]
         heights <- heights[!is.na(heights)]
 
-        dt_info_mk1 <- dt_info_mk[mk]
+        dt_info_mk1 <- dt_info_mk[Marker == mk]
         at <- as.numeric(dt_info_mk1[, AT])
         peaks <- peaks[heights >= at]
 
-        dt_alcor_combined_mk1 <- dt_alcor_combined[mk]
-        alleles_registerd <- dt_alcor_combined_mk1$Allele
+        dt_sr_mk1 <- dt_sr[Marker == mk]
+        alleles_registerd <- dt_sr_mk1$Allele
 
         if(!all(is.element(peaks, alleles_registerd))){
           n_warning_mk <- n_warning_mk + 1
