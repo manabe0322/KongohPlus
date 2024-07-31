@@ -5,7 +5,7 @@
 \title{make_dt_lr}
 \usage{
 make_dt_lr(
-  markers_auto,
+  markers_use,
   log10like_hp,
   combined_log10like_hp,
   log10like_hd,
@@ -13,7 +13,7 @@ make_dt_lr(
 )
 }
 \arguments{
-\item{markers_auto}{A vector of the autosomal markers}
+\item{markers_use}{A vector of the autosomal markers}
 
 \item{log10like_hp}{A vector of the log10 likelihoods of all markers in Hp}
 
