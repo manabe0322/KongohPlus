@@ -54,12 +54,13 @@ make_hyp_id_all <- function(hnc, hyp, refs){
 #' @param pop_prob_list A list of the allele probabilities in population database
 #' @param theta The theta correction to consider sub-population
 #' @param gtc_use A list of the genotype combinations in used markers
-#' @param dt_pg_list A list of the data.tables for the results of probabilistic genotyping in used markers
+#' @param lpd_gtc_use_1st A list of the log likelihood of each genotype in each used marker (replicate 1)
+#' @param lpd_gtc_use_2nd A list of the log likelihood of each genotype in each used marker (replicate 2)
 #' @param dt_mpdeg The data.table for mixture proportions and degradation parameters of each contributor
 #' @param dt_ref The data.table for the reference profiles
 #' @param hyp Known contributors in a hypothesis
 #' @param refs The names of all references
-assign_log10like <- function(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, dt_pg_list, dt_mpdeg, dt_ref, hyp, refs){
+assign_log10like <- function(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hyp, refs){
   n_mk <- length(markers_use)
 
   prof_ref_all <- make_prof_ref_all(dt_ref, markers_use)
@@ -67,9 +68,9 @@ assign_log10like <- function(hnc, markers_use, pop_al_list, pop_prob_list, theta
   hyp_id_all <- make_hyp_id_all(hnc, hyp, refs)
   n_hyp <- nrow(hyp_id_all)
 
-  gtc_logprob_all <- vector(mode = "list", length = n_hyp)
+  gtc_logprob_all_hyp <- vector(mode = "list", length = n_hyp)
   for(i in 1:n_hyp){
-    gtc_logprob_all[[i]] <- vector(mode = "list", length = n_mk)
+    gtc_logprob_all_hyp[[i]] <- vector(mode = "list", length = n_mk)
   }
 
   for(i in 1:n_mk){
@@ -84,16 +85,15 @@ assign_log10like <- function(hnc, markers_use, pop_al_list, pop_prob_list, theta
     n_obs <- make_n_obs(pop_al, prof_ref)
     for(j in 1:n_hyp){
       gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref, hyp_id_all[j, ], n_obs)
-      gtc_logprob_all[[j]][[i]] <- log(gtc_prob_mk)
+      gtc_logprob_all_hyp[[j]][[i]] <- log(gtc_prob_mk)
     }
   }
 
   log10like_tmp <- matrix(0, n_mk, n_hyp)
   combined_log10like_tmp <- rep(0, n_hyp)
   for(i in 1:n_hyp){
-    log10like_tmp[, i] <- log10like <- calc_log10like_all_mk(lpd_gtc_use, gtc_logprob_all[[i]])
-    combined_log10like <- calc_combined_log10like(log10like)
-    combined_log10like_tmp[i] <- combined_log10like
+    log10like_tmp[, i] <- log10like_use <- calc_log10like_use(gtc_logprob_all_hyp[[i]], lpd_gtc_use_1st, lpd_gtc_use_2nd)
+    combined_log10like_tmp[i] <- sum(log10like_use)
   }
 
   index_max_like <- which.max(combined_log10like_tmp)
@@ -107,7 +107,7 @@ assign_log10like <- function(hnc, markers_use, pop_al_list, pop_prob_list, theta
                              MP = dt_mpdeg[, MP],
                              Deg = dt_mpdeg[, Deg])
 
-  dt_pg_list_hyp <- make_dt_pg_list(markers_use, gtc_use, lpd_gtc_use, gtc_logprob_all[[index_max_like]], label_contrib)
+  dt_pg_list_hyp <- make_dt_pg_list(markers_use, label_contrib, gtc_use, gtc_logprob_all_hyp[[index_max_like]], lpd_gtc_use_1st, lpd_gtc_use_2nd)
 
   return(list("log10like_adopt" = log10like_adopt,
               "combined_log10like_adopt" = combined_log10like_adopt,

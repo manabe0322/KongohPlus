@@ -225,6 +225,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         warmup <- rv_deconvo_setting$warmup
         sampling <- rv_deconvo_setting$sampling
         chains <- rv_deconvo_setting$chains
+        anameth <- input$anameth_deconvo
 
         # Extract information on the kit
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Value[dt_anameth$Category == "Kit"], ".csv"))
@@ -248,9 +249,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           # Check registration of the stutter ratio
-          message_alcor <- check_csp_alcor(dt_csp, dt_info_mk, dt_sr)
+          message_sr <- check_csp_sr(dt_csp, dt_info_mk, dt_sr)
 
-          if(message_alcor == "error"){
+          if(message_sr == "error"){
             showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
           }else{
             data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
@@ -259,18 +260,17 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
             rv_deconvo$dt_csp <- dt_csp
             rv_deconvo$dt_ref <- dt_ref
             rv_deconvo$dt_af <- dt_af
-            #rv_deconvo$anameth <- anameth
-            #rv_deconvo$dt_kit <- dt_kit
-            #rv_deconvo$dt_at <- dt_at
-            #          rv_deconvo$dt_mcmc <- dt_mcmc
-            #          rv_deconvo$dt_alcor <- dt_alcor
-            #          rv_deconvo$dt_gtc_fltr <- dt_gtc_fltr
-            #          rv_deconvo$dt_gtc_prob <- dt_gtc_prob
-            #rv_deconvo$warmup <- warmup
-            #rv_deconvo$sampling <- sampling
-            #rv_deconvo$chains <- chains
-
-            # Keep message_alcor
+            rv_deconvo$anameth <- anameth
+            rv_deconvo$dt_kit <- dt_kit
+            rv_deconvo$dt_info_mk <- dt_info_mk
+            rv_deconvo$dt_sr <- dt_sr
+            rv_deconvo$dt_al_prob <- dt_al_prob
+            rv_deconvo$dt_gt_fltr <- dt_gt_fltr
+            rv_deconvo$dt_dropin <- dt_dropin
+            rv_deconvo$warmup <- warmup
+            rv_deconvo$sampling <- sampling
+            rv_deconvo$chains <- chains
+            rv_deconvo$message_sr <- message_sr
 
             updateTabsetPanel(session = session_deconvo_top, inputId = "tabset_deconvo", selected = "Result")
           }

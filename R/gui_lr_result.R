@@ -9,25 +9,20 @@ lr_result_ui <- function(id){
            fluidRow(
              column(3,
                     wellPanel(
-                      h4("Estimated parameter"),
+                      h4("Parameters for contributors"),
                       br(),
                       dataTableOutput(ns("dt_mpdeg_hp")),
                       br(),
                       dataTableOutput(ns("dt_mpdeg_hd")),
-                      br(),
-                      textOutput(ns("tph")),
-                      br(),
-                      textOutput(ns("lambda")),
-                      br(),
-                      actionButton(ns("act_ae"), label = "AE")
                     ),
-                    wellPanel(
-                      h4("Diagnostics"),
-                      br(),
-                      actionButton(ns("act_rhat"), label = "Rhat"),
-                      br(),
-                      actionButton(ns("act_traceplot_lp"), label = "Trace plot")
-                    )
+                    br(),
+                    actionButton(ns("act_pardiag"), label = "Parameters and diagnostics"),
+                    br(),
+                    br(),
+                    actionButton(ns("act_traceplot_lp"), label = "Trace plot"),
+                    br(),
+                    br(),
+                    downloadButton(ns("download_report"), "Report")
              ),
              column(6,
                     wellPanel(
@@ -69,7 +64,7 @@ lr_result_server <- function(id, rv_lr){
         dt_lr <- data_lr$dt_lr
 
         hnc <- nrow(dt_mpdeg_hd)
-        markers_auto <- names(dt_pg_list_hd)
+        markers_use <- names(dt_pg_list_hd)
 
         rv_lr_result <- reactiveValues()
         rv_lr_result$dt_pg_display <- dt_pg_list_hp
@@ -99,7 +94,7 @@ lr_result_server <- function(id, rv_lr){
         })
 
         output$mk_pg <- renderUI({
-          selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_auto, selected = markers_auto[1], selectize = FALSE)
+          selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_use, selected = markers_use[1], selectize = FALSE)
         })
 
         observeEvent(input$hyp_pg, {

@@ -373,13 +373,14 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
       index_dedup1_use_cpp <- asplit(index_dedup1_use_1st - 1, 1) # C++ index
       index_dedup2_use_cpp <- index_dedup2_use_1st - 1 # C++ index
       ae_dedup1_use <- ae[id_mk_dedup1_1st]
-      lpd_gtc_use <- calc_lpd_gtc_all_mk_cpp(n_mk, mp, deg, hnc, n_dedup1_sum_1st, n_general_sum_1st, n_dropout_sum_1st, n_dropin_sum_1st,
-                                             unlist(rph_base_use), index_dedup1_use_cpp, unlist(size_dedup1_use_1st), mean_size, ae_dedup1_use, oph_dedup1_use_1st,
-                                             at_dropout_1st, loglike_di_1st, cv, tph,
-                                             index_dedup2_use_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
-      log10like_use <- calc_log10like_use(gtc_logprob_use, lpd_gtc_use)
+      lpd_gtc_use_1st <- calc_lpd_gtc_all_mk_cpp(n_mk, mp, deg, hnc, n_dedup1_sum_1st, n_general_sum_1st, n_dropout_sum_1st, n_dropin_sum_1st,
+                                                 unlist(rph_base_use), index_dedup1_use_cpp, unlist(size_dedup1_use_1st), mean_size, ae_dedup1_use, oph_dedup1_use_1st,
+                                                 at_dropout_1st, loglike_di_1st, cv, tph,
+                                                 index_dedup2_use_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
+      lpd_gtc_use_2nd <- NULL
+      log10like_use <- calc_log10like_use(gtc_logprob_use, lpd_gtc_use_1st)
 
-      dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use)
+      dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use_1st)
 
       dt_mcmc <- data.table(Parameter = c("Log probability in stan", "Total peak height", rep("lambda", hnc), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
                             Contributor = c("-", "-", paste0("U", 1:hnc), paste0("U", 1:hnc), paste0("U", 1:hnc), rep("-", n_mk)),
@@ -582,6 +583,8 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
                 "pop_prob_list" = pop_prob_list,
                 "theta" = theta,
                 "gtc_use" = gtc_use,
+                "lpd_gtc_use_1st" = lpd_gtc_use_1st,
+                "lpd_gtc_use_2nd" = lpd_gtc_use_2nd,
                 "dt_pg_list" = dt_pg_list,
                 "dt_log10like" = dt_log10like,
                 "dt_mpdeg" = dt_mpdeg,
@@ -595,6 +598,8 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
                 "pop_prob_list" = NULL,
                 "theta" = NULL,
                 "gtc_use" = NULL,
+                "lpd_gtc_use_1st" = NULL,
+                "lpd_gtc_use_2nd" = NULL,
                 "dt_pg_list" = NULL,
                 "dt_log10like" = NULL,
                 "dt_mpdeg" = NULL,
