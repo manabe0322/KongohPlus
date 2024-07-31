@@ -1,3 +1,14 @@
+#' make_index_dedup2_mk
+#'
+#' @description The function to make 'index_dedup2_mk'
+#' @param index_rph_gtc Information on the connection between rph_base and genotype combinations
+#' @param index_dedup1_all_mk Index for deduplication (pattern 1)
+make_index_dedup2_mk <- function(index_rph_gtc, index_dedup1_all_mk){
+  paste_index_rph_gtc <- apply(index_rph_gtc, 2, paste, collapse = "-")
+  paste_index_dedup1_all_mk <- apply(index_dedup1_all_mk, 2, paste, collapse = "-")
+  return(match(paste_index_rph_gtc, paste_index_dedup1_all_mk))
+}
+
 perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
                             hnc, warmup, sampling, chains){
   # Start computation
