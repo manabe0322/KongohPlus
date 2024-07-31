@@ -53,20 +53,20 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, markers_auto, method){
   return(error_message)
 }
 
-#' check_csp_alcor
+#' check_csp_sr
 #'
 #' @description The function to check whether the corrected alleles for all peaks are registered or not
 #' @param dt_csp The data.table of the crime stain profiles
 #' @param dt_info_mk The data.table of the information on the ignored marker and the analytical thresholds for each marker
 #' @param dt_sr The data.table of the stutter ratios
-check_csp_alcor <- function(dt_csp, dt_info_mk, dt_sr){
-  message_alcor <- ""
+check_csp_sr <- function(dt_csp, dt_info_mk, dt_sr){
+  message_sr <- ""
 
   markers_use <- dt_info_mk$Marker[!dt_info_mk$Ignore]
   n_mk <- length(markers_use)
 
   if(n_mk == 0){
-    message_alcor <- "error"
+    message_sr <- "error"
   }else{
     names_csp <- names(dt_csp)
     index_allele <- grep("Allele", names_csp)
@@ -101,13 +101,13 @@ check_csp_alcor <- function(dt_csp, dt_info_mk, dt_sr){
         if(!all(is.element(peaks, alleles_registerd))){
           n_warning_mk <- n_warning_mk + 1
           if(n_warning_mk == 1){
-            message_alcor <- "Stutter ratios of the following alleles are regarded as zero.<br>"
+            message_sr <- "Stutter ratios of the following alleles are regarded as zero.<br>"
           }
-          message_alcor <- paste0(message_alcor, "  - ", mk, ": ", paste(peaks[!is.element(peaks, alleles_registerd)], collapse = ", "), "<br>")
+          message_sr <- paste0(message_sr, "  - ", mk, ": ", paste(peaks[!is.element(peaks, alleles_registerd)], collapse = ", "), "<br>")
         }
       }
     }
   }
 
-  return(message_alcor)
+  return(message_sr)
 }
