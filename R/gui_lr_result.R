@@ -113,10 +113,10 @@ lr_result_server <- function(id, rv_lr){
               dt_pg_display[[mk_select]],
               selection = list(mode = "single", target = "row"),
               options = list(iDisplayLength = 25, ordering = FALSE, autowidth = TRUE,
-                             columnDefs = list(list(targets = c(hnc + 1, hnc + 2), visible = FALSE))),
+                             columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
               rownames = FALSE
             ) %>%
-              formatSignif(columns = c("Weight"), digits = 3)
+              formatSignif(columns = c("post_prob"), digits = 3)
           })
         })
 
@@ -129,10 +129,10 @@ lr_result_server <- function(id, rv_lr){
               dt_pg_display[[mk_select]],
               selection = list(mode = "single", target = "row"),
               options = list(iDisplayLength = 25, ordering = FALSE, autowidth = TRUE,
-                             columnDefs = list(list(targets = c(hnc + 1, hnc + 2), visible = FALSE))),
+                             columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
               rownames = FALSE
             ) %>%
-              formatSignif(columns = c("Weight"), digits = 3)
+              formatSignif(columns = c("post_prob"), digits = 3)
           })
         })
 

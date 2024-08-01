@@ -281,8 +281,17 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
         hp <- input$hp
         hd <- input$hd
         refs <- rv_lr_setting$refs
+        dt_csp <- rv_lr_setting$dt_csp
         dt_ref <- rv_lr_setting$dt_ref
+        dt_af <- rv_lr_setting$dt_af
+        dt_anameth <- rv_lr_setting$dt_anameth
         use_deconvo <- input$use_deconvo
+
+        # Extract information on the kit
+        dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Value[dt_anameth$Category == "Kit"], ".csv"))
+        dt_kit <- change_data_type_kit(dt_kit)
+        dt_kit_auto <- extract_kit_auto(dt_kit)
+        markers_auto <- unique(dt_kit_auto[, Marker])
 
         if(use_deconvo){
           error_message <- check_main_file(dt_csp, dt_ref, dt_af, markers_auto, method = "lr")
@@ -320,20 +329,10 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
           # Fix setting
           hnc_lr_hp <- input$noc_lr_hp
           hnc_lr_hd <- input$noc_lr_hd
-          dt_csp <- rv_lr_setting$dt_csp
-          dt_ref <- rv_lr_setting$dt_ref
-          dt_af <- rv_lr_setting$dt_af
-          dt_anameth <- rv_lr_setting$dt_anameth
           warmup <- rv_lr_setting$warmup
           sampling <- rv_lr_setting$sampling
           chains <- rv_lr_setting$chains
           anameth <- input$anameth_lr
-
-          # Extract information on the kit
-          dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Value[dt_anameth$Category == "Kit"], ".csv"))
-          dt_kit <- change_data_type_kit(dt_kit)
-          dt_kit_auto <- extract_kit_auto(dt_kit)
-          markers_auto <- unique(dt_kit_auto[, Marker])
 
           load(paste0(path_pack, "/extdata/param/", dt_anameth$Value[dt_anameth$Category == "Parameter"], ".Rdata"))
           dt_al_prob <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Allele_probability"],
