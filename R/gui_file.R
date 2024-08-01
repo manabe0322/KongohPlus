@@ -21,24 +21,24 @@ file_ui <- function(id){
                        tabsetPanel(id = ns("tabset_load_file"),
                                    type = "tabs",
                                    tabPanel("Crime stain profile",
-                                            tags$head(
-                                              tags$style(HTML("table {table-layout: fixed;")),
-                                              tags$style(".datatables .display {margin-left: 0;}")
-                                            ),
+                                            #tags$head(
+                                            #  tags$style(HTML("table {table-layout: fixed;")),
+                                            #  tags$style(".datatables .display {margin-left: 0;}")
+                                            #),
                                             dataTableOutput(ns("dt_csp"))
                                    ),
                                    tabPanel("Reference profile",
-                                            tags$head(
-                                              tags$style(HTML("table {table-layout: fixed;")),
-                                              tags$style(".datatables .display {margin-left: 0;}")
-                                            ),
+                                            #tags$head(
+                                            #  tags$style(HTML("table {table-layout: fixed;")),
+                                            #  tags$style(".datatables .display {margin-left: 0;}")
+                                            #),
                                             dataTableOutput(ns("dt_ref"))
                                    ),
                                    tabPanel("Allele frequency",
-                                            tags$head(
-                                              tags$style(HTML("table {table-layout: fixed;")),
-                                              tags$style(".datatables .display {margin-left: 0;}")
-                                            ),
+                                            #tags$head(
+                                            #  tags$style(HTML("table {table-layout: fixed;")),
+                                            #  tags$style(".datatables .display {margin-left: 0;}")
+                                            #),
                                             dataTableOutput(ns("dt_af"))
                                    )
                        )
@@ -108,7 +108,7 @@ file_server <- function(id, session_top){
             dt_csp_display,
             filter = "top",
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_csp_display), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "650px",
+            options = list(dom = "t", iDisplayLength = nrow(dt_csp_display), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "100%",
                            columnDefs = list(list(targets = index_search_disable, searchable = FALSE, width = "40px"),
                                              list(targets = c(index_sn, index_mk), width = "100px"))),
             rownames = FALSE
@@ -132,7 +132,7 @@ file_server <- function(id, session_top){
             dt_ref_display,
             filter = "top",
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_ref_display), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "650px",
+            options = list(dom = "t", iDisplayLength = nrow(dt_ref_display), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, #scrollY = "650px",
                            columnDefs = list(list(targets = index_search_disable, searchable = FALSE, width = "40px"),
                                              list(targets = c(index_sn, index_mk), width = "100px"))),
             rownames = FALSE
@@ -147,7 +147,7 @@ file_server <- function(id, session_top){
           dt_af,
           selection = "none",
           extensions = c("FixedColumns", "FixedHeader"),
-          options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "650px",
+          options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, #scrollY = "650px",
                          fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0)),
           rownames = FALSE
         )# %>% formatStyle(0, target = "row", lineHeight = "75%")
