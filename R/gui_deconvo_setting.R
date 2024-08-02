@@ -18,6 +18,12 @@ deconvo_setting_ui <- function(id){
                           actionButton(ns("act_analyze_deconvo"), label = "Analyze", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 9,
+                       tags$head( #CSS added to shrink the column with
+                         tags$style('td.small .shiny-input-container{width:auto;}
+                                     td.small{width:30px;}
+                                     th { font-size: 16px !important; }'
+                         )
+                       ),
                        dataTableOutput(ns("dt_info_mk_display_deconvo"))
              )
            )
@@ -199,8 +205,8 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
           datatable(
             dt_info_mk_display_deconvo,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_info_mk_display_deconvo), ordering = FALSE, autoWidth = TRUE,
-                           columnDefs = list(list(targets = 0:2, width = "100px"))),
+            options = list(dom = "t", iDisplayLength = nrow(dt_info_mk_display_deconvo), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 200px)",
+                           columnDefs = list(list(targets = 0, className = "small"), list(targets = 1:2, width = "100px"))),
             rownames = FALSE,
             escape = FALSE,
             callback = JS(js("dt_info_mk_display_deconvo", session$ns))

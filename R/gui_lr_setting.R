@@ -22,6 +22,12 @@ lr_setting_ui <- function(id){
                           actionButton(ns("act_analyze_lr"), label = "Analyze", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 9,
+                       tags$head( #CSS added to shrink the column with
+                         tags$style('td.small .shiny-input-container{width:auto;}
+                                     td.small{width:30px;}
+                                     th { font-size: 16px !important; }'
+                         )
+                       ),
                        dataTableOutput(ns("dt_info_mk_display_lr"))
              )
            )
@@ -241,7 +247,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
 
         # Create a data.table for information on markers
         dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
-                            AT = dt_anameth$Value[dt_anameth$Category == "AT"])
+                            AT = as.numeric(dt_anameth$Value[dt_anameth$Category == "AT"]))
         dt_info_mk <- copy(dt_at)
         dt_info_mk <- cbind(
           Ignore = rep(FALSE, nrow(dt_info_mk)),
@@ -260,8 +266,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
           datatable(
             dt_info_mk_display_lr,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_info_mk_display_lr), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "650px",
-                           columnDefs = list(list(targets = 0:2, width = "100px"))),
+            options = list(dom = "t", iDisplayLength = nrow(dt_info_mk_display_lr), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 200px)",
+                           columnDefs = list(list(targets = 0, className = "small"), list(targets = 1:2, width = "100px"))),
             rownames = FALSE,
             escape = FALSE,
             callback = JS(js("dt_info_mk_display_lr", session$ns))

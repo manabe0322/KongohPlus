@@ -15,7 +15,7 @@ KongohPlus <- function(){
   ui <- fluidPage(theme = shinytheme("cerulean"),
                   useShinyjs(),
                   useShinyFeedback(),
-                  tags$style(type = "text/css", "body{padding-top: 70px;}"),
+                  tags$style(type = "text/css", "body{padding-top: 65px;}"),
 
                   navbarPage(title = paste0("KongohPlus ver. ", ver_soft),
                              id = "navbar",
