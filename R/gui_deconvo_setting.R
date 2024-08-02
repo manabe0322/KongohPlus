@@ -21,7 +21,7 @@ deconvo_setting_ui <- function(id){
                        tags$head( #CSS added to shrink the column with
                          tags$style('td.small .shiny-input-container{width:auto;}
                                      td.small{width:30px;}
-                                     th { font-size: 16px !important; }'
+                                     th.small{font-size: 14px !important;}'
                          )
                        ),
                        dataTableOutput(ns("dt_info_mk_display_deconvo"))
@@ -210,7 +210,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
             rownames = FALSE,
             escape = FALSE,
             callback = JS(js("dt_info_mk_display_deconvo", session$ns))
-          )# %>% formatStyle(0, target = "row", lineHeight = "75%")
+          )
         })
       })
 

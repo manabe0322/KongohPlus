@@ -25,7 +25,7 @@ lr_setting_ui <- function(id){
                        tags$head( #CSS added to shrink the column with
                          tags$style('td.small .shiny-input-container{width:auto;}
                                      td.small{width:30px;}
-                                     th { font-size: 16px !important; }'
+                                     th.small{font-size: 14px !important;}'
                          )
                        ),
                        dataTableOutput(ns("dt_info_mk_display_lr"))
