@@ -92,7 +92,7 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
             selection = "none",
             options = list(dom = "t", iDisplayLength = nrow(dt_mcmc), ordering = FALSE, autowidth = TRUE,
                            columnDefs = list(list(width = "200px", targets = c(0)),
-                                             list(width = "150px", targets = c(1, 2, 3, 4)))),
+                                             list(width = "100px", targets = c(1, 2, 3, 4)))),
             rownames = FALSE,
             colnames = c("Parameter", "Contributor", "Marker", "Estimated value", "Rhat")
           ) %>%
