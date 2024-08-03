@@ -28,7 +28,8 @@ Imports:
     rmarkdown, 
     shinyFeedback,
     shinyjs, 
-    shinythemes
+    shinythemes, 
+    waiter
 LinkingTo: 
     Rcpp
 Suggests: 

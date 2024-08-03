@@ -5,6 +5,7 @@ lr_setting_ui <- function(id){
   ns <- NS(id)
 
   tabPanel("Setting",
+           useWaiter(),
            br(),
            sidebarLayout(
              sidebarPanel(width = 3,
@@ -283,6 +284,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
       })
 
       observeEvent(input$act_analyze_lr, {
+        waiter_show(html = spin_3k(), color = "white")
+
         # Fix setting
         hp <- input$hp
         hd <- input$hd
@@ -302,6 +305,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
         if(use_deconvo){
           error_message <- check_main_file(dt_csp, dt_ref, dt_af, markers_auto, method = "lr")
           if(error_message != ""){
+            waiter_hide()
             showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
           }else{
             # Extract data from data_deconvo
@@ -330,6 +334,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
             rv_lr$data_lr <- data_lr
 
             updateTabsetPanel(session = session_lr_top, inputId = "tabset_lr", selected = "Result")
+            waiter_hide()
           }
         }else{
           # Fix setting
@@ -353,51 +358,60 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
           # Check input files and setting
           error_message <- check_main_file(dt_csp, dt_ref, dt_af, markers_auto, method = "lr")
           if(error_message != ""){
+            waiter_hide()
             showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
           }else{
-            data_deconvo_hp <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr,
-                                               hnc_lr_hp, warmup, sampling, chains)
-            if(hnc_lr_hp == hnc_lr_hd){
-              data_deconvo_hd <- data_deconvo_hp
+            # Check registration of the stutter ratio
+            message_sr <- check_csp_sr(dt_csp, dt_info_mk, dt_sr)
+            if(message_sr == "error"){
+              waiter_hide()
+              showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
             }else{
-              data_deconvo_hd <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr,
-                                                 hnc_lr_hd, warmup, sampling, chains)
+              data_deconvo_hp <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr,
+                                                 hnc_lr_hp, warmup, sampling, chains)
+              if(hnc_lr_hp == hnc_lr_hd){
+                data_deconvo_hd <- data_deconvo_hp
+              }else{
+                data_deconvo_hd <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr,
+                                                   hnc_lr_hd, warmup, sampling, chains)
+              }
+
+              # Extract data from data_deconvo for Hp
+              data_deconvo <- rv_lr_setting$data_deconvo_hp
+              hnc <- data_deconvo$hnc
+              markers_use <- data_deconvo$markers_use
+              pop_al_list <- data_deconvo$pop_al_list
+              pop_prob_list <- data_deconvo$pop_prob_list
+              theta <- data_deconvo$theta
+              gtc_use <- data_deconvo$gtc_use
+              lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
+              lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
+              dt_mpdeg <- data_deconvo$dt_mpdeg
+
+              data_hp <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hp, refs)
+
+              # Extract data from data_deconvo for Hd
+              data_deconvo <- rv_lr_setting$data_deconvo_hd
+              hnc <- data_deconvo$hnc
+              markers_use <- data_deconvo$markers_use
+              pop_al_list <- data_deconvo$pop_al_list
+              pop_prob_list <- data_deconvo$pop_prob_list
+              theta <- data_deconvo$theta
+              gtc_use <- data_deconvo$gtc_use
+              lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
+              lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
+              dt_mpdeg <- data_deconvo$dt_mpdeg
+
+              data_hd <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hd, refs)
+
+              dt_lr <- make_dt_lr(markers_use,
+                                  data_hp$log10like_adopt, data_hp$combined_log10like_adopt,
+                                  data_hd$log10like_adopt, data_hd$combined_log10like_adopt)
+              rv_lr$data_lr <- data_lr
+
+              updateTabsetPanel(session = session_lr_top, inputId = "tabset_lr", selected = "Result")
+              waiter_hide()
             }
-
-            # Extract data from data_deconvo for Hp
-            data_deconvo <- rv_lr_setting$data_deconvo_hp
-            hnc <- data_deconvo$hnc
-            markers_use <- data_deconvo$markers_use
-            pop_al_list <- data_deconvo$pop_al_list
-            pop_prob_list <- data_deconvo$pop_prob_list
-            theta <- data_deconvo$theta
-            gtc_use <- data_deconvo$gtc_use
-            lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
-            lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
-            dt_mpdeg <- data_deconvo$dt_mpdeg
-
-            data_hp <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hp, refs)
-
-            # Extract data from data_deconvo for Hd
-            data_deconvo <- rv_lr_setting$data_deconvo_hd
-            hnc <- data_deconvo$hnc
-            markers_use <- data_deconvo$markers_use
-            pop_al_list <- data_deconvo$pop_al_list
-            pop_prob_list <- data_deconvo$pop_prob_list
-            theta <- data_deconvo$theta
-            gtc_use <- data_deconvo$gtc_use
-            lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
-            lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
-            dt_mpdeg <- data_deconvo$dt_mpdeg
-
-            data_hd <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hd, refs)
-
-            dt_lr <- make_dt_lr(markers_use,
-                                data_hp$log10like_adopt, data_hp$combined_log10like_adopt,
-                                data_hd$log10like_adopt, data_hd$combined_log10like_adopt)
-            rv_lr$data_lr <- data_lr
-
-            updateTabsetPanel(session = session_lr_top, inputId = "tabset_lr", selected = "Result")
           }
         }
       })

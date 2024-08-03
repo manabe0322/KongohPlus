@@ -5,6 +5,7 @@ deconvo_setting_ui <- function(id){
   ns <- NS(id)
 
   tabPanel("Setting",
+           useWaiter(),
            br(),
            sidebarLayout(
              sidebarPanel(width = 3,
@@ -222,6 +223,8 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
       })
 
       observeEvent(input$act_analyze_deconvo, {
+        waiter_show(html = spin_3k(), color = "white")
+
         # Fix setting
         hnc_deconvo <- input$noc_deconvo
         dt_csp <- rv_deconvo_setting$dt_csp
@@ -252,12 +255,14 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         # Check input files
         error_message <- check_main_file(dt_csp, dt_ref, dt_af, markers_auto, method = "deconvo")
         if(error_message != ""){
+          waiter_hide()
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           # Check registration of the stutter ratio
           message_sr <- check_csp_sr(dt_csp, dt_info_mk, dt_sr)
 
           if(message_sr == "error"){
+            waiter_hide()
             showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
           }else{
             data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
@@ -279,6 +284,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
             rv_deconvo$message_sr <- message_sr
 
             updateTabsetPanel(session = session_deconvo_top, inputId = "tabset_deconvo", selected = "Result")
+            waiter_hide()
           }
         }
       })

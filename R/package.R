@@ -17,6 +17,7 @@
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
 #' @importFrom shinyjs disable disabled enable useShinyjs
 #' @importFrom shinythemes shinytheme
+#' @importFrom waiter useWaiter waiter_show waiter_hide spin_3k
 "_PACKAGE"
 
 #' @useDynLib KongohPlus, .registration = TRUE
