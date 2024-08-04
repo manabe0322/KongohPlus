@@ -78,14 +78,15 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
       rv_deconvo$dt_af <- NULL
       rv_deconvo$anameth <- NULL
       rv_deconvo$dt_kit <- NULL
-      rv_deconvo$dt_at <- NULL
-      rv_deconvo$dt_mcmc <- NULL
-      rv_deconvo$dt_alcor <- NULL
-      rv_deconvo$dt_gtc_fltr <- NULL
-      rv_deconvo$dt_gtc_prob <- NULL
+      rv_deconvo$dt_info_mk <- NULL
+      rv_deconvo$dt_sr <- NULL
+      rv_deconvo$dt_al_prob <- NULL
+      rv_deconvo$dt_gt_fltr <- NULL
+      rv_deconvo$dt_dropin <- NULL
       rv_deconvo$warmup <- NULL
       rv_deconvo$sampling <- NULL
       rv_deconvo$chains <- NULL
+      rv_deconvo$message_sr <- NULL
 
       observe({
         req(rv_file)

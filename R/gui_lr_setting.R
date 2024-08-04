@@ -79,19 +79,19 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
 
       rv_lr <- reactiveValues()
       rv_lr$dt_lr <- NULL
-      rv_lr$dt_csp <- NULL
-      rv_lr$dt_ref <- NULL
-      rv_lr$dt_af <- NULL
-      rv_lr$anameth <- NULL
-      rv_lr$dt_kit <- NULL
-      rv_lr$dt_at <- NULL
-      rv_lr$dt_param <- NULL
-      rv_lr$dt_alcor <- NULL
-      rv_lr$dt_gtc_fltr <- NULL
-      rv_lr$dt_gtc_prob <- NULL
-      rv_lr$warmup <- NULL
-      rv_lr$sampling <- NULL
-      rv_lr$chains <- NULL
+      #rv_lr$dt_csp <- NULL
+      #rv_lr$dt_ref <- NULL
+      #rv_lr$dt_af <- NULL
+      #rv_lr$anameth <- NULL
+      #rv_lr$dt_kit <- NULL
+      #rv_lr$dt_at <- NULL
+      #rv_lr$dt_param <- NULL
+      #rv_lr$dt_alcor <- NULL
+      #rv_lr$dt_gtc_fltr <- NULL
+      #rv_lr$dt_gtc_prob <- NULL
+      #rv_lr$warmup <- NULL
+      #rv_lr$sampling <- NULL
+      #rv_lr$chains <- NULL
 
       observe({
         req(rv_file)

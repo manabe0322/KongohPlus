@@ -6,9 +6,9 @@ params:
   dt_csp: NA
   dt_ref: NA
   hnc: NA
-  markers_auto: NA
+  markers_use: NA
   dt_mpdeg: NA
-  dt_param: NA
+  dt_mcmc: NA
   dt_pg_list: NA
   dt_log10like: NA
 ---
@@ -59,9 +59,9 @@ library(magrittr)
 dt_csp <- params$dt_csp
 dt_ref <- params$dt_ref
 hnc <- params$hnc
-markers_auto <- params$markers_auto
+markers_use <- params$markers_use
 dt_mpdeg <- params$dt_mpdeg
-dt_param <- params$dt_param
+dt_mcmc <- params$dt_mcmc
 dt_pg_list <- params$dt_pg_list
 dt_log10like <- params$dt_log10like
 ```
@@ -105,18 +105,18 @@ datatable(dt_mpdeg,
 ### Genotype combination
 
 ```{r echo = FALSE, results='asis'}
-n_mk <- length(markers_auto)
+n_mk <- length(markers_use)
 for(i in 1:n_mk){
-  print(md_bullet(markers_auto[i], marker = "-"))
+  print(md_bullet(markers_use[i], marker = "-"))
   
   dt_pg <- dt_pg_list[[i]]
   print(htmltools::tagList(datatable(dt_pg_list[[i]],
                                      selection = "none",
                                      options = list(dom = "tp", iDisplayLength = 10, ordering = FALSE, autowidth = TRUE,
-                                     columnDefs = list(list(targets = c(hnc + 1, hnc + 2), visible = FALSE))),
+                                     columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
                                      rownames = FALSE
                                      ) %>%
-                                     formatSignif(columns = c("Weight"), digits = 3)
+                                     formatSignif(columns = c("post_prob"), digits = 3)
                            )
         )
 }
@@ -127,9 +127,9 @@ for(i in 1:n_mk){
 ### Parameter and diagnostics
 
 ```{r echo = FALSE}
-datatable(dt_param,
+datatable(dt_mcmc,
           selection = "none",
-          options = list(dom = "t", iDisplayLength = nrow(dt_param), ordering = FALSE, autowidth = TRUE,
+          options = list(dom = "t", iDisplayLength = nrow(dt_mcmc), ordering = FALSE, autowidth = TRUE,
                          columnDefs = list(list(width = "200px", targets = c(0)),
                                            list(width = "150px", targets = c(1, 2, 3, 4)))),
           rownames = FALSE,
