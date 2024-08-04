@@ -51,19 +51,19 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
   moduleServer(
     id,
     function(input, output, session){
-      data_deconvo <- rv_deconvo$data_deconvo
-      if(!is.null(data_deconvo)){
+      fin_deconvo <- rv_deconvo$fin_deconvo
+      if(fin_deconvo){
         dt_csp <- rv_deconvo$dt_csp
         dt_ref <- rv_deconvo$dt_ref
         dt_af <- rv_deconvo$dt_af
 
-        hnc <- data_deconvo$hnc
-        markers_use <- data_deconvo$markers_use
-        dt_pg_list <- data_deconvo$dt_pg_list
-        dt_log10like <- data_deconvo$dt_log10like
-        dt_mpdeg <- data_deconvo$dt_mpdeg
-        dt_mcmc <- data_deconvo$dt_mcmc
-        traceplot <- data_deconvo$traceplot
+        hnc <- rv_deconvo$hnc
+        markers_use <- rv_deconvo$markers_use
+        dt_pg_list <- rv_deconvo$dt_pg_list
+        dt_log10like <- rv_deconvo$dt_log10like
+        dt_mpdeg <- rv_deconvo$dt_mpdeg
+        dt_mcmc <- rv_deconvo$dt_mcmc
+        traceplot <- rv_deconvo$traceplot
 
         output$dt_mpdeg <- renderDataTable(server = FALSE, {
           datatable(

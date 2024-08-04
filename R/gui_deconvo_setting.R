@@ -72,7 +72,21 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
       rv_deconvo_setting$chains <- 4
 
       rv_deconvo <- reactiveValues()
-      rv_deconvo$data_deconvo <- NULL
+      rv_deconvo$fin_deconvo <- FALSE
+      rv_deconvo$hnc <- NULL
+      rv_deconvo$markers_use <- NULL
+      rv_deconvo$pop_al_list <- NULL
+      rv_deconvo$pop_prob_list <- NULL
+      rv_deconvo$gtc_use <- NULL
+      rv_deconvo$lpd_gtc_use_1st <- NULL
+      rv_deconvo$lpd_gtc_use_2nd <- NULL
+      rv_deconvo$dt_pg_list <- NULL
+      rv_deconvo$dt_log10like <- NULL
+      rv_deconvo$dt_mpdeg <- NULL
+      rv_deconvo$dt_mcmc <- NULL
+      rv_deconvo$traceplot <- NULL
+      rv_deconvo$comp_time <- NULL
+
       rv_deconvo$dt_csp <- NULL
       rv_deconvo$dt_ref <- NULL
       rv_deconvo$dt_af <- NULL
@@ -272,7 +286,22 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
               waiter_hide()
               showModal(modalDialog(title = "Error", HTML(data_deconvo$error_message), easyClose = TRUE, footer = NULL))
             }else{
-              rv_deconvo$data_deconvo <- data_deconvo
+              rv_deconvo$fin_deconvo <- TRUE
+              rv_deconvo$hnc <- hnc_deconvo
+              rv_deconvo$markers_use <- data_deconvo$markers_use
+              rv_deconvo$pop_al_list <- data_deconvo$pop_al_list
+              rv_deconvo$pop_prob_list <- data_deconvo$pop_prob_list
+              rv_deconvo$theta <- data_deconvo$theta
+              rv_deconvo$gtc_use <- data_deconvo$gtc_use
+              rv_deconvo$lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
+              rv_deconvo$lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
+              rv_deconvo$dt_pg_list <- data_deconvo$dt_pg_list
+              rv_deconvo$dt_log10like <- data_deconvo$dt_log10like
+              rv_deconvo$dt_mpdeg <- data_deconvo$dt_mpdeg
+              rv_deconvo$dt_mcmc <- data_deconvo$dt_mcmc
+              rv_deconvo$traceplot <- data_deconvo$traceplot
+              rv_deconvo$comp_time <- data_deconvo$comp_time
+
               rv_deconvo$dt_csp <- dt_csp
               rv_deconvo$dt_ref <- dt_ref
               rv_deconvo$dt_af <- dt_af

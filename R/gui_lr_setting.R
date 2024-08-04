@@ -66,7 +66,17 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
       }
 
       rv_lr_setting <- reactiveValues()
-      rv_lr_setting$data_deconvo <- NULL
+      rv_lr_setting$fin_deconvo <- NULL
+      rv_lr_setting$hnc <- NULL
+      rv_lr_setting$markers_use <- NULL
+      rv_lr_setting$pop_al_list <- NULL
+      rv_lr_setting$pop_prob_list <- NULL
+      rv_lr_setting$theta <- NULL
+      rv_lr_setting$gtc_use <- NULL
+      rv_lr_setting$lpd_gtc_use_1st <- NULL
+      rv_lr_setting$lpd_gtc_use_2nd <- NULL
+      rv_lr_setting$dt_mpdeg <- NULL
+
       rv_lr_setting$dt_csp <- NULL
       rv_lr_setting$dt_ref <- NULL
       rv_lr_setting$dt_af <- NULL
@@ -78,7 +88,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
       rv_lr_setting$chains <- 4
 
       rv_lr <- reactiveValues()
-      rv_lr$dt_lr <- NULL
+      rv_lr$data_lr <- NULL
       #rv_lr$dt_csp <- NULL
       #rv_lr$dt_ref <- NULL
       #rv_lr$dt_af <- NULL
@@ -106,14 +116,23 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
 
       observe({
         req(rv_deconvo)
-        rv_lr_setting$data_deconvo <- rv_deconvo$data_deconvo
+        rv_lr_setting$fin_deconvo <- rv_deconvo$fin_deconvo
+        rv_lr_setting$hnc <- rv_deconvo$hnc
+        rv_lr_setting$markers_use <- rv_deconvo$markers_use
+        rv_lr_setting$pop_al_list <- rv_deconvo$pop_al_list
+        rv_lr_setting$pop_prob_list <- rv_deconvo$pop_prob_list
+        rv_lr_setting$theta <- rv_deconvo$theta
+        rv_lr_setting$gtc_use <- rv_deconvo$gtc_use
+        rv_lr_setting$lpd_gtc_use_1st <- rv_deconvo$lpd_gtc_use_1st
+        rv_lr_setting$lpd_gtc_use_2nd <- rv_deconvo$lpd_gtc_use_2nd
+        rv_lr_setting$dt_mpdeg <- rv_deconvo$dt_mpdeg
       })
 
       output$use_deconvo <- renderUI({
-        if(is.null(rv_lr_setting$data_deconvo)){
-          disabled(checkboxInput(session$ns("use_deconvo"), label = "Use the result of deconvolution", value = FALSE))
-        }else{
+        if(rv_lr_setting$fin_deconvo){
           checkboxInput(session$ns("use_deconvo"), label = "Use the result of deconvolution", value = TRUE)
+        }else{
+          disabled(checkboxInput(session$ns("use_deconvo"), label = "Use the result of deconvolution", value = FALSE))
         }
       })
 
@@ -309,16 +328,15 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
             showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
           }else{
             # Extract data from data_deconvo
-            data_deconvo <- rv_lr_setting$data_deconvo
-            hnc <- data_deconvo$hnc
-            markers_use <- data_deconvo$markers_use
-            pop_al_list <- data_deconvo$pop_al_list
-            pop_prob_list <- data_deconvo$pop_prob_list
-            theta <- data_deconvo$theta
-            gtc_use <- data_deconvo$gtc_use
-            lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
-            lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
-            dt_mpdeg <- data_deconvo$dt_mpdeg
+            hnc <- rv_lr_setting$hnc
+            markers_use <- rv_lr_setting$markers_use
+            pop_al_list <- rv_lr_setting$pop_al_list
+            pop_prob_list <- rv_lr_setting$pop_prob_list
+            theta <- rv_lr_setting$theta
+            gtc_use <- rv_lr_setting$gtc_use
+            lpd_gtc_use_1st <- rv_lr_setting$lpd_gtc_use_1st
+            lpd_gtc_use_2nd <- rv_lr_setting$lpd_gtc_use_2nd
+            dt_mpdeg <- rv_lr_setting$dt_mpdeg
 
             data_hp <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hp, refs)
             data_hd <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hd, refs)
@@ -367,7 +385,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
               waiter_hide()
               showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
             }else{
-              data_deconvo_hp <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr,
+              data_deconvo_hp <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
                                                  hnc_lr_hp, warmup, sampling, chains)
               if(!is.null(data_deconvo_hp$error_message)){
                 waiter_hide()
@@ -376,7 +394,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
                 if(hnc_lr_hp == hnc_lr_hd){
                   data_deconvo_hd <- data_deconvo_hp
                 }else{
-                  data_deconvo_hd <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr,
+                  data_deconvo_hd <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
                                                      hnc_lr_hd, warmup, sampling, chains)
                 }
                 if(!is.null(data_deconvo_hd$error_message)){
@@ -384,30 +402,28 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
                   showModal(modalDialog(title = "Error", HTML(data_deconvo_hd$error_message), easyClose = TRUE, footer = NULL))
                 }else{
                   # Extract data from data_deconvo for Hp
-                  data_deconvo <- rv_lr_setting$data_deconvo_hp
-                  hnc <- data_deconvo$hnc
-                  markers_use <- data_deconvo$markers_use
-                  pop_al_list <- data_deconvo$pop_al_list
-                  pop_prob_list <- data_deconvo$pop_prob_list
-                  theta <- data_deconvo$theta
-                  gtc_use <- data_deconvo$gtc_use
-                  lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
-                  lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
-                  dt_mpdeg <- data_deconvo$dt_mpdeg
+                  hnc <- data_deconvo_hp$hnc
+                  markers_use <- data_deconvo_hp$markers_use
+                  pop_al_list <- data_deconvo_hp$pop_al_list
+                  pop_prob_list <- data_deconvo_hp$pop_prob_list
+                  theta <- data_deconvo_hp$theta
+                  gtc_use <- data_deconvo_hp$gtc_use
+                  lpd_gtc_use_1st <- data_deconvo_hp$lpd_gtc_use_1st
+                  lpd_gtc_use_2nd <- data_deconvo_hp$lpd_gtc_use_2nd
+                  dt_mpdeg <- data_deconvo_hp$dt_mpdeg
 
                   data_hp <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hp, refs)
 
                   # Extract data from data_deconvo for Hd
-                  data_deconvo <- rv_lr_setting$data_deconvo_hd
-                  hnc <- data_deconvo$hnc
-                  markers_use <- data_deconvo$markers_use
-                  pop_al_list <- data_deconvo$pop_al_list
-                  pop_prob_list <- data_deconvo$pop_prob_list
-                  theta <- data_deconvo$theta
-                  gtc_use <- data_deconvo$gtc_use
-                  lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
-                  lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
-                  dt_mpdeg <- data_deconvo$dt_mpdeg
+                  hnc <- data_deconvo_hd$hnc
+                  markers_use <- data_deconvo_hd$markers_use
+                  pop_al_list <- data_deconvo_hd$pop_al_list
+                  pop_prob_list <- data_deconvo_hd$pop_prob_list
+                  theta <- data_deconvo_hd$theta
+                  gtc_use <- data_deconvo_hd$gtc_use
+                  lpd_gtc_use_1st <- data_deconvo_hd$lpd_gtc_use_1st
+                  lpd_gtc_use_2nd <- data_deconvo_hd$lpd_gtc_use_2nd
+                  dt_mpdeg <- data_deconvo_hd$dt_mpdeg
 
                   data_hd <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hd, refs)
 
