@@ -268,24 +268,29 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
           }else{
             data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
                                             hnc_deconvo, warmup, sampling, chains)
-            rv_deconvo$data_deconvo <- data_deconvo
-            rv_deconvo$dt_csp <- dt_csp
-            rv_deconvo$dt_ref <- dt_ref
-            rv_deconvo$dt_af <- dt_af
-            rv_deconvo$anameth <- anameth
-            rv_deconvo$dt_kit <- dt_kit
-            rv_deconvo$dt_info_mk <- dt_info_mk
-            rv_deconvo$dt_sr <- dt_sr
-            rv_deconvo$dt_al_prob <- dt_al_prob
-            rv_deconvo$dt_gt_fltr <- dt_gt_fltr
-            rv_deconvo$dt_dropin <- dt_dropin
-            rv_deconvo$warmup <- warmup
-            rv_deconvo$sampling <- sampling
-            rv_deconvo$chains <- chains
-            rv_deconvo$message_sr <- message_sr
+            if(!is.null(data_deconvo$error_message)){
+              waiter_hide()
+              showModal(modalDialog(title = "Error", HTML(data_deconvo$error_message), easyClose = TRUE, footer = NULL))
+            }else{
+              rv_deconvo$data_deconvo <- data_deconvo
+              rv_deconvo$dt_csp <- dt_csp
+              rv_deconvo$dt_ref <- dt_ref
+              rv_deconvo$dt_af <- dt_af
+              rv_deconvo$anameth <- anameth
+              rv_deconvo$dt_kit <- dt_kit
+              rv_deconvo$dt_info_mk <- dt_info_mk
+              rv_deconvo$dt_sr <- dt_sr
+              rv_deconvo$dt_al_prob <- dt_al_prob
+              rv_deconvo$dt_gt_fltr <- dt_gt_fltr
+              rv_deconvo$dt_dropin <- dt_dropin
+              rv_deconvo$warmup <- warmup
+              rv_deconvo$sampling <- sampling
+              rv_deconvo$chains <- chains
+              rv_deconvo$message_sr <- message_sr
 
-            updateTabsetPanel(session = session_deconvo_top, inputId = "tabset_deconvo", selected = "Result")
-            waiter_hide()
+              updateTabsetPanel(session = session_deconvo_top, inputId = "tabset_deconvo", selected = "Result")
+              waiter_hide()
+            }
           }
         }
       })
