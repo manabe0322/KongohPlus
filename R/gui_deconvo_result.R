@@ -56,14 +56,14 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
         dt_csp <- rv_deconvo$dt_csp
         dt_ref <- rv_deconvo$dt_ref
         dt_af <- rv_deconvo$dt_af
-
-        hnc <- rv_deconvo$hnc
-        markers_use <- rv_deconvo$markers_use
-        dt_pg_list <- rv_deconvo$dt_pg_list
-        dt_log10like <- rv_deconvo$dt_log10like
-        dt_mpdeg <- rv_deconvo$dt_mpdeg
-        dt_mcmc <- rv_deconvo$dt_mcmc
-        traceplot <- rv_deconvo$traceplot
+        data_deconvo <- rv_deconvo$data_deconvo
+        hnc <- data_deconvo$hnc
+        markers_use <- data_deconvo$markers_use
+        dt_pg_list <- data_deconvo$dt_pg_list
+        dt_log10like <- data_deconvo$dt_log10like
+        dt_mpdeg <- data_deconvo$dt_mpdeg
+        dt_mcmc <- data_deconvo$dt_mcmc
+        traceplot <- data_deconvo$traceplot
 
         output$dt_mpdeg <- renderDataTable(server = FALSE, {
           datatable(
@@ -110,6 +110,10 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
           ))
         })
 
+        output$traceplot_lp <- renderPlot({
+          traceplot
+        })
+
         output$download_report <- downloadHandler(
           filename = "report.html",
           content = function(file){
@@ -119,10 +123,6 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
             render(report_tmp, output_file = file, params = params, envir = new.env(parent = globalenv()))
           }
         )
-
-        output$traceplot_lp <- renderPlot({
-          traceplot
-        })
 
         output$mk_pg <- renderUI({
           selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_use, selected = markers_use[1], selectize = FALSE)

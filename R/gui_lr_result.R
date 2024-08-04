@@ -22,7 +22,10 @@ lr_result_ui <- function(id){
                     actionButton(ns("act_pardiag_hd"), label = "Parameters and diagnostics (Hd)"),
                     br(),
                     br(),
-                    actionButton(ns("act_traceplot_lp"), label = "Trace plot"),
+                    actionButton(ns("act_traceplot_lp_hp"), label = "Trace plot (Hp)"),
+                    br(),
+                    br(),
+                    actionButton(ns("act_traceplot_lp_hd"), label = "Trace plot (Hd)"),
                     br(),
                     br(),
                     downloadButton(ns("download_report"), "Report")
@@ -66,8 +69,16 @@ lr_result_server <- function(id, rv_lr){
         dt_pg_list_hd <- data_lr$dt_pg_list_hd
         dt_lr <- data_lr$dt_lr
 
-        hnc <- nrow(dt_mpdeg_hd)
-        markers_use <- names(dt_pg_list_hd)
+        data_deconvo_hp <- rv_lr$data_deconvo_hp
+        hnc_hp <- data_deconvo_hp$hnc
+        markers_use <- data_deconvo_hp$markers_use
+        dt_mcmc_hp <- data_deconvo_hp$dt_mcmc
+        traceplot_hp <- data_deconvo_hp$traceplot
+
+        data_deconvo_hd <- rv_lr$data_deconvo_hd
+        hnc_hd <- data_deconvo_hd$hnc
+        dt_mcmc_hd <- data_deconvo_hd$dt_mcmc
+        traceplot_hd <- data_deconvo_hd$traceplot
 
         rv_lr_result <- reactiveValues()
         rv_lr_result$dt_pg_display <- dt_pg_list_hp
@@ -92,6 +103,82 @@ lr_result_server <- function(id, rv_lr){
             formatSignif(columns = c("MP", "Deg"), digits = 3)
         })
 
+        observeEvent(input$act_pardiag_hp, {
+          showModal(modalDialog(
+            title = "Parameters and diagnostics in Hp",
+            dataTableOutput(session$ns("dt_mcmc_hp")),
+            easyClose = TRUE,
+            footer = NULL,
+            size = "l"
+          ))
+        })
+
+        output$dt_mcmc_hp <- renderDataTable(server = FALSE, {
+          datatable(
+            dt_mcmc_hp,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_mcmc_hp), ordering = FALSE, autowidth = TRUE,
+                           columnDefs = list(list(width = "200px", targets = c(0)),
+                                             list(width = "100px", targets = c(1, 2, 3, 4)))),
+            rownames = FALSE,
+            colnames = c("Parameter", "Contributor", "Marker", "Estimated value", "Rhat")
+          ) %>%
+            formatSignif(columns = c("Estimated_value", "Rhat"), digits = 3)
+        })
+
+        observeEvent(input$act_pardiag_hd, {
+          showModal(modalDialog(
+            title = "Parameters and diagnostics in Hd",
+            dataTableOutput(session$ns("dt_mcmc_hd")),
+            easyClose = TRUE,
+            footer = NULL,
+            size = "l"
+          ))
+        })
+
+        output$dt_mcmc_hd <- renderDataTable(server = FALSE, {
+          datatable(
+            dt_mcmc_hd,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_mcmc_hd), ordering = FALSE, autowidth = TRUE,
+                           columnDefs = list(list(width = "200px", targets = c(0)),
+                                             list(width = "100px", targets = c(1, 2, 3, 4)))),
+            rownames = FALSE,
+            colnames = c("Parameter", "Contributor", "Marker", "Estimated value", "Rhat")
+          ) %>%
+            formatSignif(columns = c("Estimated_value", "Rhat"), digits = 3)
+        })
+
+        observeEvent(input$act_traceplot_lp_hp, {
+          showModal(modalDialog(
+            title = "Trace plot (Hp)",
+            plotOutput(session$ns("traceplot_lp_hp")),
+            footer = tagList(
+              modalButton("Close")
+            ),
+            size = "l"
+          ))
+        })
+
+        output$traceplot_lp_hp <- renderPlot({
+          traceplot_hp
+        })
+
+        observeEvent(input$act_traceplot_lp_hd, {
+          showModal(modalDialog(
+            title = "Trace plot (Hd)",
+            plotOutput(session$ns("traceplot_lp_hd")),
+            footer = tagList(
+              modalButton("Close")
+            ),
+            size = "l"
+          ))
+        })
+
+        output$traceplot_lp_hd <- renderPlot({
+          traceplot_hd
+        })
+
         output$hyp_pg <- renderUI({
           selectInput(session$ns("hyp_pg"), label = "Hypothesis", choices = c("Hp", "Hd"), selected = "Hp", selectize = FALSE)
         })
@@ -101,15 +188,16 @@ lr_result_server <- function(id, rv_lr){
         })
 
         observeEvent(input$hyp_pg, {
-          hyp_select <- input$hyp_pg
-          if(hyp_select == "Hp"){
+          if(input$hyp_pg == "Hp"){
             rv_lr_result$dt_pg_display <- dt_pg_list_hp
+            hnc <- hnc_hp
           }else{
             rv_lr_result$dt_pg_display <- dt_pg_list_hd
+            hnc <- hnc_hd
           }
 
           mk_select <- input$mk_pg
-          isolate(dt_pg_display <- rv_lr_result$dt_pg_display)
+          dt_pg_display <- rv_lr_result$dt_pg_display
 
           output$dt_pg <- renderDataTable(server = FALSE, {
             datatable(
@@ -124,8 +212,14 @@ lr_result_server <- function(id, rv_lr){
         })
 
         observeEvent(input$mk_pg, {
+          if(input$hyp_pg == "Hp"){
+            hnc <- hnc_hp
+          }else{
+            hnc <- hnc_hd
+          }
+
           mk_select <- input$mk_pg
-          isolate(dt_pg_display <- rv_lr_result$dt_pg_display)
+          dt_pg_display <- rv_lr_result$dt_pg_display
 
           output$dt_pg <- renderDataTable(server = FALSE, {
             datatable(

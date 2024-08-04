@@ -576,7 +576,8 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
       end_time <- proc.time()
       comp_time <- end_time[3] - start_time[3]
 
-      return(list("markers_use" = markers_use,
+      return(list("hnc" = hnc,
+                  "markers_use" = markers_use,
                   "pop_al_list" = pop_al_list,
                   "pop_prob_list" = pop_prob_list,
                   "theta" = theta,
@@ -601,7 +602,8 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
         error_message <- paste0(error_message, "  - ", markers_unexplainable[i], "<br>")
       }
 
-      return(list("markers_use" = markers_use,
+      return(list("hnc" = NULL,
+                  "markers_use" = NULL,
                   "pop_al_list" = NULL,
                   "pop_prob_list" = NULL,
                   "theta" = NULL,
@@ -617,7 +619,8 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
                   "error_message" = error_message))
     }
   }else{
-    return(list("markers_use" = NULL,
+    return(list("hnc" = NULL,
+                "markers_use" = NULL,
                 "pop_al_list" = NULL,
                 "pop_prob_list" = NULL,
                 "theta" = NULL,

@@ -66,17 +66,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
       }
 
       rv_lr_setting <- reactiveValues()
-      rv_lr_setting$fin_deconvo <- NULL
-      rv_lr_setting$hnc <- NULL
-      rv_lr_setting$markers_use <- NULL
-      rv_lr_setting$pop_al_list <- NULL
-      rv_lr_setting$pop_prob_list <- NULL
-      rv_lr_setting$theta <- NULL
-      rv_lr_setting$gtc_use <- NULL
-      rv_lr_setting$lpd_gtc_use_1st <- NULL
-      rv_lr_setting$lpd_gtc_use_2nd <- NULL
-      rv_lr_setting$dt_mpdeg <- NULL
-
+      rv_lr_setting$fin_deconvo <- FALSE
+      rv_lr_setting$data_deconvo <- NULL
       rv_lr_setting$dt_csp <- NULL
       rv_lr_setting$dt_ref <- NULL
       rv_lr_setting$dt_af <- NULL
@@ -89,19 +80,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
 
       rv_lr <- reactiveValues()
       rv_lr$data_lr <- NULL
-      #rv_lr$dt_csp <- NULL
-      #rv_lr$dt_ref <- NULL
-      #rv_lr$dt_af <- NULL
-      #rv_lr$anameth <- NULL
-      #rv_lr$dt_kit <- NULL
-      #rv_lr$dt_at <- NULL
-      #rv_lr$dt_param <- NULL
-      #rv_lr$dt_alcor <- NULL
-      #rv_lr$dt_gtc_fltr <- NULL
-      #rv_lr$dt_gtc_prob <- NULL
-      #rv_lr$warmup <- NULL
-      #rv_lr$sampling <- NULL
-      #rv_lr$chains <- NULL
+      rv_lr$data_deconvo_hp <- NULL
+      rv_lr$data_deconvo_hd <- NULL
 
       observe({
         req(rv_file)
@@ -117,15 +97,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
       observe({
         req(rv_deconvo)
         rv_lr_setting$fin_deconvo <- rv_deconvo$fin_deconvo
-        rv_lr_setting$hnc <- rv_deconvo$hnc
-        rv_lr_setting$markers_use <- rv_deconvo$markers_use
-        rv_lr_setting$pop_al_list <- rv_deconvo$pop_al_list
-        rv_lr_setting$pop_prob_list <- rv_deconvo$pop_prob_list
-        rv_lr_setting$theta <- rv_deconvo$theta
-        rv_lr_setting$gtc_use <- rv_deconvo$gtc_use
-        rv_lr_setting$lpd_gtc_use_1st <- rv_deconvo$lpd_gtc_use_1st
-        rv_lr_setting$lpd_gtc_use_2nd <- rv_deconvo$lpd_gtc_use_2nd
-        rv_lr_setting$dt_mpdeg <- rv_deconvo$dt_mpdeg
+        rv_lr_setting$data_deconvo <- rv_deconvo$data_deconvo
       })
 
       output$use_deconvo <- renderUI({
@@ -328,15 +300,16 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
             showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
           }else{
             # Extract data from data_deconvo
-            hnc <- rv_lr_setting$hnc
-            markers_use <- rv_lr_setting$markers_use
-            pop_al_list <- rv_lr_setting$pop_al_list
-            pop_prob_list <- rv_lr_setting$pop_prob_list
-            theta <- rv_lr_setting$theta
-            gtc_use <- rv_lr_setting$gtc_use
-            lpd_gtc_use_1st <- rv_lr_setting$lpd_gtc_use_1st
-            lpd_gtc_use_2nd <- rv_lr_setting$lpd_gtc_use_2nd
-            dt_mpdeg <- rv_lr_setting$dt_mpdeg
+            data_deconvo <- rv_lr_setting$data_deconvo
+            hnc <- data_deconvo$hnc
+            markers_use <- data_deconvo$markers_use
+            pop_al_list <- data_deconvo$pop_al_list
+            pop_prob_list <- data_deconvo$pop_prob_list
+            theta <- data_deconvo$theta
+            gtc_use <- data_deconvo$gtc_use
+            lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
+            lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
+            dt_mpdeg <- data_deconvo$dt_mpdeg
 
             data_hp <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hp, refs)
             data_hd <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hd, refs)
@@ -350,6 +323,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
                             "dt_pg_list_hd" = data_hd$dt_pg_list_hyp,
                             "dt_lr" = dt_lr)
             rv_lr$data_lr <- data_lr
+            rv_lr$data_deconvo_hp <- data_deconvo
+            rv_lr$data_deconvo_hd <- data_deconvo
 
             updateTabsetPanel(session = session_lr_top, inputId = "tabset_lr", selected = "Result")
             waiter_hide()
@@ -431,6 +406,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
                                       data_hp$log10like_adopt, data_hp$combined_log10like_adopt,
                                       data_hd$log10like_adopt, data_hd$combined_log10like_adopt)
                   rv_lr$data_lr <- data_lr
+                  rv_lr$data_deconvo_hp <- data_deconvo_hp
+                  rv_lr$data_deconvo_hd <- data_deconvo_hd
 
                   updateTabsetPanel(session = session_lr_top, inputId = "tabset_lr", selected = "Result")
                   waiter_hide()

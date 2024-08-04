@@ -76,7 +76,7 @@ make_dt_pg <- function(label_contrib, gtc_mk, gtc_logprob_mk, lpd_gtc_mk_1st, lp
 
   # Make a data.table
   mat_pg <- cbind(gtc_mk_new, gtc_logprob_mk, lpd_gtc_mk_1st, lpd_gtc_mk_2nd, post_prob_gtc)
-  mat_pg <- mat_pg[gtc_logprob_mk != 0, , drop = FALSE]
+  mat_pg <- mat_pg[gtc_logprob_mk != -Inf, , drop = FALSE]
   dt_pg <- as.data.table(mat_pg)
   names(dt_pg) <- c(paste0("Gt_", label_contrib), "gtc_prob", "loglike_gtc_1st", "loglike_gtc_2nd", "post_prob")
 
