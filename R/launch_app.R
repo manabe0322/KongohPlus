@@ -27,7 +27,16 @@ KongohPlus <- function(){
 
                              lr_ui("lr"),
 
-                             tabPanel("Project"),
+                             navbarMenu("Project",
+                                        tabPanel("New project",
+                                                 useShinyjs(),
+                                                 h2("New project"),
+                                                 br(),
+                                                 actionButton("act_new_proj", label = "New project", class = "btn btn-primary btn-lg")
+                                        )#,
+                                        #load_proj_ui("load_proj"),
+                                        #save_proj_ui("save_proj")
+                             ),
 
                              navbarMenu("Setting",
                                         anameth_ui("anameth"),
@@ -56,6 +65,22 @@ KongohPlus <- function(){
     sr_server("sr", path_pack)
     kit_server("kit", path_pack)
     size_server("size", path_pack)
+
+    observeEvent(input$act_new_proj, {
+      refresh()
+    })
+    #rv_load_proj <- load_proj_server("load_proj", session)
+    #observe({
+    #  req(rv_load_proj)
+    #  data_list <- rv_load_proj$data_list
+    #  if(!is.null(data_list)){
+    #
+    #  }
+    #})
+    #observe({
+    #  req(rv_file)
+    #  save_proj_server("save_proj", rv_file)
+    #})
   }
 
   shinyApp(ui, server)
