@@ -66,7 +66,6 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
       }
 
       rv_lr_setting <- reactiveValues()
-      rv_lr_setting$fin_deconvo <- FALSE
       rv_lr_setting$data_deconvo <- NULL
       rv_lr_setting$dt_csp <- NULL
       rv_lr_setting$dt_ref <- NULL
@@ -96,15 +95,14 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
 
       observe({
         req(rv_deconvo)
-        rv_lr_setting$fin_deconvo <- rv_deconvo$fin_deconvo
         rv_lr_setting$data_deconvo <- rv_deconvo$data_deconvo
       })
 
       output$use_deconvo <- renderUI({
-        if(rv_lr_setting$fin_deconvo){
-          checkboxInput(session$ns("use_deconvo"), label = "Use the result of deconvolution", value = TRUE)
-        }else{
+        if(is.null(rv_lr_setting$data_deconvo)){
           disabled(checkboxInput(session$ns("use_deconvo"), label = "Use the result of deconvolution", value = FALSE))
+        }else{
+          checkboxInput(session$ns("use_deconvo"), label = "Use the result of deconvolution", value = TRUE)
         }
       })
 
@@ -317,7 +315,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
                                 data_hp$log10like_adopt, data_hp$combined_log10like_adopt,
                                 data_hd$log10like_adopt, data_hd$combined_log10like_adopt)
 
-            data_lr <- list("dt_mpdeg_hp" = data_hp$dt_mpdeg_hyp,
+            data_lr <- list("dt_ref" = dt_ref,
+                            "dt_mpdeg_hp" = data_hp$dt_mpdeg_hyp,
                             "dt_mpdeg_hd" = data_hd$dt_mpdeg_hyp,
                             "dt_pg_list_hp" = data_hp$dt_pg_list_hyp,
                             "dt_pg_list_hd" = data_hd$dt_pg_list_hyp,

@@ -63,7 +63,6 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
 
       rv_deconvo_setting <- reactiveValues()
       rv_deconvo_setting$dt_csp <- NULL
-      rv_deconvo_setting$dt_ref <- NULL
       rv_deconvo_setting$dt_af <- NULL
       rv_deconvo_setting$dt_anameth <- NULL
       rv_deconvo_setting$dt_info_mk <- NULL
@@ -72,27 +71,11 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
       rv_deconvo_setting$chains <- 4
 
       rv_deconvo <- reactiveValues()
-      rv_deconvo$fin_deconvo <- FALSE
       rv_deconvo$data_deconvo <- NULL
-      rv_deconvo$dt_csp <- NULL
-      rv_deconvo$dt_ref <- NULL
-      rv_deconvo$dt_af <- NULL
-      rv_deconvo$anameth <- NULL
-      rv_deconvo$dt_kit <- NULL
-      rv_deconvo$dt_info_mk <- NULL
-      rv_deconvo$dt_sr <- NULL
-      rv_deconvo$dt_al_prob <- NULL
-      rv_deconvo$dt_gt_fltr <- NULL
-      rv_deconvo$dt_dropin <- NULL
-      rv_deconvo$warmup <- NULL
-      rv_deconvo$sampling <- NULL
-      rv_deconvo$chains <- NULL
-      rv_deconvo$message_sr <- NULL
 
       observe({
         req(rv_file)
         rv_deconvo_setting$dt_csp <- rv_file$dt_csp
-        rv_deconvo_setting$dt_ref <- rv_file$dt_ref
         rv_deconvo_setting$dt_af <- rv_file$dt_af
       })
 
@@ -230,7 +213,6 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         # Fix setting
         hnc_deconvo <- input$noc_deconvo
         dt_csp <- rv_deconvo_setting$dt_csp
-        dt_ref <- rv_deconvo_setting$dt_ref
         dt_af <- rv_deconvo_setting$dt_af
         dt_anameth <- rv_deconvo_setting$dt_anameth
         warmup <- rv_deconvo_setting$warmup
@@ -255,7 +237,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         dt_info_mk <- rv_deconvo_setting$dt_info_mk
 
         # Check input files
-        error_message <- check_main_file(dt_csp, dt_ref, dt_af, markers_auto, method = "deconvo")
+        error_message <- check_main_file(dt_csp, NULL, dt_af, markers_auto, method = "deconvo")
         if(error_message != ""){
           waiter_hide()
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
@@ -267,28 +249,14 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
             waiter_hide()
             showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
           }else{
-            data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
+            data_deconvo <- perform_deconvo(dt_csp, dt_af, anameth, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
                                             hnc_deconvo, warmup, sampling, chains)
             if(!is.null(data_deconvo$error_message)){
               waiter_hide()
               showModal(modalDialog(title = "Error", HTML(data_deconvo$error_message), easyClose = TRUE, footer = NULL))
             }else{
-              rv_deconvo$fin_deconvo <- TRUE
+              data_deconvo$message_sr <- message_sr
               rv_deconvo$data_deconvo <- data_deconvo
-              rv_deconvo$dt_csp <- dt_csp
-              rv_deconvo$dt_ref <- dt_ref
-              rv_deconvo$dt_af <- dt_af
-              rv_deconvo$anameth <- anameth
-              rv_deconvo$dt_kit <- dt_kit
-              rv_deconvo$dt_info_mk <- dt_info_mk
-              rv_deconvo$dt_sr <- dt_sr
-              rv_deconvo$dt_al_prob <- dt_al_prob
-              rv_deconvo$dt_gt_fltr <- dt_gt_fltr
-              rv_deconvo$dt_dropin <- dt_dropin
-              rv_deconvo$warmup <- warmup
-              rv_deconvo$sampling <- sampling
-              rv_deconvo$chains <- chains
-              rv_deconvo$message_sr <- message_sr
 
               updateTabsetPanel(session = session_deconvo_top, inputId = "tabset_deconvo", selected = "Result")
               waiter_hide()

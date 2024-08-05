@@ -26,6 +26,8 @@ lr_server <- function(id, path_pack, rv_file, rv_deconvo){
         req(rv_lr)
         lr_result_server("lr_result", rv_lr)
       })
+
+      return(rv_lr)
     }
   )
 }

@@ -4,7 +4,6 @@ date: "`r Sys.Date()`"
 output: html_document
 params:
   dt_csp: NA
-  dt_ref: NA
   hnc: NA
   markers_use: NA
   dt_mpdeg: NA
@@ -57,7 +56,6 @@ library(gluedown)
 library(magrittr)
 
 dt_csp <- params$dt_csp
-dt_ref <- params$dt_ref
 hnc <- params$hnc
 markers_use <- params$markers_use
 dt_mpdeg <- params$dt_mpdeg
@@ -80,8 +78,7 @@ md_bullet(sn_csp, marker = "-")
 ### Reference profile
 
 ```{r echo = FALSE, results='asis'}
-sn_ref <- unique(params$dt_ref[, SampleName])
-md_bullet(sn_ref, marker = "-")
+
 ```
 
 ### Allele frequency

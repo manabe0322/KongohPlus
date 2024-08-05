@@ -9,7 +9,7 @@ make_index_dedup2_mk <- function(index_rph_gtc, index_dedup1_all_mk){
   return(match(paste_index_rph_gtc, paste_index_dedup1_all_mk))
 }
 
-perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
+perform_deconvo <- function(dt_csp, dt_af, anameth, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
                             hnc, warmup, sampling, chains){
   # Start computation
   start_time <- proc.time()
@@ -23,6 +23,9 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
   n_mk <- length(markers_use)
 
   if(n_mk != 0){
+    dt_kit <- change_data_type_kit(dt_kit)
+    dt_kit_auto <- extract_kit_auto(dt_kit)
+
     # Extract peak data from crime stain profiles
     tmp <- make_peak_data(dt_csp, dt_kit_auto, markers_use, ats_use)
     peaks_list <- tmp$peaks_list
@@ -576,7 +579,20 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_s
       end_time <- proc.time()
       comp_time <- end_time[3] - start_time[3]
 
-      return(list("hnc" = hnc,
+      return(list("dt_csp" = dt_csp,
+                  "dt_af" = dt_af,
+                  "anameth" = anameth,
+                  "dt_kit" = dt_kit,
+                  "dt_info_mk" = dt_info_mk,
+                  "dt_par" = dt_par,
+                  "dt_sr" = dt_sr,
+                  "dt_al_prob" = dt_al_prob,
+                  "dt_gt_fltr" = dt_gt_fltr,
+                  "dt_dropin" = dt_dropin,
+                  "warmup" = warmup,
+                  "sampling" = sampling,
+                  "chains" = chains,
+                  "hnc" = hnc,
                   "markers_use" = markers_use,
                   "pop_al_list" = pop_al_list,
                   "pop_prob_list" = pop_prob_list,
