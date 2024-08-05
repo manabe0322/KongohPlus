@@ -38,7 +38,7 @@ lr_setting_ui <- function(id){
 #' lr_setting_server
 #'
 #' @description The function to create the server module for setting conditions of the likelihood ratio
-lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top){
+lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
   moduleServer(
     id,
     function(input, output, session){
@@ -70,6 +70,9 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
       rv_lr_setting$dt_csp <- NULL
       rv_lr_setting$dt_ref <- NULL
       rv_lr_setting$dt_af <- NULL
+      rv_lr_setting$fn_csp <- NULL
+      rv_lr_setting$fn_ref <- NULL
+      rv_lr_setting$fn_af <- NULL
       rv_lr_setting$refs <- NULL
       rv_lr_setting$dt_anameth <- NULL
       rv_lr_setting$dt_info_mk <- NULL
@@ -87,6 +90,9 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
         rv_lr_setting$dt_csp <- rv_file$dt_csp
         rv_lr_setting$dt_ref <- dt_ref <- rv_file$dt_ref
         rv_lr_setting$dt_af <- rv_file$dt_af
+        rv_lr_setting$fn_csp <- rv_file$fn_csp
+        rv_lr_setting$fn_ref <- rv_file$fn_ref
+        rv_lr_setting$fn_af <- rv_file$fn_af
 
         if(!is.null(dt_ref)){
           rv_lr_setting$refs <- unique(dt_ref[, SampleName])
@@ -316,6 +322,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
                                 data_hd$log10like_adopt, data_hd$combined_log10like_adopt)
 
             data_lr <- list("dt_ref" = dt_ref,
+                            "fn_ref" = rv_lr_setting$fn_ref,
                             "dt_mpdeg_hp" = data_hp$dt_mpdeg_hyp,
                             "dt_mpdeg_hd" = data_hd$dt_mpdeg_hyp,
                             "dt_pg_list_hp" = data_hp$dt_pg_list_hyp,
@@ -325,7 +332,6 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
             rv_lr$data_deconvo_hp <- data_deconvo
             rv_lr$data_deconvo_hd <- data_deconvo
 
-            updateTabsetPanel(session = session_lr_top, inputId = "tabset_lr", selected = "Result")
             waiter_hide()
           }
         }else{
@@ -359,7 +365,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
               waiter_hide()
               showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
             }else{
-              data_deconvo_hp <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
+              data_deconvo_hp <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
                                                  hnc_lr_hp, warmup, sampling, chains)
               if(!is.null(data_deconvo_hp$error_message)){
                 waiter_hide()
@@ -368,13 +374,22 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
                 if(hnc_lr_hp == hnc_lr_hd){
                   data_deconvo_hd <- data_deconvo_hp
                 }else{
-                  data_deconvo_hd <- perform_deconvo(dt_csp, dt_af, dt_kit_auto, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
+                  data_deconvo_hd <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
                                                      hnc_lr_hd, warmup, sampling, chains)
                 }
                 if(!is.null(data_deconvo_hd$error_message)){
                   waiter_hide()
                   showModal(modalDialog(title = "Error", HTML(data_deconvo_hd$error_message), easyClose = TRUE, footer = NULL))
                 }else{
+                  data_deconvo_hp$message_sr <- message_sr
+                  data_deconvo_hp$fn_csp <- rv_lr_setting$fn_csp
+                  data_deconvo_hp$fn_af <- rv_lr_setting$fn_af
+                  data_deconvo_hp$anameth <- anameth
+                  data_deconvo_hd$message_sr <- message_sr
+                  data_deconvo_hd$fn_csp <- rv_lr_setting$fn_csp
+                  data_deconvo_hd$fn_af <- rv_lr_setting$fn_af
+                  data_deconvo_hd$anameth <- anameth
+
                   # Extract data from data_deconvo for Hp
                   hnc <- data_deconvo_hp$hnc
                   markers_use <- data_deconvo_hp$markers_use
@@ -404,11 +419,18 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo, session_lr_top
                   dt_lr <- make_dt_lr(markers_use,
                                       data_hp$log10like_adopt, data_hp$combined_log10like_adopt,
                                       data_hd$log10like_adopt, data_hd$combined_log10like_adopt)
+
+                  data_lr <- list("dt_ref" = dt_ref,
+                                  "fn_ref" = rv_lr_setting$fn_ref,
+                                  "dt_mpdeg_hp" = data_hp$dt_mpdeg_hyp,
+                                  "dt_mpdeg_hd" = data_hd$dt_mpdeg_hyp,
+                                  "dt_pg_list_hp" = data_hp$dt_pg_list_hyp,
+                                  "dt_pg_list_hd" = data_hd$dt_pg_list_hyp,
+                                  "dt_lr" = dt_lr)
                   rv_lr$data_lr <- data_lr
                   rv_lr$data_deconvo_hp <- data_deconvo_hp
                   rv_lr$data_deconvo_hd <- data_deconvo_hd
 
-                  updateTabsetPanel(session = session_lr_top, inputId = "tabset_lr", selected = "Result")
                   waiter_hide()
                 }
               }

@@ -9,9 +9,16 @@ deconvo_result_ui <- function(id){
            fluidRow(
              column(3,
                     wellPanel(
+                      h4("Crime stain profile"),
+                      textOutput(ns("fn_csp")),
+                      br(),
+                      h4("Allele frequency"),
+                      textOutput(ns("fn_af"))
+                    ),
+                    wellPanel(
                       h4("Parameters for contributors"),
                       br(),
-                      dataTableOutput(ns("dt_mpdeg")),
+                      dataTableOutput(ns("dt_mpdeg"))
                     ),
                     br(),
                     actionButton(ns("act_pardiag"), label = "Parameters and diagnostics"),
@@ -55,6 +62,8 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
       if(!is.null(data_deconvo)){
         dt_csp <- data_deconvo$dt_csp
         dt_af <- data_deconvo$dt_af
+        fn_csp <- data_deconvo$fn_csp
+        fn_af <- data_deconvo$fn_af
         hnc <- data_deconvo$hnc
         markers_use <- data_deconvo$markers_use
         dt_pg_list <- data_deconvo$dt_pg_list
@@ -62,6 +71,9 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
         dt_mpdeg <- data_deconvo$dt_mpdeg
         dt_mcmc <- data_deconvo$dt_mcmc
         traceplot <- data_deconvo$traceplot
+
+        output$fn_csp <- renderText({paste0(fn_csp)})
+        output$fn_af <- renderText({paste0(fn_af)})
 
         output$dt_mpdeg <- renderDataTable(server = FALSE, {
           datatable(

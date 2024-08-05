@@ -46,6 +46,9 @@ file_server <- function(id, session_top){
       rv_file$dt_csp <- NULL
       rv_file$dt_ref <- NULL
       rv_file$dt_af <- NULL
+      rv_file$fn_csp <- NULL
+      rv_file$fn_ref <- NULL
+      rv_file$fn_af <- NULL
 
       # Load the crime stain profile
       observeEvent(input$file_csp, {
@@ -54,6 +57,7 @@ file_server <- function(id, session_top){
           dt_csp <- fread(file_input$datapath)
           dt_csp <- change_data_type_csp(dt_csp)
           rv_file$dt_csp <- dt_csp
+          rv_file$fn_csp <- file_input$name
           updateTabsetPanel(inputId = "tabset_load_file", selected = "Crime stain profile")
         }
       })
@@ -65,6 +69,7 @@ file_server <- function(id, session_top){
           dt_ref <- fread(file_input$datapath)
           dt_ref <- change_data_type_ref(dt_ref)
           rv_file$dt_ref <- dt_ref
+          rv_file$fn_ref <- file_input$name
           updateTabsetPanel(inputId = "tabset_load_file", selected = "Reference profile")
         }
       })
@@ -76,6 +81,7 @@ file_server <- function(id, session_top){
           dt_af <- fread(file_input$datapath)
           dt_af <- change_data_type_af(dt_af)
           rv_file$dt_af <- dt_af
+          rv_file$fn_af <- file_input$name
           updateTabsetPanel(inputId = "tabset_load_file", selected = "Allele frequency")
         }
       })

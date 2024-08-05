@@ -51,10 +51,22 @@ load_proj_server <- function(id, session_top){
           rv_load_proj$dt_af <- dt_af
           rv_load_proj$data_deconvo <- data_deconvo
           rv_load_proj$data_lr <- data_lr
-          rv_load_proj$dt_ref <- dt_ref
           rv_load_proj$data_deconvo_hp <- data_deconvo_hp
           rv_load_proj$data_deconvo_hd <- data_deconvo_hd
-          updateNavbarPage(session = session_top, "navbar", selected = "File")
+
+          if(is.null(data_deconvo)){
+            if(is.null(data_lr)){
+              updateNavbarPage(session = session_top, "navbar", selected = "File")
+            }else{
+              updateNavbarPage(session = session_top, "navbar", selected = "Likelihood ratio")
+            }
+          }else{
+            if(is.null(data_lr)){
+              updateNavbarPage(session = session_top, "navbar", selected = "Deconvolution")
+            }else{
+              updateNavbarPage(session = session_top, "navbar", selected = "Likelihood ratio")
+            }
+          }
           waiter_hide()
         }
       }, ignoreInit = TRUE)

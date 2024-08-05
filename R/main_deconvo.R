@@ -9,7 +9,7 @@ make_index_dedup2_mk <- function(index_rph_gtc, index_dedup1_all_mk){
   return(match(paste_index_rph_gtc, paste_index_dedup1_all_mk))
 }
 
-perform_deconvo <- function(dt_csp, dt_af, anameth, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
+perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
                             hnc, warmup, sampling, chains){
   # Start computation
   start_time <- proc.time()
@@ -581,7 +581,6 @@ perform_deconvo <- function(dt_csp, dt_af, anameth, dt_kit, dt_info_mk, dt_par, 
 
       return(list("dt_csp" = dt_csp,
                   "dt_af" = dt_af,
-                  "anameth" = anameth,
                   "dt_kit" = dt_kit,
                   "dt_info_mk" = dt_info_mk,
                   "dt_par" = dt_par,
@@ -618,7 +617,19 @@ perform_deconvo <- function(dt_csp, dt_af, anameth, dt_kit, dt_info_mk, dt_par, 
         error_message <- paste0(error_message, "  - ", markers_unexplainable[i], "<br>")
       }
 
-      return(list("hnc" = NULL,
+      return(list("dt_csp" = NULL,
+                  "dt_af" = NULL,
+                  "dt_kit" = NULL,
+                  "dt_info_mk" = NULL,
+                  "dt_par" = NULL,
+                  "dt_sr" = NULL,
+                  "dt_al_prob" = NULL,
+                  "dt_gt_fltr" = NULL,
+                  "dt_dropin" = NULL,
+                  "warmup" = NULL,
+                  "sampling" = NULL,
+                  "chains" = NULL,
+                  "hnc" = NULL,
                   "markers_use" = NULL,
                   "pop_al_list" = NULL,
                   "pop_prob_list" = NULL,
@@ -635,7 +646,19 @@ perform_deconvo <- function(dt_csp, dt_af, anameth, dt_kit, dt_info_mk, dt_par, 
                   "error_message" = error_message))
     }
   }else{
-    return(list("hnc" = NULL,
+    return(list("dt_csp" = NULL,
+                "dt_af" = NULL,
+                "dt_kit" = NULL,
+                "dt_info_mk" = NULL,
+                "dt_par" = NULL,
+                "dt_sr" = NULL,
+                "dt_al_prob" = NULL,
+                "dt_gt_fltr" = NULL,
+                "dt_dropin" = NULL,
+                "warmup" = NULL,
+                "sampling" = NULL,
+                "chains" = NULL,
+                "hnc" = NULL,
                 "markers_use" = NULL,
                 "pop_al_list" = NULL,
                 "pop_prob_list" = NULL,

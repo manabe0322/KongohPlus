@@ -20,11 +20,14 @@ deconvo_server <- function(id, path_pack, rv_file){
   moduleServer(
     id,
     function(input, output, session){
-      rv_deconvo <- deconvo_setting_server("deconvo_setting", path_pack, rv_file, session)
+      rv_deconvo <- deconvo_setting_server("deconvo_setting", path_pack, rv_file)
 
       observe({
         req(rv_deconvo)
         deconvo_result_server("deconvo_result", path_pack, rv_deconvo)
+        if(!is.null(rv_deconvo$data_deconvo)){
+          updateTabsetPanel(session, "tabset_deconvo", selected = "Result")
+        }
       })
 
       return(rv_deconvo)

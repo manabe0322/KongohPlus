@@ -20,11 +20,14 @@ lr_server <- function(id, path_pack, rv_file, rv_deconvo){
   moduleServer(
     id,
     function(input, output, session){
-      rv_lr <- lr_setting_server("lr_setting", path_pack, rv_file, rv_deconvo, session)
+      rv_lr <- lr_setting_server("lr_setting", path_pack, rv_file, rv_deconvo)
 
       observe({
         req(rv_lr)
         lr_result_server("lr_result", rv_lr)
+        if(!is.null(rv_lr$data_lr)){
+          updateTabsetPanel(session, "tabset_lr", selected = "Result")
+        }
       })
 
       return(rv_lr)

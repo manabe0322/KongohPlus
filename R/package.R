@@ -11,7 +11,6 @@
 #' @importFrom pandoc pandoc_activate pandoc_install
 #' @importFrom magrittr %>%
 #' @importFrom parallel detectCores
-#' @importFrom posterior as_draws_matrix rhat
 #' @importFrom Rcpp sourceCpp
 #' @import rmarkdown
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback

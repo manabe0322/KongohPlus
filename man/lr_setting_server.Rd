@@ -4,7 +4,7 @@
 \alias{lr_setting_server}
 \title{lr_setting_server}
 \usage{
-lr_setting_server(id, path_pack, rv_file, rv_deconvo, session_lr_top)
+lr_setting_server(id, path_pack, rv_file, rv_deconvo)
 }
 \description{
 The function to create the server module for setting conditions of the likelihood ratio

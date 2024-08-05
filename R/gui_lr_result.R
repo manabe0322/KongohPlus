@@ -9,11 +9,21 @@ lr_result_ui <- function(id){
            fluidRow(
              column(3,
                     wellPanel(
+                      h4("Crime stain profile"),
+                      textOutput(ns("fn_csp")),
+                      br(),
+                      h4("Reference profile"),
+                      textOutput(ns("fn_ref")),
+                      br(),
+                      h4("Allele frequency"),
+                      textOutput(ns("fn_af"))
+                    ),
+                    wellPanel(
                       h4("Parameters for contributors"),
                       br(),
                       dataTableOutput(ns("dt_mpdeg_hp")),
                       br(),
-                      dataTableOutput(ns("dt_mpdeg_hd")),
+                      dataTableOutput(ns("dt_mpdeg_hd"))
                     ),
                     br(),
                     actionButton(ns("act_pardiag_hp"), label = "Parameters and diagnostics (Hp)"),
@@ -63,6 +73,7 @@ lr_result_server <- function(id, rv_lr){
     function(input, output, session){
       data_lr <- rv_lr$data_lr
       if(!is.null(data_lr)){
+        fn_ref <- data_lr$fn_ref
         dt_mpdeg_hp <- data_lr$dt_mpdeg_hp
         dt_mpdeg_hd <- data_lr$dt_mpdeg_hd
         dt_pg_list_hp <- data_lr$dt_pg_list_hp
@@ -71,9 +82,11 @@ lr_result_server <- function(id, rv_lr){
 
         data_deconvo_hp <- rv_lr$data_deconvo_hp
         hnc_hp <- data_deconvo_hp$hnc
-        markers_use <- data_deconvo_hp$markers_use
         dt_mcmc_hp <- data_deconvo_hp$dt_mcmc
         traceplot_hp <- data_deconvo_hp$traceplot
+        markers_use <- data_deconvo_hp$markers_use
+        fn_csp <- data_deconvo_hp$fn_csp
+        fn_af <- data_deconvo_hp$fn_af
 
         data_deconvo_hd <- rv_lr$data_deconvo_hd
         hnc_hd <- data_deconvo_hd$hnc
@@ -82,6 +95,10 @@ lr_result_server <- function(id, rv_lr){
 
         rv_lr_result <- reactiveValues()
         rv_lr_result$dt_pg_display <- dt_pg_list_hp
+
+        output$fn_csp <- renderText({paste0(fn_csp)})
+        output$fn_ref <- renderText({paste0(fn_ref)})
+        output$fn_af <- renderText({paste0(fn_af)})
 
         output$dt_mpdeg_hp <- renderDataTable(server = FALSE, {
           datatable(

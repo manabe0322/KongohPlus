@@ -34,7 +34,7 @@ deconvo_setting_ui <- function(id){
 #' deconvo_setting_server
 #'
 #' @description The function to create the server module for setting conditions of deconvolution
-deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
+deconvo_setting_server <- function(id, path_pack, rv_file){
   moduleServer(
     id,
     function(input, output, session){
@@ -64,6 +64,8 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
       rv_deconvo_setting <- reactiveValues()
       rv_deconvo_setting$dt_csp <- NULL
       rv_deconvo_setting$dt_af <- NULL
+      rv_deconvo_setting$fn_csp <- NULL
+      rv_deconvo_setting$fn_af <- NULL
       rv_deconvo_setting$dt_anameth <- NULL
       rv_deconvo_setting$dt_info_mk <- NULL
       rv_deconvo_setting$warmup <- 1200
@@ -77,6 +79,8 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
         req(rv_file)
         rv_deconvo_setting$dt_csp <- rv_file$dt_csp
         rv_deconvo_setting$dt_af <- rv_file$dt_af
+        rv_deconvo_setting$fn_csp <- rv_file$fn_csp
+        rv_deconvo_setting$fn_af <- rv_file$fn_af
       })
 
       observeEvent(input$noc_deconvo, {
@@ -249,16 +253,18 @@ deconvo_setting_server <- function(id, path_pack, rv_file, session_deconvo_top){
             waiter_hide()
             showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
           }else{
-            data_deconvo <- perform_deconvo(dt_csp, dt_af, anameth, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
+            data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
                                             hnc_deconvo, warmup, sampling, chains)
             if(!is.null(data_deconvo$error_message)){
               waiter_hide()
               showModal(modalDialog(title = "Error", HTML(data_deconvo$error_message), easyClose = TRUE, footer = NULL))
             }else{
               data_deconvo$message_sr <- message_sr
+              data_deconvo$fn_csp <- rv_deconvo_setting$fn_csp
+              data_deconvo$fn_af <- rv_deconvo_setting$fn_af
+              data_deconvo$anameth <- anameth
               rv_deconvo$data_deconvo <- data_deconvo
 
-              updateTabsetPanel(session = session_deconvo_top, inputId = "tabset_deconvo", selected = "Result")
               waiter_hide()
             }
           }
