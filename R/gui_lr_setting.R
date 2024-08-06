@@ -307,6 +307,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
             data_deconvo <- rv_lr_setting$data_deconvo
             hnc <- data_deconvo$hnc
             markers_use <- data_deconvo$markers_use
+            peaks_list <- data_deconvo$peaks_list
             pop_al_list <- data_deconvo$pop_al_list
             pop_prob_list <- data_deconvo$pop_prob_list
             theta <- data_deconvo$theta
@@ -315,8 +316,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
             lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
             dt_mpdeg <- data_deconvo$dt_mpdeg
 
-            data_hp <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hp, refs)
-            data_hd <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hd, refs)
+            data_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hp, refs)
+            data_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hd, refs)
             dt_lr <- make_dt_lr(markers_use,
                                 data_hp$log10like_adopt, data_hp$combined_log10like_adopt,
                                 data_hd$log10like_adopt, data_hd$combined_log10like_adopt)
@@ -393,6 +394,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                   # Extract data from data_deconvo for Hp
                   hnc <- data_deconvo_hp$hnc
                   markers_use <- data_deconvo_hp$markers_use
+                  peaks_list <- data_deconvo_hp$peaks_list
                   pop_al_list <- data_deconvo_hp$pop_al_list
                   pop_prob_list <- data_deconvo_hp$pop_prob_list
                   theta <- data_deconvo_hp$theta
@@ -401,11 +403,12 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                   lpd_gtc_use_2nd <- data_deconvo_hp$lpd_gtc_use_2nd
                   dt_mpdeg <- data_deconvo_hp$dt_mpdeg
 
-                  data_hp <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hp, refs)
+                  data_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hp, refs)
 
                   # Extract data from data_deconvo for Hd
                   hnc <- data_deconvo_hd$hnc
                   markers_use <- data_deconvo_hd$markers_use
+                  peaks_list <- data_deconvo_hd$peaks_list
                   pop_al_list <- data_deconvo_hd$pop_al_list
                   pop_prob_list <- data_deconvo_hd$pop_prob_list
                   theta <- data_deconvo_hd$theta
@@ -414,7 +417,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                   lpd_gtc_use_2nd <- data_deconvo_hd$lpd_gtc_use_2nd
                   dt_mpdeg <- data_deconvo_hd$dt_mpdeg
 
-                  data_hd <- assign_log10like(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hd, refs)
+                  data_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hd, refs)
 
                   dt_lr <- make_dt_lr(markers_use,
                                       data_hp$log10like_adopt, data_hp$combined_log10like_adopt,

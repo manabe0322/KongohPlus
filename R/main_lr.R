@@ -3,20 +3,30 @@
 #' @description The function to make a matrix for reference profiles of all autosomal markers
 #' @param dt_ref The data.table of the reference profile
 #' @param markers_auto A vector of the autosomal markers
-make_prof_ref_all <- function(dt_ref, markers_auto){
+#' @param peaks_list A list of peaks
+make_prof_ref_all <- function(dt_ref, markers_auto, peaks_list){
   n_mk <- length(markers_auto)
   refs <- unique(dt_ref[, SampleName])
   n_ref <- length(refs)
   setindex(dt_ref, Marker)
 
   prof_ref_all <- matrix(0, n_mk, 2 * n_ref)
-  index_al1 <- 2 * 1:n_ref - 1
-  index_al2 <- 2 * 1:n_ref
   for(i in 1:n_mk){
     mk <- markers_auto[i]
     dt_ref_one_mk <- dt_ref[Marker == mk]
-    prof_ref_all[i, index_al1] <- as.numeric(dt_ref_one_mk[, Allele1])
-    prof_ref_all[i, index_al2] <- as.numeric(dt_ref_one_mk[, Allele2])
+    peaks <- peaks_list[[mk]]
+    for(j in 1:n_ref){
+      tmp <- dt_ref_one_mk[j, ]
+      al_1 <- as.numeric(tmp[, Allele1])
+      if(!is.element(al_1, peaks)){
+        al_1 <- 99
+      }
+      al_2 <- as.numeric(tmp[, Allele2])
+      if(!is.element(al_2, peaks)){
+        al_2 <- 99
+      }
+      prof_ref_all[i, c(2 * j - 1, 2 * j)] <- sort(c(al_1, al_2))
+    }
   }
   rownames(prof_ref_all) <- markers_auto
   colnames(prof_ref_all) <- as.vector(sapply(refs, rep, 2))
@@ -50,6 +60,7 @@ make_hyp_id_all <- function(hnc, hyp, refs){
 #' @description The function to assign the log10 likelihood
 #' @param hnc The hypothesized number of contributors
 #' @param markers_use A vector of the autosomal markers used
+#' @param peaks_list A list of peaks
 #' @param pop_al_list A list of the alleles in population database
 #' @param pop_prob_list A list of the allele probabilities in population database
 #' @param theta The theta correction to consider sub-population
@@ -60,10 +71,10 @@ make_hyp_id_all <- function(hnc, hyp, refs){
 #' @param dt_ref The data.table for the reference profiles
 #' @param hyp Known contributors in a hypothesis
 #' @param refs The names of all references
-assign_log10like <- function(hnc, markers_use, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hyp, refs){
+assign_log10like <- function(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hyp, refs){
   n_mk <- length(markers_use)
 
-  prof_ref_all <- make_prof_ref_all(dt_ref, markers_use)
+  prof_ref_all <- make_prof_ref_all(dt_ref, markers_use, peaks_list)
 
   hyp_id_all <- make_hyp_id_all(hnc, hyp, refs)
   n_hyp <- nrow(hyp_id_all)
