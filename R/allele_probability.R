@@ -29,6 +29,7 @@ correct_af_dirichlet <- function(pop_al, pop_freq, unobs_al = numeric(0)){
 #' @param unobs_al A vector of the unobserved alleles in the population database
 correct_af_observed <- function(pop_al, pop_freq, maf, unobs_al){
   n_unobs <- length(unobs_al)
+  pop_freq <- pop_freq / sum(pop_freq)
   if(n_unobs > 0){
     pop_al <- c(pop_al, unobs_al)
     pop_freq <- c(pop_freq, rep(maf, n_unobs))
