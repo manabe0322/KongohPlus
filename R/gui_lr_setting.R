@@ -122,7 +122,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
           disable("act_advance_lr")
           updateNumericInput(session, "noc_lr_hp", value = data_deconvo$hnc)
           updateNumericInput(session, "noc_lr_hd", value = data_deconvo$hnc)
-          updateSelectInput(session, "anameth_lr", selected = rv_deconvo$anameth)
+          updateSelectInput(session, "anameth_lr", selected = data_deconvo$anameth)
         }else{
           enable("noc_lr_hp")
           enable("noc_lr_hd")
