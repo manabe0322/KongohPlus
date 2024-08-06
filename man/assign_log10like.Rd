@@ -7,6 +7,7 @@
 assign_log10like(
   hnc,
   markers_use,
+  peaks_list,
   pop_al_list,
   pop_prob_list,
   theta,
@@ -23,6 +24,8 @@ assign_log10like(
 \item{hnc}{The hypothesized number of contributors}
 
 \item{markers_use}{A vector of the autosomal markers used}
+
+\item{peaks_list}{A list of peaks}
 
 \item{pop_al_list}{A list of the alleles in population database}
 

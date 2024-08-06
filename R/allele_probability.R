@@ -27,7 +27,7 @@ correct_af_dirichlet <- function(pop_al, pop_freq, unobs_al = numeric(0)){
 #' @param pop_freq A vector of the allele frequencies in the population database
 #' @param maf The minimum allele frequency
 #' @param unobs_al A vector of the unobserved alleles in the population database
-correct_af_observed <- function(pop_al, pop_freq, maf, unobs_al){
+correct_af_observed <- function(pop_al, pop_freq, maf, unobs_al = numeric(0)){
   n_unobs <- length(unobs_al)
   pop_freq <- pop_freq / sum(pop_freq)
   if(n_unobs > 0){
@@ -97,6 +97,37 @@ set_al_prob <- function(markers_use, dt_af, peaks_list, method_al_prob, maf){
     index_target <- match(peaks, pop_al)
     pop_al_list[[i]] <- pop_al[index_target]
     pop_prob_list[[i]] <- pop_prob[index_target]
+  }
+
+  names(pop_al_list) <- markers_use
+  names(pop_prob_list) <- markers_use
+  return(list("pop_al_list" = pop_al_list,
+              "pop_prob_list" = pop_prob_list))
+}
+
+#' set_al_prob_randgt
+#'
+#' @description The function to set allele probabilities for generating random genotypes
+#' @param markers_use A vector of the autosomal markers used
+#' @param dt_af The data.table of the allele frequencies
+#' @param method_al_prob The method to correct allele probabilities (Dirichlet or Observed)
+set_al_prob_randgt <- function(markers_use, dt_af, method_al_prob){
+  n_mk <- length(markers_use)
+  pop_al_all <- dt_af[, Allele]
+  pop_al_list <- pop_prob_list <- vector(mode = "list", length = n_mk)
+  for(i in 1:n_mk){
+    mk <- markers_use[i]
+    pop_freq <- as.numeric(unlist(dt_af[, mk, with = FALSE]))
+    pop_al <- pop_al_all[!is.na(pop_freq)]
+    pop_freq <- pop_freq[!is.na(pop_freq)]
+
+    if(method_al_prob == "Dirichlet"){
+      tmp <- correct_af_dirichlet(pop_al, pop_freq)
+    }else{
+      tmp <- correct_af_observed(pop_al, pop_freq, maf = 0)
+    }
+    pop_al_list[[i]] <- tmp$pop_al
+    pop_prob_list[[i]] <- tmp$pop_prob
   }
 
   names(pop_al_list) <- markers_use

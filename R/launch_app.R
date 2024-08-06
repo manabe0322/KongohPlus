@@ -48,6 +48,7 @@ KongohPlus <- function(){
                              navbarMenu("Tools",
                                         tabPanel("Example files"),
                                         est_par_ui("est_par"),
+                                        hd_true_ui("hd_true"),
                                         tabPanel("Validation mode")
                              ),
 
@@ -61,6 +62,7 @@ KongohPlus <- function(){
     rv_lr <- lr_server("lr", path_pack, rv_file, rv_deconvo)
 
     est_par_server("est_par", path_pack)
+    hd_true_server <- hd_true_server("hd_true", path_pack, rv_file, rv_deconvo)
     anameth_server("anameth", path_pack)
     sr_server("sr", path_pack)
     kit_server("kit", path_pack)

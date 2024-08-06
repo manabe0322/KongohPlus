@@ -4,12 +4,14 @@
 \alias{make_prof_ref_all}
 \title{make_prof_ref_all}
 \usage{
-make_prof_ref_all(dt_ref, markers_auto)
+make_prof_ref_all(dt_ref, markers_auto, peaks_list)
 }
 \arguments{
 \item{dt_ref}{The data.table of the reference profile}
 
 \item{markers_auto}{A vector of the autosomal markers}
+
+\item{peaks_list}{A list of peaks}
 }
 \description{
 The function to make a matrix for reference profiles of all autosomal markers

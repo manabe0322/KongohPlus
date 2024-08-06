@@ -4,7 +4,7 @@
 \alias{correct_af_observed}
 \title{correct_af_observed}
 \usage{
-correct_af_observed(pop_al, pop_freq, maf, unobs_al)
+correct_af_observed(pop_al, pop_freq, maf, unobs_al = numeric(0))
 }
 \arguments{
 \item{pop_al}{A vector of the alleles in the population database}
