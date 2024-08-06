@@ -51,7 +51,7 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_use, ats_use){
   setindex(dt_kit_auto, Marker)
   setindex(dt_csp, Marker)
 
-  peaks_list <- sizes_list <- heights_list <- vector(mode = "list", length = n_rep)
+  peaks_list <- sizes_list <- heights_list <- vector(mode = "list", length = n_mk)
 
   for(i in 1:n_mk){
     mk <- markers_use[i]
