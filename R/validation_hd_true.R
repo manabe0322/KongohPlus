@@ -56,7 +56,8 @@ assign_log10like_randgt <- function(hnc, markers_use, peaks_list, pop_al_list, p
 
     # Calculate genotype probabilities
     n_obs <- make_n_obs(pop_al, prof_ref)
-    gtc_logprob_use[[i]] <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs)
+    gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs)
+    gtc_logprob_use[[i]] <- log(gtc_prob_mk)
   }
 
   log10like_adopt <- calc_log10like_use(gtc_logprob_use, lpd_gtc_use_1st, lpd_gtc_use_2nd)

@@ -62,11 +62,15 @@ KongohPlus <- function(){
     rv_lr <- lr_server("lr", path_pack, rv_file, rv_deconvo)
 
     est_par_server("est_par", path_pack)
-    hd_true_server <- hd_true_server("hd_true", path_pack, rv_file, rv_deconvo)
     anameth_server("anameth", path_pack)
     sr_server("sr", path_pack)
     kit_server("kit", path_pack)
     size_server("size", path_pack)
+
+    observe({
+      req(rv_deconvo)
+      rv_hd_true <- hd_true_server("hd_true", path_pack, rv_deconvo)
+    })
 
     observeEvent(input$act_new_proj, {
       refresh()
