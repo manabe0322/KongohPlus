@@ -3,7 +3,7 @@
 #' @importFrom bayesplot mcmc_trace
 #' @importFrom cmdstanr cmdstan_model
 #' @importFrom data.table as.data.table data.table copy fread setDT setindex
-#' @importFrom dplyr full_join
+#' @importFrom dplyr arrange desc full_join group_by_at summarise
 #' @importFrom DT datatable dataTableOutput formatRound formatSignif formatStyle JS renderDataTable
 #' @import gluedown
 #' @importFrom gtools combinations permutations

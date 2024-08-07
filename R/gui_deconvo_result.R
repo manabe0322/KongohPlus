@@ -16,24 +16,26 @@ deconvo_result_ui <- function(id){
                       textOutput(ns("fn_af"))
                     ),
                     wellPanel(
-                      h4("Parameters for contributors"),
-                      br(),
-                      dataTableOutput(ns("dt_mpdeg"))
-                    ),
-                    br(),
-                    actionButton(ns("act_pardiag"), label = "Parameters and diagnostics"),
-                    br(),
-                    br(),
-                    actionButton(ns("act_traceplot_lp"), label = "Trace plot")
+                      h4("Warnings"),
+                      htmlOutput(ns("warning_message"))
+                    )
              ),
              column(6,
                     wellPanel(
-                      h4("Probabilistic genotyping"),
+                      h4("Parameters and diagnostics"),
                       br(),
-                      uiOutput(ns("mk_pg")),
-                      br(),
-                      dataTableOutput(ns("dt_pg")),
-                      br()
+                      fluidRow(
+                        column(8,
+                               dataTableOutput(ns("dt_mpdeg"))
+                        ),
+                        column(4,
+                               br(),
+                               actionButton(ns("act_pardiag"), label = "All parameters"),
+                               br(),
+                               br(),
+                               actionButton(ns("act_traceplot_lp"), label = "Trace plot")
+                        )
+                      )
                     )
              ),
              column(3,
@@ -51,7 +53,7 @@ deconvo_result_ui <- function(id){
 #' deconvo_result_server
 #'
 #' @description The function to create the server module for results of deconvolution
-deconvo_result_server <- function(id, path_pack, rv_deconvo){
+deconvo_result_server <- function(id, rv_deconvo){
   moduleServer(
     id,
     function(input, output, session){
@@ -62,15 +64,16 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
         fn_csp <- data_deconvo$fn_csp
         fn_af <- data_deconvo$fn_af
         hnc <- data_deconvo$hnc
-        markers_use <- data_deconvo$markers_use
-        dt_pg_list <- data_deconvo$dt_pg_list
         dt_log10like <- data_deconvo$dt_log10like
         dt_mpdeg <- data_deconvo$dt_mpdeg
         dt_mcmc <- data_deconvo$dt_mcmc
         traceplot <- data_deconvo$traceplot
+        message_sr <- data_deconvo$message_sr
 
         output$fn_csp <- renderText({paste0(fn_csp)})
         output$fn_af <- renderText({paste0(fn_af)})
+
+        output$warning_message <- renderUI({HTML(message_sr)})
 
         output$dt_mpdeg <- renderDataTable(server = FALSE, {
           datatable(
@@ -119,25 +122,6 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
 
         output$traceplot_lp <- renderPlot({
           traceplot
-        })
-
-        output$mk_pg <- renderUI({
-          selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_use, selected = markers_use[1], selectize = FALSE)
-        })
-
-        observeEvent(input$mk_pg, {
-          mk_select <- input$mk_pg
-
-          output$dt_pg <- renderDataTable(server = FALSE, {
-            datatable(
-              dt_pg_list[[mk_select]],
-              selection = list(mode = "single", target = "row"),
-              options = list(iDisplayLength = 10, ordering = FALSE, autowidth = TRUE,
-                             columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
-              rownames = FALSE
-            ) %>%
-              formatSignif(columns = c("Probability"), digits = 3)
-          })
         })
 
         output$dt_log10like <- renderDataTable(server = FALSE, {
