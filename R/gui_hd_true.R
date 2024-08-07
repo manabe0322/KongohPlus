@@ -24,7 +24,7 @@ hd_true_ui <- function(id){
                     )
              ),
              column(9,
-                    plotOutput(ns("hist_lr_rand"))
+                    plotOutput(ns("hist_lr_rand"), height = "600px")
              )
            )
   )
@@ -40,11 +40,19 @@ hd_true_server <- function(id, path_pack, rv_deconvo){
       rv_hd_true <- reactiveValues()
       rv_hd_true$lr_rand <- NULL
 
-      data_deconvo <- rv_deconvo$data_deconvo
-      if(is.null(data_deconvo)){
+      rv_hd_true_setting <- reactiveValues()
+      rv_hd_true_setting$data_deconvo <- NULL
+
+      observe({
+        req(rv_deconvo)
+        rv_hd_true_setting$data_deconvo <- rv_deconvo$data_deconvo
+      })
+
+      if(is.null(rv_hd_true_setting$data_deconvo)){
         disable("act_analyze_hd_true")
         output$error_message <- renderText({paste0("Perform deconvolution before starting Hd true test!")})
       }else{
+        data_deconvo <- rv_hd_true_setting$data_deconvo
         enable("act_analyze_hd_true")
         output$error_message <- renderText({paste0("")})
 
@@ -97,7 +105,7 @@ hd_true_server <- function(id, path_pack, rv_deconvo){
           lr_rand <- rv_hd_true$lr_rand
           if(!is.null(lr_rand)){
             log10_lr_rand <- log10(lr_rand)
-            log10_lr_rand[log10_lr_rand == -Inf] <- -50
+            log10_lr_rand[log10_lr_rand < -100] <- -100
             hist(log10_lr_rand)
           }
         })

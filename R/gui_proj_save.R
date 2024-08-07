@@ -18,7 +18,7 @@ save_proj_ui <- function(id){
 #' save_proj_server
 #'
 #' @description The function to create the server module for saving the project
-save_proj_server <- function(id, rv_file, rv_deconvo, rv_lr){
+save_proj_server <- function(id, rv_file, rv_deconvo, rv_lr, rv_hd_true){
   moduleServer(
     id,
     function(input, output, session){
@@ -29,6 +29,7 @@ save_proj_server <- function(id, rv_file, rv_deconvo, rv_lr){
       data_lr <- rv_lr$data_lr
       data_deconvo_hp <- rv_lr$data_deconvo_hp
       data_deconvo_hd <- rv_lr$data_deconvo_hd
+      lr_rand <- rv_hd_true$lr_rand
 
       output$download_proj <- downloadHandler(
         filename = function(){
@@ -47,7 +48,8 @@ save_proj_server <- function(id, rv_file, rv_deconvo, rv_lr){
                         "data_deconvo",
                         "data_lr",
                         "data_deconvo_hp",
-                        "data_deconvo_hd"),
+                        "data_deconvo_hd",
+                        "lr_rand"),
                file = file)
           waiter_hide()
         }

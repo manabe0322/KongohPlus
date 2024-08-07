@@ -35,10 +35,7 @@ lr_result_ui <- function(id){
                     actionButton(ns("act_traceplot_lp_hp"), label = "Trace plot (Hp)"),
                     br(),
                     br(),
-                    actionButton(ns("act_traceplot_lp_hd"), label = "Trace plot (Hd)"),
-                    br(),
-                    br(),
-                    downloadButton(ns("download_report"), "Report")
+                    actionButton(ns("act_traceplot_lp_hd"), label = "Trace plot (Hd)")
              ),
              column(6,
                     wellPanel(

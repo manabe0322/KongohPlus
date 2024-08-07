@@ -24,10 +24,7 @@ deconvo_result_ui <- function(id){
                     actionButton(ns("act_pardiag"), label = "Parameters and diagnostics"),
                     br(),
                     br(),
-                    actionButton(ns("act_traceplot_lp"), label = "Trace plot"),
-                    br(),
-                    br(),
-                    downloadButton(ns("download_report"), "Report")
+                    actionButton(ns("act_traceplot_lp"), label = "Trace plot")
              ),
              column(6,
                     wellPanel(
@@ -123,16 +120,6 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
         output$traceplot_lp <- renderPlot({
           traceplot
         })
-
-        output$download_report <- downloadHandler(
-          filename = "report.html",
-          content = function(file){
-            report_tmp <- file.path(tempdir(), "report.Rmd")
-            file.copy(paste0(path_pack, "/rmd/report.Rmd"), report_tmp, overwrite = TRUE)
-            params <- list(dt_csp = dt_csp, hnc = hnc, markers_use = markers_use, dt_mpdeg = dt_mpdeg, dt_mcmc = dt_mcmc, dt_pg_list = dt_pg_list, dt_log10like = dt_log10like)
-            render(report_tmp, output_file = file, params = params, envir = new.env(parent = globalenv()))
-          }
-        )
 
         output$mk_pg <- renderUI({
           selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_use, selected = markers_use[1], selectize = FALSE)

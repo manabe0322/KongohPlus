@@ -27,6 +27,8 @@ KongohPlus <- function(){
 
                              lr_ui("lr"),
 
+                             report_ui("report"),
+
                              navbarMenu("Project",
                                         tabPanel("New project",
                                                  useShinyjs(),
@@ -60,17 +62,13 @@ KongohPlus <- function(){
     rv_file <- file_server("file", session)
     rv_deconvo <- deconvo_server("deconvo", path_pack, rv_file)
     rv_lr <- lr_server("lr", path_pack, rv_file, rv_deconvo)
+    rv_hd_true <- hd_true_server("hd_true", path_pack, rv_deconvo)
 
     est_par_server("est_par", path_pack)
     anameth_server("anameth", path_pack)
     sr_server("sr", path_pack)
     kit_server("kit", path_pack)
     size_server("size", path_pack)
-
-    observe({
-      req(rv_deconvo)
-      rv_hd_true <- hd_true_server("hd_true", path_pack, rv_deconvo)
-    })
 
     observeEvent(input$act_new_proj, {
       refresh()
@@ -79,6 +77,10 @@ KongohPlus <- function(){
     rv_load_proj <- load_proj_server("load_proj", session)
     observe({
       req(rv_load_proj)
+      req(rv_file)
+      req(rv_deconvo)
+      req(rv_lr)
+      req(rv_hd_true)
 
       rv_file$dt_csp <- rv_load_proj$dt_csp
       rv_file$dt_ref <- rv_load_proj$dt_ref
@@ -95,13 +97,19 @@ KongohPlus <- function(){
         rv_lr$data_deconvo_hp <- rv_load_proj$data_deconvo_hp
         rv_lr$data_deconvo_hd <- rv_load_proj$data_deconvo_hd
       }
+
+      lr_rand <- rv_load_proj$lr_rand
+      if(!is.null(lr_rand)){
+        rv_hd_true$lr_rand <- lr_rand
+      }
     })
 
     observe({
       req(rv_file)
       req(rv_deconvo)
       req(rv_lr)
-      save_proj_server("save_proj", rv_file, rv_deconvo, rv_lr)
+      req(rv_hd_true)
+      save_proj_server("save_proj", rv_file, rv_deconvo, rv_lr, rv_hd_true)
     })
   }
 

@@ -29,6 +29,7 @@ load_proj_server <- function(id, session_top){
       rv_load_proj$data_lr <- NULL
       rv_load_proj$data_deconvo_hp <- NULL
       rv_load_proj$data_deconvo_hd <- NULL
+      rv_load_proj$lr_rand <- NULL
 
       load_proj <- reactive({
         file_input <- input$file_proj
@@ -53,6 +54,7 @@ load_proj_server <- function(id, session_top){
           rv_load_proj$data_lr <- data_lr
           rv_load_proj$data_deconvo_hp <- data_deconvo_hp
           rv_load_proj$data_deconvo_hd <- data_deconvo_hd
+          rv_load_proj$lr_rand <- lr_rand
 
           if(is.null(data_deconvo)){
             if(is.null(data_lr)){
