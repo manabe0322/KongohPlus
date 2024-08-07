@@ -18,7 +18,7 @@ pick_al_size <- function(dt_exp_one, dt_gt_one, markers_all, at_all_mk, dye_all_
   for(i in 1:n_mk_all){
     # Extract data of one marker
     mk <- markers_all[i]
-    dt_exp_one_mk <- dt_exp_one[mk]
+    dt_exp_one_mk <- dt_exp_one[Marker == mk]
     peaks <- as.character(dt_exp_one_mk[, index_exp_peak, with = FALSE])
     sizes <- as.numeric(dt_exp_one_mk[, index_exp_size, with = FALSE])
     heights <- as.numeric(dt_exp_one_mk[, index_exp_height, with = FALSE])
@@ -36,7 +36,7 @@ pick_al_size <- function(dt_exp_one, dt_gt_one, markers_all, at_all_mk, dye_all_
     heights <- heights[index_above_at]
 
     # Extract the genotype of one marker
-    dt_gt_one_mk <- dt_gt_one[mk]
+    dt_gt_one_mk <- dt_gt_one[Marker == mk]
     gt <- as.character(dt_gt_one_mk[, index_gt_allele, with = FALSE])
 
     # Extract information on the allele
