@@ -386,7 +386,7 @@ sr_server <- function(id, path_pack){
             options = list(dom = "t", iDisplayLength = nrow(dt_info_sr), ordering = FALSE, autoWidth = TRUE),
             rownames = FALSE
           ) %>%
-            formatRound(columns = c("Average_BSR", "Average_FSR", "Average_DSR"), digits = 4)
+            formatRound(columns = c("Average_BSR", "Average_FSR", "Average_DSR", "Average_M2SR"), digits = 4)
         }
       })
     }
