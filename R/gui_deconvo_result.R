@@ -136,7 +136,7 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
                              columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
               rownames = FALSE
             ) %>%
-              formatSignif(columns = c("post_prob"), digits = 3)
+              formatSignif(columns = c("Probability"), digits = 3)
           })
         })
 
@@ -145,7 +145,9 @@ deconvo_result_server <- function(id, path_pack, rv_deconvo){
             dt_log10like,
             selection = "none",
             options = list(dom = "t", iDisplayLength = nrow(dt_log10like), ordering = FALSE, autowidth = TRUE),
-            rownames = FALSE
+            rownames = FALSE,
+            colnames = c("Marker", "Log<sub>10</sub>(Likelihood)"),
+            escape = FALSE
           ) %>%
             formatSignif(columns = c("Log10_Likelihood"), digits = 3)
         })

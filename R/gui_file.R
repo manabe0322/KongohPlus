@@ -141,7 +141,7 @@ file_server <- function(id, session_top){
           dt_af,
           selection = "none",
           extensions = c("FixedColumns", "FixedHeader"),
-          options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 200px)",
+          options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 150px)",
                          fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0)),
           rownames = FALSE
         )

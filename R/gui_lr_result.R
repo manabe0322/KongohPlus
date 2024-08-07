@@ -21,8 +21,10 @@ lr_result_ui <- function(id){
                     wellPanel(
                       h4("Parameters for contributors"),
                       br(),
+                      p("Hp"),
                       dataTableOutput(ns("dt_mpdeg_hp")),
                       br(),
+                      p("Hd"),
                       dataTableOutput(ns("dt_mpdeg_hd"))
                     ),
                     br(),
@@ -102,7 +104,8 @@ lr_result_server <- function(id, rv_lr){
             dt_mpdeg_hp,
             selection = "none",
             options = list(dom = "t", iDisplayLength = nrow(dt_mpdeg_hp), ordering = FALSE, autowidth = TRUE),
-            rownames = FALSE
+            rownames = FALSE,
+            colnames = c("Contributor", "Mixture proportion", "Degradation")
           ) %>%
             formatSignif(columns = c("MP", "Deg"), digits = 3)
         })
@@ -112,7 +115,8 @@ lr_result_server <- function(id, rv_lr){
             dt_mpdeg_hd,
             selection = "none",
             options = list(dom = "t", iDisplayLength = nrow(dt_mpdeg_hd), ordering = FALSE, autowidth = TRUE),
-            rownames = FALSE
+            rownames = FALSE,
+            colnames = c("Contributor", "Mixture proportion", "Degradation")
           ) %>%
             formatSignif(columns = c("MP", "Deg"), digits = 3)
         })
@@ -221,7 +225,7 @@ lr_result_server <- function(id, rv_lr){
                              columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
               rownames = FALSE
             ) %>%
-              formatSignif(columns = c("post_prob"), digits = 3)
+              formatSignif(columns = c("Probability"), digits = 3)
           })
         })
 
@@ -243,7 +247,7 @@ lr_result_server <- function(id, rv_lr){
                              columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
               rownames = FALSE
             ) %>%
-              formatSignif(columns = c("post_prob"), digits = 3)
+              formatSignif(columns = c("Probability"), digits = 3)
           })
         })
 

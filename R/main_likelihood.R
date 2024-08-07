@@ -78,14 +78,14 @@ make_dt_pg <- function(label_contrib, gtc_mk, gtc_logprob_mk, lpd_gtc_mk_1st, lp
   mat_pg <- cbind(gtc_mk_new, gtc_logprob_mk, lpd_gtc_mk_1st, lpd_gtc_mk_2nd, post_prob_gtc)
   mat_pg <- mat_pg[gtc_logprob_mk != -Inf, , drop = FALSE]
   dt_pg <- as.data.table(mat_pg)
-  names(dt_pg) <- c(paste0("Gt_", label_contrib), "gtc_prob", "loglike_gtc_1st", "loglike_gtc_2nd", "post_prob")
+  names(dt_pg) <- c(label_contrib, "Log_gtc_prob", "Loglike_gtc_1st", "Loglike_gtc_2nd", "Probability")
 
   # Change data type
-  col_numeric <- c("gtc_prob", "loglike_gtc_1st", "loglike_gtc_2nd", "post_prob")
+  col_numeric <- c("Log_gtc_prob", "Loglike_gtc_1st", "Loglike_gtc_2nd", "Probability")
   dt_pg[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
 
   # Descending order for weights
-  dt_pg <- dt_pg[order(dt_pg[, post_prob], decreasing = TRUE)]
+  dt_pg <- dt_pg[order(dt_pg[, Probability], decreasing = TRUE)]
 
   return(dt_pg)
 }

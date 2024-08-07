@@ -262,7 +262,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
           datatable(
             dt_info_mk_display_lr,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_info_mk_display_lr), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 200px)",
+            options = list(dom = "t", iDisplayLength = nrow(dt_info_mk_display_lr), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 175px)",
                            columnDefs = list(list(targets = 0, className = "small"), list(targets = 1:2, width = "100px"))),
             rownames = FALSE,
             escape = FALSE,
