@@ -4,7 +4,7 @@
 \alias{save_proj_server}
 \title{save_proj_server}
 \usage{
-save_proj_server(id, rv_file, rv_deconvo, rv_lr)
+save_proj_server(id, rv_file, rv_deconvo, rv_lr, rv_hd_true)
 }
 \description{
 The function to create the server module for saving the project
