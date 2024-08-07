@@ -3,6 +3,14 @@
 #' @description The function to create the ui module for the Hd true test
 hd_true_ui <- function(id){
   ns <- NS(id)
+  hd_true_ui_sub(ns("hd_true_sub"))
+}
+
+#' hd_true_ui_sub
+#'
+#' @description The function to create the sub-ui module for the Hd true test
+hd_true_ui_sub <- function(id){
+  ns <- NS(id)
 
   tabPanel("Hd true test",
            useWaiter(),
@@ -40,19 +48,29 @@ hd_true_server <- function(id, path_pack, rv_deconvo){
       rv_hd_true <- reactiveValues()
       rv_hd_true$lr_rand <- NULL
 
-      rv_hd_true_setting <- reactiveValues()
-      rv_hd_true_setting$data_deconvo <- NULL
-
       observe({
         req(rv_deconvo)
-        rv_hd_true_setting$data_deconvo <- rv_deconvo$data_deconvo
+        req(rv_hd_true)
+        rv_hd_true <- hd_true_server_sub("hd_true_sub", path_pack, rv_deconvo, rv_hd_true)
       })
 
-      if(is.null(rv_hd_true_setting$data_deconvo)){
+      return(rv_hd_true)
+    }
+  )
+}
+
+#' hd_true_server_sub
+#'
+#' @description The function to create the sub-server module for the Hd true test
+hd_true_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true){
+  moduleServer(
+    id,
+    function(input, output, session){
+      data_deconvo <- rv_deconvo$data_deconvo
+      if(is.null(data_deconvo)){
         disable("act_analyze_hd_true")
         output$error_message <- renderText({paste0("Perform deconvolution before starting Hd true test!")})
       }else{
-        data_deconvo <- rv_hd_true_setting$data_deconvo
         enable("act_analyze_hd_true")
         output$error_message <- renderText({paste0("")})
 

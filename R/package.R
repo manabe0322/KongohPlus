@@ -14,7 +14,7 @@
 #' @importFrom Rcpp sourceCpp
 #' @import rmarkdown
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
-#' @importFrom shinyjs disable disabled enable useShinyjs
+#' @importFrom shinyjs disable disabled enable refresh useShinyjs
 #' @importFrom shinythemes shinytheme
 #' @importFrom waiter useWaiter waiter_show waiter_hide spin_3k
 "_PACKAGE"
