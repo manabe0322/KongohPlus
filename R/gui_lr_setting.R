@@ -285,9 +285,6 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         hp <- input$hp
         hd <- input$hd
 
-        print(hp)
-        print(hd)
-
         refs <- rv_lr_setting$refs
         dt_csp <- rv_lr_setting$dt_csp
         dt_ref <- rv_lr_setting$dt_ref
