@@ -19,36 +19,41 @@ lr_result_ui <- function(id){
                       textOutput(ns("fn_af"))
                     ),
                     wellPanel(
-                      h4("Parameters for contributors"),
-                      br(),
-                      p("Hp"),
-                      dataTableOutput(ns("dt_mpdeg_hp")),
-                      br(),
-                      p("Hd"),
-                      dataTableOutput(ns("dt_mpdeg_hd"))
-                    ),
-                    br(),
-                    actionButton(ns("act_pardiag_hp"), label = "Parameters and diagnostics (Hp)"),
-                    br(),
-                    br(),
-                    actionButton(ns("act_pardiag_hd"), label = "Parameters and diagnostics (Hd)"),
-                    br(),
-                    br(),
-                    actionButton(ns("act_traceplot_lp_hp"), label = "Trace plot (Hp)"),
-                    br(),
-                    br(),
-                    actionButton(ns("act_traceplot_lp_hd"), label = "Trace plot (Hd)")
+                      h4("Warnings"),
+                      htmlOutput(ns("warning_message"))
+                    )
              ),
              column(6,
                     wellPanel(
-                      h4("Probabilistic genotyping"),
+                      h4("Parameters and diagnostics"),
                       br(),
-                      uiOutput(ns("hyp_pg")),
+                      h5("Hp"),
+                      fluidRow(
+                        column(8,
+                               dataTableOutput(ns("dt_mpdeg_hp"))
+                        ),
+                        column(4,
+                               br(),
+                               actionButton(ns("act_pardiag_hp"), label = "All parameters"),
+                               br(),
+                               br(),
+                               actionButton(ns("act_traceplot_lp_hp"), label = "Trace plot")
+                        )
+                      ),
                       br(),
-                      uiOutput(ns("mk_pg")),
-                      br(),
-                      dataTableOutput(ns("dt_pg")),
-                      br()
+                      h5("Hd"),
+                      fluidRow(
+                        column(8,
+                               dataTableOutput(ns("dt_mpdeg_hd"))
+                        ),
+                        column(4,
+                               br(),
+                               actionButton(ns("act_pardiag_hd"), label = "All parameters"),
+                               br(),
+                               br(),
+                               actionButton(ns("act_traceplot_lp_hd"), label = "Trace plot")
+                        )
+                      )
                     )
              ),
              column(3,
@@ -75,29 +80,24 @@ lr_result_server <- function(id, rv_lr){
         fn_ref <- data_lr$fn_ref
         dt_mpdeg_hp <- data_lr$dt_mpdeg_hp
         dt_mpdeg_hd <- data_lr$dt_mpdeg_hd
-        dt_pg_list_hp <- data_lr$dt_pg_list_hp
-        dt_pg_list_hd <- data_lr$dt_pg_list_hd
         dt_lr <- data_lr$dt_lr
 
         data_deconvo_hp <- rv_lr$data_deconvo_hp
-        hnc_hp <- data_deconvo_hp$hnc
         dt_mcmc_hp <- data_deconvo_hp$dt_mcmc
         traceplot_hp <- data_deconvo_hp$traceplot
-        markers_use <- data_deconvo_hp$markers_use
         fn_csp <- data_deconvo_hp$fn_csp
         fn_af <- data_deconvo_hp$fn_af
+        message_sr <- data_deconvo_hp$message_sr
 
         data_deconvo_hd <- rv_lr$data_deconvo_hd
-        hnc_hd <- data_deconvo_hd$hnc
         dt_mcmc_hd <- data_deconvo_hd$dt_mcmc
         traceplot_hd <- data_deconvo_hd$traceplot
-
-        rv_lr_result <- reactiveValues()
-        rv_lr_result$dt_pg_display <- dt_pg_list_hp
 
         output$fn_csp <- renderText({paste0(fn_csp)})
         output$fn_ref <- renderText({paste0(fn_ref)})
         output$fn_af <- renderText({paste0(fn_af)})
+
+        output$warning_message <- renderUI({HTML(message_sr)})
 
         output$dt_mpdeg_hp <- renderDataTable(server = FALSE, {
           datatable(
@@ -195,60 +195,6 @@ lr_result_server <- function(id, rv_lr){
 
         output$traceplot_lp_hd <- renderPlot({
           traceplot_hd
-        })
-
-        output$hyp_pg <- renderUI({
-          selectInput(session$ns("hyp_pg"), label = "Hypothesis", choices = c("Hp", "Hd"), selected = "Hp", selectize = FALSE)
-        })
-
-        output$mk_pg <- renderUI({
-          selectInput(session$ns("mk_pg"), label = "Marker", choices = markers_use, selected = markers_use[1], selectize = FALSE)
-        })
-
-        observeEvent(input$hyp_pg, {
-          if(input$hyp_pg == "Hp"){
-            rv_lr_result$dt_pg_display <- dt_pg_list_hp
-            hnc <- hnc_hp
-          }else{
-            rv_lr_result$dt_pg_display <- dt_pg_list_hd
-            hnc <- hnc_hd
-          }
-
-          mk_select <- input$mk_pg
-          dt_pg_display <- rv_lr_result$dt_pg_display
-
-          output$dt_pg <- renderDataTable(server = FALSE, {
-            datatable(
-              dt_pg_display[[mk_select]],
-              selection = list(mode = "single", target = "row"),
-              options = list(iDisplayLength = 25, ordering = FALSE, autowidth = TRUE,
-                             columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
-              rownames = FALSE
-            ) %>%
-              formatSignif(columns = c("Probability"), digits = 3)
-          })
-        })
-
-        observeEvent(input$mk_pg, {
-          if(input$hyp_pg == "Hp"){
-            hnc <- hnc_hp
-          }else{
-            hnc <- hnc_hd
-          }
-
-          mk_select <- input$mk_pg
-          dt_pg_display <- rv_lr_result$dt_pg_display
-
-          output$dt_pg <- renderDataTable(server = FALSE, {
-            datatable(
-              dt_pg_display[[mk_select]],
-              selection = list(mode = "single", target = "row"),
-              options = list(iDisplayLength = 25, ordering = FALSE, autowidth = TRUE,
-                             columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
-              rownames = FALSE
-            ) %>%
-              formatSignif(columns = c("Probability"), digits = 3)
-          })
         })
 
         output$dt_lr <- renderDataTable(server = FALSE, {
