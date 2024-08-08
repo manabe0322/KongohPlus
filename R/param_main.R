@@ -51,6 +51,7 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param n_warmup The number of simulations for warm-up
 #' @param n_sampling The number of simulations for sampling
 #' @param n_chains The number of chains
+#' @param pu_remove Whether pull-up peaks are automatically removed or not
 #' @param pu_dist Maximum pull-up distance (bp)
 #' @param at_sex The analytical threshold of the sex-chromosomal markers
 #' @param min_n_motif_lus The minimum number of repeat motifs for considering the LUS model

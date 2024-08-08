@@ -35,7 +35,7 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
 
       # Back stutter
       if(sr_consider["BS"]){
-        bs <- round(al_1 - 1, 1)
+        bs <- calc_bs_one(al_1)
         if(is.element(bs, peaks)){
           bsr[1] <- heights[peaks == bs] / h_al
         }
@@ -43,7 +43,7 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
 
       # Forward stutter
       if(sr_consider["FS"]){
-        fs <- round(al_1 + 1, 1)
+        fs <- calc_fs_one(al_1)
         if(is.element(fs, peaks)){
           fsr[1] <- heights[peaks == fs] / h_al
         }
@@ -51,7 +51,7 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
 
       # Double-back stutter
       if(sr_consider["DS"]){
-        ds <- round(al_1 - 2, 1)
+        ds <- calc_ds_one(al_1)
         if(is.element(ds, peaks)){
           dsr[1] <- heights[peaks == ds] / h_al
         }
@@ -59,11 +59,7 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
 
       # Minus 2-nt stutter
       if(sr_consider["M2S"]){
-        if(al_1 %% 1 < 0.15){
-          m2s <- round(al_1 - 0.8, 1)  # Allele x or x.1
-        }else{
-          m2s <- round(al_1 - 0.2, 1)  # Allele x.2, x.3, ...
-        }
+        m2s <- calc_m2s_one(al_1)
         if(is.element(m2s, peaks)){
           m2sr[1] <- heights[peaks == m2s] / h_al
         }
@@ -92,26 +88,22 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
           al_2 <- gt[3 - i]
           cand_share <- al_2
           if(sr_consider["BS"]){
-            cand_share <- c(cand_share, al_2 - 1)
+            cand_share <- c(cand_share, calc_bs_one(al_2))
           }
           if(sr_consider["FS"]){
-            cand_share <- c(cand_share, al_2 + 1)
+            cand_share <- c(cand_share, calc_fs_one(al_2))
           }
           if(sr_consider["DS"]){
-            cand_share <- c(cand_share, al_2 - 2)
+            cand_share <- c(cand_share, calc_ds_one(al_2))
           }
           if(sr_consider["M2S"]){
-            if(al_2 %% 1 < 0.15){
-              cand_share <- c(cand_share, al_2 - 0.8)  # Allele x or x.1
-            }else{
-              cand_share <- c(cand_share, al_2 - 0.2)  # Allele x.2, x.3, ...
-            }
+            cand_share <- c(cand_share, calc_m2s_one(al_2))
           }
           cand_share <- round(sort(unique(cand_share)), 1)
 
           # Back stutter
           if(sr_consider["BS"]){
-            bs <- round(al_1 - 1, 1)
+            bs <- calc_bs_one(al_1)
             if(is.element(bs, peaks) && !is.element(bs, cand_share)){
               h_bs <- heights[peaks == bs]
               bsr[i] <- h_bs / h_al
@@ -121,7 +113,7 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
 
           # Forward stutter
           if(sr_consider["FS"]){
-            fs <- round(al_1 + 1, 1)
+            fs <- calc_fs_one(al_1)
             if(is.element(fs, peaks) && !is.element(fs, cand_share)){
               h_fs <- heights[peaks == fs]
               fsr[i] <- h_fs / h_al
@@ -131,7 +123,7 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
 
           # Double-back stutter
           if(sr_consider["DS"]){
-            ds <- round(al_1 - 2, 1)
+            ds <- calc_ds_one(al_1)
             if(is.element(ds, peaks) && !is.element(ds, cand_share)){
               h_ds <- heights[peaks == ds]
               dsr[i] <- h_ds / h_al
@@ -141,11 +133,7 @@ calc_sr <- function(peaks, heights, gt, sr_consider){
 
           # Minus 2-nt stutter
           if(sr_consider["M2S"]){
-            if(al_1 %% 1 < 0.15){
-              m2s <- round(al_1 - 0.8, 1)  # Allele x or x.1
-            }else{
-              m2s <- round(al_1 - 0.2, 1)  # Allele x.2, x.3, ...
-            }
+            m2s <- calc_m2s_one(al_1)
             if(is.element(m2s, peaks) && !is.element(m2s, cand_share)){
               h_m2s <- heights[peaks == m2s]
               m2sr[i] <- h_m2s / h_al

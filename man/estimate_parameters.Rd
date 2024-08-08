@@ -57,6 +57,8 @@ estimate_parameters(
 
 \item{n_chains}{The number of chains}
 
+\item{pu_remove}{Whether pull-up peaks are automatically removed or not}
+
 \item{pu_dist}{Maximum pull-up distance (bp)}
 
 \item{at_sex}{The analytical threshold of the sex-chromosomal markers}
