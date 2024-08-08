@@ -255,7 +255,7 @@ make_dt_aic <- function(markers_auto, meth_model_sr_auto, aics_sr_all_mk,
 #' @param markers_auto The vector of autosomal markers
 #' @param meth_model_sr_auto The vector of modeling methods of autosomal markers
 #' @param model_sr_gen The stan model for locus-specific models with the slope parameter
-#' @param model_sr_together The stan model for multiple loci together
+#' @param model_sr_uni The stan model for the uniform model
 #' @param sr_data The stutter ratios of autosomal markers
 #' @param parent_al_data The parent alleles for each stutter ratios of autosomal markers
 #' @param total_al_prod_data The total allelic products of autosomal markers
@@ -270,7 +270,7 @@ make_dt_aic <- function(markers_auto, meth_model_sr_auto, aics_sr_all_mk,
 #' @param min_n_motif_lus The minimum number of repeat motifs for considering the LUS model
 #' @param min_n_motif_multi The minimum number of repeat motifs for considering the multi-sequence model
 #' @param max_n_motif_multi The maximum number of repeat motifs for considering the multi-sequence model
-analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model_sr_gen, model_sr_together,
+analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model_sr_gen, model_sr_uni,
                                 sr_data, parent_al_data, total_al_prod_data,
                                 lus_auto, reps_auto, seq_al_auto, seq_count_auto,
                                 n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi){
@@ -493,16 +493,16 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
       sr_alcor_all_mk[[id_mk]] <- list(info_al = info_al_one_mk,
                                         info_ca = info_ca_one_mk)
     }
-    data_list_sr_together <- list(N = length(sr_together), NMk = n_mk_together_sr, SR = sr_together, Height = sr_h_together, IndexMk = id_mk_together)
-    tmp <- run_mcmc_sr_together(model_sr_together, data_list_sr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
+    data_list_sr_together <- list(N = length(sr_together), SR = sr_together, Height = sr_h_together)
+    tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
     sr_best_model_all_mk[index_mk_together_sr] <- "Multiple loci together"
-    sr_best_median_myu_all_mk[index_mk_together_sr] <- tmp$median_myus
+    sr_best_median_myu_all_mk[index_mk_together_sr] <- tmp$median_myu
     sr_best_median_sigma_all_mk[index_mk_together_sr] <- tmp$median_sigma
-    sr_best_rhat_myu_all_mk[index_mk_together_sr] <- tmp$rhat_myus
+    sr_best_rhat_myu_all_mk[index_mk_together_sr] <- tmp$rhat_myu
     sr_best_rhat_sigma_all_mk[index_mk_together_sr] <- tmp$rhat_sigma
     sr_best_rhat_lp_all_mk[index_mk_together_sr] <- tmp$rhat_lp
     for(i in 1:n_mk_together_sr){
-      sr_best_trace_all_mk[index_mk_together_sr[i]] <- tmp$traceplot
+      sr_best_trace_all_mk[[index_mk_together_sr[i]]] <- tmp$traceplot
     }
   }
 
@@ -560,7 +560,6 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
 #' @param markers_auto The vector of autosomal markers
 #' @param meth_model_sr_auto The vector of modeling methods of autosomal markers
 #' @param model_sr_uni The stan model for the uniform model
-#' @param model_sr_together The stan model for multiple loci together
 #' @param sr_data The minus 2-nt stutter ratios of autosomal markers
 #' @param parent_al_data The parent alleles for each stutter ratios of autosomal markers
 #' @param total_al_prod_data The total allelic products of all autosomal markers
@@ -569,7 +568,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
 #' @param n_sampling The number of simulations for sampling
 #' @param n_chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
-analyze_m2sr_main <- function(markers_auto, meth_model_sr_auto, model_sr_uni, model_sr_together,
+analyze_m2sr_main <- function(markers_auto, meth_model_sr_auto, model_sr_uni,
                               sr_data, parent_al_data, total_al_prod_data,
                               lus_auto,
                               n_warmup, n_sampling, n_chains, n_parallel_chains){
@@ -647,16 +646,16 @@ analyze_m2sr_main <- function(markers_auto, meth_model_sr_auto, model_sr_uni, mo
       sr_data_one_mk[[2]] <- sr_al_one_mk
       sr_data_all_mk[[id_mk]] <- sr_data_one_mk
     }
-    data_list_sr_together <- list(N = length(sr_together), NMk = n_mk_together_sr, SR = sr_together, Height = sr_h_together, IndexMk = id_mk_together)
-    tmp <- run_mcmc_sr_together(model_sr_together, data_list_sr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
+    data_list_sr_together <- list(N = length(sr_together), SR = sr_together, Height = sr_h_together)
+    tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
     sr_best_model_all_mk[index_mk_together_sr] <- "Multiple loci together"
-    sr_best_median_myu_all_mk[index_mk_together_sr] <- tmp$median_myus
+    sr_best_median_myu_all_mk[index_mk_together_sr] <- tmp$median_myu
     sr_best_median_sigma_all_mk[index_mk_together_sr] <- tmp$median_sigma
-    sr_best_rhat_myu_all_mk[index_mk_together_sr] <- tmp$rhat_myus
+    sr_best_rhat_myu_all_mk[index_mk_together_sr] <- tmp$rhat_myu
     sr_best_rhat_sigma_all_mk[index_mk_together_sr] <- tmp$rhat_sigma
     sr_best_rhat_lp_all_mk[index_mk_together_sr] <- tmp$rhat_lp
     for(i in 1:n_mk_together_sr){
-      sr_best_trace_all_mk[index_mk_together_sr[i]] <- tmp$traceplot
+      sr_best_trace_all_mk[[index_mk_together_sr[i]]] <- tmp$traceplot
     }
   }
 

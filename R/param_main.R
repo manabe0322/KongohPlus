@@ -45,7 +45,6 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param kit_par Kit name
 #' @param model_ae The stan model for the locus-specific amplification efficiency
 #' @param model_sr_gen The stan model for the general stutter ratio
-#' @param model_sr_together The stan model for the stutter ratio when considering multiple loci together
 #' @param model_sr_uni The stan model for the uniform stutter ratio
 #' @param model_gamma The stan model for gamma distribution
 #' @param n_warmup The number of simulations for warm-up
@@ -58,7 +57,7 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param min_n_motif_multi The minimum number of repeat motifs for considering the multi-sequence model
 #' @param n_parallel_chains The number of parallel chains
 estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_par,
-                                model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
+                                model_ae, model_sr_gen, model_sr_uni, model_gamma,
                                 n_warmup, n_sampling, n_chains,
                                 pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi = 10,
                                 n_parallel_chains = detectCores()){
@@ -131,25 +130,25 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_p
                                     n_warmup, n_sampling, n_chains, n_parallel_chains)
 
   # Perform the MCMC for the back stutter ratio
-  bsr_result_list <- analyze_bfdstr_main("BSR", markers_auto, meth_model_bsr_auto, model_sr_gen, model_sr_together,
+  bsr_result_list <- analyze_bfdstr_main("BSR", markers_auto, meth_model_bsr_auto, model_sr_gen, model_sr_uni,
                                          bsr_data, parent_al_data, total_al_prod_data,
                                          lus_auto, reps_auto, seq_al_auto, seq_count_auto,
                                          n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
 
   # Perform the MCMC for the forward stutter ratio
-  fsr_result_list <- analyze_bfdstr_main("FSR", markers_auto, meth_model_fsr_auto, model_sr_gen, model_sr_together,
+  fsr_result_list <- analyze_bfdstr_main("FSR", markers_auto, meth_model_fsr_auto, model_sr_gen, model_sr_uni,
                                          fsr_data, parent_al_data, total_al_prod_data,
                                          lus_auto, reps_auto, seq_al_auto, seq_count_auto,
                                          n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
 
   # Perform the MCMC for the double-back stutter ratio
-  dsr_result_list <- analyze_bfdstr_main("DSR", markers_auto, meth_model_dsr_auto, model_sr_gen, model_sr_together,
+  dsr_result_list <- analyze_bfdstr_main("DSR", markers_auto, meth_model_dsr_auto, model_sr_gen, model_sr_uni,
                                          dsr_data, parent_al_data, total_al_prod_data,
                                          lus_auto, reps_auto, seq_al_auto, seq_count_auto,
                                          n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
 
   # Perform the MCMC for the minus 2-nt stutter ratio
-  m2sr_result_list <- analyze_m2sr_main(markers_auto, meth_model_m2sr_auto, model_sr_uni, model_sr_together,
+  m2sr_result_list <- analyze_m2sr_main(markers_auto, meth_model_m2sr_auto, model_sr_uni,
                                         m2sr_data, parent_al_data, total_al_prod_data,
                                         lus_auto,
                                         n_warmup, n_sampling, n_chains, n_parallel_chains)

@@ -417,12 +417,11 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           # Load the MCMC models
           model_ae <- stan_package_model(name = "model_ae", package = "KongohPlus")
           model_sr_gen <- stan_package_model(name = "model_sr_gen", package = "KongohPlus")
-          model_sr_together <- stan_package_model(name = "model_sr_together", package = "KongohPlus")
           model_sr_uni <- stan_package_model(name = "model_sr_uni", package = "KongohPlus")
           model_gamma <- stan_package_model(name = "model_gamma", package = "KongohPlus")
 
           results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_par,
-                                                 model_ae, model_sr_gen, model_sr_together, model_sr_uni, model_gamma,
+                                                 model_ae, model_sr_gen, model_sr_uni, model_gamma,
                                                  n_warmup, n_sampling, n_chains,
                                                  pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi)
           rv_output$results_est_par <- results_est_par

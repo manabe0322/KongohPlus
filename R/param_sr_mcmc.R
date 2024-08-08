@@ -45,60 +45,6 @@ run_mcmc_sr_gen <- function(model_sr_gen, data_list_sr, n_warmup, n_sampling, n_
               "traceplot" = traceplot))
 }
 
-#' run_mcmc_sr_together
-#'
-#' @description The function to perform MCMC for the stutter ratio (multiple loci together)
-#' @param model_sr_together The stan model of the stutter ratio
-#' @param data_list_sr The data list of the stutter ratio
-#' @param n_warmup The number of simulations for warm-up
-#' @param n_sampling The number of simulations for sampling
-#' @param n_chains The number of chains
-#' @param n_parallel_chains The number of parallel chains
-run_mcmc_sr_together <- function(model_sr_together, data_list_sr, n_warmup, n_sampling, n_chains, n_parallel_chains){
-  # Perform MCMC
-  fit_sr <- model_sr_together$sample(
-    data_list_sr,
-    iter_warmup = n_warmup,
-    iter_sampling = n_sampling,
-    chains = n_chains,
-    parallel_chains = n_parallel_chains
-  )
-
-  # Summary data
-  fit_sr_summary <- fit_sr$summary()
-  medians <- fit_sr_summary$median
-  variables <- fit_sr_summary$variable
-  rhats <- fit_sr_summary$rhat
-  median_lp <- medians[which(variables == "lp__")]
-
-  # Median of each parameter
-  n_mk_together <- data_list_sr$NMk
-  median_myus <- rep(NA, n_mk_together)
-  for(i in 1:n_mk_together){
-    median_myus[i] <- medians[which(variables == paste0("myu[", i, "]"))]
-  }
-  median_sigma <- medians[which(variables == "sigma")]
-
-  # rhat of each parameter
-  rhat_myus <- rep(NA, n_mk_together)
-  for(i in 1:n_mk_together){
-    rhat_myus[i] <- rhats[which(variables == paste0("myu[", i, "]"))]
-  }
-  rhat_sigma <- rhats[which(variables == "sigma")]
-  rhat_lp <- rhats[which(variables == "lp__")]
-
-  # Trace plot
-  fit_sr$draws() %>% mcmc_trace(pars = c(paste0("myu[", 1:n_mk_together, "]"), "sigma")) -> traceplot
-
-  return(list("median_lp" = median_lp,
-              "median_myus" = median_myus,
-              "median_sigma" = median_sigma,
-              "rhat_myus" = rhat_myus,
-              "rhat_sigma" = rhat_sigma,
-              "rhat_lp" = rhat_lp,
-              "traceplot" = traceplot))
-}
-
 #' run_mcmc_sr_uni
 #'
 #' @description The function to perform MCMC for the stutter ratio (uniform)
