@@ -390,7 +390,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
       aics <- mapply(calc_aic, log_likes, n_pars)
       names(aics) <- names(log_likes)
       index_best_model <- which.min(aics)
-      if(index_best_model == 1){
+      if(names(aics)[index_best_model] == "Allele"){
         sr_best_model_all_mk[id_mk] <- "Allele"
         sr_best_median_slope_all_mk[id_mk] <- sr_allele_median_slope_all_mk[id_mk]
         sr_best_median_intercept_all_mk[id_mk] <- sr_allele_median_intercept_all_mk[id_mk]
@@ -400,7 +400,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
         sr_best_rhat_sigma_all_mk[id_mk] <- sr_allele_rhat_sigma_all_mk[id_mk]
         sr_best_rhat_lp_all_mk[id_mk] <- sr_allele_rhat_lp_all_mk[id_mk]
         sr_best_trace_all_mk[[id_mk]] <- sr_allele_trace_all_mk[[id_mk]]
-      }else if(index_best_model == 2){
+      }else if(names(aics)[index_best_model] == "LUS"){
         sr_best_model_all_mk[id_mk] <- "LUS"
         sr_best_median_slope_all_mk[id_mk] <- sr_lus_median_slope_all_mk[id_mk]
         sr_best_median_intercept_all_mk[id_mk] <- sr_lus_median_intercept_all_mk[id_mk]
