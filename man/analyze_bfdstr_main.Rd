@@ -9,7 +9,7 @@ analyze_bfdstr_main(
   markers_auto,
   meth_model_sr_auto,
   model_sr_gen,
-  model_sr_together,
+  model_sr_uni,
   sr_data,
   parent_al_data,
   total_al_prod_data,
@@ -35,7 +35,7 @@ analyze_bfdstr_main(
 
 \item{model_sr_gen}{The stan model for locus-specific models with the slope parameter}
 
-\item{model_sr_together}{The stan model for multiple loci together}
+\item{model_sr_uni}{The stan model for the uniform model}
 
 \item{sr_data}{The stutter ratios of autosomal markers}
 

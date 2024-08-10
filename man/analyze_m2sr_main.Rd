@@ -8,7 +8,6 @@ analyze_m2sr_main(
   markers_auto,
   meth_model_sr_auto,
   model_sr_uni,
-  model_sr_together,
   sr_data,
   parent_al_data,
   total_al_prod_data,
@@ -25,8 +24,6 @@ analyze_m2sr_main(
 \item{meth_model_sr_auto}{The vector of modeling methods of autosomal markers}
 
 \item{model_sr_uni}{The stan model for the uniform model}
-
-\item{model_sr_together}{The stan model for multiple loci together}
 
 \item{sr_data}{The minus 2-nt stutter ratios of autosomal markers}
 

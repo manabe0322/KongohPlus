@@ -13,7 +13,6 @@ estimate_parameters(
   kit_par,
   model_ae,
   model_sr_gen,
-  model_sr_together,
   model_sr_uni,
   model_gamma,
   n_warmup,
@@ -44,8 +43,6 @@ estimate_parameters(
 \item{model_ae}{The stan model for the locus-specific amplification efficiency}
 
 \item{model_sr_gen}{The stan model for the general stutter ratio}
-
-\item{model_sr_together}{The stan model for the stutter ratio when considering multiple loci together}
 
 \item{model_sr_uni}{The stan model for the uniform stutter ratio}
 
