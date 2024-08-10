@@ -83,7 +83,7 @@ deconvo_result_server <- function(id, rv_deconvo){
             rownames = FALSE,
             colnames = c("Contributor", "Mixture proportion", "Degradation")
           ) %>%
-            formatSignif(columns = c("MP", "Deg"), digits = 2)
+            formatSignif(columns = c("MP", "Deg"), digits = 3)
         })
 
         observeEvent(input$act_pardiag, {

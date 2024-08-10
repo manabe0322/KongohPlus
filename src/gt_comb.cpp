@@ -92,6 +92,41 @@ std::vector<std::vector<double>> remove_dropin(std::vector<double> peaks_rm99,
 }
 
 // [[Rcpp::export]]
+double calc_parent_al_bs_one(double bs){
+  double tmp = bs + 1;
+  double par_al = round(tmp * 10) / 10;
+  return(par_al);
+}
+
+// [[Rcpp::export]]
+double calc_parent_al_fs_one(double fs){
+  double tmp = fs - 1;
+  double par_al = round(tmp * 10) / 10;
+  return(par_al);
+}
+
+// [[Rcpp::export]]
+double calc_parent_al_ds_one(double ds){
+  double tmp = ds + 2;
+  double par_al = round(tmp * 10) / 10;
+  return(par_al);
+}
+
+// [[Rcpp::export]]
+double calc_parent_al_m2s_one(double m2s){
+  double residual = fmod(m2s, 1);
+  double par_al = 0;
+  if(residual < 0.15){
+    double tmp = m2s + 0.2;
+    par_al = round(tmp * 10) / 10;
+  }else{
+    double tmp = m2s + 0.8;
+    par_al = round(tmp * 10) / 10;
+  }
+  return(par_al);
+}
+
+// [[Rcpp::export]]
 bool judge_gtc_sr(std::vector<double> gtc,
                   std::vector<double> peaks,
                   std::vector<double> peaks_rm99_rmdi,
@@ -128,7 +163,7 @@ bool judge_gtc_sr(std::vector<double> gtc,
       int index_m2sr;
       double height_allele;
 
-      parent_allele = cand_stutter + 1;
+      parent_allele = calc_parent_al_bs_one(cand_stutter);
       index_bsr = find_index_double(parent_allele, peaks);
       if(index_bsr != -1){
         if(bsrs[index_bsr] != 0){
@@ -141,7 +176,7 @@ bool judge_gtc_sr(std::vector<double> gtc,
       }
 
       if(over_bsr){
-        parent_allele = cand_stutter - 1;
+        parent_allele = calc_parent_al_fs_one(cand_stutter);
         index_fsr = find_index_double(parent_allele, peaks);
         if(index_fsr != -1){
           if(fsrs[index_fsr] != 0){
@@ -154,7 +189,7 @@ bool judge_gtc_sr(std::vector<double> gtc,
         }
 
         if(over_fsr){
-          parent_allele = cand_stutter + 2;
+          parent_allele = calc_parent_al_ds_one(cand_stutter);
           index_dsr = find_index_double(parent_allele, peaks);
           if(index_dsr != -1){
             if(dsrs[index_dsr] != 0){
@@ -167,12 +202,7 @@ bool judge_gtc_sr(std::vector<double> gtc,
           }
 
           if(over_dsr){
-            double residual = fmod(cand_stutter, 1);
-            if(residual < 0.15){
-              parent_allele = cand_stutter + 0.2;
-            }else{
-              parent_allele = cand_stutter + 0.8;
-            }
+            parent_allele = calc_parent_al_m2s_one(cand_stutter);
             index_m2sr = find_index_double(parent_allele, peaks);
             if(index_m2sr != -1){
               if(m2srs[index_m2sr] != 0){
