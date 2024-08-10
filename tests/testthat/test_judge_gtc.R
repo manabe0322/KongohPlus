@@ -22,4 +22,5 @@ test_that("judge_gtc pattern 1", {
                          bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
 
   # Test
+  expect_equal(adopt_gtc, TRUE)
 })

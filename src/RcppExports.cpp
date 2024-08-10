@@ -311,8 +311,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // judge_gtc_sr
-bool judge_gtc_sr(std::vector<double> gtc, std::vector<double> peaks, std::vector<double> peaks_rm99_rmdi, std::vector<double> heights_rm99_rmdi, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, std::vector<double> m2srs, double bsr_fltr, double fsr_fltr, double dsr_fltr, double m2sr_fltr);
-RcppExport SEXP _KongohPlus_judge_gtc_sr(SEXP gtcSEXP, SEXP peaksSEXP, SEXP peaks_rm99_rmdiSEXP, SEXP heights_rm99_rmdiSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srsSEXP, SEXP bsr_fltrSEXP, SEXP fsr_fltrSEXP, SEXP dsr_fltrSEXP, SEXP m2sr_fltrSEXP) {
+std::vector<bool> judge_gtc_sr(std::vector<double> gtc, std::vector<double> peaks, std::vector<double> peaks_rm99_rmdi, std::vector<double> heights_rm99_rmdi, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, std::vector<double> m2srs, double bsr_fltr, double fsr_fltr, double dsr_fltr, double m2sr_fltr, int n_dropin_fltr, double h_dropin_fltr, int n_dropin, std::vector<bool> bool_gtc_di);
+RcppExport SEXP _KongohPlus_judge_gtc_sr(SEXP gtcSEXP, SEXP peaksSEXP, SEXP peaks_rm99_rmdiSEXP, SEXP heights_rm99_rmdiSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srsSEXP, SEXP bsr_fltrSEXP, SEXP fsr_fltrSEXP, SEXP dsr_fltrSEXP, SEXP m2sr_fltrSEXP, SEXP n_dropin_fltrSEXP, SEXP h_dropin_fltrSEXP, SEXP n_dropinSEXP, SEXP bool_gtc_diSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -328,12 +328,16 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type fsr_fltr(fsr_fltrSEXP);
     Rcpp::traits::input_parameter< double >::type dsr_fltr(dsr_fltrSEXP);
     Rcpp::traits::input_parameter< double >::type m2sr_fltr(m2sr_fltrSEXP);
-    rcpp_result_gen = Rcpp::wrap(judge_gtc_sr(gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr));
+    Rcpp::traits::input_parameter< int >::type n_dropin_fltr(n_dropin_fltrSEXP);
+    Rcpp::traits::input_parameter< double >::type h_dropin_fltr(h_dropin_fltrSEXP);
+    Rcpp::traits::input_parameter< int >::type n_dropin(n_dropinSEXP);
+    Rcpp::traits::input_parameter< std::vector<bool> >::type bool_gtc_di(bool_gtc_diSEXP);
+    rcpp_result_gen = Rcpp::wrap(judge_gtc_sr(gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr, n_dropin, bool_gtc_di));
     return rcpp_result_gen;
 END_RCPP
 }
 // judge_gtc
-bool judge_gtc(std::vector<double> gtc, std::vector<double> peaks, std::vector<double> heights, std::vector<double> peaks_rm99, std::vector<double> heights_rm99, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, std::vector<double> m2srs, double bsr_fltr, double fsr_fltr, double dsr_fltr, double m2sr_fltr, int n_dropin_fltr, double h_dropin_fltr);
+std::vector<bool> judge_gtc(std::vector<double> gtc, std::vector<double> peaks, std::vector<double> heights, std::vector<double> peaks_rm99, std::vector<double> heights_rm99, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, std::vector<double> m2srs, double bsr_fltr, double fsr_fltr, double dsr_fltr, double m2sr_fltr, int n_dropin_fltr, double h_dropin_fltr);
 RcppExport SEXP _KongohPlus_judge_gtc(SEXP gtcSEXP, SEXP peaksSEXP, SEXP heightsSEXP, SEXP peaks_rm99SEXP, SEXP heights_rm99SEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srsSEXP, SEXP bsr_fltrSEXP, SEXP fsr_fltrSEXP, SEXP dsr_fltrSEXP, SEXP m2sr_fltrSEXP, SEXP n_dropin_fltrSEXP, SEXP h_dropin_fltrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -358,7 +362,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // judge_gtc_mk
-std::vector<std::vector<int>> judge_gtc_mk(std::vector<std::vector<double>> cand_gts, std::vector<std::vector<int>> index_gtc_cpp, std::vector<double> peaks, std::vector<std::vector<double>> heights_all_rep, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, std::vector<double> m2srs, double bsr_fltr, double fsr_fltr, double dsr_fltr, double m2sr_fltr, int n_dropin_fltr, double h_dropin_fltr);
+Rcpp::List judge_gtc_mk(std::vector<std::vector<double>> cand_gts, std::vector<std::vector<int>> index_gtc_cpp, std::vector<double> peaks, std::vector<std::vector<double>> heights_all_rep, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, std::vector<double> m2srs, double bsr_fltr, double fsr_fltr, double dsr_fltr, double m2sr_fltr, int n_dropin_fltr, double h_dropin_fltr);
 RcppExport SEXP _KongohPlus_judge_gtc_mk(SEXP cand_gtsSEXP, SEXP index_gtc_cppSEXP, SEXP peaksSEXP, SEXP heights_all_repSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srsSEXP, SEXP bsr_fltrSEXP, SEXP fsr_fltrSEXP, SEXP dsr_fltrSEXP, SEXP m2sr_fltrSEXP, SEXP n_dropin_fltrSEXP, SEXP h_dropin_fltrSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
@@ -572,7 +576,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_parent_al_fs_one", (DL_FUNC) &_KongohPlus_calc_parent_al_fs_one, 1},
     {"_KongohPlus_calc_parent_al_ds_one", (DL_FUNC) &_KongohPlus_calc_parent_al_ds_one, 1},
     {"_KongohPlus_calc_parent_al_m2s_one", (DL_FUNC) &_KongohPlus_calc_parent_al_m2s_one, 1},
-    {"_KongohPlus_judge_gtc_sr", (DL_FUNC) &_KongohPlus_judge_gtc_sr, 12},
+    {"_KongohPlus_judge_gtc_sr", (DL_FUNC) &_KongohPlus_judge_gtc_sr, 16},
     {"_KongohPlus_judge_gtc", (DL_FUNC) &_KongohPlus_judge_gtc, 15},
     {"_KongohPlus_judge_gtc_mk", (DL_FUNC) &_KongohPlus_judge_gtc_mk, 14},
     {"_KongohPlus_extract_gtc_adopt", (DL_FUNC) &_KongohPlus_extract_gtc_adopt, 2},
