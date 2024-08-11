@@ -199,18 +199,6 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// make_cand_peak
-std::vector<double> make_cand_peak(std::vector<double> alleles, std::vector<bool> sr_consider);
-RcppExport SEXP _KongohPlus_make_cand_peak(SEXP allelesSEXP, SEXP sr_considerSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type alleles(allelesSEXP);
-    Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
-    rcpp_result_gen = Rcpp::wrap(make_cand_peak(alleles, sr_consider));
-    return rcpp_result_gen;
-END_RCPP
-}
 // extract_gtc
 std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts, std::vector<int> ind_gtc, int hnc);
 RcppExport SEXP _KongohPlus_extract_gtc(SEXP cand_gtsSEXP, SEXP ind_gtcSEXP, SEXP hncSEXP) {
@@ -551,6 +539,18 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// make_cand_peak
+std::vector<double> make_cand_peak(std::vector<double> alleles, std::vector<bool> sr_consider);
+RcppExport SEXP _KongohPlus_make_cand_peak(SEXP allelesSEXP, SEXP sr_considerSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<double> >::type alleles(allelesSEXP);
+    Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
+    rcpp_result_gen = Rcpp::wrap(make_cand_peak(alleles, sr_consider));
+    return rcpp_result_gen;
+END_RCPP
+}
 // make_rph_base
 std::vector<double> make_rph_base(std::vector<double> peaks, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, std::vector<double> m2srs);
 RcppExport SEXP _KongohPlus_make_rph_base(SEXP peaksSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srsSEXP) {
@@ -583,7 +583,6 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_ds", (DL_FUNC) &_KongohPlus_calc_ds, 1},
     {"_KongohPlus_calc_m2s_one", (DL_FUNC) &_KongohPlus_calc_m2s_one, 1},
     {"_KongohPlus_calc_m2s", (DL_FUNC) &_KongohPlus_calc_m2s, 1},
-    {"_KongohPlus_make_cand_peak", (DL_FUNC) &_KongohPlus_make_cand_peak, 2},
     {"_KongohPlus_extract_gtc", (DL_FUNC) &_KongohPlus_extract_gtc, 3},
     {"_KongohPlus_make_detectable_peak", (DL_FUNC) &_KongohPlus_make_detectable_peak, 6},
     {"_KongohPlus_search_index_dropin", (DL_FUNC) &_KongohPlus_search_index_dropin, 2},
@@ -605,6 +604,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_gamma_pdf", (DL_FUNC) &_KongohPlus_gamma_pdf, 3},
     {"_KongohPlus_gamma_cdf", (DL_FUNC) &_KongohPlus_gamma_cdf, 3},
     {"_KongohPlus_calc_lpd_gtc_all_mk_cpp", (DL_FUNC) &_KongohPlus_calc_lpd_gtc_all_mk_cpp, 22},
+    {"_KongohPlus_make_cand_peak", (DL_FUNC) &_KongohPlus_make_cand_peak, 2},
     {"_KongohPlus_make_rph_base", (DL_FUNC) &_KongohPlus_make_rph_base, 5},
     {NULL, NULL, 0}
 };

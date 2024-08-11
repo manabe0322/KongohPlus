@@ -61,10 +61,6 @@ calc_m2s <- function(alleles) {
     .Call(`_KongohPlus_calc_m2s`, alleles)
 }
 
-make_cand_peak <- function(alleles, sr_consider) {
-    .Call(`_KongohPlus_make_cand_peak`, alleles, sr_consider)
-}
-
 extract_gtc <- function(cand_gts, ind_gtc, hnc) {
     .Call(`_KongohPlus_extract_gtc`, cand_gts, ind_gtc, hnc)
 }
@@ -147,6 +143,10 @@ gamma_cdf <- function(threshold, shape, scale) {
 
 calc_lpd_gtc_all_mk_cpp <- function(n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, mean_size, ae_dedup1_all_mk, oph_dedup1_all_mk, at_dropout, loglike_di, cv, tph, index_dedup2_all_mk_cpp, n_dedup2_all_mk, n_peak_all_mk, n_gtc_all_mk) {
     .Call(`_KongohPlus_calc_lpd_gtc_all_mk_cpp`, n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, mean_size, ae_dedup1_all_mk, oph_dedup1_all_mk, at_dropout, loglike_di, cv, tph, index_dedup2_all_mk_cpp, n_dedup2_all_mk, n_peak_all_mk, n_gtc_all_mk)
+}
+
+make_cand_peak <- function(alleles, sr_consider) {
+    .Call(`_KongohPlus_make_cand_peak`, alleles, sr_consider)
 }
 
 make_rph_base <- function(peaks, bsrs, fsrs, dsrs, m2srs) {
