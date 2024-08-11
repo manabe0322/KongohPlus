@@ -78,8 +78,8 @@ check_csp_sr <- function(dt_csp, dt_info_mk, dt_sr){
     setindex(dt_info_mk, Marker)
     setindex(dt_sr, Marker)
 
-    n_warning_mk <- 0
     for(i in 1:length(sn_all_csp)){
+      n_warning_mk <- 0
       sn1_csp <- sn_all_csp[i]
       dt_csp_sn1 <- dt_csp[SampleName == sn1_csp]
       setindex(dt_csp_sn1, Marker)
@@ -101,9 +101,9 @@ check_csp_sr <- function(dt_csp, dt_info_mk, dt_sr){
         if(!all(is.element(peaks, alleles_registerd))){
           n_warning_mk <- n_warning_mk + 1
           if(n_warning_mk == 1){
-            message_sr <- "Stutter ratios of the following alleles are regarded as zero.<br>"
+            message_sr <- paste0(message_sr, sn1_csp, "<br> &nbsp; - Stutter ratios of the following alleles are regarded as zero.<br>")
           }
-          message_sr <- paste0(message_sr, "  - ", mk, ": ", paste(peaks[!is.element(peaks, alleles_registerd)], collapse = ", "), "<br>")
+          message_sr <- paste0(message_sr, "&nbsp; &nbsp; - ", mk, ": ", paste(peaks[!is.element(peaks, alleles_registerd)], collapse = ", "), "<br>")
         }
       }
     }
