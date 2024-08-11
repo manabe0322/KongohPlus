@@ -184,3 +184,16 @@ std::vector<double> make_cand_peak(std::vector<double> alleles,
 
   return(cand_peak);
 }
+
+// [[Rcpp::export]]
+std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts,
+                                std::vector<int> ind_gtc,
+                                int hnc){
+  std::vector<double> gtc(2 * hnc);
+  for(int i = 0; i < hnc; ++i){
+    std::vector<double> gt = cand_gts.at(ind_gtc[i]);
+    gtc[2 * i] = gt[0];
+    gtc[2 * i + 1] = gt[1];
+  }
+  return(gtc);
+}

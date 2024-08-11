@@ -11,8 +11,8 @@ Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
 // connect_rph_gtc
-std::vector<std::vector<int>> connect_rph_gtc(std::vector<double> gtc, std::vector<double> bs_gtc, std::vector<double> fs_gtc, std::vector<double> ds_gtc, std::vector<double> m2s_gtc, std::vector<double> peaks, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, std::vector<double> m2srs);
-RcppExport SEXP _KongohPlus_connect_rph_gtc(SEXP gtcSEXP, SEXP bs_gtcSEXP, SEXP fs_gtcSEXP, SEXP ds_gtcSEXP, SEXP m2s_gtcSEXP, SEXP peaksSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srsSEXP) {
+std::vector<std::vector<int>> connect_rph_gtc(std::vector<double> gtc, std::vector<double> bs_gtc, std::vector<double> fs_gtc, std::vector<double> ds_gtc, std::vector<double> m2s_gtc, std::vector<double> peaks, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, std::vector<double> m2srs, std::vector<bool> bool_gtc_di);
+RcppExport SEXP _KongohPlus_connect_rph_gtc(SEXP gtcSEXP, SEXP bs_gtcSEXP, SEXP fs_gtcSEXP, SEXP ds_gtcSEXP, SEXP m2s_gtcSEXP, SEXP peaksSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srsSEXP, SEXP bool_gtc_diSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -26,24 +26,26 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<double> >::type fsrs(fsrsSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type dsrs(dsrsSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type m2srs(m2srsSEXP);
-    rcpp_result_gen = Rcpp::wrap(connect_rph_gtc(gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc, peaks, bsrs, fsrs, dsrs, m2srs));
+    Rcpp::traits::input_parameter< std::vector<bool> >::type bool_gtc_di(bool_gtc_diSEXP);
+    rcpp_result_gen = Rcpp::wrap(connect_rph_gtc(gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc, peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di));
     return rcpp_result_gen;
 END_RCPP
 }
 // connect_rph_gtc_mk
-std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::vector<double>> cand_gt, std::vector<std::vector<int>> index_gt_comb_adopt, std::vector<double> peaks, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, std::vector<double> m2srs);
-RcppExport SEXP _KongohPlus_connect_rph_gtc_mk(SEXP cand_gtSEXP, SEXP index_gt_comb_adoptSEXP, SEXP peaksSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srsSEXP) {
+std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::vector<double>> cand_gts, std::vector<std::vector<int>> index_gt_comb_adopt, std::vector<double> peaks, std::vector<double> bsrs, std::vector<double> fsrs, std::vector<double> dsrs, std::vector<double> m2srs, std::vector<std::vector<bool>> bool_gtc_di_mk);
+RcppExport SEXP _KongohPlus_connect_rph_gtc_mk(SEXP cand_gtsSEXP, SEXP index_gt_comb_adoptSEXP, SEXP peaksSEXP, SEXP bsrsSEXP, SEXP fsrsSEXP, SEXP dsrsSEXP, SEXP m2srsSEXP, SEXP bool_gtc_di_mkSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<std::vector<double>> >::type cand_gt(cand_gtSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::vector<double>> >::type cand_gts(cand_gtsSEXP);
     Rcpp::traits::input_parameter< std::vector<std::vector<int>> >::type index_gt_comb_adopt(index_gt_comb_adoptSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type peaks(peaksSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type bsrs(bsrsSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type fsrs(fsrsSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type dsrs(dsrsSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type m2srs(m2srsSEXP);
-    rcpp_result_gen = Rcpp::wrap(connect_rph_gtc_mk(cand_gt, index_gt_comb_adopt, peaks, bsrs, fsrs, dsrs, m2srs));
+    Rcpp::traits::input_parameter< std::vector<std::vector<bool>> >::type bool_gtc_di_mk(bool_gtc_di_mkSEXP);
+    rcpp_result_gen = Rcpp::wrap(connect_rph_gtc_mk(cand_gts, index_gt_comb_adopt, peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di_mk));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -206,6 +208,19 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<double> >::type alleles(allelesSEXP);
     Rcpp::traits::input_parameter< std::vector<bool> >::type sr_consider(sr_considerSEXP);
     rcpp_result_gen = Rcpp::wrap(make_cand_peak(alleles, sr_consider));
+    return rcpp_result_gen;
+END_RCPP
+}
+// extract_gtc
+std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts, std::vector<int> ind_gtc, int hnc);
+RcppExport SEXP _KongohPlus_extract_gtc(SEXP cand_gtsSEXP, SEXP ind_gtcSEXP, SEXP hncSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<std::vector<double>> >::type cand_gts(cand_gtsSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type ind_gtc(ind_gtcSEXP);
+    Rcpp::traits::input_parameter< int >::type hnc(hncSEXP);
+    rcpp_result_gen = Rcpp::wrap(extract_gtc(cand_gts, ind_gtc, hnc));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -553,8 +568,8 @@ END_RCPP
 }
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_KongohPlus_connect_rph_gtc", (DL_FUNC) &_KongohPlus_connect_rph_gtc, 10},
-    {"_KongohPlus_connect_rph_gtc_mk", (DL_FUNC) &_KongohPlus_connect_rph_gtc_mk, 7},
+    {"_KongohPlus_connect_rph_gtc", (DL_FUNC) &_KongohPlus_connect_rph_gtc, 11},
+    {"_KongohPlus_connect_rph_gtc_mk", (DL_FUNC) &_KongohPlus_connect_rph_gtc_mk, 8},
     {"_KongohPlus_extract_subvec_int", (DL_FUNC) &_KongohPlus_extract_subvec_int, 3},
     {"_KongohPlus_extract_subvec_double", (DL_FUNC) &_KongohPlus_extract_subvec_double, 3},
     {"_KongohPlus_find_index_double", (DL_FUNC) &_KongohPlus_find_index_double, 2},
@@ -569,6 +584,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_m2s_one", (DL_FUNC) &_KongohPlus_calc_m2s_one, 1},
     {"_KongohPlus_calc_m2s", (DL_FUNC) &_KongohPlus_calc_m2s, 1},
     {"_KongohPlus_make_cand_peak", (DL_FUNC) &_KongohPlus_make_cand_peak, 2},
+    {"_KongohPlus_extract_gtc", (DL_FUNC) &_KongohPlus_extract_gtc, 3},
     {"_KongohPlus_make_detectable_peak", (DL_FUNC) &_KongohPlus_make_detectable_peak, 6},
     {"_KongohPlus_search_index_dropin", (DL_FUNC) &_KongohPlus_search_index_dropin, 2},
     {"_KongohPlus_judge_gtc_dropin", (DL_FUNC) &_KongohPlus_judge_gtc_dropin, 7},

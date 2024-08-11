@@ -287,18 +287,6 @@ std::vector<bool> judge_gtc(std::vector<double> gtc,
   return(bool_gtc_di);
 }
 
-std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts,
-                                std::vector<int> ind_gtc,
-                                int hnc){
-  std::vector<double> gtc(2 * hnc);
-  for(int i = 0; i < hnc; ++i){
-    std::vector<double> gt = cand_gts.at(ind_gtc[i]);
-    gtc[2 * i] = gt[0];
-    gtc[2 * i + 1] = gt[1];
-  }
-  return(gtc);
-}
-
 // [[Rcpp::export]]
 Rcpp::List judge_gtc_mk(std::vector<std::vector<double>> cand_gts,
                         std::vector<std::vector<int>> index_gtc_cpp,
@@ -324,7 +312,7 @@ Rcpp::List judge_gtc_mk(std::vector<std::vector<double>> cand_gts,
   peaks_rm99.erase(peaks_rm99.begin() + n_peak - 1);
 
   std::vector<std::vector<int>> index_gtc_adopt_cpp;
-  std::vector<std::vector<std::vector<bool>>> bool_gtc_di_all(n_rep);
+  std::vector<std::vector<std::vector<bool>>> bool_gtc_di_mk_rep(n_rep);
 
   int count = 0;
   for(int i = 0; i < n_gt_comb; ++i){
@@ -356,9 +344,9 @@ Rcpp::List judge_gtc_mk(std::vector<std::vector<double>> cand_gts,
       }
 
       for(int j = 0; j < n_rep; ++j){
-        bool_gtc_di_all[j].push_back(std::vector<bool>(n_peak + 1));
+        bool_gtc_di_mk_rep[j].push_back(std::vector<bool>(n_peak + 1));
         for(int k = 0; k < n_peak + 1; ++k){
-          bool_gtc_di_all[j][count][k] = bool_gtc_di_rep[j][k];
+          bool_gtc_di_mk_rep[j][count][k] = bool_gtc_di_rep[j][k];
         }
       }
 
@@ -366,7 +354,7 @@ Rcpp::List judge_gtc_mk(std::vector<std::vector<double>> cand_gts,
     }
   }
 
-  List result = List::create(index_gtc_adopt_cpp, bool_gtc_di_all);
+  List result = List::create(index_gtc_adopt_cpp, bool_gtc_di_mk_rep);
   return(result);
 }
 

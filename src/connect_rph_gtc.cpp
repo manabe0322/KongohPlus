@@ -10,7 +10,8 @@ std::vector<std::vector<int>> connect_rph_gtc(std::vector<double> gtc,
                                               std::vector<double> bsrs,
                                               std::vector<double> fsrs,
                                               std::vector<double> dsrs,
-                                              std::vector<double> m2srs){
+                                              std::vector<double> m2srs,
+                                              std::vector<bool> bool_gtc_di){
   int n_allele = gtc.size();
   int n_peak = peaks.size();
   std::vector<std::vector<int>> index_rph_gtc_cpp(n_peak, std::vector<int>(n_allele, 5 * n_peak));
@@ -56,13 +57,8 @@ std::vector<std::vector<int>> connect_rph_gtc(std::vector<double> gtc,
 
   //Index for drop-in
   for(int i = 0; i < n_peak; ++i){
-    if(peaks[i] != 99){
-      std::vector<int> index_tmp = index_rph_gtc_cpp.at(i);
-      std::vector<int> index_tmp2(1, 5 * n_peak);
-      std::vector<int> index_alprod = setdiff_int(index_tmp, index_tmp2);
-      if(index_alprod.size() == 0){
-        index_rph_gtc_cpp.at(i) = std::vector<int>(n_allele, 5 * n_peak + 1);
-      }
+    if(bool_gtc_di[i + 1]){
+      index_rph_gtc_cpp.at(i) = std::vector<int>(n_allele, 5 * n_peak + 1);
     }
   }
 
@@ -70,13 +66,14 @@ std::vector<std::vector<int>> connect_rph_gtc(std::vector<double> gtc,
 }
 
 // [[Rcpp::export]]
-std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::vector<double>> cand_gt,
+std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::vector<double>> cand_gts,
                                                               std::vector<std::vector<int>> index_gt_comb_adopt,
                                                               std::vector<double> peaks,
                                                               std::vector<double> bsrs,
                                                               std::vector<double> fsrs,
                                                               std::vector<double> dsrs,
-                                                              std::vector<double> m2srs){
+                                                              std::vector<double> m2srs,
+                                                              std::vector<std::vector<bool>> bool_gtc_di_mk){
   int n_gt_comb = index_gt_comb_adopt.size();
   int hnc = index_gt_comb_adopt.at(0).size();
   int n_peak = peaks.size();
@@ -84,12 +81,8 @@ std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::v
   std::vector<std::vector<std::vector<int>>> index_rph_gtc_mk(n_gt_comb, std::vector<std::vector<int>>(n_peak, std::vector<int>(2 * hnc)));
   for(int i = 0; i < n_gt_comb; ++i){
     std::vector<int> ind_gtc = index_gt_comb_adopt.at(i);
-    std::vector<double> gtc(2 * hnc);
-    for(int j = 0; j < hnc; ++j){
-      std::vector<double> gt = cand_gt.at(ind_gtc[j]);
-      gtc[2 * j] = gt[0];
-      gtc[2 * j + 1] = gt[1];
-    }
+    std::vector<double> gtc = extract_gtc(cand_gts, ind_gtc, hnc);
+    std::vector<bool> bool_gtc_di = bool_gtc_di_mk.at(i);
 
     std::vector<double> bs_gtc = calc_bs(gtc);
     std::vector<double> fs_gtc = calc_fs(gtc);
@@ -97,7 +90,7 @@ std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::v
     std::vector<double> m2s_gtc = calc_m2s(gtc);
 
     index_rph_gtc_mk.at(i) = connect_rph_gtc(gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc,
-                                             peaks, bsrs, fsrs, dsrs, m2srs);
+                                             peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di);
   }
   return(index_rph_gtc_mk);
 }

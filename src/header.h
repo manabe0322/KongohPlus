@@ -22,3 +22,4 @@ std::vector<double> calc_ds(std::vector<double> alleles);
 double calc_m2s_one(double al);
 std::vector<double> calc_m2s(std::vector<double> alleles);
 std::vector<double> make_cand_peak(std::vector<double> alleles, std::vector<bool> sr_consider);
+std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts, std::vector<int> ind_gtc, int hnc);

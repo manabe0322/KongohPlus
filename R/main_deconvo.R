@@ -76,7 +76,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
     # Define objects
     rph_base_use <- vector(mode = "list", length = n_mk)
     gtc_logprob_use <- vector(mode = "list", length = n_mk)
-    index_rph_gtc_use <- vector(mode = "list", length = n_mk)
+    index_rph_gtc_use <- vector(mode = "list", length = n_rep)
     index_dedup1_general_use <- vector(mode = "list", length = n_rep)
     index_dedup1_dropout_use <- vector(mode = "list", length = n_rep)
     index_dedup1_dropin_use <- vector(mode = "list", length = n_rep)
@@ -91,6 +91,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
     oph_dedup1_ignore_use <- vector(mode = "list", length = n_rep)
     loglike_di_use <- vector(mode = "list", length = n_rep)
     for(i in 1:n_rep){
+      index_rph_gtc_use[[i]] <- vector(mode = "list", length = n_mk)
       index_dedup1_general_use[[i]] <- vector(mode = "list", length = n_mk)
       index_dedup1_dropout_use[[i]] <- vector(mode = "list", length = n_mk)
       index_dedup1_dropin_use[[i]] <- vector(mode = "list", length = n_mk)
@@ -157,9 +158,12 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
       index_gtc_cpp <- asplit(index_gtc_cpp, 1)
 
       # Indices of genotypes of each contributor in each adopted genotype combination
-      index_gtc_adopt_cpp <- judge_gtc_mk(cand_gt, index_gtc_cpp, peaks, heights_all_rep,
-                                          bsrs, fsrs, dsrs, m2srs,
-                                          bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+      tmp <- judge_gtc_mk(cand_gt, index_gtc_cpp, peaks, heights_all_rep,
+                          bsrs, fsrs, dsrs, m2srs,
+                          bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+      index_gtc_adopt_cpp <- tmp[[1]]
+      bool_gtc_di_mk_rep <- tmp[[2]]
+
       n_gtc_use[i] <- n_gtc <- length(index_gtc_adopt_cpp)
 
       if(n_gtc != 0){
@@ -171,22 +175,21 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
         gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = rep(0, hnc), n_obs)
         gtc_logprob_use[[i]] <- log(gtc_prob_mk)
 
-        # Connect rph_base and genotype combinations
-        index_rph_gtc_cpp <- connect_rph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks, bsrs, fsrs, dsrs, m2srs)
-        index_rph_gtc_use[[i]] <- index_rph_gtc <- matrix(unlist(index_rph_gtc_cpp) + 1, nrow = 2 * hnc) # R and stan index
-
-        # Delete duplicated indices -> index for deduplication (pattern 1: Before summation of the rph_base)
-        bool_duplicated_adopt <- !duplicated(t(index_rph_gtc))
-        index_dedup1_tmp <- index_rph_gtc[, bool_duplicated_adopt, drop = FALSE]
-
-        # Sizes for de-duplicated objects (pattern 1)
-        size_dedup1_tmp <- rep(sizes, n_gtc)
-        size_dedup1_tmp <- size_dedup1_tmp[bool_duplicated_adopt]
-
         for(j in 1:n_rep){
-          heights <- heights_all_rep[[j]]
+          # Connect rph_base and genotype combinations
+          index_rph_gtc_cpp <- connect_rph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di_mk_rep[[j]])
+          index_rph_gtc_use[[j]][[i]] <- index_rph_gtc <- matrix(unlist(index_rph_gtc_cpp) + 1, nrow = 2 * hnc) # R and stan index
+
+          # Delete duplicated indices -> index for deduplication (pattern 1: Before summation of the rph_base)
+          bool_duplicated_adopt <- !duplicated(t(index_rph_gtc))
+          index_dedup1_tmp <- index_rph_gtc[, bool_duplicated_adopt, drop = FALSE]
+
+          # Sizes for de-duplicated objects (pattern 1)
+          size_dedup1_tmp <- rep(sizes, n_gtc)
+          size_dedup1_tmp <- size_dedup1_tmp[bool_duplicated_adopt]
 
           # Update the maximum of the total peak height per marker
+          heights <- heights_all_rep[[j]]
           oph_sum <- sum(heights)
           if(oph_sum > max_tph){
             max_tph <- oph_sum
@@ -200,9 +203,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
           rph_dedup1_tmp <- matrix(rph_base_mk[index_dedup1_tmp], nrow = 2 * hnc)
           rph_dedup1_tmp <- apply(rph_dedup1_tmp, 2, sum)
           index_oph0 <- which(oph_dedup1_tmp == 0)
-          #index_ignore <- which(rph_dedup1_tmp == 0)
-          index_ignore <- c(which(rph_dedup1_tmp == 0), intersect(which(rph_dedup1_tmp < 0), index_oph0))
-          #index_dropin <- which(rph_dedup1_tmp < 0)
+          index_ignore <- c(which(rph_dedup1_tmp == 0), intersect(which(rph_dedup1_tmp < 0), index_oph0)) # intersect(which(rph_dedup1_tmp < 0), index_oph0): for duplicate
           index_dropin <- setdiff(which(rph_dedup1_tmp < 0), index_ignore)
           index_dropout <- setdiff(index_oph0, c(index_ignore, index_dropin))
           index_general <- setdiff(1:length(rph_dedup1_tmp), c(index_ignore, index_dropin, index_dropout))
@@ -303,7 +304,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
       index_dedup2_start <- 1
       sumup_index_dedup2 <- 0
       for(i in 1:n_mk){
-        index_rph_gtc <- index_rph_gtc_use[[i]] + sumup_index_dedup2
+        index_rph_gtc <- index_rph_gtc_use[[1]][[i]] + sumup_index_dedup2
         n_dedup2 <- n_dedup2_use[i]
         index_dedup2_use_1st[index_dedup2_start:(index_dedup2_start + n_dedup2 - 1)] <- make_index_dedup2_mk(index_rph_gtc, index_dedup1_use_1st)
 
@@ -462,7 +463,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
         index_dedup2_start <- 1
         sumup_index_dedup2 <- 0
         for(i in 1:n_mk){
-          index_rph_gtc <- index_rph_gtc_use[[i]] + sumup_index_dedup2
+          index_rph_gtc <- index_rph_gtc_use[[2]][[i]] + sumup_index_dedup2
           n_dedup2 <- n_dedup2_use[i]
           index_dedup2_use_2nd[index_dedup2_start:(index_dedup2_start + n_dedup2 - 1)] <- make_index_dedup2_mk(index_rph_gtc, index_dedup1_use_2nd)
 
