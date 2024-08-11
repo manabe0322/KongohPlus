@@ -8,9 +8,9 @@ run_mcmc_ae(
   model_ae,
   data_list_ae,
   n_mk,
-  n_warmup,
-  n_sampling,
-  n_chains,
+  warmup,
+  sampling,
+  chains,
   n_parallel_chains
 )
 }
@@ -21,11 +21,11 @@ run_mcmc_ae(
 
 \item{n_mk}{The number of markers}
 
-\item{n_warmup}{The number of simulations for warm-up}
+\item{warmup}{The number of warm-up iterations for each chain}
 
-\item{n_sampling}{The number of simulations for sampling}
+\item{sampling}{The number of sampling iterations for each chain}
 
-\item{n_chains}{The number of chains}
+\item{chains}{The number of chains}
 
 \item{n_parallel_chains}{The number of parallel chains}
 }

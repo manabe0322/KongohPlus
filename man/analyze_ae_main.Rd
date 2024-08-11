@@ -8,9 +8,9 @@ analyze_ae_main(
   markers_auto,
   model_ae,
   pae_data_use,
-  n_warmup,
-  n_sampling,
-  n_chains,
+  warmup,
+  sampling,
+  chains,
   n_parallel_chains
 )
 }
@@ -21,11 +21,11 @@ analyze_ae_main(
 
 \item{pae_data_use}{The data of the proportion of the AE which is used for MCMC}
 
-\item{n_warmup}{The number of simulations for warm-up}
+\item{warmup}{The number of warm-up iterations for each chain}
 
-\item{n_sampling}{The number of simulations for sampling}
+\item{sampling}{The number of sampling iterations for each chain}
 
-\item{n_chains}{The number of chains}
+\item{chains}{The number of chains}
 
 \item{n_parallel_chains}{The number of parallel chains}
 }

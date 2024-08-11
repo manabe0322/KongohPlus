@@ -15,9 +15,9 @@ estimate_parameters(
   model_sr_gen,
   model_sr_uni,
   model_gamma,
-  n_warmup,
-  n_sampling,
-  n_chains,
+  warmup,
+  sampling,
+  chains,
   pu_remove,
   pu_dist,
   at_sex,
@@ -48,11 +48,11 @@ estimate_parameters(
 
 \item{model_gamma}{The stan model for gamma distribution}
 
-\item{n_warmup}{The number of simulations for warm-up}
+\item{warmup}{The number of warm-up iterations for each chain}
 
-\item{n_sampling}{The number of simulations for sampling}
+\item{sampling}{The number of sampling iterations for each chain}
 
-\item{n_chains}{The number of chains}
+\item{chains}{The number of chains}
 
 \item{pu_remove}{Whether pull-up peaks are automatically removed or not}
 

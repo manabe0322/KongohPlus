@@ -7,9 +7,9 @@
 run_mcmc_sr_uni(
   model_sr_uni,
   data_list_sr,
-  n_warmup,
-  n_sampling,
-  n_chains,
+  warmup,
+  sampling,
+  chains,
   n_parallel_chains
 )
 }
@@ -18,11 +18,11 @@ run_mcmc_sr_uni(
 
 \item{data_list_sr}{The data list of the stutter ratio}
 
-\item{n_warmup}{The number of simulations for warm-up}
+\item{warmup}{The number of warm-up iterations for each chain}
 
-\item{n_sampling}{The number of simulations for sampling}
+\item{sampling}{The number of sampling iterations for each chain}
 
-\item{n_chains}{The number of chains}
+\item{chains}{The number of chains}
 
 \item{n_parallel_chains}{The number of parallel chains}
 }

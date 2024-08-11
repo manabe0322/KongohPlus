@@ -12,9 +12,9 @@ analyze_m2sr_main(
   parent_al_data,
   total_al_prod_data,
   lus_auto,
-  n_warmup,
-  n_sampling,
-  n_chains,
+  warmup,
+  sampling,
+  chains,
   n_parallel_chains
 )
 }
@@ -33,11 +33,11 @@ analyze_m2sr_main(
 
 \item{lus_auto}{The information on the LUS values of autosomal markers}
 
-\item{n_warmup}{The number of simulations for warm-up}
+\item{warmup}{The number of warm-up iterations for each chain}
 
-\item{n_sampling}{The number of simulations for sampling}
+\item{sampling}{The number of sampling iterations for each chain}
 
-\item{n_chains}{The number of chains}
+\item{chains}{The number of chains}
 
 \item{n_parallel_chains}{The number of parallel chains}
 }
