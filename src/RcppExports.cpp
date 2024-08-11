@@ -238,8 +238,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // judge_gtc_dropin
-bool judge_gtc_dropin(std::vector<double> peaks_rm99, std::vector<double> heights_rm99, std::vector<double> detectable_peak, std::vector<int> index_dropin, int n_dropin_fltr, double h_dropin_fltr);
-RcppExport SEXP _KongohPlus_judge_gtc_dropin(SEXP peaks_rm99SEXP, SEXP heights_rm99SEXP, SEXP detectable_peakSEXP, SEXP index_dropinSEXP, SEXP n_dropin_fltrSEXP, SEXP h_dropin_fltrSEXP) {
+std::vector<bool> judge_gtc_dropin(std::vector<double> peaks_rm99, std::vector<double> heights_rm99, std::vector<double> detectable_peak, std::vector<int> index_dropin, int n_dropin_fltr, double h_dropin_fltr, std::vector<bool> bool_gtc_di);
+RcppExport SEXP _KongohPlus_judge_gtc_dropin(SEXP peaks_rm99SEXP, SEXP heights_rm99SEXP, SEXP detectable_peakSEXP, SEXP index_dropinSEXP, SEXP n_dropin_fltrSEXP, SEXP h_dropin_fltrSEXP, SEXP bool_gtc_diSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -249,7 +249,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<int> >::type index_dropin(index_dropinSEXP);
     Rcpp::traits::input_parameter< int >::type n_dropin_fltr(n_dropin_fltrSEXP);
     Rcpp::traits::input_parameter< double >::type h_dropin_fltr(h_dropin_fltrSEXP);
-    rcpp_result_gen = Rcpp::wrap(judge_gtc_dropin(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr));
+    Rcpp::traits::input_parameter< std::vector<bool> >::type bool_gtc_di(bool_gtc_diSEXP);
+    rcpp_result_gen = Rcpp::wrap(judge_gtc_dropin(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gtc_di));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -570,7 +571,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_make_cand_peak", (DL_FUNC) &_KongohPlus_make_cand_peak, 2},
     {"_KongohPlus_make_detectable_peak", (DL_FUNC) &_KongohPlus_make_detectable_peak, 6},
     {"_KongohPlus_search_index_dropin", (DL_FUNC) &_KongohPlus_search_index_dropin, 2},
-    {"_KongohPlus_judge_gtc_dropin", (DL_FUNC) &_KongohPlus_judge_gtc_dropin, 6},
+    {"_KongohPlus_judge_gtc_dropin", (DL_FUNC) &_KongohPlus_judge_gtc_dropin, 7},
     {"_KongohPlus_remove_dropin", (DL_FUNC) &_KongohPlus_remove_dropin, 3},
     {"_KongohPlus_calc_parent_al_bs_one", (DL_FUNC) &_KongohPlus_calc_parent_al_bs_one, 1},
     {"_KongohPlus_calc_parent_al_fs_one", (DL_FUNC) &_KongohPlus_calc_parent_al_fs_one, 1},

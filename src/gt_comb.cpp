@@ -54,25 +54,30 @@ std::vector<int> search_index_dropin(std::vector<double> peaks_rm99,
 }
 
 // [[Rcpp::export]]
-bool judge_gtc_dropin(std::vector<double> peaks_rm99,
-                      std::vector<double> heights_rm99,
-                      std::vector<double> detectable_peak,
-                      std::vector<int> index_dropin,
-                      int n_dropin_fltr,
-                      double h_dropin_fltr){
-  bool adopt_gtc = true;
+std::vector<bool> judge_gtc_dropin(std::vector<double> peaks_rm99,
+                                   std::vector<double> heights_rm99,
+                                   std::vector<double> detectable_peak,
+                                   std::vector<int> index_dropin,
+                                   int n_dropin_fltr,
+                                   double h_dropin_fltr,
+                                   std::vector<bool> bool_gtc_di){
+  std::vector<bool> bool_gtc_di_new = bool_gtc_di;
   int n_dropin = index_dropin.size();
   if(n_dropin <= n_dropin_fltr){
     for(int i = 0; i < n_dropin; ++i){
       if(heights_rm99[index_dropin[i]] > h_dropin_fltr){
-        adopt_gtc = false;
+        bool_gtc_di_new = bool_gtc_di;
+        bool_gtc_di_new[0] = false;
         break;
+      }else{
+        bool_gtc_di_new[index_dropin[i] + 1] = true;
       }
     }
   }else{
-    adopt_gtc = false;
+    bool_gtc_di_new[0] = false;
   }
-  return(adopt_gtc);
+
+  return(bool_gtc_di_new);
 }
 
 // [[Rcpp::export]]
@@ -143,6 +148,7 @@ std::vector<bool> judge_gtc_sr(std::vector<double> gtc,
                                double h_dropin_fltr,
                                int n_dropin,
                                std::vector<bool> bool_gtc_di){
+  std::vector<bool> bool_gtc_di_new = bool_gtc_di;
   std::vector<double> cand_stutters = setdiff_double(peaks_rm99_rmdi, gtc);
   int n_cand_stutters = cand_stutters.size();
 
@@ -220,10 +226,11 @@ std::vector<bool> judge_gtc_sr(std::vector<double> gtc,
             if(over_m2sr){
               if(height_stutter <= h_dropin_fltr && n_dropin < n_dropin_fltr){
                 index_di = find_index_double(cand_stutter, peaks);
-                bool_gtc_di[index_di] = true;
+                bool_gtc_di_new[index_di + 1] = true;
                 n_dropin += 1;
               }else{
-                bool_gtc_di[0] = false;
+                bool_gtc_di_new = bool_gtc_di;
+                bool_gtc_di_new[0] = false;
                 break;
               }
             }
@@ -233,7 +240,7 @@ std::vector<bool> judge_gtc_sr(std::vector<double> gtc,
     }
   }
 
-  return(bool_gtc_di);
+  return(bool_gtc_di_new);
 }
 
 // [[Rcpp::export]]
@@ -261,15 +268,10 @@ std::vector<bool> judge_gtc(std::vector<double> gtc,
 
   int n_dropin = index_dropin.size();
   if(n_dropin != 0){
-    bool_gtc_di[0] = judge_gtc_dropin(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr);
+    bool_gtc_di = judge_gtc_dropin(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gtc_di);
   }
 
   if(bool_gtc_di[0]){
-    // Update information on drop-in peaks
-    for(int i = 0; i < n_dropin; ++i){
-      bool_gtc_di[index_dropin[i] + 1] = true;
-    }
-
     // Remove drop-in peaks
     std::vector<std::vector<double>> tmp = remove_dropin(peaks_rm99, heights_rm99, index_dropin);
     std::vector<double> peaks_rm99_rmdi = tmp.at(0);
@@ -295,79 +297,6 @@ std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts,
     gtc[2 * i + 1] = gt[1];
   }
   return(gtc);
-}
-
-std::tuple<std::vector<std::vector<int>>, std::vector<std::vector<std::vector<bool>>>> judge_gtc_mk2(std::vector<std::vector<double>> cand_gts,
-                                                                                                    std::vector<std::vector<int>> index_gtc_cpp,
-                                                                                                    std::vector<double> peaks,
-                                                                                                    std::vector<std::vector<double>> heights_all_rep,
-                                                                                                    std::vector<double> bsrs,
-                                                                                                    std::vector<double> fsrs,
-                                                                                                    std::vector<double> dsrs,
-                                                                                                    std::vector<double> m2srs,
-                                                                                                    double bsr_fltr,
-                                                                                                    double fsr_fltr,
-                                                                                                    double dsr_fltr,
-                                                                                                    double m2sr_fltr,
-                                                                                                    int n_dropin_fltr,
-                                                                                                    double h_dropin_fltr){
-  int n_gt_comb = index_gtc_cpp.size();
-  int hnc = index_gtc_cpp.at(0).size();
-  int n_peak = peaks.size();
-  int n_rep = heights_all_rep.size();
-
-  // Remove allele Q (i.e., 99) from the object 'peaks'
-  std::vector<double> peaks_rm99 = peaks;
-  peaks_rm99.erase(peaks_rm99.begin() + n_peak - 1);
-
-  std::vector<std::vector<int>> index_gtc_adopt_cpp;
-  std::vector<std::vector<std::vector<bool>>> bool_gtc_di_all(n_rep);
-
-  int count = 0;
-  for(int i = 0; i < n_gt_comb; ++i){
-    std::vector<int> ind_gtc = index_gtc_cpp.at(i);
-    std::vector<double> gtc = extract_gtc(cand_gts, ind_gtc, hnc);
-
-    bool adopt_gtc = true;
-    std::vector<std::vector<bool>> bool_gtc_di_rep(n_rep, std::vector<bool>(n_peak + 1, false));
-    std::vector<bool> bool_gtc_di;
-    for(int j = 0; j < n_rep; ++j){
-      std::vector<double> heights = heights_all_rep.at(j);
-
-      // Remove the peak height of the allele Q (i.e., 99) from the object 'heights'
-      std::vector<double> heights_rm99 = heights_all_rep.at(i);
-      heights_rm99.erase(heights_rm99.begin() + n_peak - 1);
-
-      bool_gtc_di = judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99,
-                              bsrs, fsrs, dsrs, m2srs,
-                              bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr);
-      adopt_gtc = bool_gtc_di[0];
-      bool_gtc_di_rep.at(j) = bool_gtc_di;
-      if(!adopt_gtc){
-        break;
-      }
-    }
-
-    if(adopt_gtc){
-      index_gtc_adopt_cpp.push_back(std::vector<int>(hnc));
-      for(int j = 0; j < hnc; ++j){
-        index_gtc_adopt_cpp[count][j] = ind_gtc[j];
-      }
-
-      for(int j = 0; j < n_rep; ++j){
-        bool_gtc_di_all.at(j).push_back(std::vector<bool>(n_peak + 1));
-        for(int k = 0; k < n_peak + 1; ++k){
-          bool_gtc_di_all[j][count][k] = bool_gtc_di_rep[j][k];
-        }
-      }
-
-      count += 1;
-    }
-  }
-
-  std::tuple<std::vector<std::vector<int>>, std::vector<std::vector<std::vector<bool>>>> tuple_data = std::make_tuple(index_gtc_adopt_cpp, bool_gtc_di_all);
-
-  return(tuple_data);
 }
 
 // [[Rcpp::export]]

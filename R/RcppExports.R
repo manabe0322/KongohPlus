@@ -73,8 +73,8 @@ search_index_dropin <- function(peaks_rm99, detectable_peak) {
     .Call(`_KongohPlus_search_index_dropin`, peaks_rm99, detectable_peak)
 }
 
-judge_gtc_dropin <- function(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr) {
-    .Call(`_KongohPlus_judge_gtc_dropin`, peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr)
+judge_gtc_dropin <- function(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gtc_di) {
+    .Call(`_KongohPlus_judge_gtc_dropin`, peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gtc_di)
 }
 
 remove_dropin <- function(peaks_rm99, heights_rm99, index_dropin) {
