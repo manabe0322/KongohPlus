@@ -3,17 +3,17 @@
 #' @description The function to perform MCMC for the stutter ratio (locus-specific with slope)
 #' @param model_sr_gen The stan model of the stutter ratio
 #' @param data_list_sr The data list of the stutter ratio
-#' @param n_warmup The number of simulations for warm-up
-#' @param n_sampling The number of simulations for sampling
-#' @param n_chains The number of chains
+#' @param warmup The number of warm-up iterations for each chain
+#' @param sampling The number of sampling iterations for each chain
+#' @param chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
-run_mcmc_sr_gen <- function(model_sr_gen, data_list_sr, n_warmup, n_sampling, n_chains, n_parallel_chains){
+run_mcmc_sr_gen <- function(model_sr_gen, data_list_sr, warmup, sampling, chains, n_parallel_chains){
   # Perform MCMC
   fit_sr <- model_sr_gen$sample(
     data_list_sr,
-    iter_warmup = n_warmup,
-    iter_sampling = n_sampling,
-    chains = n_chains,
+    iter_warmup = warmup,
+    iter_sampling = sampling,
+    chains = chains,
     parallel_chains = n_parallel_chains
   )
 
@@ -50,17 +50,17 @@ run_mcmc_sr_gen <- function(model_sr_gen, data_list_sr, n_warmup, n_sampling, n_
 #' @description The function to perform MCMC for the stutter ratio (uniform)
 #' @param model_sr_uni The stan model of the stutter ratio
 #' @param data_list_sr The data list of the stutter ratio
-#' @param n_warmup The number of simulations for warm-up
-#' @param n_sampling The number of simulations for sampling
-#' @param n_chains The number of chains
+#' @param warmup The number of warm-up iterations for each chain
+#' @param sampling The number of sampling iterations for each chain
+#' @param chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
-run_mcmc_sr_uni <- function(model_sr_uni, data_list_sr, n_warmup, n_sampling, n_chains, n_parallel_chains){
+run_mcmc_sr_uni <- function(model_sr_uni, data_list_sr, warmup, sampling, chains, n_parallel_chains){
   # Perform MCMC
   fit_sr <- model_sr_uni$sample(
     data_list_sr,
-    iter_warmup = n_warmup,
-    iter_sampling = n_sampling,
-    chains = n_chains,
+    iter_warmup = warmup,
+    iter_sampling = sampling,
+    chains = chains,
     parallel_chains = n_parallel_chains
   )
 

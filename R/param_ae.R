@@ -56,17 +56,17 @@ calc_tph_all_data <- function(height_list){
 #' @param markers_auto The vector of autosomal markers
 #' @param model_ae The stan model for AE
 #' @param pae_data_use The data of the proportion of the AE which is used for MCMC
-#' @param n_warmup The number of simulations for warm-up
-#' @param n_sampling The number of simulations for sampling
-#' @param n_chains The number of chains
+#' @param warmup The number of warm-up iterations for each chain
+#' @param sampling The number of sampling iterations for each chain
+#' @param chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
 analyze_ae_main <- function(markers_auto, model_ae, pae_data_use,
-                            n_warmup, n_sampling, n_chains, n_parallel_chains){
+                            warmup, sampling, chains, n_parallel_chains){
 
   cat("MCMC for the locus-specific amplification efficiency\n")
   n_mk <- length(markers_auto)
   data_list_ae <- list(N = ncol(pae_data_use), N_Mk = nrow(pae_data_use), PAE = pae_data_use)
-  tmp <- run_mcmc_ae(model_ae, data_list_ae, n_mk, n_warmup, n_sampling, n_chains, n_parallel_chains)
+  tmp <- run_mcmc_ae(model_ae, data_list_ae, n_mk, warmup, sampling, chains, n_parallel_chains)
   median_alpha <- tmp$median_alpha
   rhat_alpha <- tmp$rhat_alpha
   rhat_lp <- tmp$rhat_lp
@@ -87,17 +87,17 @@ analyze_ae_main <- function(markers_auto, model_ae, pae_data_use,
 #' @param model_ae The stan model of the locus-specific amplification efficiency
 #' @param data_list_ae The data list of the locus-specific amplification efficiency
 #' @param n_mk The number of markers
-#' @param n_warmup The number of simulations for warm-up
-#' @param n_sampling The number of simulations for sampling
-#' @param n_chains The number of chains
+#' @param warmup The number of warm-up iterations for each chain
+#' @param sampling The number of sampling iterations for each chain
+#' @param chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
-run_mcmc_ae <- function(model_ae, data_list_ae, n_mk, n_warmup, n_sampling, n_chains, n_parallel_chains){
+run_mcmc_ae <- function(model_ae, data_list_ae, n_mk, warmup, sampling, chains, n_parallel_chains){
   # Perform MCMC
   fit_ae <- model_ae$sample(
     data_list_ae,
-    iter_warmup = n_warmup,
-    iter_sampling = n_sampling,
-    chains = n_chains,
+    iter_warmup = warmup,
+    iter_sampling = sampling,
+    chains = chains,
     parallel_chains = n_parallel_chains
   )
 

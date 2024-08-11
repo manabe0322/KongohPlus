@@ -9,6 +9,22 @@ make_index_dedup2_mk <- function(index_rph_gtc, index_dedup1_all_mk){
   return(match(paste_index_rph_gtc, paste_index_dedup1_all_mk))
 }
 
+#' perform_deconvo
+#'
+#' @description The function to perform mixture deconvolution
+#' @param dt_csp The data.table of the crime stain profiles
+#' @param dt_af The data.table of the allele frequencies
+#' @param dt_kit The data.table of the information on the kit
+#' @param dt_info_mk The data.table of the information on the ignored marker and the analytical thresholds for each marker
+#' @param dt_par The data.table of the parameters
+#' @param dt_sr The data.table of the stutter ratios
+#' @param dt_al_prob The data.table of the setting of the allele probabilities
+#' @param dt_gt_fltr The data.table of the genotype filters
+#' @param dt_dropin The data.table of the setting of the drop-in
+#' @param hnc The hypothesized number of contributors
+#' @param warmup The number of warm-up iterations for each chain
+#' @param sampling The number of sampling iterations for each chain
+#' @param chains The number of chains
 perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
                             hnc, warmup, sampling, chains){
   # Start computation
@@ -23,7 +39,6 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
   n_mk <- length(markers_use)
 
   if(n_mk != 0){
-    dt_kit <- change_data_type_kit(dt_kit)
     dt_kit_auto <- extract_kit_auto(dt_kit)
 
     # Extract peak data from crime stain profiles

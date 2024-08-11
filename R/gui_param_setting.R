@@ -399,9 +399,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         dt_kit_set <- rv_output$dt_kit_set
 
         # Fix parameters
-        n_warmup <- rv_advanced$warmup
-        n_sampling <- rv_advanced$sampling
-        n_chains <- rv_advanced$chains
+        warmup <- rv_advanced$warmup
+        sampling <- rv_advanced$sampling
+        chains <- rv_advanced$chains
         pu_remove <- rv_advanced$pu_remove
         pu_dist <- rv_advanced$pu_dist
         at_sex <- rv_advanced$at_sex
@@ -422,7 +422,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
 
           results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_par,
                                                  model_ae, model_sr_gen, model_sr_uni, model_gamma,
-                                                 n_warmup, n_sampling, n_chains,
+                                                 warmup, sampling, chains,
                                                  pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi)
           rv_output$results_est_par <- results_est_par
 

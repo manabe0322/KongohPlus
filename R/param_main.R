@@ -47,9 +47,9 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param model_sr_gen The stan model for the general stutter ratio
 #' @param model_sr_uni The stan model for the uniform stutter ratio
 #' @param model_gamma The stan model for gamma distribution
-#' @param n_warmup The number of simulations for warm-up
-#' @param n_sampling The number of simulations for sampling
-#' @param n_chains The number of chains
+#' @param warmup The number of warm-up iterations for each chain
+#' @param sampling The number of sampling iterations for each chain
+#' @param chains The number of chains
 #' @param pu_remove Whether pull-up peaks are automatically removed or not
 #' @param pu_dist Maximum pull-up distance (bp)
 #' @param at_sex The analytical threshold of the sex-chromosomal markers
@@ -58,7 +58,7 @@ make_dt_par <- function(dt_result_ae, dt_result_bsr, dt_result_fsr, dt_result_ds
 #' @param n_parallel_chains The number of parallel chains
 estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_par,
                                 model_ae, model_sr_gen, model_sr_uni, model_gamma,
-                                n_warmup, n_sampling, n_chains,
+                                warmup, sampling, chains,
                                 pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi = 10,
                                 n_parallel_chains = detectCores()){
   # Extract information on the kit
@@ -127,31 +127,31 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_p
 
   # Perform the MCMC for the locus-specific amplification efficiency
   ae_result_list <- analyze_ae_main(markers_auto, model_ae, pae_data_use,
-                                    n_warmup, n_sampling, n_chains, n_parallel_chains)
+                                    warmup, sampling, chains, n_parallel_chains)
 
   # Perform the MCMC for the back stutter ratio
   bsr_result_list <- analyze_bfdstr_main("BSR", markers_auto, meth_model_bsr_auto, model_sr_gen, model_sr_uni,
                                          bsr_data, parent_al_data, total_al_prod_data,
                                          lus_auto, reps_auto, seq_al_auto, seq_count_auto,
-                                         n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
+                                         warmup, sampling, chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
 
   # Perform the MCMC for the forward stutter ratio
   fsr_result_list <- analyze_bfdstr_main("FSR", markers_auto, meth_model_fsr_auto, model_sr_gen, model_sr_uni,
                                          fsr_data, parent_al_data, total_al_prod_data,
                                          lus_auto, reps_auto, seq_al_auto, seq_count_auto,
-                                         n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
+                                         warmup, sampling, chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
 
   # Perform the MCMC for the double-back stutter ratio
   dsr_result_list <- analyze_bfdstr_main("DSR", markers_auto, meth_model_dsr_auto, model_sr_gen, model_sr_uni,
                                          dsr_data, parent_al_data, total_al_prod_data,
                                          lus_auto, reps_auto, seq_al_auto, seq_count_auto,
-                                         n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
+                                         warmup, sampling, chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi)
 
   # Perform the MCMC for the minus 2-nt stutter ratio
   m2sr_result_list <- analyze_m2sr_main(markers_auto, meth_model_m2sr_auto, model_sr_uni,
                                         m2sr_data, parent_al_data, total_al_prod_data,
                                         lus_auto,
-                                        n_warmup, n_sampling, n_chains, n_parallel_chains)
+                                        warmup, sampling, chains, n_parallel_chains)
 
   dt_result_ae <- ae_result_list$dt_result_ae
   dt_result_bsr <- bsr_result_list$dt_result
@@ -174,7 +174,7 @@ estimate_parameters <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_p
   ophs_gamma <- ophs_gamma[index_not_na]
 
   data_list_gamma <- list(N = length(ophs_gamma), OPH = ophs_gamma, RPH = rphs_gamma, TPH = tphs_gamma)
-  tmp <- run_mcmc_gamma(model_gamma, data_list_gamma, n_warmup, n_sampling, n_chains, n_parallel_chains)
+  tmp <- run_mcmc_gamma(model_gamma, data_list_gamma, warmup, sampling, chains, n_parallel_chains)
   dt_result_gamma <- data.table(Cv = tmp$median_cv,
                                 Rhat_Cv = tmp$rhat_cv,
                                 Rhat_Lp = tmp$rhat_lp)

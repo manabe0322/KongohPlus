@@ -263,9 +263,9 @@ make_dt_aic <- function(markers_auto, meth_model_sr_auto, aics_sr_all_mk,
 #' @param reps_auto The information on the repeat motifs of all alleles
 #' @param seq_al_auto The information on the alleles for each sequence
 #' @param seq_count_auto The information on the number of counts for each sequence
-#' @param n_warmup The number of simulations for warm-up
-#' @param n_sampling The number of simulations for sampling
-#' @param n_chains The number of chains
+#' @param warmup The number of warm-up iterations for each chain
+#' @param sampling The number of sampling iterations for each chain
+#' @param chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
 #' @param min_n_motif_lus The minimum number of repeat motifs for considering the LUS model
 #' @param min_n_motif_multi The minimum number of repeat motifs for considering the multi-sequence model
@@ -273,7 +273,7 @@ make_dt_aic <- function(markers_auto, meth_model_sr_auto, aics_sr_all_mk,
 analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model_sr_gen, model_sr_uni,
                                 sr_data, parent_al_data, total_al_prod_data,
                                 lus_auto, reps_auto, seq_al_auto, seq_count_auto,
-                                n_warmup, n_sampling, n_chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi){
+                                warmup, sampling, chains, n_parallel_chains, min_n_motif_lus, min_n_motif_multi, max_n_motif_multi){
   # Define objects
   n_mk <- length(markers_auto)
   sr_data_all_mk <- vector(mode = "list", length = n_mk)
@@ -325,7 +325,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
       if(consider_sr["Allele"]){
         cat(paste0("MCMC for the ", sr_type, " of the ", markers_auto[id_mk], ": Allele model\n"))
         data_list_sr_allele <- list(N = length(sr_one_mk), SR = sr_one_mk, XVal = sr_al_one_mk, Height = sr_h_one_mk)
-        tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_sr_allele, n_warmup, n_sampling, n_chains, n_parallel_chains)
+        tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_sr_allele, warmup, sampling, chains, n_parallel_chains)
         log_likes[1] <- tmp$median_lp
         sr_allele_median_slope_all_mk[id_mk] <- tmp$median_slope
         sr_allele_median_intercept_all_mk[id_mk] <- tmp$median_intercept
@@ -341,7 +341,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
       if(consider_sr["LUS"]){
         cat(paste0("MCMC for the ", sr_type, " of the ", markers_auto[id_mk], ": LUS model\n"))
         data_list_sr_lus <- list(N = length(sr_one_mk), SR = sr_one_mk, XVal = sr_lus_one_mk, Height = sr_h_one_mk)
-        tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_sr_lus, n_warmup, n_sampling, n_chains, n_parallel_chains)
+        tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_sr_lus, warmup, sampling, chains, n_parallel_chains)
         log_likes[2] <- tmp$median_lp
         sr_lus_median_slope_all_mk[id_mk] <- tmp$median_slope
         sr_lus_median_intercept_all_mk[id_mk] <- tmp$median_intercept
@@ -364,7 +364,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
         for(j in 1:n_cand_min_us){
           sr_ca_one_mk_cand[[j]] <- sr_ca_one_mk <- make_sr_ca_one_mk(cand_min_us[j], reps_one_mk, seq_al_one_mk, seq_count_one_mk, sr_al_one_mk)
           data_list_sr_multi <- list(N = length(sr_one_mk), SR = sr_one_mk, XVal = sr_ca_one_mk, Height = sr_h_one_mk)
-          result_sr_multi_cand[[j]] <- run_mcmc_sr_gen(model_sr_gen, data_list_sr_multi, n_warmup, n_sampling, n_chains, n_parallel_chains)
+          result_sr_multi_cand[[j]] <- run_mcmc_sr_gen(model_sr_gen, data_list_sr_multi, warmup, sampling, chains, n_parallel_chains)
           loglike_multi[j] <- result_sr_multi_cand[[j]]$median_lp
         }
         index_max_like_multi <- which.max(loglike_multi)
@@ -494,7 +494,7 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
                                         info_ca = info_ca_one_mk)
     }
     data_list_sr_together <- list(N = length(sr_together), SR = sr_together, Height = sr_h_together)
-    tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
+    tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr_together, warmup, sampling, chains, n_parallel_chains)
     sr_best_model_all_mk[index_mk_together_sr] <- "Multiple loci together"
     sr_best_median_myu_all_mk[index_mk_together_sr] <- tmp$median_myu
     sr_best_median_sigma_all_mk[index_mk_together_sr] <- tmp$median_sigma
@@ -564,14 +564,14 @@ analyze_bfdstr_main <- function(sr_type, markers_auto, meth_model_sr_auto, model
 #' @param parent_al_data The parent alleles for each stutter ratios of autosomal markers
 #' @param total_al_prod_data The total allelic products of all autosomal markers
 #' @param lus_auto The information on the LUS values of autosomal markers
-#' @param n_warmup The number of simulations for warm-up
-#' @param n_sampling The number of simulations for sampling
-#' @param n_chains The number of chains
+#' @param warmup The number of warm-up iterations for each chain
+#' @param sampling The number of sampling iterations for each chain
+#' @param chains The number of chains
 #' @param n_parallel_chains The number of parallel chains
 analyze_m2sr_main <- function(markers_auto, meth_model_sr_auto, model_sr_uni,
                               sr_data, parent_al_data, total_al_prod_data,
                               lus_auto,
-                              n_warmup, n_sampling, n_chains, n_parallel_chains){
+                              warmup, sampling, chains, n_parallel_chains){
   # Define objects
   n_mk <- length(markers_auto)
   sr_best_model_all_mk <- rep(NA, n_mk)
@@ -596,7 +596,7 @@ analyze_m2sr_main <- function(markers_auto, meth_model_sr_auto, model_sr_uni,
       sr_h_one_mk <- tmp[[3]]
 
       data_list_sr_uniform <- list(N = length(sr_one_mk), SR = sr_one_mk, Height = sr_h_one_mk)
-      tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr_uniform, n_warmup, n_sampling, n_chains, n_parallel_chains)
+      tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr_uniform, warmup, sampling, chains, n_parallel_chains)
       sr_best_model_all_mk[id_mk] <- "Uniform"
       sr_best_median_myu_all_mk[id_mk] <- tmp$median_myu
       sr_best_median_sigma_all_mk[id_mk] <- tmp$median_sigma
@@ -647,7 +647,7 @@ analyze_m2sr_main <- function(markers_auto, meth_model_sr_auto, model_sr_uni,
       sr_data_all_mk[[id_mk]] <- sr_data_one_mk
     }
     data_list_sr_together <- list(N = length(sr_together), SR = sr_together, Height = sr_h_together)
-    tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr_together, n_warmup, n_sampling, n_chains, n_parallel_chains)
+    tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr_together, warmup, sampling, chains, n_parallel_chains)
     sr_best_model_all_mk[index_mk_together_sr] <- "Multiple loci together"
     sr_best_median_myu_all_mk[index_mk_together_sr] <- tmp$median_myu
     sr_best_median_sigma_all_mk[index_mk_together_sr] <- tmp$median_sigma
