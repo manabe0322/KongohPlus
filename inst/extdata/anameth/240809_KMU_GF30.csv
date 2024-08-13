@@ -25,12 +25,12 @@ AT,D2S1338,110
 Allele_probability,Method,Dirichlet
 Allele_probability,Maf,0
 Allele_probability,Theta,0
-Genotype_filter,BSR,0.85
-Genotype_filter,FSR,0.35
-Genotype_filter,DSR,0.2
-Genotype_filter,M2SR,0.1
+Genotype_filter,BSR,0.3
+Genotype_filter,FSR,0.2
+Genotype_filter,DSR,0.05
+Genotype_filter,M2SR,0.05
 Genotype_filter,N_Dropin,2
-Genotype_filter,H_Dropin,150
+Genotype_filter,H_Dropin,250
 Drop-in,Probability,0.00335
 Drop-in,Shape,1.22
 Drop-in,Rate,0.0503
