@@ -3,11 +3,6 @@ calc_rphs <- function(gt, peaks, ae_actual, sr_consider, bsr_allele, bsr_average
   gt <- as.numeric(gt)
   peaks <- as.numeric(peaks)
 
-  # Define an output object
-  n_peak <- length(peaks)
-  eph_base <- rep(0, n_peak)
-  names(eph_base) <- peaks
-
   al <- unique(gt)
   n_al <- length(al)
 
@@ -54,6 +49,7 @@ calc_rphs <- function(gt, peaks, ae_actual, sr_consider, bsr_allele, bsr_average
   index_m2s <- match(m2s, peaks)
 
   # Calculate relative peak heights
+  n_peak <- length(peaks)
   rphs <- rep(0, n_peak)
   for(i in 1:n_al){
     if(!is.na(index_al[i])){
