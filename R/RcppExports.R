@@ -129,6 +129,10 @@ calc_gtc_prob_mk <- function(gtc_mk, pop_al, pop_prob, theta, prof_ref, hyp_id, 
     .Call(`_KongohPlus_calc_gtc_prob_mk`, gtc_mk, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs)
 }
 
+calc_rph_dedup1_cpp_test <- function(tph, mp, deg, hnc, n_dedup1_sum, rph_base_use, index_dedup1_use_cpp, size_dedup1_use, mean_size, ae_dedup1_use) {
+    .Call(`_KongohPlus_calc_rph_dedup1_cpp_test`, tph, mp, deg, hnc, n_dedup1_sum, rph_base_use, index_dedup1_use_cpp, size_dedup1_use, mean_size, ae_dedup1_use)
+}
+
 calc_rph_dedup1_cpp <- function(mp, deg, hnc, n_dedup1_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, mean_size, ae_dedup1_all_mk) {
     .Call(`_KongohPlus_calc_rph_dedup1_cpp`, mp, deg, hnc, n_dedup1_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, mean_size, ae_dedup1_all_mk)
 }

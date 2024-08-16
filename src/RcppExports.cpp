@@ -462,6 +462,26 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// calc_rph_dedup1_cpp_test
+std::vector<std::vector<double>> calc_rph_dedup1_cpp_test(double tph, std::vector<double> mp, std::vector<double> deg, int hnc, int n_dedup1_sum, std::vector<double> rph_base_use, std::vector<std::vector<int>> index_dedup1_use_cpp, std::vector<double> size_dedup1_use, double mean_size, std::vector<double> ae_dedup1_use);
+RcppExport SEXP _KongohPlus_calc_rph_dedup1_cpp_test(SEXP tphSEXP, SEXP mpSEXP, SEXP degSEXP, SEXP hncSEXP, SEXP n_dedup1_sumSEXP, SEXP rph_base_useSEXP, SEXP index_dedup1_use_cppSEXP, SEXP size_dedup1_useSEXP, SEXP mean_sizeSEXP, SEXP ae_dedup1_useSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type tph(tphSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type mp(mpSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type deg(degSEXP);
+    Rcpp::traits::input_parameter< int >::type hnc(hncSEXP);
+    Rcpp::traits::input_parameter< int >::type n_dedup1_sum(n_dedup1_sumSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type rph_base_use(rph_base_useSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::vector<int>> >::type index_dedup1_use_cpp(index_dedup1_use_cppSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type size_dedup1_use(size_dedup1_useSEXP);
+    Rcpp::traits::input_parameter< double >::type mean_size(mean_sizeSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type ae_dedup1_use(ae_dedup1_useSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_rph_dedup1_cpp_test(tph, mp, deg, hnc, n_dedup1_sum, rph_base_use, index_dedup1_use_cpp, size_dedup1_use, mean_size, ae_dedup1_use));
+    return rcpp_result_gen;
+END_RCPP
+}
 // calc_rph_dedup1_cpp
 std::vector<double> calc_rph_dedup1_cpp(std::vector<double> mp, std::vector<double> deg, int hnc, int n_dedup1_sum, std::vector<double> rph_base_all_mk, std::vector<std::vector<int>> index_dedup1_all_mk_cpp, std::vector<double> size_dedup1_all_mk, double mean_size, std::vector<double> ae_dedup1_all_mk);
 RcppExport SEXP _KongohPlus_calc_rph_dedup1_cpp(SEXP mpSEXP, SEXP degSEXP, SEXP hncSEXP, SEXP n_dedup1_sumSEXP, SEXP rph_base_all_mkSEXP, SEXP index_dedup1_all_mk_cppSEXP, SEXP size_dedup1_all_mkSEXP, SEXP mean_sizeSEXP, SEXP ae_dedup1_all_mkSEXP) {
@@ -600,6 +620,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_gt_prob", (DL_FUNC) &_KongohPlus_calc_gt_prob, 5},
     {"_KongohPlus_calc_gtc_prob", (DL_FUNC) &_KongohPlus_calc_gtc_prob, 7},
     {"_KongohPlus_calc_gtc_prob_mk", (DL_FUNC) &_KongohPlus_calc_gtc_prob_mk, 7},
+    {"_KongohPlus_calc_rph_dedup1_cpp_test", (DL_FUNC) &_KongohPlus_calc_rph_dedup1_cpp_test, 10},
     {"_KongohPlus_calc_rph_dedup1_cpp", (DL_FUNC) &_KongohPlus_calc_rph_dedup1_cpp, 9},
     {"_KongohPlus_gamma_pdf", (DL_FUNC) &_KongohPlus_gamma_pdf, 3},
     {"_KongohPlus_gamma_cdf", (DL_FUNC) &_KongohPlus_gamma_cdf, 3},
