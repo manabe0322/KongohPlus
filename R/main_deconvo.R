@@ -163,6 +163,10 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
       # The base of the relative peak heights
       rph_base_use[[i]] <- rph_base_mk <- make_rph_base(peaks, bsrs, fsrs, dsrs, m2srs)
 
+      ###########################################
+      # List all possible genotype combinations #
+      ###########################################
+
       # All candidate genotypes of one contributor
       cand_gt <- combinations(n = n_peak, r = 2, v = peaks, repeats.allowed = TRUE)
       cand_gt <- asplit(cand_gt, 1)
@@ -181,7 +185,11 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
 
       n_gtc_use[i] <- n_gtc <- length(index_gtc_adopt_cpp)
 
-      if(n_gtc != 0){
+      ##################################################
+      # Prepare objects for de-duplication (pattern 1) #
+      ##################################################
+
+      if(!any(is.element(n_gtc_use, 0))){
         # Extract genotype combinations
         gtc_use[[i]] <- gtc_mk <- extract_gtc_adopt(cand_gt, index_gtc_adopt_cpp)
 
@@ -246,6 +254,11 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
     }
 
     if(all(n_gtc_use != 0)){
+
+      ##################################
+      # Define objects for replicate 1 #
+      ##################################
+
       n_rph_base_use <- sapply(rph_base_use, length)
       n_general_use_1st <- sapply(index_dedup1_general_use[[1]], ncol)
       n_dropout_use_1st <- sapply(index_dedup1_dropout_use[[1]], ncol)
@@ -263,7 +276,10 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
         loglike_di_1st <- numeric(0)
       }
 
-      # Arrange de-duplicated objects (pattern 1)
+      ##################################################
+      # Arrange objects for de-duplication (pattern 1) #
+      ##################################################
+
       index_dedup1_use_1st <- matrix(NA, nrow = 2 * hnc, ncol = n_dedup1_sum_1st)
       size_dedup1_use_1st <- rep(NA, n_dedup1_sum_1st)
       oph_dedup1_use_1st <- rep(NA, n_dedup1_sum_1st)
@@ -312,7 +328,10 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
         sumup_index_dedup1 <- sumup_index_dedup1 + n_rph_base_use[i]
       }
 
-      # Define de-duplicated objects (pattern 2)
+      ##################################################
+      # Prepare objects for de-duplication (pattern 2) #
+      ##################################################
+
       n_dedup2_use <- n_peak_use * n_gtc_use
       n_dedup2_sum <- sum(n_dedup2_use)
       index_dedup2_use_1st <- rep(NA, n_dedup2_sum)
@@ -327,7 +346,13 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
         sumup_index_dedup2 <- sumup_index_dedup2 + n_rph_base_use[i]
       }
 
+      ########################
+      # MCMC for one profile #
+      ########################
+
       if(n_rep == 1){
+
+        # Prepare date list
         data_list_main <- list(hnc = hnc,
                                n_mk = n_mk,
                                ltph = max_tph / 4,
@@ -405,7 +430,17 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
                               Marker = c("-", "-", rep("-", 3 * hnc), markers_use),
                               Estimated_value = c(lp, tph, lambda[hnc:1], mp[hnc:1], deg[hnc:1], ae),
                               Rhat = c(rhat_lp, rhat_tph, rhat_lambda[hnc:1], rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
+
+      #######################
+      # Duplicated profiles #
+      #######################
+
       }else{
+
+        ##################################
+        # Define objects for replicate 2 #
+        ##################################
+
         n_general_use_2nd <- sapply(index_dedup1_general_use[[2]], ncol)
         n_dropout_use_2nd <- sapply(index_dedup1_dropout_use[[2]], ncol)
         n_dropin_use_2nd <- sapply(index_dedup1_dropin_use[[2]], ncol)
@@ -422,7 +457,10 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
           loglike_di_2nd <- numeric(0)
         }
 
-        # Arrange de-duplicated objects (pattern 1)
+        ##################################################
+        # Arrange objects for de-duplication (pattern 1) #
+        ##################################################
+
         index_dedup1_use_2nd <- matrix(NA, nrow = 2 * hnc, ncol = n_dedup1_sum_2nd)
         size_dedup1_use_2nd <- rep(NA, n_dedup1_sum_2nd)
         oph_dedup1_use_2nd <- rep(NA, n_dedup1_sum_2nd)
@@ -471,7 +509,10 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
           sumup_index_dedup1 <- sumup_index_dedup1 + n_rph_base_use[i]
         }
 
-        # Define de-duplicated objects (pattern 2)
+        ##################################################
+        # Prepare objects for de-duplication (pattern 1) #
+        ##################################################
+
         n_dedup2_use <- n_peak_use * n_gtc_use
         n_dedup2_sum <- sum(n_dedup2_use)
         index_dedup2_use_2nd <- rep(NA, n_dedup2_sum)
@@ -486,6 +527,11 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
           sumup_index_dedup2 <- sumup_index_dedup2 + n_rph_base_use[i]
         }
 
+        ################################
+        # MCMC for duplicated profiles #
+        ################################
+
+        # Prepare date list
         data_list_main <- list(hnc = hnc,
                                n_mk = n_mk,
                                ltph = max_tph / 4,
