@@ -13,6 +13,7 @@ std::vector<std::vector<int>> connect_rph_gtc(std::vector<double> gtc,
                                               std::vector<double> m2srs,
                                               std::vector<bool> bool_gtc_di){
   int n_allele = gtc.size();
+  int hnc = n_allele / 2;
   int n_peak = peaks.size();
   std::vector<std::vector<int>> index_rph_gtc_cpp(n_peak, std::vector<int>(n_allele, 5 * n_peak));
 
@@ -59,6 +60,18 @@ std::vector<std::vector<int>> connect_rph_gtc(std::vector<double> gtc,
   for(int i = 0; i < n_peak; ++i){
     if(bool_gtc_di[i + 1]){
       index_rph_gtc_cpp.at(i) = std::vector<int>(n_allele, 5 * n_peak + 1);
+    }
+  }
+
+  //Ascending order of index for one contributor
+  for(int i = 0; i < n_peak; ++i){
+    for(int j = 0; j < hnc; ++j){
+      int index_1 = index_rph_gtc_cpp[i][2 * j];
+      int index_2 = index_rph_gtc_cpp[i][2 * j + 1];
+      if(index_1 > index_2){
+        index_rph_gtc_cpp[i][2 * j] = index_2;
+        index_rph_gtc_cpp[i][2 * j + 1] = index_1;
+      }
     }
   }
 
