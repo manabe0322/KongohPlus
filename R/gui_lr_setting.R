@@ -23,13 +23,13 @@ lr_setting_ui <- function(id){
                           actionButton(ns("act_analyze_lr"), label = "Analyze", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 9,
-                       tags$head( #CSS added to shrink the column with
-                         tags$style('td.small .shiny-input-container{width:auto;}
-                                     td.small{width:30px;}
-                                     th.small{font-size: 14px !important;}'
-                         )
-                       ),
-                       dataTableOutput(ns("dt_info_mk_display_lr"))
+                       tags$style(HTML("
+                         .handsontable .htCore td {
+                           vertical-align: middle !important;
+                           text-align: center !important;
+                         }"
+                       )),
+                       rHandsontableOutput(ns("dt_info_mk"))
              )
            )
   )
@@ -42,29 +42,6 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
   moduleServer(
     id,
     function(input, output, session){
-      shinyInput <- function(FUN, len, id, ...) {
-        inputs <- character(len)
-        for (i in seq_len(len)) {
-          inputs[i] <- as.character(FUN(paste0(id, i), label = NULL, ...))
-        }
-        inputs
-      }
-
-      js <- function(dtid, ns){
-        c(
-          "$('[id^=checkb]').on('click', function(){",
-          "  var id = this.getAttribute('id');",
-          "  var i = parseInt(/checkb(\\d+)/.exec(id)[1]);",
-          "  var value = $(this).prop('checked');",
-          "  var info = [{row: i, col: 1, value: value}];",
-          sprintf(
-            "Shiny.setInputValue('%s', info);",
-            ns(sprintf("%s_cell_edit:DT.cellInfo", dtid))
-          ),
-          "})"
-        )
-      }
-
       rv_lr_setting <- reactiveValues()
       rv_lr_setting$data_deconvo <- NULL
       rv_lr_setting$dt_csp <- NULL
@@ -75,7 +52,6 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
       rv_lr_setting$fn_af <- NULL
       rv_lr_setting$refs <- NULL
       rv_lr_setting$dt_anameth <- NULL
-      rv_lr_setting$dt_info_mk <- NULL
       rv_lr_setting$warmup <- 1200
       rv_lr_setting$sampling <- 300
       rv_lr_setting$chains <- 4
@@ -249,33 +225,14 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
           Ignore = rep(FALSE, nrow(dt_info_mk)),
           dt_info_mk
         )
-        rv_lr_setting$dt_info_mk <- dt_info_mk
 
-        # Create a displayed data.table for information on markers
-        dt_info_mk_display_lr <- copy(dt_at)
-        dt_info_mk_display_lr <- cbind(
-          Ignore = shinyInput(checkboxInput, nrow(dt_info_mk_display_lr), "checkb"),
-          dt_info_mk_display_lr
-        )
-
-        output$dt_info_mk_display_lr <- renderDataTable(server = FALSE, {
-          datatable(
-            dt_info_mk_display_lr,
-            selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_info_mk_display_lr), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 175px)",
-                           columnDefs = list(list(targets = 0, className = "small"), list(targets = 1:2, width = "100px"))),
-            rownames = FALSE,
-            escape = FALSE,
-            callback = JS(js("dt_info_mk_display_lr", session$ns))
-          )
+        output$dt_info_mk <- renderRHandsontable({
+          rhandsontable(dt_info_mk, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Ignore", type = "checkbox") %>%
+            hot_col("Marker", type = "text", readOnly = TRUE) %>%
+            hot_col("AT", type = "numeric", format = "0", readOnly = TRUE)
         })
-      })
-
-      observeEvent(input[["dt_info_mk_display_lr_cell_edit"]], {
-        info <- input[["dt_info_mk_display_lr_cell_edit"]]
-        dt_info_mk <- rv_lr_setting$dt_info_mk
-        dt_info_mk[[info[1, "col"]]][info[1, "row"]] <- info[1, "value"]
-        rv_lr_setting$dt_info_mk <- dt_info_mk
       })
 
       observeEvent(input$act_analyze_lr, {
@@ -353,7 +310,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
           dt_dropin <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Drop-in"],
                                   Value = dt_anameth$Value[dt_anameth$Category == "Drop-in"])
 
-          dt_info_mk <- rv_lr_setting$dt_info_mk
+          dt_info_mk <- hot_to_r(input$dt_info_mk)
 
           # Check input files and setting
           error_message <- check_main_file(dt_csp, dt_ref, dt_af, markers_auto, method = "lr")

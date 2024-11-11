@@ -12,6 +12,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
+#' @importFrom rhandsontable hot_col hot_table hot_to_r renderRHandsontable rhandsontable rHandsontableOutput
 #' @import rmarkdown
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
 #' @importFrom shinyjs disable disabled enable refresh useShinyjs
