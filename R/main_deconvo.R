@@ -56,8 +56,8 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
     cv <- dt_par$Cv[dt_par$Parameter == "Gamma"]
 
     # Extract methods to estimate allele probabilities
-    al_prob_subcategory <- dt_al_prob[, Subcategory]
-    al_prob_value <- dt_al_prob[, Value]
+    al_prob_subcategory <- dt_al_prob$Subcategory
+    al_prob_value <- dt_al_prob$Value
     method_al_prob <- al_prob_value[al_prob_subcategory == "Method"]
     maf <- as.numeric(al_prob_value[al_prob_subcategory == "Maf"])
     theta <- as.numeric(al_prob_value[al_prob_subcategory == "Theta"])
@@ -68,8 +68,8 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
     pop_prob_list <- tmp$pop_prob_list
 
     # Extract filters to remove unrealistic genotype combinations
-    gt_fltr_subcategory <- dt_gt_fltr[, Subcategory]
-    gt_fltr_value <- as.numeric(dt_gt_fltr[, Value])
+    gt_fltr_subcategory <- dt_gt_fltr$Subcategory
+    gt_fltr_value <- as.numeric(dt_gt_fltr$Value)
     bsr_fltr <- gt_fltr_value[gt_fltr_subcategory == "BSR"]
     fsr_fltr <- gt_fltr_value[gt_fltr_subcategory == "FSR"]
     dsr_fltr <- gt_fltr_value[gt_fltr_subcategory == "DSR"]
@@ -78,8 +78,8 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
     h_dropin_fltr <- gt_fltr_value[gt_fltr_subcategory == "H_Dropin"]
 
     # Extract drop-in parameters
-    dropin_subcategory <- dt_dropin[, Subcategory]
-    dropin_value <- as.numeric(dt_dropin[, Value])
+    dropin_subcategory <- dt_dropin$Subcategory
+    dropin_value <- as.numeric(dt_dropin$Value)
     logprob_di <- log(dropin_value[dropin_subcategory == "Probability"])
     shape_di <- dropin_value[dropin_subcategory == "Shape"]
     rate_di <- dropin_value[dropin_subcategory == "Rate"]
@@ -140,11 +140,11 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
       # Extract parameters of one marker
       at <- ats_use[i]
       dt_sr_mk <- dt_sr[Marker == mk]
-      sr_alleles_mk <- as.numeric(dt_sr_mk[, Allele])
-      bsrs_mk <- dt_sr_mk[, Average_BSR]
-      fsrs_mk <- dt_sr_mk[, Average_FSR]
-      dsrs_mk <- dt_sr_mk[, Average_DSR]
-      m2srs_mk <- dt_sr_mk[, Average_M2SR]
+      sr_alleles_mk <- as.numeric(dt_sr_mk$Allele)
+      bsrs_mk <- dt_sr_mk$Average_BSR
+      fsrs_mk <- dt_sr_mk$Average_FSR
+      dsrs_mk <- dt_sr_mk$Average_DSR
+      m2srs_mk <- dt_sr_mk$Average_M2SR
       index_sr <- match(peaks, sr_alleles_mk)
       bsrs <- fsrs <- dsrs <- m2srs <- rep(0, n_peak)
       for(j in 1:length(index_sr)){
