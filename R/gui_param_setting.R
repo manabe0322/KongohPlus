@@ -41,8 +41,8 @@ est_par_setting_ui <- function(id){
 
            sidebarLayout(
              sidebarPanel(width = 3,
-                          fileInput(ns("exp_data"), label = h4("Experimental data"), accept = ".csv"),
-                          fileInput(ns("gt_data"), label = h4("Genotype data"), accept = ".csv"),
+                          fileInput(ns("exp_data"), label = h4("Experimental data"), accept = ".csv", buttonLabel = "Load"),
+                          fileInput(ns("gt_data"), label = h4("Genotype data"), accept = ".csv", buttonLabel = "Load"),
                           uiOutput(ns("seq_data")),
                           uiOutput(ns("kit_par")),
                           br(),

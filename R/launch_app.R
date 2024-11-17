@@ -42,15 +42,19 @@ KongohPlus <- function(){
 
                              navbarMenu("Setting",
                                         anameth_ui("anameth"),
-                                        sr_ui("sr"),
                                         kit_ui("kit"),
                                         size_ui("size")
                              ),
 
+                             navbarMenu("Experimental parameters",
+                                        seq_data_ui("seq_data"),
+                                        est_sr_ui("est_sr"),
+                                        sr_ui("sr"),
+                                        est_par_ui("est_par")
+                             ),
+
                              navbarMenu("Tools",
                                         tabPanel("Example files"),
-                                        seq_data_ui("seq_data"),
-                                        est_par_ui("est_par"),
                                         hd_true_ui("hd_true"),
                                         tabPanel("Validation mode")
                              ),
@@ -65,12 +69,14 @@ KongohPlus <- function(){
     rv_lr <- lr_server("lr", path_pack, rv_file, rv_deconvo)
     rv_hd_true <- hd_true_server("hd_true", path_pack, rv_deconvo)
 
-    seq_data_server("seq_data", path_pack)
-    est_par_server("est_par", path_pack)
     anameth_server("anameth", path_pack)
-    sr_server("sr", path_pack)
     kit_server("kit", path_pack)
     size_server("size", path_pack)
+
+    seq_data_server("seq_data", path_pack)
+    est_sr_server("est_sr", path_pack)
+    sr_server("sr", path_pack)
+    est_par_server("est_par", path_pack)
 
     observeEvent(input$act_new_proj, {
       refresh()
