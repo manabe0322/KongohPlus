@@ -4,10 +4,10 @@
 \alias{create_init_dt_setting_est_sr}
 \title{create_init_dt_setting_est_sr}
 \usage{
-create_init_dt_setting_est_sr(kit_name, path_pack)
+create_init_dt_setting_est_sr(dt_kit, path_pack)
 }
 \arguments{
-\item{kit_name}{A kit name}
+\item{dt_kit}{The data.table of information on a kit}
 
 \item{path_pack}{The package path of KongohPlus}
 }
