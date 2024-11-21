@@ -21,4 +21,8 @@ double calc_ds_one(double al);
 std::vector<double> calc_ds(std::vector<double> alleles);
 double calc_m2s_one(double al);
 std::vector<double> calc_m2s(std::vector<double> alleles);
+double calc_parent_al_bs_one(double bs);
+double calc_parent_al_fs_one(double fs);
+double calc_parent_al_ds_one(double ds);
+double calc_parent_al_m2s_one(double m2s);
 std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts, std::vector<int> ind_gtc, int hnc);

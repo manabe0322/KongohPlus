@@ -37,8 +37,7 @@ est_sr_setting_ui <- function(id){
 #'
 #' @description The function to create the initial data.table in the setting tab for estimating average stutter ratios
 #' @param dt_kit The data.table of information on a kit
-#' @param path_pack The package path of KongohPlus
-create_init_dt_setting_est_sr <- function(dt_kit, path_pack){
+create_init_dt_setting_est_sr <- function(dt_kit){
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers <- unique(dt_kit_auto$Marker)
   dyes <- extract_dye(dt_kit_auto, markers)
@@ -51,7 +50,10 @@ create_init_dt_setting_est_sr <- function(dt_kit, path_pack){
   dt_setting_est_sr$Model_M2SR <- "Not consider"
   dt_setting_est_sr$X_Multi <- NA
 
-  names(dt_setting_est_sr) <- c("Marker", "Dye", "AT", "BSR model", "FSR model", "DSR model", "M2SR model", "Min. number of repeats that affects stuttering (for Multi-seq)")
+  col_int <- c("AT", "X_Multi")
+  dt_setting_est_sr[, (col_int) := lapply(.SD, as.integer), .SDcols = col_int]
+
+  names(dt_setting_est_sr) <- c("Marker", "Dye", "AT", "BSR model", "FSR model", "DSR model", "M2SR model", "Minimum uninterrupted stretch (for Multi-seq)")
 
   return(dt_setting_est_sr)
 }

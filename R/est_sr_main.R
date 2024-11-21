@@ -1,173 +1,141 @@
-#' calc_sr
+#' extract_sr_data
 #'
-#' @description The function to calculate stutter ratios
+#' @description The function to extract stutter ratios
 #' @param peaks A character vector of peaks
 #' @param heights A numeric vector of heights
 #' @param gt A character vector of the genotype in one marker
-calc_sr <- function(peaks, heights, gt, sr_consider){
-
-  # bsr: back stutter ratio
-  # fsr: forward stutter ratio
-  # dsr: double-back stutter ratio
-  # m2sr: minus 2-nt stutter ratio
-  # parent_al: parent allele data for stutter ratios
-  # parent_ph: peak height data for parent alleles
-  # total_al_prod: total allelic product data for stutter ratios
-  bsr <- fsr <- dsr <- m2sr <- parent_al <- parent_ph <- total_al_prod <- rep(0, 2)
-
+#' @param sr_consider Information on consideration of back, forward, double-back, and minus 2-nt stutters in one marker
+extract_sr_data <- function(peaks, heights, gt, sr_consider){
   peaks <- as.numeric(peaks)
-
+  n_peak <- length(peaks)
   gt <- as.numeric(gt)
   gt <- sort(unique(gt[!is.na(gt)]))
+  n_al <- length(gt)
 
-  ##############
-  # Homozygote #
-  ##############
+  parent_al <- stutter <- rep("", n_peak)
+  stutter_ph <- parent_ph <- total_al_prod <- stutter_ratio <- rep(NA, n_peak)
+  bool_al <- bool_bs <- bool_fs <- bool_ds <- bool_m2s <- bool_shared_allele <- bool_shared_stutter <- rep(FALSE, n_peak)
 
-  if(length(gt) == 1){
-    al_1 <- gt
+  # At least one peak
+  if(n_peak > 0){
+    bool_al <- is.element(peaks, gt)
+    if(sr_consider["BS"]){
+      bs <- calc_bs(gt)
+      bool_bs <- is.element(peaks, bs)
+    }
+    if(sr_consider["FS"]){
+      fs <- calc_fs(gt)
+      bool_fs <- is.element(peaks, fs)
+    }
+    if(sr_consider["DS"]){
+      ds <- calc_ds(gt)
+      bool_ds <- is.element(peaks, ds)
+    }
+    if(sr_consider["M2S"]){
+      m2s <- calc_m2s(gt)
+      bool_m2s <- is.element(peaks, m2s)
+    }
 
-    # No allelic drop-out
-    if(is.element(al_1, peaks)){
-      parent_al[1] <- al_1
-      parent_ph[1] <- h_al <- heights[peaks == al_1]
-      total_al_prod[1] <- sum(heights)
+    bool_shared_allele_base <- bool_al & bool_bs + bool_fs + bool_ds + bool_m2s > 0
+    bool_shared_stutter <- bool_bs + bool_fs + bool_ds + bool_m2s > 1
 
-      # Back stutter
-      if(sr_consider["BS"]){
-        bs <- calc_bs_one(al_1)
-        if(is.element(bs, peaks)){
-          bsr[1] <- heights[peaks == bs] / h_al
+    for(i in 1:n_peak){
+      if(!bool_al[i]){
+        peak <- peaks[i]
+        if(!bool_shared_stutter[i]){
+          if(bool_bs[i]){
+            al <- calc_parent_al_bs_one(peak)
+          }else if(bool_fs[i]){
+            al <- calc_parent_al_fs_one(peak)
+          }else if(bool_ds[i]){
+            al <- calc_parent_al_ds_one(peak)
+          }else if(bool_m2s[i]){
+            al <- calc_parent_al_m2s_one(peak)
+          }else{
+            al <- numeric(0)
+          }
+
+          index_al <- which(is.element(peaks, al))
+
+          parent_al[i] <- as.character(al)
+          stutter[i] <- as.character(peak)
+          stutter_ph[i] <- heights[i]
+
+          # The parent allele is above AT
+          if(length(index_al) == 1){
+            parent_ph[i] <- heights[index_al]
+            total_al_prod[i] <- stutter_ph[i] + parent_ph[i]
+            stutter_ratio[i] <- stutter_ph[i] / parent_ph[i]
+            bool_shared_allele[i] <- bool_shared_allele_base[index_al]
+          }
         }
-      }
 
-      # Forward stutter
-      if(sr_consider["FS"]){
-        fs <- calc_fs_one(al_1)
-        if(is.element(fs, peaks)){
-          fsr[1] <- heights[peaks == fs] / h_al
-        }
-      }
-
-      # Double-back stutter
-      if(sr_consider["DS"]){
-        ds <- calc_ds_one(al_1)
-        if(is.element(ds, peaks)){
-          dsr[1] <- heights[peaks == ds] / h_al
-        }
-      }
-
-      # Minus 2-nt stutter
-      if(sr_consider["M2S"]){
-        m2s <- calc_m2s_one(al_1)
-        if(is.element(m2s, peaks)){
-          m2sr[1] <- heights[peaks == m2s] / h_al
+        # Shared stutters
+        else{
+          parent_al[i] <- "Multiple"
+          stutter[i] <- as.character(peak)
+          stutter_ph[i] <- heights[i]
         }
       }
     }
 
-    ################
-    # Heterozygote #
-    ################
-
-  }else{
-
-    # Other than one repeat difference
-    if(abs(round(gt[1] - gt[2], 1)) != 1){
-
-      for(i in 1:2){
-        al_1 <- gt[i]
-
-        # No allelic drop-out
-        if(is.element(al_1, peaks)){
-          parent_al[i] <- al_1
-          h_sum <- h_al <- heights[peaks == al_1]
-          parent_ph[i] <- h_al
-
-          # Candidates of shared peaks
-          al_2 <- gt[3 - i]
-          cand_share <- al_2
-          if(sr_consider["BS"]){
-            cand_share <- c(cand_share, calc_bs_one(al_2))
-          }
-          if(sr_consider["FS"]){
-            cand_share <- c(cand_share, calc_fs_one(al_2))
-          }
-          if(sr_consider["DS"]){
-            cand_share <- c(cand_share, calc_ds_one(al_2))
-          }
-          if(sr_consider["M2S"]){
-            cand_share <- c(cand_share, calc_m2s_one(al_2))
-          }
-          cand_share <- round(sort(unique(cand_share)), 1)
-
-          # Back stutter
-          if(sr_consider["BS"]){
-            bs <- calc_bs_one(al_1)
-            if(is.element(bs, peaks) && !is.element(bs, cand_share)){
-              h_bs <- heights[peaks == bs]
-              bsr[i] <- h_bs / h_al
-              h_sum <- h_sum + h_bs
-            }
-          }
-
-          # Forward stutter
-          if(sr_consider["FS"]){
-            fs <- calc_fs_one(al_1)
-            if(is.element(fs, peaks) && !is.element(fs, cand_share)){
-              h_fs <- heights[peaks == fs]
-              fsr[i] <- h_fs / h_al
-              h_sum <- h_sum + h_fs
-            }
-          }
-
-          # Double-back stutter
-          if(sr_consider["DS"]){
-            ds <- calc_ds_one(al_1)
-            if(is.element(ds, peaks) && !is.element(ds, cand_share)){
-              h_ds <- heights[peaks == ds]
-              dsr[i] <- h_ds / h_al
-              h_sum <- h_sum + h_ds
-            }
-          }
-
-          # Minus 2-nt stutter
-          if(sr_consider["M2S"]){
-            m2s <- calc_m2s_one(al_1)
-            if(is.element(m2s, peaks) && !is.element(m2s, cand_share)){
-              h_m2s <- heights[peaks == m2s]
-              m2sr[i] <- h_m2s / h_al
-              h_sum <- h_sum + h_m2s
-            }
-          }
-          total_al_prod[i] <- h_sum
-        }
-      }
-    }
+    parent_al <- parent_al[!bool_al]
+    stutter <- stutter[!bool_al]
+    stutter_ph <- stutter_ph[!bool_al]
+    parent_ph <- parent_ph[!bool_al]
+    total_al_prod <- total_al_prod[!bool_al]
+    stutter_ratio <- stutter_ratio[!bool_al]
+    bool_bs <- bool_bs[!bool_al]
+    bool_fs <- bool_fs[!bool_al]
+    bool_ds <- bool_ds[!bool_al]
+    bool_m2s <- bool_m2s[!bool_al]
+    bool_shared_allele <- bool_shared_allele[!bool_al]
   }
-  return(list(bsr, fsr, dsr, m2sr, parent_al, parent_ph, total_al_prod))
+
+  return(list("parent_al" = parent_al,
+              "stutter" = stutter,
+              "stutter_ph" = stutter_ph,
+              "parent_ph" = parent_ph,
+              "total_al_prod" = total_al_prod,
+              "stutter_ratio" = stutter_ratio,
+              "bool_bs" = bool_bs,
+              "bool_fs" = bool_fs,
+              "bool_ds" = bool_ds,
+              "bool_m2s" = bool_m2s,
+              "bool_shared_allele" = bool_shared_allele))
 }
 
-#' get_sr_data
+#' create_dt_sr_data
 #'
-#' @description The function to get data of stutter ratios
+#' @description The function to create a data.table of the stutter ratios
 #' @param peak_list A list of peaks
 #' @param height_list A list of heights
-#' @param sr_consider_all_mk Information on consideration of back, forward, double-back, and minus 2-nt stutters in all markers
-get_sr_data <- function(peak_list, height_list, gt_list, sr_consider_all_mk){
-  n_sample <- length(peak_list)
+#' @param gt_list A list of genotypes
+#' @param sr_consider_auto Information on consideration of back, forward, double-back, and minus 2-nt stutters in autosomal markers
+#' @param wlus_auto A list of weight LUS values in autosomal markers
+create_dt_sr_data <- function(peak_list, height_list, gt_list, sr_consider_auto, wlus_auto){
+  sample_names <- names(peak_list)
+  n_sample <- length(sample_names)
   markers <- names(peak_list[[1]])
   n_mk <- length(markers)
 
-  bsr_data <- fsr_data <- dsr_data <- m2sr_data <- parent_al_data <- parent_ph_data <- total_al_prod_data <- matrix(0, 2 * n_sample, n_mk)
+  n_max_data <- 8 * n_sample * n_mk
+  sample_name_all <- rep("", n_max_data)
+  marker_all <- rep("", n_max_data)
+  parent_al_all <- rep("", n_max_data)
+  stutter_all <- rep("", n_max_data)
+  stutter_ratio_all <- rep(NA, n_max_data)
+  stutter_ph_all <- rep(NA, n_max_data)
+  parent_ph_all <- rep(NA, n_max_data)
+  total_al_prod_all <- rep(NA, n_max_data)
+  bool_bs_all <- rep(FALSE, n_max_data)
+  bool_fs_all <- rep(FALSE, n_max_data)
+  bool_ds_all <- rep(FALSE, n_max_data)
+  bool_m2s_all <- rep(FALSE, n_max_data)
+  bool_shared_allele_all <- rep(FALSE, n_max_data)
+  bool_seq_all <- rep(FALSE, n_max_data)
 
-  # Define row and column names
-  tmp <- sapply(names(height_list), rep, 2)
-  tmp[1, ] <- paste0(tmp[1, ], "_data1")
-  tmp[2, ] <- paste0(tmp[2, ], "_data2")
-  rownames(bsr_data) <- rownames(fsr_data) <- rownames(dsr_data) <- rownames(m2sr_data) <- rownames(parent_al_data) <- rownames(parent_ph_data) <- rownames(total_al_prod_data) <- as.vector(tmp)
-  colnames(bsr_data) <- colnames(fsr_data) <- colnames(dsr_data) <- colnames(m2sr_data) <- colnames(parent_al_data) <- colnames(parent_ph_data) <- colnames(total_al_prod_data) <- markers
-
+  current_index <- 1
   for(i in 1:n_sample){
     peak_list_one <- peak_list[[i]]
     height_list_one <- height_list[[i]]
@@ -175,31 +143,72 @@ get_sr_data <- function(peak_list, height_list, gt_list, sr_consider_all_mk){
 
     for(j in 1:n_mk){
       peaks <- peak_list_one[[j]]
-      heights <- height_list_one[[j]]
-      gt <- gt_list_one[j, ]
-
       if(length(peaks) > 0){
-        sr_consider <- sr_consider_all_mk[j, ]
+        heights <- height_list_one[[j]]
+        gt <- gt_list_one[j, ]
+        sr_consider <- sr_consider_auto[j, ]
+        al_names_with_seq <- names(wlus_auto[[j]])
 
-        sr_one_mk <- calc_sr(peaks, heights, gt, sr_consider)
-        bsr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[1]]
-        fsr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[2]]
-        dsr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[3]]
-        m2sr_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[4]]
-        parent_al_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[5]]
-        parent_ph_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[6]]
-        total_al_prod_data[c(2 * i - 1, 2 * i), j] <- sr_one_mk[[7]]
+        tmp <- extract_sr_data(peaks, heights, gt, sr_consider)
+        parent_al <- tmp$parent_al
+        n_data <- length(parent_al)
+
+        if(n_data > 0){
+          index_assign <- current_index:(current_index + n_data - 1)
+          sample_name_all[index_assign] <- sample_names[i]
+          marker_all[index_assign] <- markers[j]
+          parent_al_all[index_assign] <- parent_al
+          stutter_all[index_assign] <- tmp$stutter
+          stutter_ratio_all[index_assign] <- tmp$stutter_ratio
+          stutter_ph_all[index_assign] <- tmp$stutter_ph
+          parent_ph_all[index_assign] <- tmp$parent_ph
+          total_al_prod_all[index_assign] <- tmp$total_al_prod
+          bool_bs_all[index_assign] <- tmp$bool_bs
+          bool_fs_all[index_assign] <- tmp$bool_fs
+          bool_ds_all[index_assign] <- tmp$bool_ds
+          bool_m2s_all[index_assign] <- tmp$bool_m2s
+          bool_shared_allele_all[index_assign] <- tmp$bool_shared_allele
+          bool_seq_all[index_assign] <- is.element(parent_al, al_names_with_seq)
+
+          current_index <- current_index + n_data
+        }
       }
     }
   }
 
-  return(list("bsr_data" = bsr_data,
-              "fsr_data" = fsr_data,
-              "dsr_data" = dsr_data,
-              "m2sr_data" = m2sr_data,
-              "parent_al_data" = parent_al_data,
-              "parent_ph_data" = parent_ph_data,
-              "total_al_prod_data" = total_al_prod_data))
+  sample_name_all <- sample_name_all[1:(current_index - 1)]
+  marker_all <- marker_all[1:(current_index - 1)]
+  parent_al_all <- parent_al_all[1:(current_index - 1)]
+  stutter_all <- stutter_all[1:(current_index - 1)]
+  stutter_ratio_all <- stutter_ratio_all[1:(current_index - 1)]
+  stutter_ph_all <- stutter_ph_all[1:(current_index - 1)]
+  parent_ph_all <- parent_ph_all[1:(current_index - 1)]
+  total_al_prod_all <- total_al_prod_all[1:(current_index - 1)]
+  bool_bs_all <- bool_bs_all[1:(current_index - 1)]
+  bool_fs_all <- bool_fs_all[1:(current_index - 1)]
+  bool_ds_all <- bool_ds_all[1:(current_index - 1)]
+  bool_m2s_all <- bool_m2s_all[1:(current_index - 1)]
+  bool_shared_allele_all <- bool_shared_allele_all[1:(current_index - 1)]
+  bool_seq_all <- bool_seq_all[1:(current_index - 1)]
+
+  dt_sr_data <- data.table(SampleName = sample_name_all,
+                           Marker = marker_all,
+                           Allele = parent_al_all,
+                           Stutter = stutter_all,
+                           SR = stutter_ratio_all,
+                           PH_Stutter = stutter_ph_all,
+                           PH_Allele = parent_ph_all,
+                           TAP = total_al_prod_all,
+                           Bool_BS = bool_bs_all,
+                           Bool_FS = bool_fs_all,
+                           Bool_DS = bool_ds_all,
+                           Bool_M2S = bool_m2s_all,
+                           Bool_SharedAllele = bool_shared_allele_all,
+                           Bool_SeqData = bool_seq_all)
+
+
+
+  # bs, fs, ds, m2sが全てFALSEのデータを除く
 }
 
 #' pick_rep
@@ -233,8 +242,8 @@ calc_weighted_lus <- function(lus_one_al, count_one_al){
 #' @description The function to calculate the weighted corrected allele number
 #' @param min_us Minimum uninterrupted stretch
 #' @param reps_one_al Repeat motifs of one allele
-#' @param seq_count_one_al Counts for sequence data in one allele
-calc_weighted_ca <- function(min_us, reps_one_al, seq_count_one_al){
+#' @param count_one_al Counts for sequence data in one allele
+calc_weighted_ca <- function(min_us, reps_one_al, count_one_al){
   # Calculate corrected allele numbers in each sequence
   n_seq_al <- length(reps_one_al)
   ca_one_al <- rep(0, n_seq_al)
@@ -244,114 +253,76 @@ calc_weighted_ca <- function(min_us, reps_one_al, seq_count_one_al){
   }
 
   # Calculate the weighted corrected allele number
-  weighted_ca <- sum(ca_one_al * seq_count_one_al / sum(seq_count_one_al))
+  weighted_ca <- sum(ca_one_al * count_one_al / sum(count_one_al))
   return(weighted_ca)
 }
 
-#' analyze_seq
+#' correct_al_rep
 #'
-#' @description The function to analyze sequence data
-#' @param dt_seq_init The initial data.table of sequence data
-#' @param markers_auto The vector of autosomal markers
-analyze_seq <- function(dt_seq_init, markers_auto){
-  lus_auto <- list()
-  reps_auto <- list()
-  seq_al_auto <- list()
-  seq_count_auto <- list()
+#' @description The function to correct allele repeat numbers
+#' @param dt_seq The data.table of sequence data
+#' @param markers_auto A vector of the autosomal markers
+#' @param min_us_auto A vector of the minimum uninterrupted stretches of the autosomal markers
+correct_al_rep <- function(dt_seq, markers_auto, min_us_auto){
+  setindex(dt_seq, Marker)
+  n_mk <- length(markers_auto)
+  wlus_auto <- vector(mode = "list", length = n_mk)
+  wca_auto <- vector(mode = "list", length = n_mk)
 
-  for(i in 1:length(markers_auto)){
+  for(i in 1:n_mk){
     # Extract data of one marker
-    dt_seq_one_mk <- dt_seq_init[Marker == markers_auto[i]]
-    alleles <- as.numeric(dt_seq_one_mk[, Allele])
+    dt_seq_one_mk <- dt_seq[Marker == markers_auto[i]]
+    alleles <- as.numeric(dt_seq_one_mk$Allele)
     al_names <- sort(unique(alleles))
-    counts <- dt_seq_one_mk[, Count]
-    sequences <- dt_seq_one_mk[, RepeatRegion]
+    n_al <- length(al_names)
+    counts <- dt_seq_one_mk$Count
+    sequences <- dt_seq_one_mk$RepeatRegion
+    min_us <- min_us_auto[i]
 
     # Investigate the number of repeats in each motif
     reps_one_mk <- lapply(sequences, pick_rep)
 
     # Calculate weighted LUS values
     lus_all_reps <- sapply(reps_one_mk, max)
-    lus_one_mk <- rep(0, length(al_names))
-    for(j in 1:length(al_names)){
+    lus_one_mk <- rep(0, n_al)
+    for(j in 1:n_al){
       index_al <- which(alleles == al_names[j])
       lus_one_mk[j] <- calc_weighted_lus(lus_all_reps[index_al], counts[index_al])
     }
     names(lus_one_mk) <- al_names
 
-    # Assign data of one marker
-    lus_auto[[i]] <- lus_one_mk
-    reps_auto[[i]] <- reps_one_mk
-    seq_al_auto[[i]] <- alleles
-    seq_count_auto[[i]] <- counts
-  }
-
-  names(lus_auto) <- markers_auto
-  names(reps_auto) <- markers_auto
-  names(seq_al_auto) <- markers_auto
-  names(seq_count_auto) <- markers_auto
-
-  return(list("lus_auto" = lus_auto,
-              "reps_auto" = reps_auto,
-              "seq_al_auto" = seq_al_auto,
-              "seq_count_auto" = seq_count_auto))
-}
-
-#' make_sr_ca_one_mk
-#'
-#' @description The function to make data of corrected allele numbers in one marker
-#' @param min_us Minimum uninterrupted stretch
-#' @param reps_one_mk Repeat motifs of one marker
-#' @param seq_al_one_mk Alleles for sequence data in one marker
-#' @param seq_count_one_mk Counts for sequence data in one marker
-#' @param sr_al_one_mk A vector of the parent alleles of each stutter ratio
-make_sr_ca_one_mk <- function(min_us, reps_one_mk, seq_al_one_mk, seq_count_one_mk, sr_al_one_mk){
-  sr_ca_one_mk <- rep(0, length(sr_al_one_mk))
-  al_names <- sort(unique(seq_al_one_mk))
-  for(i in 1:length(al_names)){
-    index_seq_al <- which(seq_al_one_mk == al_names[i])
-    sr_ca_one_mk[which(sr_al_one_mk == al_names[i])] <- calc_weighted_ca(min_us, reps_one_mk[index_seq_al], seq_count_one_mk[index_seq_al])
-  }
-  return(sr_ca_one_mk)
-}
-
-#' extract_sr_use
-#'
-#' @description The function to extract SR data used
-#' @param sr_one_mk A vector of the stutter ratios in one marker
-#' @param sr_al_one_mk A vector of the parent alleles of each stutter ratio
-#' @param sr_h_one_mk A vector of the total allelic products of each stutter ratio
-#' @param lus_one_mk A vector of the LUS of each allele in one marker
-extract_sr_use <- function(sr_one_mk, sr_al_one_mk, sr_h_one_mk, lus_one_mk){
-  # Remove data without stutter ratio
-  index_non_zero <- which(sr_one_mk != 0)
-  sr_one_mk <- as.numeric(sr_one_mk[index_non_zero])
-  sr_al_one_mk <- as.numeric(sr_al_one_mk[index_non_zero])
-  sr_h_one_mk <- as.numeric(sr_h_one_mk[index_non_zero])
-
-  # Assign the LUS value to each allele
-  al_names <- as.numeric(names(lus_one_mk))
-  sr_lus_one_mk <- rep(-1, length(sr_one_mk))
-  for(i in 1:length(lus_one_mk)){
-    index_al <- which(sr_al_one_mk == al_names[i])
-    if(length(index_al) > 0){
-      sr_lus_one_mk[index_al] <- lus_one_mk[i]
+    # Calculate weighted CA values
+    ca_one_mk <- rep(0, n_al)
+    for(j in 1:n_al){
+      index_al <- which(alleles == al_names[j])
+      ca_one_mk[j] <- calc_weighted_ca(min_us, reps_one_mk[index_al], counts[index_al])
     }
+    names(ca_one_mk) <- al_names
+
+    # Assign data of one marker
+    wlus_auto[[i]] <- lus_one_mk
+    wca_auto[[i]] <- ca_one_mk
   }
 
-  # Remove data without sequence information
-  index_no_seq <- which(sr_lus_one_mk == -1)
-  if(length(index_no_seq) > 0){
-    sr_one_mk <- sr_one_mk[- index_no_seq]
-    sr_al_one_mk <- sr_al_one_mk[- index_no_seq]
-    sr_h_one_mk <- sr_h_one_mk[- index_no_seq]
-    sr_lus_one_mk <- sr_lus_one_mk[- index_no_seq]
-  }
+  names(wlus_auto) <- markers_auto
+  names(wca_auto) <- markers_auto
 
-  # Make an output object
-  sr_use_list <- list(sr_one_mk, sr_al_one_mk, sr_h_one_mk, sr_lus_one_mk)
-  names(sr_use_list) <- c("stutter ratio", "parent allele", "total allelic product", "LUS of parent allele")
-  return(sr_use_list)
+  return(list("wlus_auto" = wlus_auto,
+              "wca_auto" = wca_auto))
+}
+
+#' perform_mcmc_sr_all_mk
+#'
+#' @description The function to perform MCMC for SR of all markers
+perform_mcmc_sr_all_mk <- function(markers_auto, meth_model_sr,
+                                   sr_data, parent_al_data, total_al_prod_data){
+  n_mk_auto <- length(markers_auto)
+
+  # Locus-specific model
+  for(i in 1:n_mk_auto){
+    # Extract data of one marker
+    tmp <- extract_sr_use(sr_data[, i], parent_al_data[, i], total_al_prod_data[, i], lus_auto[[i]])
+  }
 }
 
 #' estimate_average_sr
@@ -371,10 +342,10 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_setting_est_sr
   n_mk_auto <- length(markers_auto)
   at_auto <- dt_setting_est_sr$AT
   names(at_auto) <- markers_auto
-  meth_model_bsr_auto <- dt_setting_est_sr$Model_BSR
-  meth_model_fsr_auto <- dt_setting_est_sr$Model_FSR
-  meth_model_dsr_auto <- dt_setting_est_sr$Model_DSR
-  meth_model_m2sr_auto <- dt_setting_est_sr$Model_M2SR
+  meth_model_bsr <- dt_setting_est_sr[["BSR model"]]
+  meth_model_fsr <- dt_setting_est_sr[["FSR model"]]
+  meth_model_dsr <- dt_setting_est_sr[["DSR model"]]
+  meth_model_m2sr <- dt_setting_est_sr[["M2SR model"]]
 
   # Make an object for ATs of all markers
   at_all_mk <- rep(NA, n_mk_all)
@@ -386,10 +357,10 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_setting_est_sr
   sr_consider_auto <- matrix(TRUE, n_mk_auto, 4)
   rownames(sr_consider_auto) <- markers_auto
   colnames(sr_consider_auto) <- c("BS", "FS", "DS", "M2S")
-  sr_consider_auto[, 1] <- meth_model_bsr_auto != "Not consider"
-  sr_consider_auto[, 2] <- meth_model_fsr_auto != "Not consider"
-  sr_consider_auto[, 3] <- meth_model_dsr_auto != "Not consider"
-  sr_consider_auto[, 4] <- meth_model_m2sr_auto != "Not consider"
+  sr_consider_auto[, 1] <- meth_model_bsr != "Not consider"
+  sr_consider_auto[, 2] <- meth_model_fsr != "Not consider"
+  sr_consider_auto[, 3] <- meth_model_dsr != "Not consider"
+  sr_consider_auto[, 4] <- meth_model_m2sr != "Not consider"
 
   # Arrange experimental data
   tmp <- arrange_exp_data(dt_exp, dt_gt,
@@ -401,20 +372,12 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_setting_est_sr
   height_list <- tmp$height_list
   gt_list <- tmp$gt_list
 
-  # Prepare data for the stutter ratios
-  tmp <- get_sr_data(peak_list, height_list, gt_list, sr_consider_auto)
-  bsr_data <- tmp$bsr_data
-  fsr_data <- tmp$fsr_data
-  dsr_data <- tmp$dsr_data
-  m2sr_data <- tmp$m2sr_data
-  parent_al_data <- tmp$parent_al_data
-  parent_ph_data <- tmp$parent_ph_data
-  total_al_prod_data <- tmp$total_al_prod_data
-
   # Prepare data related to the sequence data
-  tmp <- analyze_seq(dt_seq, markers_auto)
-  lus_auto <- tmp$lus_auto
-  reps_auto <- tmp$reps_auto
-  seq_al_auto <- tmp$seq_al_auto
-  seq_count_auto <- tmp$seq_count_auto
+  min_us_auto <- dt_setting_est_sr[["Minimum uninterrupted stretch (for Multi-seq)"]]
+  tmp <- correct_al_rep(dt_seq, markers_auto, min_us_auto)
+  wlus_auto <- tmp$wlus_auto
+  wca_auto <- tmp$wca_auto
+
+  # Prepare data for the stutter ratios
+  dt_sr_data <- create_dt_sr_data(peak_list, height_list, gt_list, sr_consider_auto, wlus_auto)
 }

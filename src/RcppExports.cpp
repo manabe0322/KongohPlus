@@ -199,6 +199,50 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// calc_parent_al_bs_one
+double calc_parent_al_bs_one(double bs);
+RcppExport SEXP _KongohPlus_calc_parent_al_bs_one(SEXP bsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type bs(bsSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_parent_al_bs_one(bs));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calc_parent_al_fs_one
+double calc_parent_al_fs_one(double fs);
+RcppExport SEXP _KongohPlus_calc_parent_al_fs_one(SEXP fsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type fs(fsSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_parent_al_fs_one(fs));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calc_parent_al_ds_one
+double calc_parent_al_ds_one(double ds);
+RcppExport SEXP _KongohPlus_calc_parent_al_ds_one(SEXP dsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type ds(dsSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_parent_al_ds_one(ds));
+    return rcpp_result_gen;
+END_RCPP
+}
+// calc_parent_al_m2s_one
+double calc_parent_al_m2s_one(double m2s);
+RcppExport SEXP _KongohPlus_calc_parent_al_m2s_one(SEXP m2sSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< double >::type m2s(m2sSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_parent_al_m2s_one(m2s));
+    return rcpp_result_gen;
+END_RCPP
+}
 // extract_gtc
 std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts, std::vector<int> ind_gtc, int hnc);
 RcppExport SEXP _KongohPlus_extract_gtc(SEXP cand_gtsSEXP, SEXP ind_gtcSEXP, SEXP hncSEXP) {
@@ -267,50 +311,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<double> >::type heights_rm99(heights_rm99SEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type index_dropin(index_dropinSEXP);
     rcpp_result_gen = Rcpp::wrap(remove_dropin(peaks_rm99, heights_rm99, index_dropin));
-    return rcpp_result_gen;
-END_RCPP
-}
-// calc_parent_al_bs_one
-double calc_parent_al_bs_one(double bs);
-RcppExport SEXP _KongohPlus_calc_parent_al_bs_one(SEXP bsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type bs(bsSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_parent_al_bs_one(bs));
-    return rcpp_result_gen;
-END_RCPP
-}
-// calc_parent_al_fs_one
-double calc_parent_al_fs_one(double fs);
-RcppExport SEXP _KongohPlus_calc_parent_al_fs_one(SEXP fsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type fs(fsSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_parent_al_fs_one(fs));
-    return rcpp_result_gen;
-END_RCPP
-}
-// calc_parent_al_ds_one
-double calc_parent_al_ds_one(double ds);
-RcppExport SEXP _KongohPlus_calc_parent_al_ds_one(SEXP dsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type ds(dsSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_parent_al_ds_one(ds));
-    return rcpp_result_gen;
-END_RCPP
-}
-// calc_parent_al_m2s_one
-double calc_parent_al_m2s_one(double m2s);
-RcppExport SEXP _KongohPlus_calc_parent_al_m2s_one(SEXP m2sSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< double >::type m2s(m2sSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_parent_al_m2s_one(m2s));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -583,15 +583,15 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_ds", (DL_FUNC) &_KongohPlus_calc_ds, 1},
     {"_KongohPlus_calc_m2s_one", (DL_FUNC) &_KongohPlus_calc_m2s_one, 1},
     {"_KongohPlus_calc_m2s", (DL_FUNC) &_KongohPlus_calc_m2s, 1},
+    {"_KongohPlus_calc_parent_al_bs_one", (DL_FUNC) &_KongohPlus_calc_parent_al_bs_one, 1},
+    {"_KongohPlus_calc_parent_al_fs_one", (DL_FUNC) &_KongohPlus_calc_parent_al_fs_one, 1},
+    {"_KongohPlus_calc_parent_al_ds_one", (DL_FUNC) &_KongohPlus_calc_parent_al_ds_one, 1},
+    {"_KongohPlus_calc_parent_al_m2s_one", (DL_FUNC) &_KongohPlus_calc_parent_al_m2s_one, 1},
     {"_KongohPlus_extract_gtc", (DL_FUNC) &_KongohPlus_extract_gtc, 3},
     {"_KongohPlus_make_detectable_peak", (DL_FUNC) &_KongohPlus_make_detectable_peak, 6},
     {"_KongohPlus_search_index_dropin", (DL_FUNC) &_KongohPlus_search_index_dropin, 2},
     {"_KongohPlus_judge_gtc_dropin", (DL_FUNC) &_KongohPlus_judge_gtc_dropin, 7},
     {"_KongohPlus_remove_dropin", (DL_FUNC) &_KongohPlus_remove_dropin, 3},
-    {"_KongohPlus_calc_parent_al_bs_one", (DL_FUNC) &_KongohPlus_calc_parent_al_bs_one, 1},
-    {"_KongohPlus_calc_parent_al_fs_one", (DL_FUNC) &_KongohPlus_calc_parent_al_fs_one, 1},
-    {"_KongohPlus_calc_parent_al_ds_one", (DL_FUNC) &_KongohPlus_calc_parent_al_ds_one, 1},
-    {"_KongohPlus_calc_parent_al_m2s_one", (DL_FUNC) &_KongohPlus_calc_parent_al_m2s_one, 1},
     {"_KongohPlus_judge_gtc_sr", (DL_FUNC) &_KongohPlus_judge_gtc_sr, 16},
     {"_KongohPlus_judge_gtc", (DL_FUNC) &_KongohPlus_judge_gtc, 15},
     {"_KongohPlus_judge_gtc_mk", (DL_FUNC) &_KongohPlus_judge_gtc_mk, 14},

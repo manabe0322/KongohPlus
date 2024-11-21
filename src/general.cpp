@@ -142,6 +142,41 @@ std::vector<double> calc_m2s(std::vector<double> alleles){
 }
 
 // [[Rcpp::export]]
+double calc_parent_al_bs_one(double bs){
+  double tmp = bs + 1;
+  double par_al = round(tmp * 10) / 10;
+  return(par_al);
+}
+
+// [[Rcpp::export]]
+double calc_parent_al_fs_one(double fs){
+  double tmp = fs - 1;
+  double par_al = round(tmp * 10) / 10;
+  return(par_al);
+}
+
+// [[Rcpp::export]]
+double calc_parent_al_ds_one(double ds){
+  double tmp = ds + 2;
+  double par_al = round(tmp * 10) / 10;
+  return(par_al);
+}
+
+// [[Rcpp::export]]
+double calc_parent_al_m2s_one(double m2s){
+  double residual = fmod(m2s, 1);
+  double par_al = 0;
+  if(residual < 0.15){
+    double tmp = m2s + 0.2;
+    par_al = round(tmp * 10) / 10;
+  }else{
+    double tmp = m2s + 0.8;
+    par_al = round(tmp * 10) / 10;
+  }
+  return(par_al);
+}
+
+// [[Rcpp::export]]
 std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts,
                                 std::vector<int> ind_gtc,
                                 int hnc){

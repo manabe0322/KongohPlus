@@ -4,12 +4,10 @@
 \alias{create_init_dt_setting_est_sr}
 \title{create_init_dt_setting_est_sr}
 \usage{
-create_init_dt_setting_est_sr(dt_kit, path_pack)
+create_init_dt_setting_est_sr(dt_kit)
 }
 \arguments{
 \item{dt_kit}{The data.table of information on a kit}
-
-\item{path_pack}{The package path of KongohPlus}
 }
 \description{
 The function to create the initial data.table in the setting tab for estimating average stutter ratios

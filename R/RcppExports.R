@@ -61,6 +61,22 @@ calc_m2s <- function(alleles) {
     .Call(`_KongohPlus_calc_m2s`, alleles)
 }
 
+calc_parent_al_bs_one <- function(bs) {
+    .Call(`_KongohPlus_calc_parent_al_bs_one`, bs)
+}
+
+calc_parent_al_fs_one <- function(fs) {
+    .Call(`_KongohPlus_calc_parent_al_fs_one`, fs)
+}
+
+calc_parent_al_ds_one <- function(ds) {
+    .Call(`_KongohPlus_calc_parent_al_ds_one`, ds)
+}
+
+calc_parent_al_m2s_one <- function(m2s) {
+    .Call(`_KongohPlus_calc_parent_al_m2s_one`, m2s)
+}
+
 extract_gtc <- function(cand_gts, ind_gtc, hnc) {
     .Call(`_KongohPlus_extract_gtc`, cand_gts, ind_gtc, hnc)
 }
@@ -79,22 +95,6 @@ judge_gtc_dropin <- function(peaks_rm99, heights_rm99, detectable_peak, index_dr
 
 remove_dropin <- function(peaks_rm99, heights_rm99, index_dropin) {
     .Call(`_KongohPlus_remove_dropin`, peaks_rm99, heights_rm99, index_dropin)
-}
-
-calc_parent_al_bs_one <- function(bs) {
-    .Call(`_KongohPlus_calc_parent_al_bs_one`, bs)
-}
-
-calc_parent_al_fs_one <- function(fs) {
-    .Call(`_KongohPlus_calc_parent_al_fs_one`, fs)
-}
-
-calc_parent_al_ds_one <- function(ds) {
-    .Call(`_KongohPlus_calc_parent_al_ds_one`, ds)
-}
-
-calc_parent_al_m2s_one <- function(m2s) {
-    .Call(`_KongohPlus_calc_parent_al_m2s_one`, m2s)
 }
 
 judge_gtc_sr <- function(gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr, n_dropin, bool_gtc_di) {
