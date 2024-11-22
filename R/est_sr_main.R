@@ -314,14 +314,55 @@ correct_al_rep <- function(dt_seq, markers_auto, min_us_auto){
 #' perform_mcmc_sr_all_mk
 #'
 #' @description The function to perform MCMC for SR of all markers
-perform_mcmc_sr_all_mk <- function(markers_auto, meth_model_sr,
-                                   sr_data, parent_al_data, total_al_prod_data){
-  n_mk_auto <- length(markers_auto)
+perform_mcmc_sr_all_mk <- function(dt_sr_data, stutter_type, markers_auto, meth_model_sr, wlus_auto, wca_auto,
+                                   model_sr_gen, model_sr_uni){
+  if(stutter_type == "BS"){
+    dt_st_type <- dt_sr_data[dt_sr_data$Bool_BS]
+  }else if(stutter_type == "FS"){
+    dt_st_type <- dt_sr_data[dt_sr_data$Bool_FS]
+  }else if(stutter_type == "DS"){
+    dt_st_type <- dt_sr_data[dt_sr_data$Bool_DS]
+  }else if(stutter_type == "M2S"){
+    dt_st_type <- dt_sr_data[dt_sr_data$Bool_M2S]
+  }else{
+    dt_st_type <- NULL
+  }
 
-  # Locus-specific model
-  for(i in 1:n_mk_auto){
-    # Extract data of one marker
-    tmp <- extract_sr_use(sr_data[, i], parent_al_data[, i], total_al_prod_data[, i], lus_auto[[i]])
+  if(!is.null(dt_st_type)){
+    n_mk <- length(markers_auto)
+    setindex(dt_st_type, Marker, Allele)
+    for(i in 1:n_mk){
+      meth <- meth_model_sr[i]
+      if(meth != "Not consider"){
+        dt_st_mk <- dt_st_type[Marker == markers_auto[i]]
+        dt_st_mk <- dt_st_mk[Allele != "Multiple"]
+        dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_SharedAllele]
+
+        if(meth == "LUS"){
+          dt_st_mk <- dt_st_mk[dt_st_mk$Bool_SeqData]
+          tmp_al <- dt_st_mk$Allele
+          wlus <- wlus_auto[[i]]
+          x_al <- as.numeric(wlus[match(tmp_al, names(wlus))])
+        }else if(meth == "Multi-seq"){
+          dt_st_mk <- dt_st_mk[dt_st_mk$Bool_SeqData]
+          tmp_al <- dt_st_mk$Allele
+          wca <- wca_auto[[i]]
+          x_al <- as.numeric(wca[match(tmp_al, names(wca))])
+        }else{
+          x_al <- as.numeric(dt_st_mk$Allele)
+        }
+
+        if(meth == "Uniform (Multiple loci)"){
+
+        }else if(meth == "Uniform"){
+
+        }else{
+
+        }
+      }
+    }
+
+    # Uniform (Multiple loci)
   }
 }
 
@@ -378,6 +419,6 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_setting_est_sr
   wlus_auto <- tmp$wlus_auto
   wca_auto <- tmp$wca_auto
 
-  # Prepare data for the stutter ratios
+  # Create a data.table for the stutter ratios
   dt_sr_data <- create_dt_sr_data(peak_list, height_list, gt_list, sr_consider_auto, wlus_auto)
 }
