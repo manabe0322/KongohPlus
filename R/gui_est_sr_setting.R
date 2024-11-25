@@ -43,12 +43,34 @@ create_init_dt_setting_est_sr <- function(dt_kit){
   dyes <- extract_dye(dt_kit_auto, markers)
 
   dt_setting_est_sr <- data.table(Marker = markers, Dye = dyes)
-  dt_setting_est_sr$AT <- 50
-  dt_setting_est_sr$Model_BSR <- "Allele"
-  dt_setting_est_sr$Model_FSR <- "Uniform (Multiple loci)"
-  dt_setting_est_sr$Model_DSR <- "Uniform (Multiple loci)"
-  dt_setting_est_sr$Model_M2SR <- "Not consider"
-  dt_setting_est_sr$X_Multi <- NA
+
+  if(nrow(dt_setting_est_sr) == 21){
+    dt_setting_est_sr$AT <- c(rep(12, 5), rep(20, 3), rep(13, 4), rep(16, 5), rep(19, 4))
+    dt_setting_est_sr$Model_BSR <- c("LUS", "Allele", "LUS", "Allele", "Allele",
+                                     "Multi-seq", "Multi-seq", "Allele",
+                                     "LUS", "Allele", "LUS", "Allele",
+                                     "LUS", "Allele", "Allele", "LUS", "Multi-seq",
+                                     "LUS", "LUS", "Multi-seq", "Multi-seq")
+    dt_setting_est_sr$Model_FSR <- "Uniform (Multiple loci)"
+    dt_setting_est_sr$Model_FSR[13] <- "LUS"
+    dt_setting_est_sr$Model_DSR <- "Uniform (Multiple loci)"
+    dt_setting_est_sr$Model_M2SR <- "Not consider"
+    dt_setting_est_sr$Model_M2SR[17] <- "Uniform"
+    dt_setting_est_sr$Model_M2SR[19] <- "Uniform"
+    dt_setting_est_sr$X_Multi <- NA
+    dt_setting_est_sr$X_Multi[6] <- 10
+    dt_setting_est_sr$X_Multi[7] <- 6
+    dt_setting_est_sr$X_Multi[17] <- 8
+    dt_setting_est_sr$X_Multi[20] <- 9
+    dt_setting_est_sr$X_Multi[21] <- 2
+  }else{
+    dt_setting_est_sr$AT <- 50
+    dt_setting_est_sr$Model_BSR <- "Allele"
+    dt_setting_est_sr$Model_FSR <- "Uniform (Multiple loci)"
+    dt_setting_est_sr$Model_DSR <- "Uniform (Multiple loci)"
+    dt_setting_est_sr$Model_M2SR <- "Not consider"
+    dt_setting_est_sr$X_Multi <- NA
+  }
 
   col_int <- c("AT", "X_Multi")
   dt_setting_est_sr[, (col_int) := lapply(.SD, as.integer), .SDcols = col_int]
@@ -61,7 +83,7 @@ create_init_dt_setting_est_sr <- function(dt_kit){
 #' est_sr_setting_server
 #'
 #' @description The function to create the server module to create the setting tab for estimating average stutter ratios
-est_sr_setting_server <- function(id, path_pack){
+est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
   moduleServer(
     id,
     function(input, output, session){
@@ -70,7 +92,15 @@ est_sr_setting_server <- function(id, path_pack){
       rv_est_sr$dt_gt <- NULL
       rv_est_sr$dt_seq <- NULL
       rv_est_sr$dt_kit <- NULL
-      rv_est_sr$results_est_sr <- NULL
+      rv_est_sr$dt_setting_est_sr <- NULL
+      rv_est_sr$kit_name <- NULL
+      rv_est_sr$warmup <- 2000
+      rv_est_sr$sampling <- 2000
+      rv_est_sr$chains <- 4
+      rv_est_sr$pu_remove <- TRUE
+      rv_est_sr$pu_dist <- 1
+      rv_est_sr$at_sex <- 100
+      rv_est_sr$data_est_sr <- NULL
 
       # Load experimental data
       observeEvent(input$exp_data, {
@@ -116,9 +146,10 @@ est_sr_setting_server <- function(id, path_pack){
       })
 
       observeEvent(input$kit_name, ignoreInit = TRUE, {
-        dt_kit <- fread(paste0(path_pack, "/extdata/kit/", input$kit_name, ".csv"))
+        rv_est_sr$kit_name <- kit_name <- input$kit_name
+        dt_kit <- fread(paste0(path_pack, "/extdata/kit/", kit_name, ".csv"))
         rv_est_sr$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
-        dt_setting_est_sr <- create_init_dt_setting_est_sr(dt_kit, path_pack)
+        dt_setting_est_sr <- create_init_dt_setting_est_sr(dt_kit)
 
         output$dt_setting_est_sr <- renderRHandsontable({
           rhandsontable(dt_setting_est_sr, rowHeaders = FALSE) %>%
@@ -127,18 +158,9 @@ est_sr_setting_server <- function(id, path_pack){
             hot_col(c("Dye"), type = "text", readOnly = TRUE, width = 50) %>%
             hot_col(c("AT"), type = "numeric", format = "0", width = 50) %>%
             hot_col(c("BSR model", "FSR model", "DSR model", "M2SR model"), type = "dropdown", source = c("Allele", "LUS", "Multi-seq", "Uniform", "Uniform (Multiple loci)", "Not consider"), width = 175) %>%
-            hot_col(c("Min. number of repeats that affects stuttering (for Multi-seq)"), type = "numeric", format = "0", width = 450)
+            hot_col(c("Minimum uninterrupted stretch (for Multi-seq)"), type = "numeric", format = "0", width = 450)
         })
       })
-
-      # Advanced setting
-      rv_advanced <- reactiveValues()
-      rv_advanced$warmup <- 2000
-      rv_advanced$sampling <- 2000
-      rv_advanced$chains <- 4
-      rv_advanced$pu_remove <- TRUE
-      rv_advanced$pu_dist <- 1
-      rv_advanced$at_sex <- 100
 
       observeEvent(input$act_advance_sr, {
         showModal(modalDialog(
@@ -146,15 +168,15 @@ est_sr_setting_server <- function(id, path_pack){
           fluidRow(
             column(6,
                    h4("MCMC conditions"),
-                   numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_advanced$warmup),
-                   numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_advanced$sampling),
-                   numericInput(session$ns("chains"), label = "Number of chains", value = rv_advanced$chains)
+                   numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_est_sr$warmup),
+                   numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_est_sr$sampling),
+                   numericInput(session$ns("chains"), label = "Number of chains", value = rv_est_sr$chains)
             ),
             column(6,
                    h4("Pull-up"),
-                   checkboxInput(session$ns("pu_remove"), label = "Automatically removed", value = rv_advanced$pu_remove),
-                   numericInput(session$ns("pu_dist"), label = "Maximum pull-up distance (bp)", value = rv_advanced$pu_dist),
-                   numericInput(session$ns("at_sex"), label = "AT of the sex-chromosomal markers", value = rv_advanced$at_sex)
+                   checkboxInput(session$ns("pu_remove"), label = "Automatically removed", value = rv_est_sr$pu_remove),
+                   numericInput(session$ns("pu_dist"), label = "Maximum pull-up distance (bp)", value = rv_est_sr$pu_dist),
+                   numericInput(session$ns("at_sex"), label = "AT of the sex-chromosomal markers", value = rv_est_sr$at_sex)
             )
           ),
           footer = tagList(
@@ -236,12 +258,12 @@ est_sr_setting_server <- function(id, path_pack){
 
         if(all(is.integer(warmup), is.integer(sampling), is.integer(chains), is.numeric(pu_dist), is.numeric(at_sex))){
           if(all(warmup > 0, sampling > 0, chains > 0, pu_dist > 0, at_sex > 0)){
-            rv_advanced$warmup <- warmup
-            rv_advanced$sampling <- sampling
-            rv_advanced$chains <- chains
-            rv_advanced$pu_remove <- pu_remove
-            rv_advanced$pu_dist <- pu_dist
-            rv_advanced$at_sex <- at_sex
+            rv_est_sr$warmup <- warmup
+            rv_est_sr$sampling <- sampling
+            rv_est_sr$chains <- chains
+            rv_est_sr$pu_remove <- pu_remove
+            rv_est_sr$pu_dist <- pu_dist
+            rv_est_sr$at_sex <- at_sex
             removeModal()
           }
         }
@@ -253,14 +275,14 @@ est_sr_setting_server <- function(id, path_pack){
         dt_gt <- rv_est_sr$dt_gt
         dt_seq <- rv_est_sr$dt_seq
         dt_kit <- rv_est_sr$dt_kit
-        dt_setting_est_sr <- hot_to_r(input$dt_setting_est_sr)
-        kit_name <- input$kit_name
-        warmup <- rv_advanced$warmup
-        sampling <- rv_advanced$sampling
-        chains <- rv_advanced$chains
-        pu_remove <- rv_advanced$pu_remove
-        pu_dist <- rv_advanced$pu_dist
-        at_sex <- rv_advanced$at_sex
+        rv_est_sr$dt_setting_est_sr <- dt_setting_est_sr <- hot_to_r(input$dt_setting_est_sr)
+        kit_name <- rv_est_sr$kit_name
+        warmup <- rv_est_sr$warmup
+        sampling <- rv_est_sr$sampling
+        chains <- rv_est_sr$chains
+        pu_remove <- rv_est_sr$pu_remove
+        pu_dist <- rv_est_sr$pu_dist
+        at_sex <- rv_est_sr$at_sex
 
         error_message <- check_est_sr(dt_exp, dt_gt, dt_seq, dt_setting_est_sr)
         if(error_message != ""){
@@ -269,7 +291,11 @@ est_sr_setting_server <- function(id, path_pack){
           model_sr_gen <- stan_package_model(name = "model_sr_gen", package = "KongohPlus")
           model_sr_uni <- stan_package_model(name = "model_sr_uni", package = "KongohPlus")
 
-          estimate_average_sr(dt_exp, dt_gt, dt_seq, dt_kit, dt_setting_est_sr, kit_name)
+          rv_est_sr$data_est_sr <- estimate_average_sr(dt_exp, dt_gt, dt_seq, dt_kit, dt_setting_est_sr, kit_name,
+                                                       model_sr_gen, model_sr_uni,
+                                                       warmup, sampling, chains, pu_remove, pu_dist, at_sex)
+
+          updateTabsetPanel(session = session_est_sr_top, inputId = "tabset_est_sr", selected = "Result")
         }
       })
 

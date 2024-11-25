@@ -4,7 +4,7 @@
 \alias{est_sr_setting_server}
 \title{est_sr_setting_server}
 \usage{
-est_sr_setting_server(id, path_pack)
+est_sr_setting_server(id, path_pack, session_est_sr_top)
 }
 \description{
 The function to create the server module to create the setting tab for estimating average stutter ratios

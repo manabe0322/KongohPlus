@@ -22,7 +22,7 @@ est_sr_server <- function(id, path_pack){
   moduleServer(
     id,
     function(input, output, session){
-      rv_est_sr <- est_sr_setting_server("est_sr_setting", path_pack)
+      rv_est_sr <- est_sr_setting_server("est_sr_setting", path_pack, session)
 
       observe({
         req(rv_est_sr)

@@ -5,11 +5,18 @@
 \title{perform_mcmc_sr_all_mk}
 \usage{
 perform_mcmc_sr_all_mk(
+  dt_sr_data,
+  stutter_type,
   markers_auto,
   meth_model_sr,
-  sr_data,
-  parent_al_data,
-  total_al_prod_data
+  wlus_auto,
+  wca_auto,
+  model_sr_gen,
+  model_sr_uni,
+  warmup,
+  sampling,
+  chains,
+  n_parallel_chains
 )
 }
 \description{

@@ -27,16 +27,6 @@ set_consider_sr_model <- function(meth_model_sr, reps_one_mk, min_n_motif_lus, m
   return(consider_sr_model)
 }
 
-#' calc_average_sr
-#'
-#' @description The function to calculate the average stutter ratio
-#' @param allele A vector of alleles or corrected alleles
-#' @param slope The slope parameter
-#' @param intercept The intercept parameter
-calc_average_sr <- function(allele, slope, intercept){
-  return(allele * slope + intercept)
-}
-
 #' make_dt_alcor
 #'
 #' @description The function to make a data.table for corrected alleles

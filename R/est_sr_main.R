@@ -311,11 +311,112 @@ correct_al_rep <- function(dt_seq, markers_auto, min_us_auto){
               "wca_auto" = wca_auto))
 }
 
+#' run_mcmc_sr_gen
+#'
+#' @description The function to perform MCMC for the stutter ratio (locus-specific with slope)
+#' @param model_sr_gen The stan model of the stutter ratio
+#' @param data_list_sr The data list of the stutter ratio
+#' @param warmup The number of warm-up iterations for each chain
+#' @param sampling The number of sampling iterations for each chain
+#' @param chains The number of chains
+#' @param n_parallel_chains The number of parallel chains
+run_mcmc_sr_gen <- function(model_sr_gen, data_list_sr, warmup, sampling, chains, n_parallel_chains){
+  # Perform MCMC
+  fit_sr <- model_sr_gen$sample(
+    data_list_sr,
+    iter_warmup = warmup,
+    iter_sampling = sampling,
+    chains = chains,
+    parallel_chains = n_parallel_chains
+  )
+
+  # Summary data
+  fit_sr_summary <- fit_sr$summary()
+  medians <- fit_sr_summary$median
+  variables <- fit_sr_summary$variable
+  rhats <- fit_sr_summary$rhat
+  median_lp <- medians[which(variables == "lp__")]
+  median_slope <- medians[which(variables == "slope")]
+  median_intercept <- medians[which(variables == "intercept")]
+  median_sigma <- medians[which(variables == "sigma")]
+  rhat_slope <- rhats[which(variables == "slope")]
+  rhat_intercept <- rhats[which(variables == "intercept")]
+  rhat_sigma <- rhats[which(variables == "sigma")]
+  rhat_lp <- rhats[which(variables == "lp__")]
+
+  # Trace plot
+  fit_sr$draws() %>% mcmc_trace(pars = c("slope", "intercept", "sigma")) -> traceplot
+
+  return(list("median_lp" = median_lp,
+              "median_slope" = median_slope,
+              "median_intercept" = median_intercept,
+              "median_sigma" = median_sigma,
+              "rhat_slope" = rhat_slope,
+              "rhat_intercept" = rhat_intercept,
+              "rhat_sigma" = rhat_sigma,
+              "rhat_lp" = rhat_lp,
+              "traceplot" = traceplot))
+}
+
+#' calc_average_sr
+#'
+#' @description The function to calculate the average stutter ratio
+#' @param allele A vector of alleles or corrected alleles
+#' @param slope The slope parameter
+#' @param intercept The intercept parameter
+calc_average_sr <- function(allele, slope, intercept){
+  return(allele * slope + intercept)
+}
+
+#' run_mcmc_sr_uni
+#'
+#' @description The function to perform MCMC for the stutter ratio (uniform)
+#' @param model_sr_uni The stan model of the stutter ratio
+#' @param data_list_sr The data list of the stutter ratio
+#' @param warmup The number of warm-up iterations for each chain
+#' @param sampling The number of sampling iterations for each chain
+#' @param chains The number of chains
+#' @param n_parallel_chains The number of parallel chains
+run_mcmc_sr_uni <- function(model_sr_uni, data_list_sr, warmup, sampling, chains, n_parallel_chains){
+  # Perform MCMC
+  fit_sr <- model_sr_uni$sample(
+    data_list_sr,
+    iter_warmup = warmup,
+    iter_sampling = sampling,
+    chains = chains,
+    parallel_chains = n_parallel_chains
+  )
+
+  # Summary data
+  fit_sr_summary <- fit_sr$summary()
+  medians <- fit_sr_summary$median
+  variables <- fit_sr_summary$variable
+  rhats <- fit_sr_summary$rhat
+  median_lp <- medians[which(variables == "lp__")]
+  median_myu <- medians[which(variables == "myu")]
+  median_sigma <- medians[which(variables == "sigma")]
+  rhat_myu <- rhats[which(variables == "myu")]
+  rhat_sigma <- rhats[which(variables == "sigma")]
+  rhat_lp <- rhats[which(variables == "lp__")]
+
+  # Trace plot
+  fit_sr$draws() %>% mcmc_trace(pars = c("myu", "sigma")) -> traceplot
+
+  return(list("median_lp" = median_lp,
+              "median_myu" = median_myu,
+              "median_sigma" = median_sigma,
+              "rhat_myu" = rhat_myu,
+              "rhat_sigma" = rhat_sigma,
+              "rhat_lp" = rhat_lp,
+              "traceplot" = traceplot))
+}
+
 #' perform_mcmc_sr_all_mk
 #'
 #' @description The function to perform MCMC for SR of all markers
 perform_mcmc_sr_all_mk <- function(dt_sr_data, stutter_type, markers_auto, meth_model_sr, wlus_auto, wca_auto,
-                                   model_sr_gen, model_sr_uni){
+                                   model_sr_gen, model_sr_uni,
+                                   warmup, sampling, chains, n_parallel_chains){
   if(stutter_type == "BS"){
     dt_st_type <- dt_sr_data[dt_sr_data$Bool_BS]
   }else if(stutter_type == "FS"){
@@ -325,45 +426,160 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, stutter_type, markers_auto, meth_
   }else if(stutter_type == "M2S"){
     dt_st_type <- dt_sr_data[dt_sr_data$Bool_M2S]
   }else{
-    dt_st_type <- NULL
+    dt_st_type <- dt_sr_data[rep(FALSE, nrow(dt_sr_data))]
   }
 
-  if(!is.null(dt_st_type)){
-    n_mk <- length(markers_auto)
-    setindex(dt_st_type, Marker, Allele)
-    for(i in 1:n_mk){
-      meth <- meth_model_sr[i]
-      if(meth != "Not consider"){
-        dt_st_mk <- dt_st_type[Marker == markers_auto[i]]
-        dt_st_mk <- dt_st_mk[Allele != "Multiple"]
-        dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_SharedAllele]
+  n_mk <- length(markers_auto)
+  setindex(dt_st_type, Marker, Allele)
+  median_myu_all_mk <- rep(NA, n_mk)
+  median_slope_all_mk <- rep(NA, n_mk)
+  median_intercept_all_mk <- rep(NA, n_mk)
+  median_sigma_all_mk <- rep(NA, n_mk)
+  median_lp_all_mk <- rep(NA, n_mk)
+  rhat_myu_all_mk <- rep(NA, n_mk)
+  rhat_slope_all_mk <- rep(NA, n_mk)
+  rhat_intercept_all_mk <- rep(NA, n_mk)
+  rhat_sigma_all_mk <- rep(NA, n_mk)
+  rhat_lp_all_mk <- rep(NA, n_mk)
+  trace_all_mk <- vector(mode = "list", length = n_mk)
+  names(trace_all_mk) <- markers_auto
+  dt_average_sr_all_mk <- vector(mode = "list", length = n_mk)
+  names(dt_average_sr_all_mk) <- markers_auto
 
+  index_multi_mk <- integer(0)
+  y_sr_multi_mk <- numeric(0)
+  tap_multi_mk <- numeric(0)
+  tmp_st_alleles_multi_mk <- vector(mode = "list", length = n_mk)
+
+  for(i in 1:n_mk){
+    meth <- meth_model_sr[i]
+    if(meth != "Not consider"){
+      dt_st_mk <- dt_st_type[Marker == markers_auto[i]]
+      dt_st_mk <- dt_st_mk[Allele != "Multiple"]
+      dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_SharedAllele]
+
+      if(nrow(dt_st_mk) != 0){
         if(meth == "LUS"){
           dt_st_mk <- dt_st_mk[dt_st_mk$Bool_SeqData]
-          tmp_al <- dt_st_mk$Allele
-          wlus <- wlus_auto[[i]]
-          x_al <- as.numeric(wlus[match(tmp_al, names(wlus))])
+          st_alleles <- dt_st_mk$Allele
+
+          alcor <- wlus_auto[[i]]
+          alname <- names(alcor)
+          index_adopt <- match(st_alleles, alname)
+          st_alleles <- st_alleles[index_adopt]
+          x_al <- as.numeric(alcor[index_adopt])
+          y_sr <- dt_st_mk$SR[index_adopt]
+          tap <- dt_st_mk$TAP[index_adopt]
         }else if(meth == "Multi-seq"){
           dt_st_mk <- dt_st_mk[dt_st_mk$Bool_SeqData]
-          tmp_al <- dt_st_mk$Allele
-          wca <- wca_auto[[i]]
-          x_al <- as.numeric(wca[match(tmp_al, names(wca))])
+          st_alleles <- dt_st_mk$Allele
+
+          alcor <- wca_auto[[i]]
+          alname <- names(alcor)
+          index_adopt <- match(st_alleles, alname)
+          st_alleles <- st_alleles[index_adopt]
+          x_al <- as.numeric(alcor[index_adopt])
+          y_sr <- dt_st_mk$SR[index_adopt]
+          tap <- dt_st_mk$TAP[index_adopt]
         }else{
-          x_al <- as.numeric(dt_st_mk$Allele)
+          st_alleles <- dt_st_mk$Allele
+          x_al <- as.numeric(st_alleles)
+          alcor <- sort(unique(x_al))
+          alname <- as.character(alcor)
+          y_sr <- dt_st_mk$SR
+          tap <- dt_st_mk$TAP
         }
 
         if(meth == "Uniform (Multiple loci)"){
-
+          index_multi_mk <- c(index_multi_mk, i)
+          y_sr_multi_mk <- c(y_sr_multi_mk, y_sr)
+          tap_multi_mk <- c(tap_multi_mk, tap)
+          tmp_st_alleles_multi_mk[[i]] <- st_alleles
         }else if(meth == "Uniform"){
+          data_list_sr <- list(N = length(x_al), SR = y_sr, Height = tap)
+          tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr, warmup, sampling, chains, n_parallel_chains)
+          median_myu_all_mk[i] <- tmp$median_myu
+          median_sigma_all_mk[i] <- tmp$median_sigma
+          median_lp_all_mk[i] <- tmp$median_lp
+          rhat_myu_all_mk[i] <- tmp$rhat_myu
+          rhat_sigma_all_mk[i] <- tmp$rhat_sigma
+          rhat_lp_all_mk[i] <- tmp$rhat_lp
+          trace_all_mk[[i]] <- tmp$traceplot
 
+          dt_average_sr_all_mk[[i]] <- data.table(Allele = alname,
+                                                  AlCor = alcor,
+                                                  AveSR = rep(median_myu_all_mk[i], length(alcor)))
         }else{
+          data_list_sr <- list(N = length(x_al), SR = y_sr, XVal = x_al, Height = tap)
+          tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_sr, warmup, sampling, chains, n_parallel_chains)
+          median_slope_all_mk[i] <- tmp$median_slope
+          median_intercept_all_mk[i] <- tmp$median_intercept
+          median_sigma_all_mk[i] <- tmp$median_sigma
+          median_lp_all_mk[i] <- tmp$median_lp
+          rhat_slope_all_mk[i] <- tmp$rhat_slope
+          rhat_intercept_all_mk[i] <- tmp$rhat_intercept
+          rhat_sigma_all_mk[i] <- tmp$rhat_sigma
+          rhat_lp_all_mk[i] <- tmp$rhat_lp
+          trace_all_mk[[i]] <- tmp$traceplot
 
+          average_sr <- calc_average_sr(alcor, median_slope_all_mk[i], median_intercept_all_mk[i])
+          dt_average_sr_all_mk[[i]] <- data.table(Allele = alname,
+                                                  AlCor = alcor,
+                                                  AveSR = average_sr)
+        }
+
+        cat(paste0("MCMC for the ", stutter_type, " of the ", markers_auto[i], "\n"))
+
+      }else{
+        if(meth == "Uniform (Multiple loci)"){
+          index_multi_mk <- c(index_multi_mk, i)
         }
       }
     }
-
-    # Uniform (Multiple loci)
   }
+
+  # Uniform (Multiple loci)
+  if(length(y_sr_multi_mk) != 0){
+    data_list_sr <- list(N = length(y_sr_multi_mk), SR = y_sr_multi_mk, Height = tap_multi_mk)
+    tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr, warmup, sampling, chains, n_parallel_chains)
+    median_myu_all_mk[index_multi_mk] <- tmp$median_myu
+    median_sigma_all_mk[index_multi_mk] <- tmp$median_sigma
+    median_lp_all_mk[index_multi_mk] <- tmp$median_lp
+    rhat_myu_all_mk[index_multi_mk] <- tmp$rhat_myu
+    rhat_sigma_all_mk[index_multi_mk] <- tmp$rhat_sigma
+    rhat_lp_all_mk[index_multi_mk] <- tmp$rhat_lp
+
+    for(i in 1:length(index_multi_mk)){
+      index_mk <- index_multi_mk[i]
+
+      trace_all_mk[[index_mk]] <- tmp$traceplot
+
+      tmp_st_alleles <- tmp_st_alleles_multi_mk[[index_mk]]
+      tmp_st_alleles <- sort(unique(tmp_st_alleles))
+      dt_average_sr_all_mk[[index_mk]] <- data.table(Allele = tmp_st_alleles,
+                                                     AlCor = as.numeric(tmp_st_alleles),
+                                                     AveSR = rep(median_myu_all_mk[index_mk], length(tmp_st_alleles)))
+    }
+
+    cat(paste0("MCMC for the ", stutter_type, " of Uniform (Multiple loci)", "\n"))
+  }
+
+  dt_result_est_sr <- data.table(Marker = markers_auto,
+                                 Model = meth_model_sr,
+                                 Myu = median_myu_all_mk,
+                                 Slope = median_slope_all_mk,
+                                 Intercept = median_intercept_all_mk,
+                                 Sigma = median_sigma_all_mk,
+                                 Lp = median_lp_all_mk,
+                                 Rhat_Myu = rhat_myu_all_mk,
+                                 Rhat_Slope = rhat_slope_all_mk,
+                                 Rhat_Intercept = rhat_intercept_all_mk,
+                                 Rhat_Sigma = rhat_sigma_all_mk,
+                                 Rhat_Lp = rhat_lp_all_mk)
+
+  return(list("dt_result_est_sr" = dt_result_est_sr,
+              "trace_all_mk" = trace_all_mk,
+              "dt_average_sr_all_mk" = dt_average_sr_all_mk))
 }
 
 #' estimate_average_sr
@@ -421,4 +637,49 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_setting_est_sr
 
   # Create a data.table for the stutter ratios
   dt_sr_data <- create_dt_sr_data(peak_list, height_list, gt_list, sr_consider_auto, wlus_auto)
+
+  # Perform MCMC for BSR
+  tmp <- perform_mcmc_sr_all_mk(dt_sr_data, "BS", markers_auto, meth_model_bsr, wlus_auto, wca_auto,
+                                model_sr_gen, model_sr_uni,
+                                warmup, sampling, chains, n_parallel_chains)
+  dt_result_est_bsr <- tmp$dt_result_est_sr
+  trace_bsr <- tmp$trace_all_mk
+  dt_average_bsr <- tmp$dt_average_sr_all_mk
+
+  # Perform MCMC for FSR
+  tmp <- perform_mcmc_sr_all_mk(dt_sr_data, "FS", markers_auto, meth_model_fsr, wlus_auto, wca_auto,
+                                model_sr_gen, model_sr_uni,
+                                warmup, sampling, chains, n_parallel_chains)
+  dt_result_est_fsr <- tmp$dt_result_est_sr
+  trace_fsr <- tmp$trace_all_mk
+  dt_average_fsr <- tmp$dt_average_sr_all_mk
+
+  # Perform MCMC for DSR
+  tmp <- perform_mcmc_sr_all_mk(dt_sr_data, "DS", markers_auto, meth_model_dsr, wlus_auto, wca_auto,
+                                model_sr_gen, model_sr_uni,
+                                warmup, sampling, chains, n_parallel_chains)
+  dt_result_est_dsr <- tmp$dt_result_est_sr
+  trace_dsr <- tmp$trace_all_mk
+  dt_average_dsr <- tmp$dt_average_sr_all_mk
+
+  # Perform MCMC for M2SR
+  tmp <- perform_mcmc_sr_all_mk(dt_sr_data, "M2S", markers_auto, meth_model_m2sr, wlus_auto, wca_auto,
+                                model_sr_gen, model_sr_uni,
+                                warmup, sampling, chains, n_parallel_chains)
+  dt_result_est_m2sr <- tmp$dt_result_est_sr
+  trace_m2sr <- tmp$trace_all_mk
+  dt_average_m2sr <- tmp$dt_average_sr_all_mk
+
+  return(list("dt_result_est_bsr" = dt_result_est_bsr,
+              "trace_bsr" = trace_bsr,
+              "dt_average_bsr" = dt_average_bsr,
+              "dt_result_est_fsr" = dt_result_est_fsr,
+              "trace_fsr" = trace_fsr,
+              "dt_average_fsr" = dt_average_fsr,
+              "dt_result_est_dsr" = dt_result_est_dsr,
+              "trace_dsr" = trace_dsr,
+              "dt_average_dsr" = dt_average_dsr,
+              "dt_result_est_m2sr" = dt_result_est_m2sr,
+              "trace_m2sr" = trace_m2sr,
+              "dt_average_m2sr" = dt_average_m2sr))
 }
