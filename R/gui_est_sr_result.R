@@ -64,7 +64,7 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           selectInput(ns("select_st_type"), label = h4("Stutter type"), choices = c("Back stutter", "Forward stutter", "Double-back stutter", "Minus 2-nt stutter"), selected = "Back stutter", multiple = FALSE, selectize = FALSE)
         })
 
-        observeEvent(input$select_mk, {
+        observeEvent(c(input$select_mk,input$select_st_type), {
           select_mk <- input$select_mk
           select_st_type <- input$select_st_type
           if(select_st_type == "Back stutter"){
@@ -84,7 +84,8 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
               options = list(iDisplayLength = 10, ordering = FALSE, autowidth = TRUE),
               rownames = FALSE,
               colnames = c("Allele", "Corrected", "Average SR")
-            )
+            ) %>%
+              formatSignif(columns = c("AlCor", "AveSR"), digits = 3)
           })
         })
       }
