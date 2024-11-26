@@ -15,6 +15,7 @@
 #' @importFrom rhandsontable hot_col hot_table hot_to_r renderRHandsontable rhandsontable rHandsontableOutput
 #' @import rmarkdown
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
+#' @importFrom shinyFiles parseFilePaths shinyFilesButton shinyFileChoose
 #' @importFrom shinyjs disable disabled enable refresh useShinyjs
 #' @importFrom shinythemes shinytheme
 #' @importFrom waiter useWaiter waiter_show waiter_hide spin_3k

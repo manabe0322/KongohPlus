@@ -449,12 +449,14 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, stutter_type, markers_auto, meth_
   index_multi_mk <- integer(0)
   y_sr_multi_mk <- numeric(0)
   tap_multi_mk <- numeric(0)
-  tmp_st_alleles_multi_mk <- vector(mode = "list", length = n_mk)
+  tmp_alname_multi_mk <- vector(mode = "list", length = n_mk)
+  tmp_alcor_multi_mk <- vector(mode = "list", length = n_mk)
 
   for(i in 1:n_mk){
+    mk <- markers_auto[i]
     meth <- meth_model_sr[i]
     if(meth != "Not consider"){
-      dt_st_mk <- dt_st_type[Marker == markers_auto[i]]
+      dt_st_mk <- dt_st_type[Marker == mk]
       dt_st_mk <- dt_st_mk[Allele != "Multiple"]
       dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_SharedAllele]
 
@@ -463,38 +465,45 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, stutter_type, markers_auto, meth_
           dt_st_mk <- dt_st_mk[dt_st_mk$Bool_SeqData]
           st_alleles <- dt_st_mk$Allele
 
-          alcor <- wlus_auto[[i]]
+          alcor <- wlus_auto[[mk]]
           alname <- names(alcor)
-          index_adopt <- match(st_alleles, alname)
+          index_adopt <- which(is.element(st_alleles, alname))
           st_alleles <- st_alleles[index_adopt]
-          x_al <- as.numeric(alcor[index_adopt])
+
+          index_alcor <- match(st_alleles, alname)
+          x_al <- alcor[index_alcor]
           y_sr <- dt_st_mk$SR[index_adopt]
           tap <- dt_st_mk$TAP[index_adopt]
         }else if(meth == "Multi-seq"){
           dt_st_mk <- dt_st_mk[dt_st_mk$Bool_SeqData]
           st_alleles <- dt_st_mk$Allele
 
-          alcor <- wca_auto[[i]]
+          alcor <- wca_auto[[mk]]
           alname <- names(alcor)
-          index_adopt <- match(st_alleles, alname)
+          index_adopt <- which(is.element(st_alleles, alname))
           st_alleles <- st_alleles[index_adopt]
-          x_al <- as.numeric(alcor[index_adopt])
+
+          index_alcor <- match(st_alleles, alname)
+          x_al <- alcor[index_alcor]
           y_sr <- dt_st_mk$SR[index_adopt]
           tap <- dt_st_mk$TAP[index_adopt]
         }else{
           st_alleles <- dt_st_mk$Allele
           x_al <- as.numeric(st_alleles)
-          alcor <- sort(unique(x_al))
-          alname <- as.character(alcor)
           y_sr <- dt_st_mk$SR
           tap <- dt_st_mk$TAP
+
+          tmp_alname <- c(names(wlus_auto[[mk]]), st_alleles)
+          alcor <- sort(unique(as.numeric(tmp_alname)))
+          alname <- as.character(alcor)
         }
 
         if(meth == "Uniform (Multiple loci)"){
           index_multi_mk <- c(index_multi_mk, i)
           y_sr_multi_mk <- c(y_sr_multi_mk, y_sr)
           tap_multi_mk <- c(tap_multi_mk, tap)
-          tmp_st_alleles_multi_mk[[i]] <- st_alleles
+          tmp_alname_multi_mk[[i]] <- alname
+          tmp_alcor_multi_mk[[i]] <- alcor
         }else if(meth == "Uniform"){
           data_list_sr <- list(N = length(x_al), SR = y_sr, Height = tap)
           tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr, warmup, sampling, chains, n_parallel_chains)
@@ -506,9 +515,11 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, stutter_type, markers_auto, meth_
           rhat_lp_all_mk[i] <- tmp$rhat_lp
           trace_all_mk[[i]] <- tmp$traceplot
 
+          average_sr <- rep(median_myu_all_mk[i], length(alcor))
+          average_sr[average_sr < 0] <- 0
           dt_average_sr_all_mk[[i]] <- data.table(Allele = alname,
                                                   AlCor = alcor,
-                                                  AveSR = rep(median_myu_all_mk[i], length(alcor)))
+                                                  AveSR = average_sr)
         }else{
           data_list_sr <- list(N = length(x_al), SR = y_sr, XVal = x_al, Height = tap)
           tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_sr, warmup, sampling, chains, n_parallel_chains)
@@ -523,18 +534,20 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, stutter_type, markers_auto, meth_
           trace_all_mk[[i]] <- tmp$traceplot
 
           average_sr <- calc_average_sr(alcor, median_slope_all_mk[i], median_intercept_all_mk[i])
+          average_sr[average_sr < 0] <- 0
           dt_average_sr_all_mk[[i]] <- data.table(Allele = alname,
                                                   AlCor = alcor,
                                                   AveSR = average_sr)
         }
-
-        cat(paste0("MCMC for the ", stutter_type, " of the ", markers_auto[i], "\n"))
-
       }else{
         if(meth == "Uniform (Multiple loci)"){
           index_multi_mk <- c(index_multi_mk, i)
         }
       }
+    }else{
+      dt_average_sr_all_mk[[i]] <- data.table(Allele = character(0),
+                                              AlCor = numeric(0),
+                                              AveSR = numeric(0))
     }
   }
 
@@ -554,14 +567,14 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, stutter_type, markers_auto, meth_
 
       trace_all_mk[[index_mk]] <- tmp$traceplot
 
-      tmp_st_alleles <- tmp_st_alleles_multi_mk[[index_mk]]
-      tmp_st_alleles <- sort(unique(tmp_st_alleles))
-      dt_average_sr_all_mk[[index_mk]] <- data.table(Allele = tmp_st_alleles,
-                                                     AlCor = as.numeric(tmp_st_alleles),
-                                                     AveSR = rep(median_myu_all_mk[index_mk], length(tmp_st_alleles)))
+      alname <- tmp_alname_multi_mk[[index_mk]]
+      alcor <- tmp_alcor_multi_mk[[index_mk]]
+      average_sr <- rep(median_myu_all_mk[index_mk], length(alcor))
+      average_sr[average_sr < 0] <- 0
+      dt_average_sr_all_mk[[index_mk]] <- data.table(Allele = alname,
+                                                     AlCor = alcor,
+                                                     AveSR = average_sr)
     }
-
-    cat(paste0("MCMC for the ", stutter_type, " of Uniform (Multiple loci)", "\n"))
   }
 
   dt_result_est_sr <- data.table(Marker = markers_auto,
@@ -643,43 +656,43 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_setting_est_sr
                                 model_sr_gen, model_sr_uni,
                                 warmup, sampling, chains, n_parallel_chains)
   dt_result_est_bsr <- tmp$dt_result_est_sr
-  trace_bsr <- tmp$trace_all_mk
-  dt_average_bsr <- tmp$dt_average_sr_all_mk
+  list_trace_bsr <- tmp$trace_all_mk
+  list_dt_average_bsr <- tmp$dt_average_sr_all_mk
 
   # Perform MCMC for FSR
   tmp <- perform_mcmc_sr_all_mk(dt_sr_data, "FS", markers_auto, meth_model_fsr, wlus_auto, wca_auto,
                                 model_sr_gen, model_sr_uni,
                                 warmup, sampling, chains, n_parallel_chains)
   dt_result_est_fsr <- tmp$dt_result_est_sr
-  trace_fsr <- tmp$trace_all_mk
-  dt_average_fsr <- tmp$dt_average_sr_all_mk
+  list_trace_fsr <- tmp$trace_all_mk
+  list_dt_average_fsr <- tmp$dt_average_sr_all_mk
 
   # Perform MCMC for DSR
   tmp <- perform_mcmc_sr_all_mk(dt_sr_data, "DS", markers_auto, meth_model_dsr, wlus_auto, wca_auto,
                                 model_sr_gen, model_sr_uni,
                                 warmup, sampling, chains, n_parallel_chains)
   dt_result_est_dsr <- tmp$dt_result_est_sr
-  trace_dsr <- tmp$trace_all_mk
-  dt_average_dsr <- tmp$dt_average_sr_all_mk
+  list_trace_dsr <- tmp$trace_all_mk
+  list_dt_average_dsr <- tmp$dt_average_sr_all_mk
 
   # Perform MCMC for M2SR
   tmp <- perform_mcmc_sr_all_mk(dt_sr_data, "M2S", markers_auto, meth_model_m2sr, wlus_auto, wca_auto,
                                 model_sr_gen, model_sr_uni,
                                 warmup, sampling, chains, n_parallel_chains)
   dt_result_est_m2sr <- tmp$dt_result_est_sr
-  trace_m2sr <- tmp$trace_all_mk
-  dt_average_m2sr <- tmp$dt_average_sr_all_mk
+  list_trace_m2sr <- tmp$trace_all_mk
+  list_dt_average_m2sr <- tmp$dt_average_sr_all_mk
 
   return(list("dt_result_est_bsr" = dt_result_est_bsr,
-              "trace_bsr" = trace_bsr,
-              "dt_average_bsr" = dt_average_bsr,
+              "list_trace_bsr" = list_trace_bsr,
+              "list_dt_average_bsr" = list_dt_average_bsr,
               "dt_result_est_fsr" = dt_result_est_fsr,
-              "trace_fsr" = trace_fsr,
-              "dt_average_fsr" = dt_average_fsr,
+              "list_trace_fsr" = list_trace_fsr,
+              "list_dt_average_fsr" = list_dt_average_fsr,
               "dt_result_est_dsr" = dt_result_est_dsr,
-              "trace_dsr" = trace_dsr,
-              "dt_average_dsr" = dt_average_dsr,
+              "list_trace_dsr" = list_trace_dsr,
+              "list_dt_average_dsr" = list_dt_average_dsr,
               "dt_result_est_m2sr" = dt_result_est_m2sr,
-              "trace_m2sr" = trace_m2sr,
-              "dt_average_m2sr" = dt_average_m2sr))
+              "list_trace_m2sr" = list_trace_m2sr,
+              "list_dt_average_m2sr" = list_dt_average_m2sr))
 }

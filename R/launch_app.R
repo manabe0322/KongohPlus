@@ -49,7 +49,7 @@ KongohPlus <- function(){
                              navbarMenu("Experimental parameters",
                                         seq_data_ui("seq_data"),
                                         est_sr_ui("est_sr"),
-                                        sr_ui("sr"),
+                                        edit_sr_ui("edit_sr"),
                                         est_par_ui("est_par")
                              ),
 
@@ -74,8 +74,8 @@ KongohPlus <- function(){
     size_server("size", path_pack)
 
     seq_data_server("seq_data", path_pack)
-    est_sr_server("est_sr", path_pack)
-    sr_server("sr", path_pack)
+    rv_est_sr <- est_sr_server("est_sr", path_pack)
+    edit_sr_server("edit_sr", path_pack)
     est_par_server("est_par", path_pack)
 
     observeEvent(input$act_new_proj, {

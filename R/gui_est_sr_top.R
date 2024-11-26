@@ -28,6 +28,8 @@ est_sr_server <- function(id, path_pack){
         req(rv_est_sr)
         est_sr_result_server("est_sr_result", path_pack, rv_est_sr)
       })
+
+      return(rv_est_sr)
     }
   )
 }

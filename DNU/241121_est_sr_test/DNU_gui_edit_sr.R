@@ -1,11 +1,11 @@
-#' sr_ui
+#' edit_sr_ui
 #'
 #' @description The function to create the ui module for the stutter ratio
-sr_ui <- function(id){
+edit_sr_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("Average stutter ratio",
-           titlePanel("Average stutter ratio"),
+  tabPanel("Edit average stutter ratio",
+           titlePanel("Edit average stutter ratio"),
            br(),
            sidebarLayout(
              sidebarPanel(width = 2,
@@ -61,10 +61,10 @@ create_dt_info_sr <- function(dt_sr, marker){
   return(dt_info_sr)
 }
 
-#' sr_server
+#' edit_sr_server
 #'
 #' @description The function to create the server module for the stutter ratio
-sr_server <- function(id, path_pack){
+edit_sr_server <- function(id, path_pack){
   moduleServer(
     id,
     function(input, output, session){

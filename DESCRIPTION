@@ -27,6 +27,7 @@ Imports:
     rhandsontable, 
     rmarkdown, 
     shinyFeedback,
+    shinyFiles, 
     shinyjs, 
     shinythemes, 
     waiter
