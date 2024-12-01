@@ -19,9 +19,10 @@ edit_sr_ui <- function(id){
                       uiOutput(ns("select_mk"))
                     ),
                     wellPanel(
-                      h4("Calculate stutter ratio"),
+                      actionButton(ns("act_add_al"), label = "Add"),
                       br(),
-                      uiOutput(ns("select_sr_type"))
+                      br(),
+                      actionButton(ns("act_del_al"), label = "Delete")
                     )
              ),
              column(10,
@@ -49,7 +50,6 @@ edit_sr_server <- function(id, path_pack){
       rv_edit_sr$list_dt_average_sr <- NULL
       rv_edit_sr$markers_auto <- character(0)
       rv_edit_sr$current_mk <- NULL
-      rv_edit_sr$current_sr_types <- character(0)
 
       shinyFileChoose(input, "load_stutter_file", roots = c(documents = paste0(path_pack, "/extdata/stutter_file")), session = session, filetypes = c("RData"))
 
@@ -108,13 +108,90 @@ edit_sr_server <- function(id, path_pack){
         rv_edit_sr$current_mk <- select_mk
       })
 
-      output$select_sr_type <- renderUI({
-        sr_types <- rv_edit_sr$current_sr_types
-        if(length(sr_types) != 0){
-          selectInput(session$ns("select_sr_type"), label = "SR type", choices = sr_types, selected = sr_types[1], selectize = FALSE)
+      ## Add an allele ##
+
+      observeEvent(input$act_add_al, {
+        showModal(modalDialog(
+          title = "Add an allele",
+          numericInput(session$ns("add_al"), label = "Allele", value = NULL),
+          #br(),
+          #checkboxInput(session$ns("ck_auto_calc_sr"), label = "Calculate stutter ratios", value = FALSE, width = NULL),
+          #br(),
+          #numericInput(session$ns("alcor_bsr"), label = "Allele", value = NULL),
+          footer = tagList(
+            actionButton(session$ns("act_add_al_done"), "Done"),
+            modalButton("Cancel")
+          ),
+          size = "l"
+        ))
+      })
+
+      observeEvent(input$add_al, {
+        add_al <- input$add_al
+        if(!is.numeric(add_al)){
+          showFeedbackDanger(inputId = "add_al", text = "A positive number is required!")
+        }else if(add_al <= 0){
+          showFeedbackDanger(inputId = "add_al", text = "A positive number is required!")
         }else{
-          selectInput(session$ns("select_sr_type"), label = "SR type", choices = sr_types, selected = NULL, selectize = FALSE)
+          hideFeedback("add_al")
         }
+      })
+
+      observeEvent(input$act_add_al_done, {
+        current_mk <- rv_edit_sr$current_mk
+        dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[current_mk]]
+        dt_ave_sr <- rbind(dt_ave_sr, list(as.character(input$add_al), NA, NA, NA, NA, NA, NA, NA, NA))
+        tmp_al <- as.numeric(dt_ave_sr$Allele)
+        tmp_al_sort <- sort(tmp_al)
+        dt_ave_sr <- dt_ave_sr[match(tmp_al_sort, tmp_al)]
+        rv_edit_sr$list_dt_average_sr[[current_mk]] <- dt_ave_sr
+
+        output$dt_edit_sr <- renderRHandsontable({
+          rhandsontable(dt_ave_sr, rowHeaders = FALSE, height = 750) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
+            hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 200) %>%
+            hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
+        })
+
+        removeModal()
+      })
+
+      ## Delete an allele ##
+
+      observeEvent(input$act_del_al, {
+        current_mk <- rv_edit_sr$current_mk
+        dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[current_mk]]
+        current_alleles <- dt_ave_sr$Allele
+
+        showModal(modalDialog(
+          title = "Delete an allele",
+          selectInput(session$ns("del_al"), label = h4("Allele"), choices = current_alleles, selected = current_alleles[1], selectize = FALSE),
+          footer = tagList(
+            actionButton(session$ns("act_del_al_done"), "Done"),
+            modalButton("Cancel")
+          ),
+          size = "l"
+        ))
+      })
+
+      observeEvent(input$act_del_al_done, {
+        del_al <- input$del_al
+        current_mk <- rv_edit_sr$current_mk
+        dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[current_mk]]
+        current_alleles <- dt_ave_sr$Allele
+        dt_ave_sr <- dt_ave_sr[- which(current_alleles == del_al)]
+        rv_edit_sr$list_dt_average_sr[[current_mk]] <- dt_ave_sr
+
+        output$dt_edit_sr <- renderRHandsontable({
+          rhandsontable(dt_ave_sr, rowHeaders = FALSE, height = 750) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
+            hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 200) %>%
+            hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
+        })
+
+        removeModal()
       })
     }
   )
