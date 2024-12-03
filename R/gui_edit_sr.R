@@ -114,10 +114,12 @@ edit_sr_server <- function(id, path_pack){
         showModal(modalDialog(
           title = "Add an allele",
           numericInput(session$ns("add_al"), label = "Allele", value = NULL),
-          #br(),
-          #checkboxInput(session$ns("ck_auto_calc_sr"), label = "Calculate stutter ratios", value = FALSE, width = NULL),
-          #br(),
-          #numericInput(session$ns("alcor_bsr"), label = "Allele", value = NULL),
+          br(),
+          checkboxInput(session$ns("ck_auto_calc_sr"), label = "Calculate stutter ratios", value = FALSE, width = NULL),
+          disabled(numericInput(session$ns("alcor_bsr"), label = "Corrected allele for BSR", value = NULL)),
+          disabled(numericInput(session$ns("alcor_fsr"), label = "Corrected allele for FSR", value = NULL)),
+          disabled(numericInput(session$ns("alcor_dsr"), label = "Corrected allele for DSR", value = NULL)),
+          disabled(numericInput(session$ns("alcor_m2sr"), label = "Corrected allele for M2SR", value = NULL)),
           footer = tagList(
             actionButton(session$ns("act_add_al_done"), "Done"),
             modalButton("Cancel")
@@ -134,6 +136,25 @@ edit_sr_server <- function(id, path_pack){
           showFeedbackDanger(inputId = "add_al", text = "A positive number is required!")
         }else{
           hideFeedback("add_al")
+        }
+      })
+
+      observeEvent(input$ck_auto_calc_sr, {
+        ck_auto_calc_sr <- input$ck_auto_calc_sr
+        if(ck_auto_calc_sr){
+          enable("alcor_bsr")
+          enable("alcor_fsr")
+          enable("alcor_dsr")
+          enable("alcor_m2sr")
+        }else{
+          #updateNumericInput(session, "alcor_bsr", value = NULL)
+          #updateNumericInput(session, "alcor_fsr", value = NULL)
+          #updateNumericInput(session, "alcor_dsr", value = NULL)
+          #updateNumericInput(session, "alcor_m2sr", value = NULL)
+          disable("alcor_bsr")
+          disable("alcor_fsr")
+          disable("alcor_dsr")
+          disable("alcor_m2sr")
         }
       })
 
