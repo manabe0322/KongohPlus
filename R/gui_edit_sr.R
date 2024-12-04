@@ -87,12 +87,17 @@ edit_sr_server <- function(id, path_pack){
     id,
     function(input, output, session){
       rv_edit_sr <- reactiveValues()
+      rv_edit_sr$fn_stutter_file <- NULL
       rv_edit_sr$dt_setting_est_sr <- NULL
       rv_edit_sr$dt_result_est_bsr <- NULL
       rv_edit_sr$dt_result_est_fsr <- NULL
       rv_edit_sr$dt_result_est_dsr <- NULL
       rv_edit_sr$dt_result_est_m2sr <- NULL
       rv_edit_sr$list_dt_average_sr <- NULL
+      rv_edit_sr$list_trace_bsr <- NULL
+      rv_edit_sr$list_trace_fsr <- NULL
+      rv_edit_sr$list_trace_dsr <- NULL
+      rv_edit_sr$list_trace_m2sr <- NULL
       rv_edit_sr$markers_auto <- character(0)
       rv_edit_sr$current_mk <- NULL
 
@@ -101,10 +106,23 @@ edit_sr_server <- function(id, path_pack){
       observeEvent(input$load_stutter_file, {
         req(input$load_stutter_file)
         path_stutter_file <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/stutter_file")), input$load_stutter_file)$datapath
-
-        output$fn_stutter_file <- renderText({paste0("File name: ", basename(path_stutter_file))})
+        rv_edit_sr$fn_stutter_file <- fn_stutter_file <- basename(path_stutter_file)
+        output$fn_stutter_file <- renderText({paste0("File name: ", fn_stutter_file)})
 
         if(length(path_stutter_file) > 0){
+          rv_edit_sr$dt_setting_est_sr <- NULL
+          rv_edit_sr$dt_result_est_bsr <- NULL
+          rv_edit_sr$dt_result_est_fsr <- NULL
+          rv_edit_sr$dt_result_est_dsr <- NULL
+          rv_edit_sr$dt_result_est_m2sr <- NULL
+          rv_edit_sr$list_dt_average_sr <- NULL
+          rv_edit_sr$list_trace_bsr <- NULL
+          rv_edit_sr$list_trace_fsr <- NULL
+          rv_edit_sr$list_trace_dsr <- NULL
+          rv_edit_sr$list_trace_m2sr <- NULL
+          rv_edit_sr$markers_auto <- character(0)
+          rv_edit_sr$current_mk <- NULL
+
           load(path_stutter_file)
           rv_edit_sr$dt_setting_est_sr <- dt_setting_est_sr
           rv_edit_sr$dt_result_est_bsr <- dt_result_est_bsr
@@ -112,7 +130,33 @@ edit_sr_server <- function(id, path_pack){
           rv_edit_sr$dt_result_est_dsr <- dt_result_est_dsr
           rv_edit_sr$dt_result_est_m2sr <- dt_result_est_m2sr
           rv_edit_sr$list_dt_average_sr <- list_dt_average_sr
+          rv_edit_sr$list_trace_bsr <- list_trace_bsr
+          rv_edit_sr$list_trace_fsr <- list_trace_fsr
+          rv_edit_sr$list_trace_dsr <- list_trace_dsr
+          rv_edit_sr$list_trace_m2sr <- list_trace_m2sr
           rv_edit_sr$markers_auto <- names(list_dt_average_sr)
+
+          select_mk <- rv_edit_sr$markers_auto[1]
+
+          dt_setting_est_sr <- rv_edit_sr$dt_setting_est_sr
+          index_mk <- which(dt_setting_est_sr$Marker == select_mk)
+          meth_bsr <- dt_setting_est_sr[["BSR model"]][index_mk]
+          meth_fsr <- dt_setting_est_sr[["FSR model"]][index_mk]
+          meth_dsr <- dt_setting_est_sr[["DSR model"]][index_mk]
+          meth_m2sr <- dt_setting_est_sr[["M2SR model"]][index_mk]
+          sr_types <- c("BSR", "FSR", "DSR", "M2SR")
+
+          dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[select_mk]]
+
+          output$dt_edit_sr <- renderRHandsontable({
+            rhandsontable(dt_ave_sr, rowHeaders = FALSE, height = 600) %>%
+              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+              hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
+              hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 175) %>%
+              hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
+          })
+
+          rv_edit_sr$current_mk <- select_mk
         }
       })
 
@@ -122,7 +166,6 @@ edit_sr_server <- function(id, path_pack){
           selectInput(session$ns("select_mk"), label = "Marker", choices = markers_auto, selected = markers_auto[1], selectize = FALSE)
         }else{
           NULL
-          #selectInput(session$ns("select_mk"), label = h4("Marker"), choices = markers_auto, selected = NULL, selectize = FALSE)
         }
       })
 
@@ -142,7 +185,6 @@ edit_sr_server <- function(id, path_pack){
           meth_dsr <- dt_setting_est_sr[["DSR model"]][index_mk]
           meth_m2sr <- dt_setting_est_sr[["M2SR model"]][index_mk]
           sr_types <- c("BSR", "FSR", "DSR", "M2SR")
-          rv_edit_sr$current_sr_types <- sr_types[!is.element(c(meth_bsr, meth_fsr, meth_dsr, meth_m2sr), "Not consider")]
 
           dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[select_mk]]
 
@@ -208,10 +250,10 @@ edit_sr_server <- function(id, path_pack){
           rv_edit_sr$list_dt_average_sr[[current_mk]] <- dt_ave_sr
 
           output$dt_edit_sr <- renderRHandsontable({
-            rhandsontable(dt_ave_sr, rowHeaders = FALSE, height = 750) %>%
+            rhandsontable(dt_ave_sr, rowHeaders = FALSE, height = 600) %>%
               hot_table(fillHandle = FALSE, rowHeights = 30) %>%
               hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
-              hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 200) %>%
+              hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 175) %>%
               hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
           })
         }
@@ -237,12 +279,63 @@ edit_sr_server <- function(id, path_pack){
         rv_edit_sr$list_dt_average_sr[[current_mk]] <- dt_ave_sr
 
         output$dt_edit_sr <- renderRHandsontable({
-          rhandsontable(dt_ave_sr, rowHeaders = FALSE, height = 750) %>%
+          rhandsontable(dt_ave_sr, rowHeaders = FALSE, height = 600) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
             hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
-            hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 200) %>%
+            hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 175) %>%
             hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
         })
+      })
+
+      ## Save edited data ##
+
+      observeEvent(input$act_save_as_edit_sr, {
+        showModal(modalDialog(
+          title = "Save stutter data",
+          textInput(session$ns("fn_edit_sr"), label = "Enter the file name"),
+          footer = tagList(
+            actionButton(session$ns("act_save_as_edit_sr_2"), "Save"),
+            modalButton("Close")
+          )
+        ))
+      })
+
+      observeEvent(input$act_save_as_edit_sr_2, {
+        dt_setting_est_sr <- rv_edit_sr$dt_setting_est_sr
+        dt_result_est_bsr <- rv_edit_sr$dt_result_est_bsr
+        dt_result_est_fsr <- rv_edit_sr$dt_result_est_fsr
+        dt_result_est_dsr <- rv_edit_sr$dt_result_est_dsr
+        dt_result_est_m2sr <- rv_edit_sr$dt_result_est_m2sr
+        list_dt_average_sr <- rv_edit_sr$list_dt_average_sr
+        list_trace_bsr <- rv_edit_sr$list_trace_bsr
+        list_trace_fsr <- rv_edit_sr$list_trace_fsr
+        list_trace_dsr <- rv_edit_sr$list_trace_dsr
+        list_trace_m2sr <- rv_edit_sr$list_trace_m2sr
+
+        save(list = c("dt_setting_est_sr",
+                      "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr",
+                      "list_trace_bsr", "list_trace_fsr", "list_trace_dsr", "list_trace_m2sr",
+                      "list_dt_average_sr"),
+             file = paste0(path_pack, "/extdata/stutter_file/", input$fn_edit_sr, ".RData"))
+      })
+
+      observeEvent(input$act_save_edit_sr, {
+        dt_setting_est_sr <- rv_edit_sr$dt_setting_est_sr
+        dt_result_est_bsr <- rv_edit_sr$dt_result_est_bsr
+        dt_result_est_fsr <- rv_edit_sr$dt_result_est_fsr
+        dt_result_est_dsr <- rv_edit_sr$dt_result_est_dsr
+        dt_result_est_m2sr <- rv_edit_sr$dt_result_est_m2sr
+        list_dt_average_sr <- rv_edit_sr$list_dt_average_sr
+        list_trace_bsr <- rv_edit_sr$list_trace_bsr
+        list_trace_fsr <- rv_edit_sr$list_trace_fsr
+        list_trace_dsr <- rv_edit_sr$list_trace_dsr
+        list_trace_m2sr <- rv_edit_sr$list_trace_m2sr
+
+        save(list = c("dt_setting_est_sr",
+                      "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr",
+                      "list_trace_bsr", "list_trace_fsr", "list_trace_dsr", "list_trace_m2sr",
+                      "list_dt_average_sr"),
+             file = paste0(path_pack, "/extdata/stutter_file/", rv_edit_sr$fn_stutter_file))
       })
     }
   )
