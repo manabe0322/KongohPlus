@@ -105,7 +105,8 @@ perform_mcmc_ae_all_mk <- function(pae_data_use, markers_auto,
               "rhat_lp" = rhat_lp))
 }
 
-tmp_func2 <- function(peaks, gt){
+tmp_func2 <- function(peaks, gt,
+                      allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average){
   peaks <- as.numeric(peaks)
   gt <- as.numeric(gt)
 
@@ -116,66 +117,64 @@ tmp_func2 <- function(peaks, gt){
 
   # Heterozygote
   if(gt[1] != gt[2]){
-    for(i in 1:length(gt)){
+    for(i in 1:2){
       al <- gt[i]
+      index_sr_al <- which(is.element(allele_sr, al))
+      if(length(index_sr_al) == 1){
+        bsr <- bsr_average[index_sr_al]
+        fsr <- fsr_average[index_sr_al]
+        dsr <- dsr_average[index_sr_al]
+        m2sr <- m2sr_average[index_sr_al]
+      }else{
+        bsr <- 0
+        fsr <- 0
+        dsr <- 0
+        m2sr <- 0
+      }
 
       index_al <- which(is.element(peaks, al))
-
       bs <- calc_bs_one(al)
       index_bs <- which(is.element(peaks, bs))
-
       fs <- calc_fs_one(al)
       index_fs <- which(is.element(peaks, fs))
-
       ds <- calc_ds_one(al)
       index_ds <- which(is.element(peaks, ds))
-
       m2s <- calc_m2s_one(al)
       index_m2s <- which(is.element(peaks, m2s))
+    }
 
-
-      index_sr_al <- which(is.element(allele_sr, al))
-
-      if(length(index_al) == 1){
-        if(sr_consider["BS"]){
-          bs <- calc_bs_one(al)
-          index_bs <- which(is.element(peaks, bs))
-          if(length(index_sr_al) == 1){
-            bsr <- bsr_average[index_sr_al]
-          }else{
-            bsr <- 0
-          }
-        }else{
-          bsr <- 0
-        }
-
-        if(sr_consider["FS"]){
-          fs <- calc_fs_one(al)
-          index_fs <- which(is.element(peaks, fs))
-          if(length(index_fsr) == 1){
-            fsr <- fsr_average[index_sr_al]
-          }else{
-            fsr <- 0
-          }
-        }else{
-          fsr <- 0
-        }
-
-        if(sr_consider["DS"]){
-          ds <- calc_ds_one(al)
-          index_ds <- which(is.element(peaks, ds))
-          if(length(index_sr_al) == 1){
-            dsr <- dsr_average[index_sr_al]
-          }else{
-            dsr <- 0
-          }
-        }else{
-          dsr <- 0
-        }
+    if(i == 1){
+      rph_al_1[index_al] <- rph_base / (1 + bsr + fsr + dsr + m2sr)
+      if(length(index_bs) == 1){
+        rph_bs_1[index_bs] <- rph_base * bsr / (1 + bsr + fsr + dsr + m2sr)
+      }
+      if(length(index_fs) == 1){
+        rph_fs_1[index_fs] <- rph_base * fsr / (1 + bsr + fsr + dsr + m2sr)
+      }
+      if(length(index_ds) == 1){
+        rph_ds_1[index_ds] <- rph_base * dsr / (1 + bsr + fsr + dsr + m2sr)
+      }
+      if(length(index_m2s) == 1){
+        rph_m2s_1[index_m2s] <- rph_base * m2sr / (1 + bsr + fsr + dsr + m2sr)
+      }
+    }else{
+      rph_al_2[index_al] <- rph_base / (1 + bsr + fsr + dsr + m2sr)
+      if(length(index_bs) == 1){
+        rph_bs_2[index_bs] <- rph_base * bsr / (1 + bsr + fsr + dsr + m2sr)
+      }
+      if(length(index_fs) == 1){
+        rph_fs_2[index_fs] <- rph_base * fsr / (1 + bsr + fsr + dsr + m2sr)
+      }
+      if(length(index_ds) == 1){
+        rph_ds_2[index_ds] <- rph_base * dsr / (1 + bsr + fsr + dsr + m2sr)
+      }
+      if(length(index_m2s) == 1){
+        rph_m2s_2[index_m2s] <- rph_base * m2sr / (1 + bsr + fsr + dsr + m2sr)
       }
     }
   }
 
+  return(cbind(rph_al_1, rph_al_2, rph_bs_1, rph_bs_2, rph_fs_1, rph_fs_2, rph_ds_1, rph_ds_2, rph_m2s_1, rph_m2s_2))
 }
 
 tmp_func <- function(peak_use, gt_use, prop_ae_data_use, list_dt_average_sr){
