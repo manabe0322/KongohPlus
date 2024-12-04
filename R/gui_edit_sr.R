@@ -8,18 +8,33 @@ edit_sr_ui <- function(id){
            titlePanel("Edit average stutter ratio"),
            br(),
            fluidRow(
+             column(1,
+                    shinyFilesButton(ns("load_stutter_file"), label = "Load stutter file", title = "Select a file", multiple = FALSE, class = "btn btn-primary"),
+                    br(),
+                    br(),
+                    actionButton(ns("act_save_as_edit_sr"), label = "Save as", class = "btn btn-primary"),
+                    br(),
+                    br(),
+                    actionButton(ns("act_save_edit_sr"), label = "Save", class = "btn btn-primary")
+             ),
              column(2,
-                    shinyFilesButton(ns("load_stutter_file"), label = "Load stutter file", title = "Select a file", multiple = FALSE, class = "btn btn-primary btn-lg"),
-                    br(),
-                    br(),
                     wellPanel(
-                      actionButton(ns("act_add_al"), label = "Add"),
-                      br(),
-                      br(),
+                      h4("Add an allele"),
+                      numericInput(ns("add_al"), label = "Allele", value = NULL),
+                      checkboxInput(ns("ck_auto_calc_sr"), label = "Calculate stutter ratios", value = FALSE, width = NULL),
+                      disabled(numericInput(ns("alcor_bsr"), label = "Corrected allele (BSR)", value = NULL)),
+                      disabled(numericInput(ns("alcor_fsr"), label = "Corrected allele (FSR)", value = NULL)),
+                      disabled(numericInput(ns("alcor_dsr"), label = "Corrected allele (DSR)", value = NULL)),
+                      disabled(numericInput(ns("alcor_m2sr"), label = "Corrected allele (M2SR)", value = NULL)),
+                      actionButton(ns("act_add_al"), label = "Add")
+                    ),
+                    wellPanel(
+                      h4("Delete an allele"),
+                      uiOutput(ns("select_del_al")),
                       actionButton(ns("act_del_al"), label = "Delete")
                     )
              ),
-             column(10,
+             column(9,
                     textOutput(ns("fn_stutter_file")),
                     br(),
                     uiOutput(ns("select_mk")),
@@ -135,7 +150,7 @@ edit_sr_server <- function(id, path_pack){
             rhandsontable(dt_ave_sr, rowHeaders = FALSE, height = 600) %>%
               hot_table(fillHandle = FALSE, rowHeights = 30) %>%
               hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
-              hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 200) %>%
+              hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 175) %>%
               hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
           })
         }
@@ -144,35 +159,6 @@ edit_sr_server <- function(id, path_pack){
       })
 
       ## Add an allele ##
-
-      observeEvent(input$act_add_al, {
-        showModal(modalDialog(
-          title = "Add an allele",
-          numericInput(session$ns("add_al"), label = "Allele", value = NULL),
-          br(),
-          checkboxInput(session$ns("ck_auto_calc_sr"), label = "Calculate stutter ratios", value = FALSE, width = NULL),
-          disabled(numericInput(session$ns("alcor_bsr"), label = "Corrected allele for BSR", value = NULL)),
-          disabled(numericInput(session$ns("alcor_fsr"), label = "Corrected allele for FSR", value = NULL)),
-          disabled(numericInput(session$ns("alcor_dsr"), label = "Corrected allele for DSR", value = NULL)),
-          disabled(numericInput(session$ns("alcor_m2sr"), label = "Corrected allele for M2SR", value = NULL)),
-          footer = tagList(
-            actionButton(session$ns("act_add_al_done"), "Done"),
-            modalButton("Cancel")
-          ),
-          size = "l"
-        ))
-      })
-
-      observeEvent(input$add_al, {
-        add_al <- input$add_al
-        if(!is.numeric(add_al)){
-          showFeedbackDanger(inputId = "add_al", text = "A positive number is required!")
-        }else if(add_al <= 0){
-          showFeedbackDanger(inputId = "add_al", text = "A positive number is required!")
-        }else{
-          hideFeedback("add_al")
-        }
-      })
 
       observeEvent(input$ck_auto_calc_sr, {
         ck_auto_calc_sr <- input$ck_auto_calc_sr
@@ -193,62 +179,56 @@ edit_sr_server <- function(id, path_pack){
         }
       })
 
-      observeEvent(input$act_add_al_done, {
-        current_mk <- rv_edit_sr$current_mk
-        dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[current_mk]]
+      observeEvent(input$act_add_al, {
+        add_al <- input$add_al
+        if(!is.na(add_al)){
+          current_mk <- rv_edit_sr$current_mk
+          dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[current_mk]]
 
-        alcor_bsr <- input$alcor_bsr
-        alcor_fsr <- input$alcor_fsr
-        alcor_dsr <- input$alcor_dsr
-        alcor_m2sr <- input$alcor_m2sr
-        if(input$ck_auto_calc_sr){
-          bsr <- extrapolate_sr(alcor_bsr, rv_edit_sr$dt_result_est_bsr, current_mk)
-          fsr <- extrapolate_sr(alcor_fsr, rv_edit_sr$dt_result_est_fsr, current_mk)
-          dsr <- extrapolate_sr(alcor_dsr, rv_edit_sr$dt_result_est_dsr, current_mk)
-          m2sr <- extrapolate_sr(alcor_m2sr, rv_edit_sr$dt_result_est_m2sr, current_mk)
-        }else{
-          bsr <- NA
-          fsr <- NA
-          dsr <- NA
-          m2sr <- NA
+          alcor_bsr <- input$alcor_bsr
+          alcor_fsr <- input$alcor_fsr
+          alcor_dsr <- input$alcor_dsr
+          alcor_m2sr <- input$alcor_m2sr
+          if(input$ck_auto_calc_sr){
+            bsr <- extrapolate_sr(alcor_bsr, rv_edit_sr$dt_result_est_bsr, current_mk)
+            fsr <- extrapolate_sr(alcor_fsr, rv_edit_sr$dt_result_est_fsr, current_mk)
+            dsr <- extrapolate_sr(alcor_dsr, rv_edit_sr$dt_result_est_dsr, current_mk)
+            m2sr <- extrapolate_sr(alcor_m2sr, rv_edit_sr$dt_result_est_m2sr, current_mk)
+          }else{
+            bsr <- NA
+            fsr <- NA
+            dsr <- NA
+            m2sr <- NA
+          }
+
+          dt_ave_sr <- rbind(dt_ave_sr, list(as.character(add_al), alcor_bsr, bsr, alcor_fsr, fsr, alcor_dsr, dsr, alcor_m2sr, m2sr))
+          tmp_al <- as.numeric(dt_ave_sr$Allele)
+          tmp_al_sort <- sort(tmp_al)
+          dt_ave_sr <- dt_ave_sr[match(tmp_al_sort, tmp_al)]
+          rv_edit_sr$list_dt_average_sr[[current_mk]] <- dt_ave_sr
+
+          output$dt_edit_sr <- renderRHandsontable({
+            rhandsontable(dt_ave_sr, rowHeaders = FALSE, height = 750) %>%
+              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+              hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
+              hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 200) %>%
+              hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
+          })
         }
-
-        dt_ave_sr <- rbind(dt_ave_sr, list(as.character(input$add_al), alcor_bsr, bsr, alcor_fsr, fsr, alcor_dsr, dsr, alcor_m2sr, m2sr))
-        tmp_al <- as.numeric(dt_ave_sr$Allele)
-        tmp_al_sort <- sort(tmp_al)
-        dt_ave_sr <- dt_ave_sr[match(tmp_al_sort, tmp_al)]
-        rv_edit_sr$list_dt_average_sr[[current_mk]] <- dt_ave_sr
-
-        output$dt_edit_sr <- renderRHandsontable({
-          rhandsontable(dt_ave_sr, rowHeaders = FALSE, height = 750) %>%
-            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-            hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
-            hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 200) %>%
-            hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
-        })
-
-        removeModal()
       })
 
       ## Delete an allele ##
 
-      observeEvent(input$act_del_al, {
+      output$select_del_al <- renderUI({
         current_mk <- rv_edit_sr$current_mk
-        dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[current_mk]]
-        current_alleles <- dt_ave_sr$Allele
-
-        showModal(modalDialog(
-          title = "Delete an allele",
-          selectInput(session$ns("del_al"), label = h4("Allele"), choices = current_alleles, selected = current_alleles[1], selectize = FALSE),
-          footer = tagList(
-            actionButton(session$ns("act_del_al_done"), "Done"),
-            modalButton("Cancel")
-          ),
-          size = "l"
-        ))
+        if(!is.null(current_mk)){
+          dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[current_mk]]
+          current_alleles <- dt_ave_sr$Allele
+          selectInput(session$ns("del_al"), label = "Allele", choices = current_alleles, selected = current_alleles[1], selectize = FALSE)
+        }
       })
 
-      observeEvent(input$act_del_al_done, {
+      observeEvent(input$act_del_al, {
         del_al <- input$del_al
         current_mk <- rv_edit_sr$current_mk
         dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[current_mk]]
@@ -263,8 +243,6 @@ edit_sr_server <- function(id, path_pack){
             hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 200) %>%
             hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
         })
-
-        removeModal()
       })
     }
   )
