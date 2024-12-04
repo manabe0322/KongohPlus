@@ -106,10 +106,11 @@ edit_sr_server <- function(id, path_pack){
       observeEvent(input$load_stutter_file, {
         req(input$load_stutter_file)
         path_stutter_file <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/stutter_file")), input$load_stutter_file)$datapath
-        rv_edit_sr$fn_stutter_file <- fn_stutter_file <- basename(path_stutter_file)
-        output$fn_stutter_file <- renderText({paste0("File name: ", fn_stutter_file)})
 
         if(length(path_stutter_file) > 0){
+          rv_edit_sr$fn_stutter_file <- fn_stutter_file <- basename(path_stutter_file)
+          output$fn_stutter_file <- renderText({paste0("File name: ", fn_stutter_file)})
+
           rv_edit_sr$dt_setting_est_sr <- NULL
           rv_edit_sr$dt_result_est_bsr <- NULL
           rv_edit_sr$dt_result_est_fsr <- NULL
@@ -317,6 +318,8 @@ edit_sr_server <- function(id, path_pack){
                       "list_trace_bsr", "list_trace_fsr", "list_trace_dsr", "list_trace_m2sr",
                       "list_dt_average_sr"),
              file = paste0(path_pack, "/extdata/stutter_file/", input$fn_edit_sr, ".RData"))
+
+        removeModal()
       })
 
       observeEvent(input$act_save_edit_sr, {
