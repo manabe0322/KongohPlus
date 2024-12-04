@@ -9,15 +9,9 @@ edit_sr_ui <- function(id){
            br(),
            fluidRow(
              column(2,
-                    wellPanel(
-                      h4("Stutter file"),
-                      shinyFilesButton(ns("load_stutter_file"), "Load", "Select a file", multiple = FALSE),
-                      br(),
-                      br(),
-                      textOutput(ns("fn_stutter_file")),
-                      br(),
-                      uiOutput(ns("select_mk"))
-                    ),
+                    shinyFilesButton(ns("load_stutter_file"), label = "Load stutter file", title = "Select a file", multiple = FALSE, class = "btn btn-primary btn-lg"),
+                    br(),
+                    br(),
                     wellPanel(
                       actionButton(ns("act_add_al"), label = "Add"),
                       br(),
@@ -26,6 +20,10 @@ edit_sr_ui <- function(id){
                     )
              ),
              column(10,
+                    textOutput(ns("fn_stutter_file")),
+                    br(),
+                    uiOutput(ns("select_mk")),
+                    br(),
                     tags$style(HTML("
                          .handsontable .htCore td {
                            vertical-align: middle !important;
@@ -38,6 +36,34 @@ edit_sr_ui <- function(id){
   )
 }
 
+#' extrapolate_sr
+#'
+#' @description The function to extrapolate the stutter ratio of an allele
+extrapolate_sr <- function(alcor, dt_result_est_sr, mk){
+  if(!is.na(alcor)){
+    index_mk <- which(dt_result_est_sr$Marker == mk)
+    meth <- dt_result_est_sr$Model[index_mk]
+    if(is.element(meth, c("Allele", "LUS", "Multi-seq"))){
+      slope <- dt_result_est_sr$Slope[index_mk]
+      intercept <- dt_result_est_sr$Intercept[index_mk]
+      sr <- slope * alcor + intercept
+      if(sr < 0){
+        sr <- 0
+      }
+    }else if(is.element(meth, c("Uniform", "Uniform (Multiple loci)"))){
+      sr <- dt_result_est_sr$Myu[index_mk]
+      if(sr < 0){
+        sr <- 0
+      }
+    }else{
+      sr <- NA
+    }
+  }else{
+    sr <- NA
+  }
+  return(sr)
+}
+
 #' edit_sr_server
 #'
 #' @description The function to create the server module for the stutter ratio
@@ -47,6 +73,10 @@ edit_sr_server <- function(id, path_pack){
     function(input, output, session){
       rv_edit_sr <- reactiveValues()
       rv_edit_sr$dt_setting_est_sr <- NULL
+      rv_edit_sr$dt_result_est_bsr <- NULL
+      rv_edit_sr$dt_result_est_fsr <- NULL
+      rv_edit_sr$dt_result_est_dsr <- NULL
+      rv_edit_sr$dt_result_est_m2sr <- NULL
       rv_edit_sr$list_dt_average_sr <- NULL
       rv_edit_sr$markers_auto <- character(0)
       rv_edit_sr$current_mk <- NULL
@@ -62,6 +92,10 @@ edit_sr_server <- function(id, path_pack){
         if(length(path_stutter_file) > 0){
           load(path_stutter_file)
           rv_edit_sr$dt_setting_est_sr <- dt_setting_est_sr
+          rv_edit_sr$dt_result_est_bsr <- dt_result_est_bsr
+          rv_edit_sr$dt_result_est_fsr <- dt_result_est_fsr
+          rv_edit_sr$dt_result_est_dsr <- dt_result_est_dsr
+          rv_edit_sr$dt_result_est_m2sr <- dt_result_est_m2sr
           rv_edit_sr$list_dt_average_sr <- list_dt_average_sr
           rv_edit_sr$markers_auto <- names(list_dt_average_sr)
         }
@@ -70,9 +104,10 @@ edit_sr_server <- function(id, path_pack){
       output$select_mk <- renderUI({
         markers_auto <- rv_edit_sr$markers_auto
         if(length(markers_auto) != 0){
-          selectInput(session$ns("select_mk"), label = h4("Marker"), choices = markers_auto, selected = markers_auto[1], selectize = FALSE)
+          selectInput(session$ns("select_mk"), label = "Marker", choices = markers_auto, selected = markers_auto[1], selectize = FALSE)
         }else{
-          selectInput(session$ns("select_mk"), label = h4("Marker"), choices = markers_auto, selected = NULL, selectize = FALSE)
+          NULL
+          #selectInput(session$ns("select_mk"), label = h4("Marker"), choices = markers_auto, selected = NULL, selectize = FALSE)
         }
       })
 
@@ -97,7 +132,7 @@ edit_sr_server <- function(id, path_pack){
           dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[select_mk]]
 
           output$dt_edit_sr <- renderRHandsontable({
-            rhandsontable(dt_ave_sr, rowHeaders = FALSE, height = 750) %>%
+            rhandsontable(dt_ave_sr, rowHeaders = FALSE, height = 600) %>%
               hot_table(fillHandle = FALSE, rowHeights = 30) %>%
               hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
               hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 200) %>%
@@ -161,7 +196,24 @@ edit_sr_server <- function(id, path_pack){
       observeEvent(input$act_add_al_done, {
         current_mk <- rv_edit_sr$current_mk
         dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[current_mk]]
-        dt_ave_sr <- rbind(dt_ave_sr, list(as.character(input$add_al), NA, NA, NA, NA, NA, NA, NA, NA))
+
+        alcor_bsr <- input$alcor_bsr
+        alcor_fsr <- input$alcor_fsr
+        alcor_dsr <- input$alcor_dsr
+        alcor_m2sr <- input$alcor_m2sr
+        if(input$ck_auto_calc_sr){
+          bsr <- extrapolate_sr(alcor_bsr, rv_edit_sr$dt_result_est_bsr, current_mk)
+          fsr <- extrapolate_sr(alcor_fsr, rv_edit_sr$dt_result_est_fsr, current_mk)
+          dsr <- extrapolate_sr(alcor_dsr, rv_edit_sr$dt_result_est_dsr, current_mk)
+          m2sr <- extrapolate_sr(alcor_m2sr, rv_edit_sr$dt_result_est_m2sr, current_mk)
+        }else{
+          bsr <- NA
+          fsr <- NA
+          dsr <- NA
+          m2sr <- NA
+        }
+
+        dt_ave_sr <- rbind(dt_ave_sr, list(as.character(input$add_al), alcor_bsr, bsr, alcor_fsr, fsr, alcor_dsr, dsr, alcor_m2sr, m2sr))
         tmp_al <- as.numeric(dt_ave_sr$Allele)
         tmp_al_sort <- sort(tmp_al)
         dt_ave_sr <- dt_ave_sr[match(tmp_al_sort, tmp_al)]
