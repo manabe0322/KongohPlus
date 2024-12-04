@@ -52,7 +52,7 @@ extract_sr_data <- function(peaks, heights, gt, sr_consider){
           }else if(bool_m2s[i]){
             al <- calc_parent_al_m2s_one(peak)
           }else{
-            al <- numeric(0)
+            al <- NA
           }
 
           index_al <- which(is.element(peaks, al))
@@ -206,9 +206,7 @@ create_dt_sr_data <- function(peak_list, height_list, gt_list, sr_consider_auto,
                            Bool_SharedAllele = bool_shared_allele_all,
                            Bool_SeqData = bool_seq_all)
 
-
-
-  # bs, fs, ds, m2sが全てFALSEのデータを除く
+  return(dt_sr_data)
 }
 
 #' pick_rep

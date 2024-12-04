@@ -138,7 +138,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         }
       })
 
-      # Select kit
+      # Select a kit
       output$kit_sr <- renderUI({
         kit_names <- list.files(paste0(path_pack, "/extdata/kit"))
         kit_names <- gsub(".csv", "", kit_names)
@@ -288,6 +288,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
+          # Load the MCMC models
           model_sr_gen <- stan_package_model(name = "model_sr_gen", package = "KongohPlus")
           model_sr_uni <- stan_package_model(name = "model_sr_uni", package = "KongohPlus")
 
