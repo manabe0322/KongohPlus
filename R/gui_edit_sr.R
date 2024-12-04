@@ -79,6 +79,27 @@ extrapolate_sr <- function(alcor, dt_result_est_sr, mk){
   return(sr)
 }
 
+replace_ave_sr <- function(list_dt_average_sr){
+  for(i in 1:length(list_dt_average_sr)){
+    dt_ave_sr <- list_dt_average_sr[[i]]
+
+    # Replace NA to 0
+    dt_ave_sr[["Average BSR"]][is.na(dt_ave_sr[["Average BSR"]])] <- 0
+    dt_ave_sr[["Average FSR"]][is.na(dt_ave_sr[["Average FSR"]])] <- 0
+    dt_ave_sr[["Average DSR"]][is.na(dt_ave_sr[["Average DSR"]])] <- 0
+    dt_ave_sr[["Average M2SR"]][is.na(dt_ave_sr[["Average M2SR"]])] <- 0
+
+    # Replace <0 to 0
+    dt_ave_sr[["Average BSR"]][dt_ave_sr[["Average BSR"]] < 0] <- 0
+    dt_ave_sr[["Average FSR"]][dt_ave_sr[["Average FSR"]] < 0] <- 0
+    dt_ave_sr[["Average DSR"]][dt_ave_sr[["Average DSR"]] < 0] <- 0
+    dt_ave_sr[["Average M2SR"]][dt_ave_sr[["Average M2SR"]] < 0] <- 0
+
+    list_dt_average_sr[[i]] <- dt_ave_sr
+  }
+  return(list_dt_average_sr)
+}
+
 #' edit_sr_server
 #'
 #' @description The function to create the server module for the stutter ratio
@@ -302,6 +323,12 @@ edit_sr_server <- function(id, path_pack){
       })
 
       observeEvent(input$act_save_as_edit_sr_2, {
+        # Update edited information
+        if(!is.null(rv_edit_sr$current_mk)){
+          dt_edit_sr <- hot_to_r(input$dt_edit_sr)
+          rv_edit_sr$list_dt_average_sr[[rv_edit_sr$current_mk]] <- dt_edit_sr
+        }
+
         dt_setting_est_sr <- rv_edit_sr$dt_setting_est_sr
         dt_result_est_bsr <- rv_edit_sr$dt_result_est_bsr
         dt_result_est_fsr <- rv_edit_sr$dt_result_est_fsr
@@ -312,6 +339,8 @@ edit_sr_server <- function(id, path_pack){
         list_trace_fsr <- rv_edit_sr$list_trace_fsr
         list_trace_dsr <- rv_edit_sr$list_trace_dsr
         list_trace_m2sr <- rv_edit_sr$list_trace_m2sr
+
+        list_dt_average_sr <- replace_ave_sr(list_dt_average_sr)
 
         save(list = c("dt_setting_est_sr",
                       "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr",
@@ -323,6 +352,12 @@ edit_sr_server <- function(id, path_pack){
       })
 
       observeEvent(input$act_save_edit_sr, {
+        # Update edited information
+        if(!is.null(rv_edit_sr$current_mk)){
+          dt_edit_sr <- hot_to_r(input$dt_edit_sr)
+          rv_edit_sr$list_dt_average_sr[[rv_edit_sr$current_mk]] <- dt_edit_sr
+        }
+
         dt_setting_est_sr <- rv_edit_sr$dt_setting_est_sr
         dt_result_est_bsr <- rv_edit_sr$dt_result_est_bsr
         dt_result_est_fsr <- rv_edit_sr$dt_result_est_fsr
@@ -333,6 +368,8 @@ edit_sr_server <- function(id, path_pack){
         list_trace_fsr <- rv_edit_sr$list_trace_fsr
         list_trace_dsr <- rv_edit_sr$list_trace_dsr
         list_trace_m2sr <- rv_edit_sr$list_trace_m2sr
+
+        list_dt_average_sr <- replace_ave_sr(list_dt_average_sr)
 
         save(list = c("dt_setting_est_sr",
                       "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr",

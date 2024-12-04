@@ -64,6 +64,12 @@ full_join_average_sr <- function(list_dt_average_bsr, list_dt_average_fsr, list_
     dt_ave_sr <- full_join(dt_ave_sr, dt_ave_fsr, by = c("Allele"))
     dt_ave_sr <- full_join(dt_ave_sr, dt_ave_dsr, by = c("Allele"))
     dt_ave_sr <- full_join(dt_ave_sr, dt_ave_m2sr, by = c("Allele"))
+
+    dt_ave_sr[["Average BSR"]][is.na(dt_ave_sr[["Average BSR"]])] <- 0
+    dt_ave_sr[["Average FSR"]][is.na(dt_ave_sr[["Average FSR"]])] <- 0
+    dt_ave_sr[["Average DSR"]][is.na(dt_ave_sr[["Average DSR"]])] <- 0
+    dt_ave_sr[["Average M2SR"]][is.na(dt_ave_sr[["Average M2SR"]])] <- 0
+
     list_dt_average_sr[[i]] <- dt_ave_sr
   }
 
