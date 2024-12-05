@@ -62,11 +62,11 @@ est_par_result_ui <- function(id){
   )
 }
 
-est_par_result_server <- function(id, path_pack, rv_output){
+est_par_result_server <- function(id, path_pack, rv_est_par){
   moduleServer(
     id,
     function(input, output, session){
-      results_est_par <- rv_output$results_est_par
+      results_est_par <- rv_est_par$results_est_par
 
       if(!is.null(results_est_par)){
         # Extract result lists

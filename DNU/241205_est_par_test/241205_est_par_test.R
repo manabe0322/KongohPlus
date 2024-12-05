@@ -6,7 +6,7 @@ dt_exp <- change_data_type_exp(dt_exp)
 dt_gt <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/gtData_kakeiken.csv")
 dt_gt <- change_data_type_gt(dt_gt)
 
-load("D:/RStudio_GitHub/KongohPlus/inst/extdata/stutter_file/241126_test.RData")
+load("D:/RStudio_GitHub/KongohPlus/inst/extdata/stutter_file/241205_stutter_GF_default.RData")
 # list_dt_average_sr
 
 dt_kit <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/kit/GlobalFiler.csv")
@@ -33,3 +33,6 @@ model_gamma <- cmdstan_model("D:/RStudio_GitHub/KongohPlus/src/stan/model_gamma.
 peak_use <- peak_list[index_prop_ae_use]
 gt_use <- gt_list[index_prop_ae_use]
 est_alpha <- dt_result_est_ae$Alpha
+
+
+# cv = 0.5439125

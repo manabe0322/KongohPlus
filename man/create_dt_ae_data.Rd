@@ -4,10 +4,14 @@
 \alias{create_dt_ae_data}
 \title{create_dt_ae_data}
 \usage{
-create_dt_ae_data(height_list)
+create_dt_ae_data(peak_list, height_list, gt_list)
 }
 \arguments{
+\item{peak_list}{A list of peaks}
+
 \item{height_list}{A list of heights}
+
+\item{gt_list}{A list of genotypes}
 }
 \description{
 The function to create a data.table of the locus-specific amplification efficiencies

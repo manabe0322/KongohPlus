@@ -30,5 +30,5 @@ run_mcmc_ae(
 \item{n_parallel_chains}{The number of parallel chains}
 }
 \description{
-The function to perform the MCMC for the locus-specific amplification efficiency
+The function to perform MCMC for the locus-specific amplification efficiency
 }

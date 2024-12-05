@@ -1,8 +1,10 @@
 #' create_dt_ae_data
 #'
 #' @description The function to create a data.table of the locus-specific amplification efficiencies
+#' @param peak_list A list of peaks
 #' @param height_list A list of heights
-create_dt_ae_data <- function(height_list){
+#' @param gt_list A list of genotypes
+create_dt_ae_data <- function(peak_list, height_list, gt_list){
   sample_names <- names(peak_list)
   n_sample <- length(sample_names)
   markers <- names(peak_list[[1]])
@@ -18,16 +20,30 @@ create_dt_ae_data <- function(height_list){
 
   current_index <- 1
   for(i in 1:n_sample){
+    peak_list_one <- peak_list[[i]]
     height_list_one <- height_list[[i]]
-    temp_amount <- sapply(height_list_one, sum)
+    gt_list_one <- gt_list[[i]]
+    bool_detect <- TRUE
+    for(j in 1:n_mk){
+      peaks <- peak_list_one[[j]]
+      heights <- height_list_one[[j]]
+      gt <- unique(gt_list_one[j, ])
+      if(!all(is.element(gt, peaks))){
+        bool_detect <- FALSE
+        break
+      }
+    }
 
     index_assign <- current_index:(current_index + n_mk - 1)
     sample_name_all[index_assign] <- sample_names[i]
     marker_all[index_assign] <- markers
-    temp_amount_all[index_assign] <- temp_amount
-    prop_ae_all[index_assign] <- temp_amount / sum(temp_amount)
-    ae_all[index_assign] <- n_mk * temp_amount / sum(temp_amount)
-    if(!is.element(0, temp_amount)){
+
+    if(bool_detect){
+      temp_amount <- sapply(height_list_one, sum)
+      sum_temp_amount <- sum(temp_amount)
+      temp_amount_all[index_assign] <- temp_amount
+      prop_ae_all[index_assign] <- temp_amount / sum_temp_amount
+      ae_all[index_assign] <- n_mk * temp_amount / sum_temp_amount
       bool_ae_use_all[index_assign] <- TRUE
     }
 
@@ -61,7 +77,7 @@ calc_ave_het_ph_all_data <- function(height_list){
 
 #' run_mcmc_ae
 #'
-#' @description The function to perform the MCMC for the locus-specific amplification efficiency
+#' @description The function to perform MCMC for the locus-specific amplification efficiency
 #' @param model_ae The stan model of the locus-specific amplification efficiency
 #' @param data_list_ae The data list of the locus-specific amplification efficiency
 #' @param n_mk The number of markers
@@ -99,11 +115,21 @@ run_mcmc_ae <- function(model_ae, data_list_ae, n_mk, warmup, sampling, chains, 
               "traceplot_ae" = traceplot_ae))
 }
 
-perform_mcmc_ae_all_mk <- function(pae_data_use, markers_auto,
+#' perform_mcmc_ae_all_mk
+#'
+#' @description The function to perform MCMC for amplification efficiencies of all loci
+#' @param prop_ae_data_use A matrix of the proportion of the amplification efficiencies (only data used for MCMC)
+#' @param markers_auto A vector of the autosomal markers
+#' @param model_ae The stan model of the locus-specific amplification efficiency
+#' @param warmup The number of warm-up iterations for each chain
+#' @param sampling The number of sampling iterations for each chain
+#' @param chains The number of chains
+#' @param n_parallel_chains The number of parallel chains
+perform_mcmc_ae_all_mk <- function(prop_ae_data_use, markers_auto,
                                    model_ae,
                                    warmup, sampling, chains, n_parallel_chains){
   n_mk <- length(markers_auto)
-  data_list_ae <- list(N = ncol(pae_data_use), N_Mk = nrow(pae_data_use), PAE = pae_data_use)
+  data_list_ae <- list(N = ncol(prop_ae_data_use), N_Mk = nrow(prop_ae_data_use), PAE = prop_ae_data_use)
 
   tmp <- run_mcmc_ae(model_ae, data_list_ae, n_mk, warmup, sampling, chains, n_parallel_chains)
   median_lp <- tmp$median_lp
@@ -122,10 +148,22 @@ perform_mcmc_ae_all_mk <- function(pae_data_use, markers_auto,
               "rhat_lp" = rhat_lp))
 }
 
+#' calc_relative_ph
+#'
+#' @description The function to calculate the relative peak heights in one locus
+#' @param peaks A vector of the peaks in one locus
+#' @param gt A vector of the genotype in one locus
+#' @param expect_ae The expected amplification efficiency in one locus
+#' @param allele_sr A vector of the alleles for stutter ratios
+#' @param bsr_average A vector of the average back stutter ratios
+#' @param fsr_average A vector of the average forward stutter ratios
+#' @param dsr_average A vector of the average double-back stutter ratios
+#' @param m2sr_average A vector of the average minus 2-nt stutter ratios
 calc_relative_ph <- function(peaks, gt, expect_ae,
                              allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average){
-  peaks <- as.numeric(peaks)
-  gt <- as.numeric(gt)
+  peaks <- round(as.numeric(peaks), 1)
+  gt <- round(as.numeric(gt), 1)
+  allele_sr <- round(as.numeric(allele_sr), 1)
 
   rph_base <- expect_ae
 
@@ -158,35 +196,35 @@ calc_relative_ph <- function(peaks, gt, expect_ae,
       index_ds <- which(is.element(peaks, ds))
       m2s <- calc_m2s_one(al)
       index_m2s <- which(is.element(peaks, m2s))
-    }
 
-    if(i == 1){
-      rph_al_1[index_al] <- rph_base / (1 + bsr + fsr + dsr + m2sr)
-      if(length(index_bs) == 1){
-        rph_bs_1[index_bs] <- rph_base * bsr / (1 + bsr + fsr + dsr + m2sr)
-      }
-      if(length(index_fs) == 1){
-        rph_fs_1[index_fs] <- rph_base * fsr / (1 + bsr + fsr + dsr + m2sr)
-      }
-      if(length(index_ds) == 1){
-        rph_ds_1[index_ds] <- rph_base * dsr / (1 + bsr + fsr + dsr + m2sr)
-      }
-      if(length(index_m2s) == 1){
-        rph_m2s_1[index_m2s] <- rph_base * m2sr / (1 + bsr + fsr + dsr + m2sr)
-      }
-    }else{
-      rph_al_2[index_al] <- rph_base / (1 + bsr + fsr + dsr + m2sr)
-      if(length(index_bs) == 1){
-        rph_bs_2[index_bs] <- rph_base * bsr / (1 + bsr + fsr + dsr + m2sr)
-      }
-      if(length(index_fs) == 1){
-        rph_fs_2[index_fs] <- rph_base * fsr / (1 + bsr + fsr + dsr + m2sr)
-      }
-      if(length(index_ds) == 1){
-        rph_ds_2[index_ds] <- rph_base * dsr / (1 + bsr + fsr + dsr + m2sr)
-      }
-      if(length(index_m2s) == 1){
-        rph_m2s_2[index_m2s] <- rph_base * m2sr / (1 + bsr + fsr + dsr + m2sr)
+      if(i == 1){
+        rph_al_1[index_al] <- rph_base / (1 + bsr + fsr + dsr + m2sr)
+        if(length(index_bs) == 1){
+          rph_bs_1[index_bs] <- rph_base * bsr / (1 + bsr + fsr + dsr + m2sr)
+        }
+        if(length(index_fs) == 1){
+          rph_fs_1[index_fs] <- rph_base * fsr / (1 + bsr + fsr + dsr + m2sr)
+        }
+        if(length(index_ds) == 1){
+          rph_ds_1[index_ds] <- rph_base * dsr / (1 + bsr + fsr + dsr + m2sr)
+        }
+        if(length(index_m2s) == 1){
+          rph_m2s_1[index_m2s] <- rph_base * m2sr / (1 + bsr + fsr + dsr + m2sr)
+        }
+      }else{
+        rph_al_2[index_al] <- rph_base / (1 + bsr + fsr + dsr + m2sr)
+        if(length(index_bs) == 1){
+          rph_bs_2[index_bs] <- rph_base * bsr / (1 + bsr + fsr + dsr + m2sr)
+        }
+        if(length(index_fs) == 1){
+          rph_fs_2[index_fs] <- rph_base * fsr / (1 + bsr + fsr + dsr + m2sr)
+        }
+        if(length(index_ds) == 1){
+          rph_ds_2[index_ds] <- rph_base * dsr / (1 + bsr + fsr + dsr + m2sr)
+        }
+        if(length(index_m2s) == 1){
+          rph_m2s_2[index_m2s] <- rph_base * m2sr / (1 + bsr + fsr + dsr + m2sr)
+        }
       }
     }
   }
@@ -194,6 +232,15 @@ calc_relative_ph <- function(peaks, gt, expect_ae,
   return(cbind(rph_al_1, rph_al_2, rph_bs_1, rph_bs_2, rph_fs_1, rph_fs_2, rph_ds_1, rph_ds_2, rph_m2s_1, rph_m2s_2))
 }
 
+#' prepare_gamma_data
+#'
+#' @description The function to prepare data for estimating the gamma distribution
+#' @param markers_auto A vector of the autosomal markers
+#' @param peak_use A list of the peaks used for estimating the gamma distribution
+#' @param gt_use A list of the genotypes used for estimating the gamma distribution
+#' @param est_alpha A vector of the alpha parameters of the Dirichlet distribution for the locus-specific amplification efficiencies
+#' @param ave_het_ph_use A vector of the average heterozygote allele peak heights used for estimating the gamma distribution
+#' @param list_dt_average_sr A list of the average stutter ratios
 prepare_gamma_data <- function(markers_auto, peak_use, gt_use, est_alpha, ave_het_ph_use, list_dt_average_sr){
   n_gt <- length(gt_use)
   n_mk <- length(markers_auto)
@@ -208,7 +255,6 @@ prepare_gamma_data <- function(markers_auto, peak_use, gt_use, est_alpha, ave_he
   for(i in 1:n_gt){
     peak_s1 <- peak_use[[i]]
     gt_s1 <- gt_use[[i]]
-    pae_s1 <- prop_ae_data_use[, i]
     ave_het_ph_s1 <- ave_het_ph_use[i]
 
     for(j in 1:n_mk){
@@ -219,7 +265,7 @@ prepare_gamma_data <- function(markers_auto, peak_use, gt_use, est_alpha, ave_he
 
         mk <- markers_auto[j]
         dt_average_sr <- list_dt_average_sr[[mk]]
-        allele_sr <- as.numeric(dt_average_sr$Allele)
+        allele_sr <- dt_average_sr$Allele
         bsr_average <- dt_average_sr[["Average BSR"]]
         fsr_average <- dt_average_sr[["Average FSR"]]
         dsr_average <- dt_average_sr[["Average DSR"]]
@@ -237,6 +283,17 @@ prepare_gamma_data <- function(markers_auto, peak_use, gt_use, est_alpha, ave_he
               "tphs_gamma" = tphs_gamma))
 }
 
+#' perform_mcmc_gamma
+#'
+#' @description The function to perform MCMC for the gamma distribution
+#' @param rphs_gamma The relative peak heights for the gamma distribution
+#' @param ophs_gamma The observed peak heights for the gamma distribution
+#' @param tphs_gamma The total peak heights in one heterozygote allele for the gamma distribution
+#' @param model_gamma The stan model of the gamma distribution
+#' @param warmup The number of warm-up iterations for each chain
+#' @param sampling The number of sampling iterations for each chain
+#' @param chains The number of chains
+#' @param n_parallel_chains The number of parallel chains
 perform_mcmc_gamma <- function(rphs_gamma, ophs_gamma, tphs_gamma,
                                model_gamma,
                                warmup, sampling, chains, n_parallel_chains){
@@ -272,6 +329,9 @@ perform_mcmc_gamma <- function(rphs_gamma, ophs_gamma, tphs_gamma,
               "traceplot_cv" = traceplot_cv))
 }
 
+#' estimate_parameters
+#'
+#' @description The function to estimate parameters of the locus-specific amplification efficiencies and the gamma distribution
 estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_kit, dt_setting_est_par,
                                 model_ae, model_gamma,
                                 warmup, sampling, chains, pu_remove, pu_dist, at_sex,
@@ -317,7 +377,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_kit, dt_se
   gt_list <- tmp$gt_list
 
   # Prepare data for AE
-  dt_ae_data <- create_dt_ae_data(height_list)
+  dt_ae_data <- create_dt_ae_data(peak_list, height_list, gt_list)
   prop_ae_data <- matrix(dt_ae_data$PropAE, nrow = n_mk_auto)
   index_prop_ae_use <- which(apply(prop_ae_data, 2, prod) > 0)
   prop_ae_data_use <- prop_ae_data[, index_prop_ae_use, drop = FALSE]

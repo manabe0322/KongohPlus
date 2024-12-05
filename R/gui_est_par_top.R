@@ -22,11 +22,11 @@ est_par_server <- function(id, path_pack){
   moduleServer(
     id,
     function(input, output, session){
-      rv_output <- est_par_setting_server("est_par_setting", path_pack, session)
+      rv_est_par <- est_par_setting_server("est_par_setting", path_pack, session)
 
       observe({
-        req(rv_output)
-        est_par_result_server("est_par_result", path_pack, rv_output)
+        req(rv_est_par)
+        est_par_result_server("est_par_result", path_pack, rv_est_par)
       })
     }
   )
