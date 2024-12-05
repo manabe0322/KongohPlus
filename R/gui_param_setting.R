@@ -42,7 +42,9 @@ create_init_dt_setting_est_par <- function(dt_kit){
   markers <- unique(dt_kit_auto$Marker)
   dyes <- extract_dye(dt_kit_auto, markers)
 
-  dt_setting_est_par <- data.table(Marker = markers, Dye = dyes, AT = rep(50, length(markers)))
+  dt_setting_est_par <- data.table(Marker = markers,
+                                   Dye = dyes,
+                                   AT = c(rep(12, 5), rep(20, 3), rep(13, 4), rep(16, 5), rep(19, 4)))
   col_int <- c("AT")
   dt_setting_est_par[, (col_int) := lapply(.SD, as.integer), .SDcols = col_int]
 
@@ -262,11 +264,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           model_ae <- stan_package_model(name = "model_ae", package = "KongohPlus")
           model_gamma <- stan_package_model(name = "model_gamma", package = "KongohPlus")
 
-          results_est_par <- estimate_parameters(dt_exp, dt_gt, dt_seq, dt_kit, dt_kit_set, kit_par,
-                                                 model_ae, model_sr_gen, model_sr_uni, model_gamma,
-                                                 warmup, sampling, chains,
-                                                 pu_remove, pu_dist, at_sex, min_n_motif_lus, min_n_motif_multi)
-          rv_est_par$results_est_par <- results_est_par
+          rv_est_par$data_est_par <- estimate_parameters(dt_exp, dt_gt, list_dt_average_sr, dt_kit, dt_setting_est_par,
+                                                         model_ae, model_gamma,
+                                                         warmup, sampling, chains, pu_remove, pu_dist, at_sex)
 
           updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result")
         }

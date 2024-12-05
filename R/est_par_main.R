@@ -30,6 +30,8 @@ create_dt_ae_data <- function(height_list){
     if(!is.element(0, temp_amount)){
       bool_ae_use_all[index_assign] <- TRUE
     }
+
+    current_index <- current_index + n_mk
   }
 
   dt_ae_data <- data.table(SampleName = sample_name_all,
@@ -40,6 +42,21 @@ create_dt_ae_data <- function(height_list){
                            Bool_Use = bool_ae_use_all)
 
   return(dt_ae_data)
+}
+
+#' calc_ave_het_ph_all_data
+#'
+#' @description The function to calculate the average heterozygote allele peak heights of all marker
+#' @param height_list The list of peak heights
+calc_ave_het_ph_all_data <- function(height_list){
+  n_data <- length(height_list)
+  ave_het_ph_all_data <- rep(0, n_data)
+  for(i in 1:n_data){
+    height_list_one_data <- height_list[[i]]
+    ave_het_ph_per_mk <- sapply(height_list_one_data, sum)
+    ave_het_ph_all_data[i] <- mean(ave_het_ph_per_mk) / 2
+  }
+  return(ave_het_ph_all_data)
 }
 
 #' run_mcmc_ae
@@ -105,12 +122,12 @@ perform_mcmc_ae_all_mk <- function(pae_data_use, markers_auto,
               "rhat_lp" = rhat_lp))
 }
 
-tmp_func2 <- function(peaks, gt,
-                      allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average){
+calc_relative_ph <- function(peaks, gt, expect_ae,
+                             allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average){
   peaks <- as.numeric(peaks)
   gt <- as.numeric(gt)
 
-  rph_base <- ae_actual
+  rph_base <- expect_ae
 
   rph_al_1 <- rph_bs_1 <- rph_fs_1 <- rph_ds_1 <- rph_m2s_1 <- rep(0, length(peaks))
   rph_al_2 <- rph_bs_2 <- rph_fs_2 <- rph_ds_2 <- rph_m2s_2 <- rep(0, length(peaks))
@@ -177,20 +194,28 @@ tmp_func2 <- function(peaks, gt,
   return(cbind(rph_al_1, rph_al_2, rph_bs_1, rph_bs_2, rph_fs_1, rph_fs_2, rph_ds_1, rph_ds_2, rph_m2s_1, rph_m2s_2))
 }
 
-tmp_func <- function(peak_use, gt_use, prop_ae_data_use, list_dt_average_sr){
+prepare_gamma_data <- function(markers_auto, peak_use, gt_use, est_alpha, ave_het_ph_use, list_dt_average_sr){
   n_gt <- length(gt_use)
   n_mk <- length(markers_auto)
 
+  expect_ae_all_mk <- n_mk * (est_alpha + 1) / (sum(est_alpha) + n_mk)
+
+  sum_peaks_all <- length(unlist(peak_use))
+  rphs_gamma <- matrix(-1, sum_peaks_all, 10)
+  tphs_gamma <- rep(-1, sum_peaks_all)
+
+  index_start <- 1
   for(i in 1:n_gt){
     peak_s1 <- peak_use[[i]]
     gt_s1 <- gt_use[[i]]
     pae_s1 <- prop_ae_data_use[, i]
+    ave_het_ph_s1 <- ave_het_ph_use[i]
 
     for(j in 1:n_mk){
       peaks <- peak_s1[[j]]
       n_peak <- length(peaks)
       if(n_peak != 0){
-        ae_actual <- n_mk * pae_s1[j]
+        expect_ae <- expect_ae_all_mk[j]
 
         mk <- markers_auto[j]
         dt_average_sr <- list_dt_average_sr[[mk]]
@@ -199,12 +224,55 @@ tmp_func <- function(peak_use, gt_use, prop_ae_data_use, list_dt_average_sr){
         fsr_average <- dt_average_sr[["Average FSR"]]
         dsr_average <- dt_average_sr[["Average DSR"]]
         m2sr_average <- dt_average_sr[["Average M2SR"]]
+
+        rphs_gamma[index_start:(index_start + n_peak - 1), ] <- calc_relative_ph(peaks, gt_s1[j, ], expect_ae,
+                                                                                 allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average)
+        tphs_gamma[index_start:(index_start + n_peak - 1)] <- ave_het_ph_s1
+        index_start <- index_start + n_peak
       }
     }
   }
+
+  return(list("rphs_gamma" = rphs_gamma,
+              "tphs_gamma" = tphs_gamma))
 }
 
-estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_kit, dt_setting_est_par, kit_name,
+perform_mcmc_gamma <- function(rphs_gamma, ophs_gamma, tphs_gamma,
+                               model_gamma,
+                               warmup, sampling, chains, n_parallel_chains){
+  rphs_sum <- apply(rphs_gamma, 1, sum)
+  data_list_gamma <- list(N = length(rphs_sum), OPH = ophs_gamma, RPH = rphs_sum, TPH = tphs_gamma)
+
+  fit_gamma <- model_gamma$sample(
+    data_list_gamma,
+    iter_warmup = warmup,
+    iter_sampling = sampling,
+    chains = chains,
+    parallel_chains = n_parallel_chains
+  )
+
+  # Summary data
+  fit_gamma_summary <- fit_gamma$summary()
+
+  # Median of the parameter 'cv'
+  median_lp <- fit_gamma_summary$median[which(fit_gamma_summary$variable == "lp__")]
+  median_cv <- fit_gamma_summary$median[which(fit_gamma_summary$variable == "cv")]
+
+  # rhat of the parameter 'cv' and the likelihood
+  rhat_lp <- fit_gamma_summary$rhat[which(fit_gamma_summary$variable == "lp__")]
+  rhat_cv <- fit_gamma_summary$rhat[which(fit_gamma_summary$variable == "cv")]
+
+  # Trace plot
+  fit_gamma$draws() %>% mcmc_trace(pars = c("cv")) -> traceplot_cv
+
+  return(list("median_lp" = median_lp,
+              "median_cv" = median_cv,
+              "rhat_lp" = rhat_lp,
+              "rhat_cv" = rhat_cv,
+              "traceplot_cv" = traceplot_cv))
+}
+
+estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_kit, dt_setting_est_par,
                                 model_ae, model_gamma,
                                 warmup, sampling, chains, pu_remove, pu_dist, at_sex,
                                 n_parallel_chains = detectCores()){
@@ -254,15 +322,57 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_kit, dt_se
   index_prop_ae_use <- which(apply(prop_ae_data, 2, prod) > 0)
   prop_ae_data_use <- prop_ae_data[, index_prop_ae_use, drop = FALSE]
 
-  #tph_all_data <- calc_tph_all_data(height_list)
-  #tph_data_use <- tph_all_data[index_pae_use]
+  # Prepare data for average heterozygote allele peak heights
+  ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
+  ave_het_ph_use <- ave_het_ph_all_data[index_prop_ae_use]
 
   # Perform MCMC for AE
-  tmp <- perform_mcmc_ae_all_mk(dt_ae_data, markers_auto,
+  tmp <- perform_mcmc_ae_all_mk(prop_ae_data_use, markers_auto,
                                 model_ae,
                                 warmup, sampling, chains, n_parallel_chains)
   dt_result_est_ae <- tmp$dt_result_est_ae
   traceplot_ae <- tmp$traceplot_ae
-  median_lp <- tmp$median_lp
-  rhat_lp <- tmp$rhat_lp
+  median_lp_ae <- tmp$median_lp
+  rhat_lp_ae <- tmp$rhat_lp
+
+  # Prepare peak height data for estimating gamma distribution
+  tmp <- prepare_gamma_data(markers_auto, peak_list[index_prop_ae_use], gt_list[index_prop_ae_use], dt_result_est_ae$Alpha, ave_het_ph_use, list_dt_average_sr)
+  rphs_gamma <- tmp$rphs_gamma
+  tphs_gamma <- tmp$tphs_gamma
+  ophs_gamma <- unlist(height_list[index_prop_ae_use])
+
+  index_rm <- which(apply(rphs_gamma, 1, sum) == 0)
+  if(length(index_rm) != 0){
+    rphs_gamma <- rphs_gamma[-index_rm, , drop = FALSE]
+    tphs_gamma <- tphs_gamma[-index_rm]
+    ophs_gamma <- ophs_gamma[-index_rm]
+  }
+
+  # Remove data with oph > 30000 RFU
+  index_rm <- which(ophs_gamma > 30000)
+  if(length(index_rm) != 0){
+    rphs_gamma <- rphs_gamma[-index_rm, , drop = FALSE]
+    tphs_gamma <- tphs_gamma[-index_rm]
+    ophs_gamma <- ophs_gamma[-index_rm]
+  }
+
+  # Perform MCMC for gamma distribution
+  tmp <- perform_mcmc_gamma(rphs_gamma, ophs_gamma, tphs_gamma,
+                            model_gamma,
+                            warmup, sampling, chains, n_parallel_chains)
+  median_lp_gamma <- tmp$median_lp
+  median_cv <- tmp$median_cv
+  rhat_lp_gamma <- tmp$rhat_lp
+  rhat_cv <- tmp$rhat_cv
+  traceplot_cv <- tmp$traceplot
+
+  return(list("dt_result_est_ae" = dt_result_est_ae,
+              "traceplot_ae" = traceplot_ae,
+              "median_lp_ae" = median_lp_ae,
+              "rhat_lp_ae" = rhat_lp_ae,
+              "median_lp_gamma" = median_lp_gamma,
+              "median_cv" = median_cv,
+              "rhat_lp_gamma" = rhat_lp_gamma,
+              "rhat_cv" = rhat_cv,
+              "traceplot_cv" = traceplot_cv))
 }
