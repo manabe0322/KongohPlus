@@ -85,7 +85,6 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
     function(input, output, session){
       data_est_sr <- rv_est_sr$data_est_sr
       if(!is.null(data_est_sr)){
-
         dt_setting_est_sr <- rv_est_sr$dt_setting_est_sr
         markers_auto <- dt_setting_est_sr$Marker
 

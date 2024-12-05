@@ -46,11 +46,11 @@ create_init_dt_setting_est_sr <- function(dt_kit){
 
   if(nrow(dt_setting_est_sr) == 21){
     dt_setting_est_sr$AT <- c(rep(12, 5), rep(20, 3), rep(13, 4), rep(16, 5), rep(19, 4))
-    dt_setting_est_sr$Model_BSR <- c("LUS", "Allele", "LUS", "Allele", "Allele",
-                                     "Multi-seq", "Multi-seq", "Allele",
-                                     "LUS", "Allele", "LUS", "Allele",
-                                     "LUS", "Allele", "Allele", "LUS", "Multi-seq",
-                                     "LUS", "LUS", "Multi-seq", "Multi-seq")
+    dt_setting_est_sr$Model_BSR <- c("Allele", "Allele", "Allele", "Allele", "Allele",
+                                     "LUS", "Multi-seq", "Allele",
+                                     "LUS", "LUS", "LUS", "LUS",
+                                     "Allele", "Allele", "Allele", "LUS", "Multi-seq",
+                                     "Allele", "LUS", "Multi-seq", "LUS")
     dt_setting_est_sr$Model_FSR <- "Uniform (Multiple loci)"
     dt_setting_est_sr$Model_FSR[13] <- "LUS"
     dt_setting_est_sr$Model_DSR <- "Uniform (Multiple loci)"
@@ -58,11 +58,9 @@ create_init_dt_setting_est_sr <- function(dt_kit){
     dt_setting_est_sr$Model_M2SR[17] <- "Uniform"
     dt_setting_est_sr$Model_M2SR[19] <- "Uniform"
     dt_setting_est_sr$X_Multi <- NA
-    dt_setting_est_sr$X_Multi[6] <- 10
     dt_setting_est_sr$X_Multi[7] <- 6
     dt_setting_est_sr$X_Multi[17] <- 8
     dt_setting_est_sr$X_Multi[20] <- 9
-    dt_setting_est_sr$X_Multi[21] <- 2
   }else{
     dt_setting_est_sr$AT <- 50
     dt_setting_est_sr$Model_BSR <- "Allele"

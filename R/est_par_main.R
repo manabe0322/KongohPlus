@@ -132,20 +132,20 @@ perform_mcmc_ae_all_mk <- function(prop_ae_data_use, markers_auto,
   data_list_ae <- list(N = ncol(prop_ae_data_use), N_Mk = nrow(prop_ae_data_use), PAE = prop_ae_data_use)
 
   tmp <- run_mcmc_ae(model_ae, data_list_ae, n_mk, warmup, sampling, chains, n_parallel_chains)
-  median_lp <- tmp$median_lp
   median_alpha <- tmp$median_alpha
+  median_lp <- tmp$median_lp
   rhat_alpha <- tmp$rhat_alpha
   rhat_lp <- tmp$rhat_lp
   traceplot_ae <- tmp$traceplot_ae
 
-  dt_result_est_ae <- data.table(Marker = markers_auto,
-                                 Alpha = median_alpha,
-                                 Rhat_Alpha = rhat_alpha)
+  names(median_alpha) <- markers_auto
+  names(rhat_alpha) <- markers_auto
 
-  return(list("dt_result_est_ae" = dt_result_est_ae,
-              "traceplot_ae" = traceplot_ae,
+  return(list("median_alpha" = median_alpha,
               "median_lp" = median_lp,
-              "rhat_lp" = rhat_lp))
+              "rhat_alpha" = rhat_alpha,
+              "rhat_lp" = rhat_lp,
+              "traceplot_ae" = traceplot_ae))
 }
 
 #' calc_relative_ph
@@ -390,13 +390,14 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_kit, dt_se
   tmp <- perform_mcmc_ae_all_mk(prop_ae_data_use, markers_auto,
                                 model_ae,
                                 warmup, sampling, chains, n_parallel_chains)
-  dt_result_est_ae <- tmp$dt_result_est_ae
-  traceplot_ae <- tmp$traceplot_ae
+  median_alpha <- tmp$median_alpha
+  rhat_alpha <- tmp$rhat_alpha
   median_lp_ae <- tmp$median_lp
   rhat_lp_ae <- tmp$rhat_lp
+  traceplot_ae <- tmp$traceplot_ae
 
   # Prepare peak height data for estimating gamma distribution
-  tmp <- prepare_gamma_data(markers_auto, peak_list[index_prop_ae_use], gt_list[index_prop_ae_use], dt_result_est_ae$Alpha, ave_het_ph_use, list_dt_average_sr)
+  tmp <- prepare_gamma_data(markers_auto, peak_list[index_prop_ae_use], gt_list[index_prop_ae_use], median_alpha, ave_het_ph_use, list_dt_average_sr)
   rphs_gamma <- tmp$rphs_gamma
   tphs_gamma <- tmp$tphs_gamma
   ophs_gamma <- unlist(height_list[index_prop_ae_use])
@@ -426,10 +427,11 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_kit, dt_se
   rhat_cv <- tmp$rhat_cv
   traceplot_cv <- tmp$traceplot
 
-  return(list("dt_result_est_ae" = dt_result_est_ae,
-              "traceplot_ae" = traceplot_ae,
+  return(list("median_alpha" = median_alpha,
+              "rhat_alpha" = rhat_alpha,
               "median_lp_ae" = median_lp_ae,
               "rhat_lp_ae" = rhat_lp_ae,
+              "traceplot_ae" = traceplot_ae,
               "median_lp_gamma" = median_lp_gamma,
               "median_cv" = median_cv,
               "rhat_lp_gamma" = rhat_lp_gamma,

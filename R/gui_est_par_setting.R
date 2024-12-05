@@ -61,9 +61,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       rv_est_par <- reactiveValues()
       rv_est_par$dt_exp <- NULL
       rv_est_par$dt_gt <- NULL
-      rv_est_par$list_dt_average_sr <- NULL
       rv_est_par$dt_kit <- NULL
-      rv_est_par$dt_setting_est_par <- NULL
       rv_est_par$kit_name <- NULL
       rv_est_par$warmup <- 2000
       rv_est_par$sampling <- 2000
@@ -72,6 +70,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       rv_est_par$pu_dist <- 1
       rv_est_par$at_sex <- 100
       rv_est_par$data_est_par <- NULL
+      rv_est_par$list_dt_average_sr <- NULL
+      rv_est_par$fn_stutter_file <- NULL
 
       # Load experimental data
       observeEvent(input$exp_data, {
@@ -100,16 +100,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         selectInput(ns("stutter_file"), label = h4("Stutter file"), choices = stutter_files, selected = stutter_files[1], multiple = FALSE, selectize = FALSE)
       })
 
-      observeEvent(input$stutter_file, {
-        file_input <- input$stutter_file
-        if(!is.null(file_input)){
-          load(paste0(path_pack, "/extdata/stutter_file/", file_input))
-          rv_est_par$list_dt_average_sr <- list_dt_average_sr
-        }
-      })
-
       # Select a kit
-      output$kit_sr <- renderUI({
+      output$kit_par <- renderUI({
         kit_names <- list.files(paste0(path_pack, "/extdata/kit"))
         kit_names <- gsub(".csv", "", kit_names)
         selectInput(session$ns("kit_name"), label = h4("Kit"), choices = kit_names, selected = kit_names[1], multiple = FALSE, selectize = FALSE)
@@ -241,12 +233,11 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
 
       # Start estimating parameters
       observeEvent(input$act_analyze_est_par, {
-        # Fix data.table
+        # Fix data
         dt_exp <- rv_est_par$dt_exp
         dt_gt <- rv_est_par$dt_gt
-        list_dt_average_sr <- rv_est_par$list_dt_average_sr
         dt_kit <- rv_est_par$dt_kit
-        rv_est_par$dt_setting_est_par <- dt_setting_est_par <- hot_to_r(input$dt_setting_est_par)
+        dt_setting_est_par <- hot_to_r(input$dt_setting_est_par)
         kit_name <- rv_est_par$kit_name
         warmup <- rv_est_par$warmup
         sampling <- rv_est_par$sampling
@@ -254,6 +245,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         pu_remove <- rv_est_par$pu_remove
         pu_dist <- rv_est_par$pu_dist
         at_sex <- rv_est_par$at_sex
+
+        rv_est_par$fn_stutter_file <- fn_stutter_file <- input$stutter_file
+        load(paste0(path_pack, "/extdata/stutter_file/", fn_stutter_file))
+        rv_est_par$list_dt_average_sr <- list_dt_average_sr
 
         # Check input files and setting
         error_message <- check_est_par(dt_exp, dt_gt, dt_setting_est_par)
