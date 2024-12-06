@@ -246,9 +246,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         pu_dist <- rv_est_par$pu_dist
         at_sex <- rv_est_par$at_sex
 
-        rv_est_par$fn_stutter_file <- fn_stutter_file <- input$stutter_file
+        fn_stutter_file <- input$stutter_file
         load(paste0(path_pack, "/extdata/stutter_file/", fn_stutter_file))
-        rv_est_par$list_dt_average_sr <- list_dt_average_sr
 
         # Check input files and setting
         error_message <- check_est_par(dt_exp, dt_gt, dt_setting_est_par)
@@ -262,6 +261,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           rv_est_par$data_est_par <- estimate_parameters(dt_exp, dt_gt, list_dt_average_sr, dt_kit, dt_setting_est_par,
                                                          model_ae, model_gamma,
                                                          warmup, sampling, chains, pu_remove, pu_dist, at_sex)
+          rv_est_par$list_dt_average_sr <- list_dt_average_sr
+          rv_est_par$kit_name <- kit_name
+          rv_est_par$fn_stutter_file <- fn_stutter_file
 
           updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result")
         }

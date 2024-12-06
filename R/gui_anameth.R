@@ -82,30 +82,6 @@ anameth_server <- function(id, path_pack){
     id,
     function(input, output, session){
 
-      numericColumn <- function(len, col, val, ...){
-        inputs <- character(len)
-        for(i in seq_len(len)){
-          inputs[i] <- as.character(
-            numericInput(paste0("numeric_", col, "_", i), label = NULL, value = val[i], ...)
-          )
-        }
-        return(inputs)
-      }
-
-      js <- function(dtid, col_numeric){
-        code <- vector("list", 1)
-        code[[1]] <- c(
-          sprintf("$('body').on('change', '[id^=numeric_%d_]', function() {", col_numeric),
-          "  var id = this.getAttribute('id');",
-          sprintf("  var i = parseInt(/numeric_%d_(\\d+)/.exec(id)[1]);", col_numeric),
-          "  var value = $(this).val();",
-          sprintf("  var info = [{row: i, col: %d, value: value}];", col_numeric),
-          sprintf("  Shiny.setInputValue('%s', info);", session$ns(sprintf("%s_cell_edit:DT.cellInfo", dtid))),
-          "});"
-        )
-        do.call(c, code)
-      }
-
       ######################################
       # Define the initial reactive values #
       ######################################
@@ -113,9 +89,9 @@ anameth_server <- function(id, path_pack){
       rv_anameth <- reactiveValues()
       rv_anameth$dt_info_anameth <- create_dt_info_anameth(path_pack)
       rv_anameth$dt_anameth_edit <- NULL
+      rv_anameth$fn_stutter_file_new <- NULL
       rv_anameth$kit_name_new <- NULL
       rv_anameth$markers_new <- NULL
-      rv_anameth$dt_at_new <- NULL
       rv_anameth$dt_at_edit <- NULL
 
       ##############################
@@ -132,12 +108,15 @@ anameth_server <- function(id, path_pack){
                                br(),
                                uiOutput(session$ns("anameth_new_parameter")),
                                br(),
+                               h4("Stutter file"),
+                               textOutput(session$ns("anameth_new_fn_stutter")),
+                               br(),
                                h4("Kit"),
                                textOutput(session$ns("anameth_new_kit"))
                       ),
                       tabPanel("AT",
                                br(),
-                               dataTableOutput(session$ns("anameth_new_at"))
+                               rHandsontableOutput(session$ns("anameth_new_at"))
                       ),
                       tabPanel("Allele probability",
                                br(),
@@ -186,52 +165,40 @@ anameth_server <- function(id, path_pack){
         selectInput(session$ns("anameth_new_parameter"), label = h4("Parameter data"), choices = param_all, selected = param_all[1], selectize = FALSE)
       })
 
+      output$anameth_new_fn_stutter <- renderText({rv_anameth$fn_stutter_file_new})
+
       output$anameth_new_kit <- renderText({rv_anameth$kit_name_new})
 
       observeEvent(input$anameth_new_parameter, {
         anameth_new_parameter <- input$anameth_new_parameter
         if(!is.null(anameth_new_parameter)){
-          load(paste0(path_pack, "/extdata/param/", anameth_new_parameter, ".Rdata"))
+          load(paste0(path_pack, "/extdata/param/", anameth_new_parameter, ".RData"))
+
+          # Set the stutter file
+          rv_anameth$fn_stutter_file_new <- gsub(".{6}$", "", fn_stutter_file)
 
           # Set the kit name
-          rv_anameth$kit_name_new <- kit_name_new <- dt_par$Kit[1]
+          rv_anameth$kit_name_new <- kit_name
 
           # Extract autosomal markers
-          dt_kit_select <- fread(paste0(path_pack, "/extdata/kit/", kit_name_new, ".csv"))
+          dt_kit_select <- fread(paste0(path_pack, "/extdata/kit/", kit_name, ".csv"))
           dt_kit_select <- change_data_type_kit(dt_kit_select)
           rv_anameth$markers_new <- unique(dt_kit_select$Marker[dt_kit_select$Chr == "Auto"])
         }
       })
 
       # Display a data.table for the AT
-      output$anameth_new_at <- renderDataTable(server = FALSE, {
+      output$anameth_new_at <- renderRHandsontable({
         markers <- rv_anameth$markers_new
         if(!is.null(markers)){
-          dt_at_new <- data.table(Marker = markers) # For saved data
-          dt_at_new_display <- copy(dt_at_new) # For displayed data
+          dt_at_new <- data.table(Marker = markers)
           dt_at_new$AT <- 100
-          rv_anameth$dt_at_new <- dt_at_new
-          dt_at_new_display$AT <- numericColumn(length(markers), 2, val = dt_at_new$AT, width = "75%")
-        }else{
-          dt_at_new_display <- NULL
         }
 
-        datatable(
-          dt_at_new_display,
-          selection = "none",
-          options = list(dom = "t", iDisplayLength = nrow(dt_at_new_display), ordering = FALSE, autoWidth = TRUE),
-          rownames = FALSE,
-          escape = FALSE,
-          callback = JS(js("anameth_new_at", 2))
-        )
-      })
-
-      # Update AT
-      observeEvent(input[["anameth_new_at_cell_edit"]], {
-        info <- input[["anameth_new_at_cell_edit"]]
-        dt_at_new <- rv_anameth$dt_at_new
-        dt_at_new[[info[1, "col"]]][info[1, "row"]] <- info[1, "value"]
-        rv_anameth$dt_at_new <- dt_at_new
+        rhandsontable(dt_at_new, rowHeaders = FALSE) %>%
+          hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+          hot_col("Marker", type = "text", readOnly = TRUE) %>%
+          hot_col("AT", type = "numeric", format = "0")
       })
 
       # Change the state of the numericInput for the MAF
@@ -245,8 +212,7 @@ anameth_server <- function(id, path_pack){
 
       # Save the new analysis method
       observeEvent(input$act_new_anameth_save, {
-        # Extract settings
-        dt_at_new <- rv_anameth$dt_at_new
+        dt_at_new <- hot_to_r(input$anameth_new_at)
         anameth_new_alprob <- input$anameth_new_alprob
         if(anameth_new_alprob == "Dirichlet"){
           anameth_new_maf <- 0
@@ -255,9 +221,9 @@ anameth_server <- function(id, path_pack){
         }
 
         # Create a data.table for the new analysis method
-        dt_anameth_new <- data.table(Category = c("Parameter", "Kit", rep("AT", nrow(dt_at_new)), rep("Allele_probability", 3), rep("Genotype_filter", 6), rep("Drop-in", 4)),
-                                     Subcategory = c("", "", dt_at_new$Marker, "Method", "Maf", "Theta", "BSR", "FSR", "DSR", "M2SR", "N_Dropin", "H_Dropin", "Probability", "Shape", "Rate", "MT"),
-                                     Value = c(input$anameth_new_parameter, rv_anameth$kit_name_new, dt_at_new$AT,
+        dt_anameth_new <- data.table(Category = c("Parameter", "Stutter file", "Kit", rep("AT", nrow(dt_at_new)), rep("Allele_probability", 3), rep("Genotype_filter", 6), rep("Drop-in", 4)),
+                                     Subcategory = c("", "", "", dt_at_new$Marker, "Method", "Maf", "Theta", "BSR", "FSR", "DSR", "M2SR", "N_Dropin", "H_Dropin", "Probability", "Shape", "Rate", "MT"),
+                                     Value = c(input$anameth_new_parameter, rv_anameth$fn_stutter_file_new, rv_anameth$kit_name_new, dt_at_new$AT,
                                                anameth_new_alprob, anameth_new_maf, input$anameth_new_theta,
                                                input$anameth_new_gt_fltr_bsr, input$anameth_new_gt_fltr_fsr, input$anameth_new_gt_fltr_dsr, input$anameth_new_gt_fltr_m2sr,
                                                input$anameth_new_gt_fltr_n_di, input$anameth_new_gt_fltr_h_di,
@@ -284,6 +250,9 @@ anameth_server <- function(id, path_pack){
 
           # Set the parameter name
           parameter_name <- dt_anameth_edit$Value[dt_anameth_edit$Category == "Parameter"]
+
+          # Set the stutter file
+          fn_stutter_file <- dt_anameth_edit$Value[dt_anameth_edit$Category == "Stutter file"]
 
           # Set the kit name
           kit_name <- dt_anameth_edit$Value[dt_anameth_edit$Category == "Kit"]
@@ -317,12 +286,15 @@ anameth_server <- function(id, path_pack){
                                  h4("Parameter data"),
                                  p(parameter_name),
                                  br(),
+                                 h4("Stutter file"),
+                                 p(fn_stutter_file),
+                                 br(),
                                  h4("Kit"),
                                  p(kit_name)
                         ),
                         tabPanel("AT",
                                  br(),
-                                 dataTableOutput(session$ns("anameth_edit_at"))
+                                 rHandsontableOutput(session$ns("anameth_edit_at"))
                         ),
                         tabPanel("Allele probability",
                                  br(),
@@ -369,35 +341,18 @@ anameth_server <- function(id, path_pack){
       })
 
       # Define the data.table for the displayed AT
-      output$anameth_edit_at <- renderDataTable(server = FALSE, {
-        # Extract autosomal markers
+      output$anameth_edit_at <- renderRHandsontable({
         dt_anameth_edit <- rv_anameth$dt_anameth_edit
         markers <- dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "AT"]
-        n_mk <- length(markers)
 
-        # Create a data.table for the AT
-        dt_at_edit <- data.table(Marker = markers) # For saved data
-        dt_at_edit_display <- copy(dt_at_edit) # For displayed data
+        dt_at_edit <- data.table(Marker = markers)
         dt_at_edit$AT <- as.numeric(dt_anameth_edit$Value[dt_anameth_edit$Category == "AT"])
         rv_anameth$dt_at_edit <- dt_at_edit
-        dt_at_edit_display$AT <- numericColumn(n_mk, 2, val = dt_at_edit$AT, width = "75%")
 
-        datatable(
-          dt_at_edit_display,
-          selection = "none",
-          options = list(dom = "t", iDisplayLength = nrow(dt_at_edit_display), ordering = FALSE, autoWidth = TRUE),
-          rownames = FALSE,
-          escape = FALSE,
-          callback = JS(js("anameth_edit_at", 2))
-        )
-      })
-
-      # Update AT
-      observeEvent(input[["anameth_edit_at_cell_edit"]], {
-        info <- input[["anameth_edit_at_cell_edit"]]
-        dt_at_edit <- rv_anameth$dt_at_edit
-        dt_at_edit[[info[1, "col"]]][info[1, "row"]] <- info[1, "value"]
-        rv_anameth$dt_at_edit <- dt_at_edit
+        rhandsontable(dt_at_edit, rowHeaders = FALSE) %>%
+          hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+          hot_col("Marker", type = "text", readOnly = TRUE) %>%
+          hot_col("AT", type = "numeric", format = "0")
       })
 
       # Change the state of the numericInput for the MAF
@@ -419,9 +374,10 @@ anameth_server <- function(id, path_pack){
         anameth_edit_input_name <- input$anameth_edit_input_name
         dt_anameth_edit <- rv_anameth$dt_anameth_edit
         parameter_name <- dt_anameth_edit$Value[dt_anameth_edit$Category == "Parameter"]
+        fn_stutter_file <- dt_anameth_edit$Value[dt_anameth_edit$Category == "Stutter file"]
         kit_name <- dt_anameth_edit$Value[dt_anameth_edit$Category == "Kit"]
 
-        dt_at_edit <- rv_anameth$dt_at_edit
+        dt_at_edit <- hot_to_r(input$anameth_edit_at)
         markers <- dt_at_edit$Marker
         ats <- dt_at_edit$AT
 
@@ -433,9 +389,9 @@ anameth_server <- function(id, path_pack){
         }
 
         # Create a data.table for the new analysis method
-        dt_anameth_new <- data.table(Category = c("Parameter", "Kit", rep("AT", length(markers)), rep("Allele_probability", 3), rep("Genotype_filter", 6), rep("Drop-in", 4)),
-                                     Subcategory = c("", "", markers, "Method", "Maf", "Theta", "BSR", "FSR", "DSR", "M2SR", "N_Dropin", "H_Dropin", "Probability", "Shape", "Rate", "MT"),
-                                     Value = c(parameter_name, kit_name, ats,
+        dt_anameth_new <- data.table(Category = c("Parameter", "Stutter file", "Kit", rep("AT", length(markers)), rep("Allele_probability", 3), rep("Genotype_filter", 6), rep("Drop-in", 4)),
+                                     Subcategory = c("", "", "", markers, "Method", "Maf", "Theta", "BSR", "FSR", "DSR", "M2SR", "N_Dropin", "H_Dropin", "Probability", "Shape", "Rate", "MT"),
+                                     Value = c(parameter_name, fn_stutter_file, kit_name, ats,
                                                anameth_edit_alprob, anameth_edit_maf, input$anameth_edit_theta,
                                                input$anameth_edit_gt_fltr_bsr, input$anameth_edit_gt_fltr_fsr, input$anameth_edit_gt_fltr_dsr, input$anameth_edit_gt_fltr_m2sr,
                                                input$anameth_edit_gt_fltr_n_di, input$anameth_edit_gt_fltr_h_di,

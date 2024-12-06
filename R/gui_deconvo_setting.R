@@ -187,7 +187,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         dt_kit_auto <- extract_kit_auto(dt_kit)
         markers_auto <- unique(dt_kit_auto[, Marker])
 
-        load(paste0(path_pack, "/extdata/param/", dt_anameth$Value[dt_anameth$Category == "Parameter"], ".Rdata"))
+        load(paste0(path_pack, "/extdata/param/", dt_anameth$Value[dt_anameth$Category == "Parameter"], ".RData"))
+        load(paste0(path_pack, "/extdata/stutter_file/", dt_anameth$Value[dt_anameth$Category == "Stutter file"], ".RData"))
+
         dt_al_prob <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Allele_probability"],
                                  Value = dt_anameth$Value[dt_anameth$Category == "Allele_probability"])
         dt_gt_fltr <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype_filter"],
@@ -204,13 +206,14 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           # Check registration of the stutter ratio
-          message_sr <- check_csp_sr(dt_csp, dt_info_mk, dt_sr)
+          message_sr <- check_csp_sr(dt_csp, dt_info_mk, list_dt_average_sr)
 
           if(message_sr == "error"){
             waiter_hide()
             showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
           }else{
-            data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
+            data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt_fltr, dt_dropin,
+                                            median_alpha, median_cv, list_dt_average_sr,
                                             hnc_deconvo, warmup, sampling, chains)
             if(!is.null(data_deconvo$error_message)){
               waiter_hide()

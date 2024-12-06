@@ -9,11 +9,12 @@ perform_deconvo(
   dt_af,
   dt_kit,
   dt_info_mk,
-  dt_par,
-  dt_sr,
   dt_al_prob,
   dt_gt_fltr,
   dt_dropin,
+  alpha_auto,
+  cv,
+  list_dt_average_sr,
   hnc,
   warmup,
   sampling,
@@ -29,15 +30,17 @@ perform_deconvo(
 
 \item{dt_info_mk}{The data.table of the information on the ignored marker and the analytical thresholds for each marker}
 
-\item{dt_par}{The data.table of the parameters}
-
-\item{dt_sr}{The data.table of the stutter ratios}
-
 \item{dt_al_prob}{The data.table of the setting of the allele probabilities}
 
 \item{dt_gt_fltr}{The data.table of the genotype filters}
 
 \item{dt_dropin}{The data.table of the setting of the drop-in}
+
+\item{alpha_auto}{A vector of the estimated alpha values for Dirichlet distribution of the locus-specific amplification efficiencies}
+
+\item{cv}{A parameter of the gamma distribution}
+
+\item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 
 \item{hnc}{The hypothesized number of contributors}
 

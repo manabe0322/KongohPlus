@@ -51,6 +51,7 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         traceplot_cv <- data_est_par$traceplot_cv
         list_dt_average_sr <- rv_est_par$list_dt_average_sr
         fn_stutter_file <- rv_est_par$fn_stutter_file
+        kit_name <- rv_est_par$kit_name
 
         rv_par_file_names <- reactiveVal(NULL)
 
@@ -87,7 +88,7 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
 
           save(list = c("median_alpha", "rhat_alpha", "median_lp_ae", "rhat_lp_ae", "traceplot_ae",
                         "median_lp_gamma", "median_cv", "rhat_lp_gamma", "rhat_cv", "traceplot_cv",
-                        "list_dt_average_sr", "fn_stutter_file"),
+                        "list_dt_average_sr", "fn_stutter_file", "kit_name"),
                file = paste0(path_pack, "/extdata/param/", fn_est_par, ".RData"))
 
           removeModal()

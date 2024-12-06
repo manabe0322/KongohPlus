@@ -302,7 +302,9 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
           chains <- rv_lr_setting$chains
           anameth <- input$anameth_lr
 
-          load(paste0(path_pack, "/extdata/param/", dt_anameth$Value[dt_anameth$Category == "Parameter"], ".Rdata"))
+          load(paste0(path_pack, "/extdata/param/", dt_anameth$Value[dt_anameth$Category == "Parameter"], ".RData"))
+          load(paste0(path_pack, "/extdata/stutter_file/", dt_anameth$Value[dt_anameth$Category == "Stutter file"], ".RData"))
+
           dt_al_prob <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Allele_probability"],
                                    Value = dt_anameth$Value[dt_anameth$Category == "Allele_probability"])
           dt_gt_fltr <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype_filter"],
@@ -319,12 +321,13 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
             showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
           }else{
             # Check registration of the stutter ratio
-            message_sr <- check_csp_sr(dt_csp, dt_info_mk, dt_sr)
+            message_sr <- check_csp_sr(dt_csp, dt_info_mk, list_dt_average_sr)
             if(message_sr == "error"){
               waiter_hide()
               showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
             }else{
-              data_deconvo_hp <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
+              data_deconvo_hp <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt_fltr, dt_dropin,
+                                                 alpha_auto, cv, list_dt_average_sr,
                                                  hnc_lr_hp, warmup, sampling, chains)
               if(!is.null(data_deconvo_hp$error_message)){
                 waiter_hide()
@@ -333,7 +336,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                 if(hnc_lr_hp == hnc_lr_hd){
                   data_deconvo_hd <- data_deconvo_hp
                 }else{
-                  data_deconvo_hd <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
+                  data_deconvo_hd <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt_fltr, dt_dropin,
+                                                     alpha_auto, cv, list_dt_average_sr,
                                                      hnc_lr_hd, warmup, sampling, chains)
                 }
                 if(!is.null(data_deconvo_hd$error_message)){

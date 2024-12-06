@@ -16,16 +16,18 @@ make_index_dedup2_mk <- function(index_rph_gtc, index_dedup1_all_mk){
 #' @param dt_af The data.table of the allele frequencies
 #' @param dt_kit The data.table of the information on the kit
 #' @param dt_info_mk The data.table of the information on the ignored marker and the analytical thresholds for each marker
-#' @param dt_par The data.table of the parameters
-#' @param dt_sr The data.table of the stutter ratios
 #' @param dt_al_prob The data.table of the setting of the allele probabilities
 #' @param dt_gt_fltr The data.table of the genotype filters
 #' @param dt_dropin The data.table of the setting of the drop-in
+#' @param alpha_auto A vector of the estimated alpha values for Dirichlet distribution of the locus-specific amplification efficiencies
+#' @param cv A parameter of the gamma distribution
+#' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc The hypothesized number of contributors
 #' @param warmup The number of warm-up iterations for each chain
 #' @param sampling The number of sampling iterations for each chain
 #' @param chains The number of chains
-perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt_al_prob, dt_gt_fltr, dt_dropin,
+perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt_fltr, dt_dropin,
+                            alpha_auto, cv, list_dt_average_sr,
                             hnc, warmup, sampling, chains){
   # Start computation
   start_time <- proc.time()
@@ -49,11 +51,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
     mean_size <- mean(dt_kit_auto$Size)
 
     # Extract parameters for AE
-    ae_alpha_all_mk <- dt_par$Alpha[dt_par$Parameter == "AE"]
-    ae_alpha_use <- ae_alpha_all_mk[is.element(dt_par$Marker[dt_par$Parameter == "AE"], markers_use)]
-
-    # Extract gamma parameter
-    cv <- dt_par$Cv[dt_par$Parameter == "Gamma"]
+    ae_alpha_use <- alpha_auto[match(markers_use, names(alpha_auto))]
 
     # Extract methods to estimate allele probabilities
     al_prob_subcategory <- dt_al_prob$Subcategory
@@ -84,9 +82,6 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
     shape_di <- dropin_value[dropin_subcategory == "Shape"]
     rate_di <- dropin_value[dropin_subcategory == "Rate"]
     mt_di <- dropin_value[dropin_subcategory == "MT"]
-
-    # setindex of data.table
-    setindex(dt_sr, Marker)
 
     # Define objects
     rph_base_use <- vector(mode = "list", length = n_mk)
@@ -139,12 +134,12 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
 
       # Extract parameters of one marker
       at <- ats_use[i]
-      dt_sr_mk <- dt_sr[Marker == mk]
-      sr_alleles_mk <- as.numeric(dt_sr_mk$Allele)
-      bsrs_mk <- dt_sr_mk$Average_BSR
-      fsrs_mk <- dt_sr_mk$Average_FSR
-      dsrs_mk <- dt_sr_mk$Average_DSR
-      m2srs_mk <- dt_sr_mk$Average_M2SR
+      dt_ave_sr <- list_dt_average_sr[[mk]]
+      sr_alleles_mk <- as.numeric(dt_ave_sr$Allele)
+      bsrs_mk <- dt_ave_sr[["Average BSR"]]
+      fsrs_mk <- dt_ave_sr[["Average FSR"]]
+      dsrs_mk <- dt_ave_sr[["Average DSR"]]
+      m2srs_mk <- dt_ave_sr[["Average M2SR"]]
       index_sr <- match(peaks, sr_alleles_mk)
       bsrs <- fsrs <- dsrs <- m2srs <- rep(0, n_peak)
       for(j in 1:length(index_sr)){
@@ -645,11 +640,12 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
                   "dt_af" = dt_af,
                   "dt_kit" = dt_kit,
                   "dt_info_mk" = dt_info_mk,
-                  "dt_par" = dt_par,
-                  "dt_sr" = dt_sr,
                   "dt_al_prob" = dt_al_prob,
                   "dt_gt_fltr" = dt_gt_fltr,
                   "dt_dropin" = dt_dropin,
+                  "alpha_auto" = alpha_auto,
+                  "cv" = cv,
+                  "list_dt_average_sr" = list_dt_average_sr,
                   "warmup" = warmup,
                   "sampling" = sampling,
                   "chains" = chains,
@@ -684,11 +680,12 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
                   "dt_af" = NULL,
                   "dt_kit" = NULL,
                   "dt_info_mk" = NULL,
-                  "dt_par" = NULL,
-                  "dt_sr" = NULL,
                   "dt_al_prob" = NULL,
                   "dt_gt_fltr" = NULL,
                   "dt_dropin" = NULL,
+                  "alpha_auto" = NULL,
+                  "cv" = NULL,
+                  "list_dt_average_sr" = NULL,
                   "warmup" = NULL,
                   "sampling" = NULL,
                   "chains" = NULL,
@@ -714,11 +711,12 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_par, dt_sr, dt
                 "dt_af" = NULL,
                 "dt_kit" = NULL,
                 "dt_info_mk" = NULL,
-                "dt_par" = NULL,
-                "dt_sr" = NULL,
                 "dt_al_prob" = NULL,
                 "dt_gt_fltr" = NULL,
                 "dt_dropin" = NULL,
+                "alpha_auto" = NULL,
+                "cv" = NULL,
+                "list_dt_average_sr" = NULL,
                 "warmup" = NULL,
                 "sampling" = NULL,
                 "chains" = NULL,

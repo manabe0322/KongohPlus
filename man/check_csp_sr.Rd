@@ -4,14 +4,14 @@
 \alias{check_csp_sr}
 \title{check_csp_sr}
 \usage{
-check_csp_sr(dt_csp, dt_info_mk, dt_sr)
+check_csp_sr(dt_csp, dt_info_mk, list_dt_average_sr)
 }
 \arguments{
 \item{dt_csp}{The data.table of the crime stain profiles}
 
 \item{dt_info_mk}{The data.table of the information on the ignored marker and the analytical thresholds for each marker}
 
-\item{dt_sr}{The data.table of the stutter ratios}
+\item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 }
 \description{
 The function to check whether the corrected alleles for all peaks are registered or not
