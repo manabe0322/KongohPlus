@@ -272,20 +272,17 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
             gtc_use <- data_deconvo$gtc_use
             lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
             lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
-            dt_mpdeg <- data_deconvo$dt_mpdeg
 
-            data_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hp, refs)
-            data_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hd, refs)
-            dt_lr <- make_dt_lr(markers_use,
-                                data_hp$log10like_adopt, data_hp$combined_log10like_adopt,
-                                data_hd$log10like_adopt, data_hd$combined_log10like_adopt)
+            log10like_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hp, refs)
+            log10like_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hd, refs)
+            dt_lr <- data.table(Marker = c(markers_use, "Total"),
+                                Log10_Likelihood_Hp = log10like_hp,
+                                Log10_Likelihood_Hd = log10like_hd,
+                                LR = 10^(log10like_hp - log10like_hd))
+            names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
 
             data_lr <- list("dt_ref" = dt_ref,
                             "fn_ref" = rv_lr_setting$fn_ref,
-                            "dt_mpdeg_hp" = data_hp$dt_mpdeg_hyp,
-                            "dt_mpdeg_hd" = data_hd$dt_mpdeg_hyp,
-                            "dt_pg_list_hp" = data_hp$dt_pg_list_hyp,
-                            "dt_pg_list_hd" = data_hd$dt_pg_list_hyp,
                             "dt_lr" = dt_lr)
             rv_lr$data_lr <- data_lr
             rv_lr$data_deconvo_hp <- data_deconvo
@@ -363,9 +360,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                   gtc_use <- data_deconvo_hp$gtc_use
                   lpd_gtc_use_1st <- data_deconvo_hp$lpd_gtc_use_1st
                   lpd_gtc_use_2nd <- data_deconvo_hp$lpd_gtc_use_2nd
-                  dt_mpdeg <- data_deconvo_hp$dt_mpdeg
 
-                  data_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hp, refs)
+                  log10like_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hp, refs)
 
                   # Extract data from data_deconvo for Hd
                   hnc <- data_deconvo_hd$hnc
@@ -377,20 +373,17 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                   gtc_use <- data_deconvo_hd$gtc_use
                   lpd_gtc_use_1st <- data_deconvo_hd$lpd_gtc_use_1st
                   lpd_gtc_use_2nd <- data_deconvo_hd$lpd_gtc_use_2nd
-                  dt_mpdeg <- data_deconvo_hd$dt_mpdeg
 
-                  data_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_mpdeg, dt_ref, hd, refs)
+                  log10like_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hd, refs)
 
-                  dt_lr <- make_dt_lr(markers_use,
-                                      data_hp$log10like_adopt, data_hp$combined_log10like_adopt,
-                                      data_hd$log10like_adopt, data_hd$combined_log10like_adopt)
+                  dt_lr <- data.table(Marker = c(markers_use, "Total"),
+                                      Log10_Likelihood_Hp = log10like_hp,
+                                      Log10_Likelihood_Hd = log10like_hd,
+                                      LR = 10^(log10like_hp - log10like_hd))
+                  names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
 
                   data_lr <- list("dt_ref" = dt_ref,
                                   "fn_ref" = rv_lr_setting$fn_ref,
-                                  "dt_mpdeg_hp" = data_hp$dt_mpdeg_hyp,
-                                  "dt_mpdeg_hd" = data_hd$dt_mpdeg_hyp,
-                                  "dt_pg_list_hp" = data_hp$dt_pg_list_hyp,
-                                  "dt_pg_list_hd" = data_hd$dt_pg_list_hyp,
                                   "dt_lr" = dt_lr)
                   rv_lr$data_lr <- data_lr
                   rv_lr$data_deconvo_hp <- data_deconvo_hp
