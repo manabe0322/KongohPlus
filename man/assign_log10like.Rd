@@ -14,10 +14,10 @@ assign_log10like(
   gtc_use,
   lpd_gtc_use_1st,
   lpd_gtc_use_2nd,
-  dt_mpdeg,
   dt_ref,
   hyp,
-  refs
+  refs,
+  sub_source = TRUE
 )
 }
 \arguments{
@@ -39,13 +39,13 @@ assign_log10like(
 
 \item{lpd_gtc_use_2nd}{A list of the log likelihood of each genotype in each used marker (replicate 2)}
 
-\item{dt_mpdeg}{The data.table for mixture proportions and degradation parameters of each contributor}
-
 \item{dt_ref}{The data.table for the reference profiles}
 
 \item{hyp}{Known contributors in a hypothesis}
 
 \item{refs}{The names of all references}
+
+\item{sub_source}{Whether the sub-source level likelihood is calculated or not}
 }
 \description{
 The function to assign the log10 likelihood

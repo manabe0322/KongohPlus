@@ -12,7 +12,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
-#' @importFrom rhandsontable hot_col hot_table hot_to_r renderRHandsontable rhandsontable rHandsontableOutput
+#' @importFrom rhandsontable hot_cell hot_col hot_table hot_to_r renderRHandsontable rhandsontable rHandsontableOutput
 #' @import rmarkdown
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
 #' @importFrom shinyFiles parseFilePaths shinyFilesButton shinyFileChoose

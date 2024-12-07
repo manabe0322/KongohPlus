@@ -23,16 +23,14 @@ AT,D10S1248,100
 AT,D1S1656,100
 AT,D12S391,100
 AT,D2S1338,100
-Allele_probability,Method,Dirichlet
-Allele_probability,Maf,0
-Allele_probability,Theta,0
-Genotype_filter,BSR,0.3
-Genotype_filter,FSR,0.15
-Genotype_filter,DSR,0.05
-Genotype_filter,M2SR,0.05
-Genotype_filter,N_Dropin,2
-Genotype_filter,H_Dropin,300
-Drop-in,Probability,0.00335
-Drop-in,Shape,1.22
-Drop-in,Rate,0.0503
-Drop-in,MT,50
+Allele & Genotype probability,Theta,0
+Genotype filter,Maximum BSR,0.3
+Genotype filter,Maximum FSR,0.15
+Genotype filter,Maximum DSR,0.05
+Genotype filter,Maximum M2SR,0.05
+Genotype filter,Maximum number of drop-in,2
+Genotype filter,Maximum height of drop-in,300
+Drop-in,Probability of drop-in,0.00335
+Drop-in,Shape parameter,1.22
+Drop-in,Rate parameter,0.0503
+Drop-in,Minimum threshold,50
