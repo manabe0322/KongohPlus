@@ -23,7 +23,7 @@ AT,D10S1248,100
 AT,D1S1656,100
 AT,D12S391,100
 AT,D2S1338,100
-Allele & Genotype probability,Theta,0
+Genotype probability,Theta,0
 Genotype filter,Maximum BSR,0.3
 Genotype filter,Maximum FSR,0.15
 Genotype filter,Maximum DSR,0.05
@@ -34,3 +34,6 @@ Drop-in,Probability of drop-in,0.00335
 Drop-in,Shape parameter,1.22
 Drop-in,Rate parameter,0.0503
 Drop-in,Minimum threshold,50
+MCMC,Warmup,1200
+MCMC,Sampling,300
+MCMC,Chains,4
