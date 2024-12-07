@@ -6,26 +6,49 @@ deconvo_setting_ui <- function(id){
 
   tabPanel("Setting",
            useWaiter(),
-           br(),
-           sidebarLayout(
-             sidebarPanel(width = 3,
-                          numericInput(ns("noc_deconvo"), label = h4("Number of contributors"), value = 1),
-                          br(),
-                          uiOutput(ns("anameth_deconvo")),
-                          br(),
-                          actionButton(ns("act_advance_deconvo"), label = "Advanced setting"),
-                          br(),
-                          br(),
-                          actionButton(ns("act_analyze_deconvo"), label = "Analyze", class = "btn btn-primary btn-lg")
-             ),
-             mainPanel(width = 9,
-                       tags$style(HTML("
+           tags$style(HTML("
                          .handsontable .htCore td {
                            vertical-align: middle !important;
                            text-align: center !important;
                          }"
-                       )),
-                       rHandsontableOutput(ns("dt_info_mk"))
+           )),
+           br(),
+           fluidRow(
+             column(3,
+                    wellPanel(
+                      numericInput(ns("noc_deconvo"), label = h4("Number of contributors"), value = 1),
+                      br(),
+                      h4("Analysis method"),
+                      shinyFilesButton(ns("load_anameth_deconvo"), label = "Load", title = "Select a file", multiple = FALSE),
+                      uiOutput(ns("anameth_deconvo")),
+                      br(),
+                      br(),
+                      actionButton(ns("act_analyze_deconvo"), label = "Analyze", class = "btn btn-primary btn-lg")
+                    )
+             ),
+             column(4,
+                    rHandsontableOutput(ns("dt_ignore_mk"))
+             ),
+             column(5,
+                    fluidRow(
+                      column(4,
+                             h4(textOutput(ns("title_at"))),
+                             rHandsontableOutput(ns("anameth_at"))
+                      ),
+                      column(8,
+                             h4(textOutput(ns("title_al_gt_prob"))),
+                             rHandsontableOutput(ns("anameth_algt_prob")),
+                             br(),
+                             h4(textOutput(ns("title_gt_fltr"))),
+                             rHandsontableOutput(ns("anameth_gt_fltr")),
+                             br(),
+                             h4(textOutput(ns("title_dropin"))),
+                             rHandsontableOutput(ns("anameth_dropin")),
+                             br(),
+                             h4(textOutput(ns("title_mcmc"))),
+                             rHandsontableOutput(ns("anameth_mcmc"))
+                      )
+                    )
              )
            )
   )
@@ -43,6 +66,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       rv_deconvo_setting$dt_af <- NULL
       rv_deconvo_setting$fn_csp <- NULL
       rv_deconvo_setting$fn_af <- NULL
+      rv_deconvo_setting$fn_anameth_deconvo <- NULL
       rv_deconvo_setting$dt_anameth <- NULL
       rv_deconvo_setting$warmup <- 1200
       rv_deconvo_setting$sampling <- 300
@@ -70,102 +94,82 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         }
       })
 
-      observeEvent(input$act_advance_deconvo, {
-        showModal(modalDialog(
-          title = "Advanced setting",
-          fluidRow(
-            column(6,
-                   h4("MCMC conditions"),
-                   numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_deconvo_setting$warmup),
-                   numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_deconvo_setting$sampling),
-                   numericInput(session$ns("chains"), label = "Number of chains", value = rv_deconvo_setting$chains)
-            ),
-            column(6)
-          ),
-          footer = tagList(
-            actionButton(session$ns("act_advance_save"), "Save"),
-            modalButton("Cancel")
-          ),
-          size = "l"
-        ))
-      })
+      shinyFileChoose(input, "load_anameth_deconvo", roots = c(documents = paste0(path_pack, "/extdata/anameth")), session = session, filetypes = c("csv"))
 
-      observeEvent(input$warmup, {
-        warmup <- input$warmup
-        if(!is.integer(warmup)){
-          showFeedbackDanger(inputId = "warmup", text = "A positive integer is required!")
-        }else if(warmup <= 0){
-          showFeedbackDanger(inputId = "warmup", text = "A positive integer is required!")
-        }else{
-          hideFeedback("warmup")
-        }
-      })
+      observeEvent(input$load_anameth_deconvo, {
+        req(input$load_anameth_deconvo)
+        path_anameth_deconvo <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/anameth")), input$load_anameth_deconvo)$datapath
 
-      observeEvent(input$sampling, {
-        sampling <- input$sampling
-        if(!is.integer(sampling)){
-          showFeedbackDanger(inputId = "sampling", text = "A positive integer is required!")
-        }else if(sampling <= 0){
-          showFeedbackDanger(inputId = "sampling", text = "A positive integer is required!")
-        }else{
-          hideFeedback("sampling")
-        }
-      })
+        if(length(path_anameth_deconvo) > 0){
+          rv_deconvo_setting$fn_anameth_deconvo <- fn_anameth_deconvo <- basename(path_anameth_deconvo)
+          rv_deconvo_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth_deconvo))
+          markers_auto <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
 
-      observeEvent(input$chains, {
-        chains <- input$chains
-        if(!is.integer(chains)){
-          showFeedbackDanger(inputId = "chains", text = "A positive integer is required!")
-        }else if(chains <= 0){
-          showFeedbackDanger(inputId = "chains", text = "A positive integer is required!")
-        }else{
-          hideFeedback("chains")
-        }
-      })
+          dt_ignore_mk <- data.table(Ignore = rep(FALSE, length(markers_auto)),
+                                     Marker = markers_auto)
 
-      observeEvent(input$act_advance_save, {
-        req(input$warmup)
-        req(input$sampling)
-        req(input$chains)
+          output$dt_ignore_mk <- renderRHandsontable({
+            rhandsontable(dt_ignore_mk, rowHeaders = FALSE) %>%
+              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+              hot_col("Ignore", type = "checkbox") %>%
+              hot_col("Marker", type = "text", readOnly = TRUE)
+          })
 
-        warmup <- input$warmup
-        sampling <- input$sampling
-        chains <- input$chains
+          output$title_at <- renderText({"Analytical threshold"})
+          output$title_al_gt_prob <- renderText({"Genotype probability"})
+          output$title_gt_fltr <- renderText({"Genotype filter"})
+          output$title_dropin <- renderText({"Drop-in"})
+          output$title_mcmc <- renderText({"MCMC"})
 
-        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains))){
-          rv_deconvo_setting$warmup <- warmup
-          rv_deconvo_setting$sampling <- sampling
-          rv_deconvo_setting$chains <- chains
-          removeModal()
+          output$anameth_at <- renderRHandsontable({
+            dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
+                                AT = dt_anameth$Value[dt_anameth$Category == "AT"])
+            rhandsontable(dt_at, rowHeaders = FALSE) %>%
+              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+              hot_col("Marker", type = "text", readOnly = TRUE, width = 100) %>%
+              hot_col("AT", type = "numeric", format = "0", readOnly = TRUE, width = 100)
+          })
+
+          output$anameth_algt_prob <- renderRHandsontable({
+            dt_algt_prob <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype probability"],
+                                       Value = dt_anameth$Value[dt_anameth$Category == "Genotype probability"])
+            rhandsontable(dt_algt_prob, rowHeaders = FALSE, colHeaders = FALSE) %>%
+              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+              hot_col(col = 1, type = "text", readOnly = TRUE, width = 300) %>%
+              hot_col(col = 2, type = "numeric", readOnly = TRUE, width = 100)
+          })
+
+          output$anameth_gt_fltr <- renderRHandsontable({
+            dt_gt_fltr <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype filter"],
+                                     Value = dt_anameth$Value[dt_anameth$Category == "Genotype filter"])
+            rhandsontable(dt_gt_fltr , rowHeaders = FALSE, colHeaders = FALSE) %>%
+              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+              hot_col(col = 1, type = "text", readOnly = TRUE, width = 300) %>%
+              hot_col(col = 2, type = "numeric", readOnly = TRUE, width = 100)
+          })
+
+          output$anameth_dropin <- renderRHandsontable({
+            dt_dropin <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Drop-in"],
+                                    Value = dt_anameth$Value[dt_anameth$Category == "Drop-in"])
+            rhandsontable(dt_dropin, rowHeaders = FALSE, colHeaders = FALSE) %>%
+              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+              hot_col(col = 1, type = "text", readOnly = TRUE, width = 300) %>%
+              hot_col(col = 2, type = "numeric", readOnly = TRUE, width = 100)
+          })
+
+          output$anameth_mcmc <- renderRHandsontable({
+            dt_mcmc <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "MCMC"],
+                                  Value = dt_anameth$Value[dt_anameth$Category == "MCMC"])
+            rhandsontable(dt_mcmc, rowHeaders = FALSE, colHeaders = FALSE) %>%
+              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+              hot_col(col = 1, type = "text", readOnly = TRUE, width = 300) %>%
+              hot_col(col = 2, type = "numeric", readOnly = TRUE, width = 100)
+          })
         }
       })
 
       output$anameth_deconvo <- renderUI({
-        anameth_all <- list.files(paste0(path_pack, "/extdata/anameth"))
-        anameth_all <- gsub(".{4}$", "", anameth_all)
-        selectInput(session$ns("anameth_deconvo"), label = h4("Analysis method"), choices = anameth_all, selected = anameth_all[1], selectize = FALSE)
-      })
-
-      observeEvent(input$anameth_deconvo, {
-        # Load the selected analysis method
-        rv_deconvo_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", input$anameth_deconvo, ".csv"))
-
-        # Create a data.table for information on markers
-        dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
-                            AT = as.numeric(dt_anameth$Value[dt_anameth$Category == "AT"]))
-        dt_info_mk <- copy(dt_at)
-        dt_info_mk <- cbind(
-          Ignore = rep(FALSE, nrow(dt_info_mk)),
-          dt_info_mk
-        )
-
-        output$dt_info_mk <- renderRHandsontable({
-          rhandsontable(dt_info_mk, rowHeaders = FALSE) %>%
-            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-            hot_col("Ignore", type = "checkbox") %>%
-            hot_col("Marker", type = "text", readOnly = TRUE) %>%
-            hot_col("AT", type = "numeric", format = "0", readOnly = TRUE)
-        })
+        disabled(textInput(session$ns("anameth_deconvo"), label = "", value = rv_deconvo_setting$fn_anameth_deconvo))
       })
 
       observeEvent(input$act_analyze_deconvo, {

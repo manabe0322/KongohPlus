@@ -268,12 +268,8 @@ anameth_server <- function(id, path_pack){
           output$title_mcmc <- renderText({"MCMC"})
 
           output$anameth_edit_at <- renderRHandsontable({
-            markers <- dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "AT"]
-
-            dt_at <- data.table(Marker = markers)
-            dt_at$AT <- as.numeric(dt_anameth_edit$Value[dt_anameth_edit$Category == "AT"])
-            rv_anameth$dt_at <- dt_at
-
+            dt_at <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "AT"],
+                                AT = dt_anameth_edit$Value[dt_anameth_edit$Category == "AT"])
             rhandsontable(dt_at, rowHeaders = FALSE) %>%
               hot_table(fillHandle = FALSE, rowHeights = 30) %>%
               hot_col("Marker", type = "text", readOnly = TRUE, width = 100) %>%
