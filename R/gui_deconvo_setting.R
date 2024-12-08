@@ -188,13 +188,13 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         dt_anameth <- rv_deconvo_setting$dt_anameth
 
         # Extract information on the kit
-        dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Value[dt_anameth$Category == "Kit"], ".csv"))
+        dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Name[dt_anameth$Category == "Kit"], ".csv"))
         dt_kit <- change_data_type_kit(dt_kit)
         dt_kit_auto <- extract_kit_auto(dt_kit)
         markers_auto <- unique(dt_kit_auto[, Marker])
 
-        load(paste0(path_pack, "/extdata/param/", dt_anameth$Value[dt_anameth$Category == "Parameter"], ".RData"))
-        load(paste0(path_pack, "/extdata/stutter_file/", dt_anameth$Value[dt_anameth$Category == "Stutter file"], ".RData"))
+        load(paste0(path_pack, "/extdata/param/", dt_anameth$Name[dt_anameth$Category == "Parameter"], ".RData"))
+        load(paste0(path_pack, "/extdata/stutter_file/", dt_anameth$Name[dt_anameth$Category == "Stutter file"], ".RData"))
 
         dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
                             AT = dt_anameth$Value[dt_anameth$Category == "AT"])

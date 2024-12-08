@@ -59,9 +59,9 @@ create_dt_info_anameth <- function(path_pack){
     info_param <- info_stutter <- info_kit <- rep("", n_anameth)
     for(i in 1:n_anameth){
       dt_anameth_1 <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth[i]))
-      info_param[i] <- dt_anameth_1$Value[dt_anameth_1$Category == "Parameter"]
-      info_stutter[i] <- dt_anameth_1$Value[dt_anameth_1$Category == "Stutter file"]
-      info_kit[i] <- dt_anameth_1$Value[dt_anameth_1$Category == "Kit"]
+      info_param[i] <- dt_anameth_1$Name[dt_anameth_1$Category == "Parameter"]
+      info_stutter[i] <- dt_anameth_1$Name[dt_anameth_1$Category == "Stutter file"]
+      info_kit[i] <- dt_anameth_1$Name[dt_anameth_1$Category == "Kit"]
     }
 
     dt_info_anameth <- data.table("Analysis method" = gsub(".{4}$", "", fn_anameth),
@@ -98,7 +98,8 @@ create_default_dt_anameth <- function(path_pack, parameter_name, stutter_file_na
                                                    "Maximum BSR", "Maximum FSR", "Maximum DSR", "Maximum M2SR", "Maximum number of drop-in", "Maximum height of drop-in",
                                                    "Probability of drop-in", "Shape parameter", "Rate parameter", "Minimum threshold",
                                                    "Warmup", "Sampling", "Chains"),
-                                   Value = c(parameter_name, stutter_file_name, kit_name,
+                                   Name = c(parameter_name, stutter_file_name, kit_name, rep("", n_mk + 14)),
+                                   Value = c(rep(NA, 3),
                                              rep(100, n_mk),
                                              0,
                                              0.3, 0.15, 0.05, 0.05, 2, 300,
@@ -253,13 +254,13 @@ anameth_server <- function(id, path_pack){
           dt_anameth_edit <- fread(paste0(path_pack, "/extdata/anameth/", anameth_select, ".csv"))
 
           # Set the parameter name
-          parameter_name <- dt_anameth_edit$Value[dt_anameth_edit$Category == "Parameter"]
+          parameter_name <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter"]
 
           # Set the stutter file
-          fn_stutter_file <- dt_anameth_edit$Value[dt_anameth_edit$Category == "Stutter file"]
+          fn_stutter_file <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Stutter file"]
 
           # Set the kit name
-          kit_name <- dt_anameth_edit$Value[dt_anameth_edit$Category == "Kit"]
+          kit_name <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Kit"]
 
           output$title_at <- renderText({"Analytical threshold"})
           output$title_al_gt_prob <- renderText({"Genotype probability"})
@@ -347,7 +348,8 @@ anameth_server <- function(id, path_pack){
                                                  dt_gt_fltr[["Subcategory"]],
                                                  dt_dropin[["Subcategory"]],
                                                  dt_mcmc[["Subcategory"]]),
-                                 Value = c(parameter_name, fn_stutter_file, kit_name,
+                                 Name = c(parameter_name, fn_stutter_file, kit_name, rep("", nrow(dt_at) + nrow(dt_algt_prob) + nrow(dt_gt_fltr) + nrow(dt_dropin) + nrow(dt_mcmc))),
+                                 Value = c(rep(NA, 3),
                                            dt_at[["AT"]],
                                            dt_algt_prob[["Value"]],
                                            dt_gt_fltr[["Value"]],

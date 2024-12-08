@@ -257,11 +257,12 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         dt_csp <- rv_lr_setting$dt_csp
         dt_ref <- rv_lr_setting$dt_ref
         dt_af <- rv_lr_setting$dt_af
+        anameth <- rv_lr_setting$fn_anameth_lr
         dt_anameth <- rv_lr_setting$dt_anameth
         use_deconvo <- input$use_deconvo
 
         # Extract information on the kit
-        dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Value[dt_anameth$Category == "Kit"], ".csv"))
+        dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Name[dt_anameth$Category == "Kit"], ".csv"))
         dt_kit <- change_data_type_kit(dt_kit)
         dt_kit_auto <- extract_kit_auto(dt_kit)
         markers_auto <- unique(dt_kit_auto[, Marker])
@@ -279,7 +280,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
             peaks_list <- data_deconvo$peaks_list
             pop_al_list <- data_deconvo$pop_al_list
             pop_prob_list <- data_deconvo$pop_prob_list
-            theta <- data_deconvo$theta
+            theta <- as.numeric(dt_anameth$Value[dt_anameth$Subcategory == "Theta"])
             gtc_use <- data_deconvo$gtc_use
             lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
             lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
@@ -305,22 +306,23 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
           # Fix setting
           hnc_lr_hp <- input$noc_lr_hp
           hnc_lr_hd <- input$noc_lr_hd
-          warmup <- rv_lr_setting$warmup
-          sampling <- rv_lr_setting$sampling
-          chains <- rv_lr_setting$chains
-          anameth <- input$anameth_lr
 
-          load(paste0(path_pack, "/extdata/param/", dt_anameth$Value[dt_anameth$Category == "Parameter"], ".RData"))
-          load(paste0(path_pack, "/extdata/stutter_file/", dt_anameth$Value[dt_anameth$Category == "Stutter file"], ".RData"))
+          load(paste0(path_pack, "/extdata/param/", dt_anameth$Name[dt_anameth$Category == "Parameter"], ".RData"))
+          load(paste0(path_pack, "/extdata/stutter_file/", dt_anameth$Name[dt_anameth$Category == "Stutter file"], ".RData"))
 
-          dt_al_prob <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Allele_probability"],
-                                   Value = dt_anameth$Value[dt_anameth$Category == "Allele_probability"])
-          dt_gt_fltr <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype_filter"],
-                                   Value = dt_anameth$Value[dt_anameth$Category == "Genotype_filter"])
+          dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
+                              AT = dt_anameth$Value[dt_anameth$Category == "AT"])
+
+          dt_al_prob <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype probability"],
+                                   Value = dt_anameth$Value[dt_anameth$Category == "Genotype probability"])
+          dt_gt_fltr <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype filter"],
+                                   Value = dt_anameth$Value[dt_anameth$Category == "Genotype filter"])
           dt_dropin <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Drop-in"],
                                   Value = dt_anameth$Value[dt_anameth$Category == "Drop-in"])
+          dt_mcmc <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "MCMC"],
+                                Value = dt_anameth$Value[dt_anameth$Category == "MCMC"])
 
-          dt_info_mk <- hot_to_r(input$dt_info_mk)
+          dt_ignore_mk <- hot_to_r(input$dt_ignore_mk)
 
           # Check input files and setting
           error_message <- check_main_file(dt_csp, dt_ref, dt_af, markers_auto, method = "lr")
@@ -329,14 +331,14 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
             showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
           }else{
             # Check registration of the stutter ratio
-            message_sr <- check_csp_sr(dt_csp, dt_info_mk, list_dt_average_sr)
+            message_sr <- check_csp_sr(dt_csp, dt_ignore_mk, dt_at, list_dt_average_sr)
             if(message_sr == "error"){
               waiter_hide()
               showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
             }else{
-              data_deconvo_hp <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt_fltr, dt_dropin,
-                                                 alpha_auto, cv, list_dt_average_sr,
-                                                 hnc_lr_hp, warmup, sampling, chains)
+              data_deconvo_hp <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_prob, dt_gt_fltr, dt_dropin, dt_mcmc,
+                                                 median_alpha, median_cv, list_dt_average_sr,
+                                                 hnc_lr_hp)
               if(!is.null(data_deconvo_hp$error_message)){
                 waiter_hide()
                 showModal(modalDialog(title = "Error", HTML(data_deconvo_hp$error_message), easyClose = TRUE, footer = NULL))
@@ -344,22 +346,41 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                 if(hnc_lr_hp == hnc_lr_hd){
                   data_deconvo_hd <- data_deconvo_hp
                 }else{
-                  data_deconvo_hd <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt_fltr, dt_dropin,
-                                                     alpha_auto, cv, list_dt_average_sr,
-                                                     hnc_lr_hd, warmup, sampling, chains)
+                  data_deconvo_hd <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_prob, dt_gt_fltr, dt_dropin, dt_mcmc,
+                                                     median_alpha, median_cv, list_dt_average_sr,
+                                                     hnc_lr_hd)
                 }
                 if(!is.null(data_deconvo_hd$error_message)){
                   waiter_hide()
                   showModal(modalDialog(title = "Error", HTML(data_deconvo_hd$error_message), easyClose = TRUE, footer = NULL))
                 }else{
-                  data_deconvo_hp$message_sr <- message_sr
-                  data_deconvo_hp$fn_csp <- rv_lr_setting$fn_csp
-                  data_deconvo_hp$fn_af <- rv_lr_setting$fn_af
+                  data_deconvo_hp$fn_csp <- fn_csp
+                  data_deconvo_hp$dt_csp <- dt_csp
+                  data_deconvo_hp$fn_af <- fn_af
+                  data_deconvo_hp$dt_af <- dt_af
                   data_deconvo_hp$anameth <- anameth
-                  data_deconvo_hd$message_sr <- message_sr
-                  data_deconvo_hd$fn_csp <- rv_lr_setting$fn_csp
-                  data_deconvo_hd$fn_af <- rv_lr_setting$fn_af
+                  data_deconvo_hp$dt_anameth <- dt_anameth
+                  data_deconvo_hp$dt_kit <- dt_kit
+                  data_deconvo_hp$dt_ignore_mk <- dt_ignore_mk
+                  data_deconvo_hp$alpha_auto <- median_alpha
+                  data_deconvo_hp$cv <- median_cv
+                  data_deconvo_hp$list_dt_average_sr <- list_dt_average_sr
+                  data_deconvo_hp$hnc <- hnc_lr_hp
+                  data_deconvo$message_sr <- message_sr
+
+                  data_deconvo_hd$fn_csp <- fn_csp
+                  data_deconvo_hd$dt_csp <- dt_csp
+                  data_deconvo_hd$fn_af <- fn_af
+                  data_deconvo_hd$dt_af <- dt_af
                   data_deconvo_hd$anameth <- anameth
+                  data_deconvo_hd$dt_anameth <- dt_anameth
+                  data_deconvo_hd$dt_kit <- dt_kit
+                  data_deconvo_hd$dt_ignore_mk <- dt_ignore_mk
+                  data_deconvo_hd$alpha_auto <- median_alpha
+                  data_deconvo_hd$cv <- median_cv
+                  data_deconvo_hd$list_dt_average_sr <- list_dt_average_sr
+                  data_deconvo_hd$hnc <- hnc_lr_hd
+                  data_deconvo_hd$message_sr <- message_sr
 
                   # Extract data from data_deconvo for Hp
                   hnc <- data_deconvo_hp$hnc
@@ -367,12 +388,13 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                   peaks_list <- data_deconvo_hp$peaks_list
                   pop_al_list <- data_deconvo_hp$pop_al_list
                   pop_prob_list <- data_deconvo_hp$pop_prob_list
-                  theta <- data_deconvo_hp$theta
                   gtc_use <- data_deconvo_hp$gtc_use
                   lpd_gtc_use_1st <- data_deconvo_hp$lpd_gtc_use_1st
                   lpd_gtc_use_2nd <- data_deconvo_hp$lpd_gtc_use_2nd
 
-                  log10like_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hp, refs)
+                  theta <- as.numeric(dt_al_prob$Value[dt_al_prob$Subcategory == "Theta"])
+
+                  log10like_hp <- assign_log10like(hnc_lr_hp, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hp, refs)
 
                   # Extract data from data_deconvo for Hd
                   hnc <- data_deconvo_hd$hnc
@@ -380,12 +402,11 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                   peaks_list <- data_deconvo_hd$peaks_list
                   pop_al_list <- data_deconvo_hd$pop_al_list
                   pop_prob_list <- data_deconvo_hd$pop_prob_list
-                  theta <- data_deconvo_hd$theta
                   gtc_use <- data_deconvo_hd$gtc_use
                   lpd_gtc_use_1st <- data_deconvo_hd$lpd_gtc_use_1st
                   lpd_gtc_use_2nd <- data_deconvo_hd$lpd_gtc_use_2nd
 
-                  log10like_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hd, refs)
+                  log10like_hd <- assign_log10like(hnc_lr_hd, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hd, refs)
 
                   dt_lr <- data.table(Marker = c(markers_use, "Total"),
                                       Log10_Likelihood_Hp = log10like_hp,

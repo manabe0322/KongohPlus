@@ -1,39 +1,39 @@
-Category,Subcategory,Value
-Parameter,,241205_pre_kakeiken_parameter
-Stutter file,,241205_pre_kakeiken
-Kit,,GlobalFiler
-AT,D3S1358,100
-AT,vWA,100
-AT,D16S539,100
-AT,CSF1PO,100
-AT,TPOX,100
-AT,D8S1179,100
-AT,D21S11,100
-AT,D18S51,100
-AT,D2S441,100
-AT,D19S433,100
-AT,TH01,100
-AT,FGA,100
-AT,D22S1045,100
-AT,D5S818,100
-AT,D13S317,100
-AT,D7S820,100
-AT,SE33,100
-AT,D10S1248,100
-AT,D1S1656,100
-AT,D12S391,100
-AT,D2S1338,100
-Genotype probability,Theta,0
-Genotype filter,Maximum BSR,0.3
-Genotype filter,Maximum FSR,0.15
-Genotype filter,Maximum DSR,0.05
-Genotype filter,Maximum M2SR,0.05
-Genotype filter,Maximum number of drop-in,2
-Genotype filter,Maximum height of drop-in,300
-Drop-in,Probability of drop-in,0.00335
-Drop-in,Shape parameter,1.22
-Drop-in,Rate parameter,0.0503
-Drop-in,Minimum threshold,50
-MCMC,Warmup,1200
-MCMC,Sampling,300
-MCMC,Chains,4
+Category,Subcategory,Name,Value
+Parameter,,241205_pre_kakeiken_parameter,
+Stutter file,,241205_pre_kakeiken,
+Kit,,GlobalFiler,
+AT,D3S1358,,100
+AT,vWA,,100
+AT,D16S539,,100
+AT,CSF1PO,,100
+AT,TPOX,,100
+AT,D8S1179,,100
+AT,D21S11,,100
+AT,D18S51,,100
+AT,D2S441,,100
+AT,D19S433,,100
+AT,TH01,,100
+AT,FGA,,100
+AT,D22S1045,,100
+AT,D5S818,,100
+AT,D13S317,,100
+AT,D7S820,,100
+AT,SE33,,100
+AT,D10S1248,,100
+AT,D1S1656,,100
+AT,D12S391,,100
+AT,D2S1338,,100
+Genotype probability,Theta,,0
+Genotype filter,Maximum BSR,,0.3
+Genotype filter,Maximum FSR,,0.15
+Genotype filter,Maximum DSR,,0.05
+Genotype filter,Maximum M2SR,,0.05
+Genotype filter,Maximum number of drop-in,,2
+Genotype filter,Maximum height of drop-in,,300
+Drop-in,Probability of drop-in,,0.00335
+Drop-in,Shape parameter,,1.22
+Drop-in,Rate parameter,,0.0503
+Drop-in,Minimum threshold,,50
+MCMC,Warmup,,1200
+MCMC,Sampling,,300
+MCMC,Chains,,4
