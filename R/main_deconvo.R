@@ -15,33 +15,34 @@ make_index_dedup2_mk <- function(index_rph_gtc, index_dedup1_all_mk){
 #' @param dt_csp The data.table of the crime stain profiles
 #' @param dt_af The data.table of the allele frequencies
 #' @param dt_kit The data.table of the information on the kit
-#' @param dt_info_mk The data.table of the information on the ignored marker and the analytical thresholds for each marker
+#' @param dt_ignore_mk The data.table of the information on the ignored markers
+#' @param dt_at The data.table of the analytical thresholds
 #' @param dt_al_prob The data.table of the setting of the allele probabilities
 #' @param dt_gt_fltr The data.table of the genotype filters
 #' @param dt_dropin The data.table of the setting of the drop-in
+#' @param dt_mcmc The data.table of the MCMC parameters
 #' @param alpha_auto A vector of the estimated alpha values for Dirichlet distribution of the locus-specific amplification efficiencies
 #' @param cv A parameter of the gamma distribution
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc The hypothesized number of contributors
-#' @param warmup The number of warm-up iterations for each chain
-#' @param sampling The number of sampling iterations for each chain
-#' @param chains The number of chains
-perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt_fltr, dt_dropin,
+perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_prob, dt_gt_fltr, dt_dropin, dt_mcmc,
                             alpha_auto, cv, list_dt_average_sr,
-                            hnc, warmup, sampling, chains){
+                            hnc){
   # Start computation
   start_time <- proc.time()
 
   # Number of replicates
-  n_rep <- length(unique(dt_csp[, SampleName]))
+  n_rep <- length(unique(dt_csp$SampleName))
 
-  # Extract used markers and ATs
-  markers_use <- dt_info_mk$Marker[!dt_info_mk$Ignore]
-  ats_use <- dt_info_mk$AT[!dt_info_mk$Ignore]
+  # Extract used markers
+  markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
 
   if(n_mk != 0){
     dt_kit_auto <- extract_kit_auto(dt_kit)
+
+    # Extract ATs of the used markers
+    ats_use <- dt_at$AT[match(markers_use, dt_at$Marker)]
 
     # Extract peak data from crime stain profiles
     tmp <- make_peak_data(dt_csp, dt_kit_auto, markers_use, ats_use)
@@ -53,35 +54,38 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt
     # Extract parameters for AE
     ae_alpha_use <- alpha_auto[match(markers_use, names(alpha_auto))]
 
-    # Extract methods to estimate allele probabilities
-    al_prob_subcategory <- dt_al_prob$Subcategory
-    al_prob_value <- dt_al_prob$Value
-    method_al_prob <- al_prob_value[al_prob_subcategory == "Method"]
-    maf <- as.numeric(al_prob_value[al_prob_subcategory == "Maf"])
-    theta <- as.numeric(al_prob_value[al_prob_subcategory == "Theta"])
+    # Extract theta
+    theta <- as.numeric(dt_al_prob$Value[dt_al_prob$Subcategory == "Theta"])
 
     # Set allele probabilities
-    tmp <- set_al_prob(markers_use, dt_af, peaks_list, method_al_prob, maf)
+    tmp <- set_al_prob(markers_use, dt_af, peaks_list)
     pop_al_list <- tmp$pop_al_list
     pop_prob_list <- tmp$pop_prob_list
 
     # Extract filters to remove unrealistic genotype combinations
     gt_fltr_subcategory <- dt_gt_fltr$Subcategory
     gt_fltr_value <- as.numeric(dt_gt_fltr$Value)
-    bsr_fltr <- gt_fltr_value[gt_fltr_subcategory == "BSR"]
-    fsr_fltr <- gt_fltr_value[gt_fltr_subcategory == "FSR"]
-    dsr_fltr <- gt_fltr_value[gt_fltr_subcategory == "DSR"]
-    m2sr_fltr <- gt_fltr_value[gt_fltr_subcategory == "M2SR"]
-    n_dropin_fltr <- gt_fltr_value[gt_fltr_subcategory == "N_Dropin"]
-    h_dropin_fltr <- gt_fltr_value[gt_fltr_subcategory == "H_Dropin"]
+    bsr_fltr <- gt_fltr_value[gt_fltr_subcategory == "Maximum BSR"]
+    fsr_fltr <- gt_fltr_value[gt_fltr_subcategory == "Maximum FSR"]
+    dsr_fltr <- gt_fltr_value[gt_fltr_subcategory == "Maximum DSR"]
+    m2sr_fltr <- gt_fltr_value[gt_fltr_subcategory == "Maximum M2SR"]
+    n_dropin_fltr <- gt_fltr_value[gt_fltr_subcategory == "Maximum number of drop-in"]
+    h_dropin_fltr <- gt_fltr_value[gt_fltr_subcategory == "Maximum height of drop-in"]
 
     # Extract drop-in parameters
     dropin_subcategory <- dt_dropin$Subcategory
     dropin_value <- as.numeric(dt_dropin$Value)
-    logprob_di <- log(dropin_value[dropin_subcategory == "Probability"])
-    shape_di <- dropin_value[dropin_subcategory == "Shape"]
-    rate_di <- dropin_value[dropin_subcategory == "Rate"]
-    mt_di <- dropin_value[dropin_subcategory == "MT"]
+    logprob_di <- log(dropin_value[dropin_subcategory == "Probability of drop-in"])
+    shape_di <- dropin_value[dropin_subcategory == "Shape parameter"]
+    rate_di <- dropin_value[dropin_subcategory == "Rate parameter"]
+    mt_di <- dropin_value[dropin_subcategory == "Minimum threshold"]
+
+    # Extract MCMC parameters
+    mcmc_subcategory <- dt_mcmc$Subcategory
+    mcmc_value <- as.numeric(dt_mcmc$Value)
+    warmup <- mcmc_value[mcmc_subcategory == "Warmup"]
+    sampling <- mcmc_value[mcmc_subcategory == "Sampling"]
+    chains <- mcmc_value[mcmc_subcategory == "Chains"]
 
     # Define objects
     rph_base_use <- vector(mode = "list", length = n_mk)
@@ -420,7 +424,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt
 
         dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use_1st)
 
-        dt_mcmc <- data.table(Parameter = c("Log probability in stan", "Total peak height", rep("lambda", hnc), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
+        dt_diag <- data.table(Parameter = c("Log probability in stan", "Total peak height", rep("lambda", hnc), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
                               Contributor = c("-", "-", paste0("U", 1:hnc), paste0("U", 1:hnc), paste0("U", 1:hnc), rep("-", n_mk)),
                               Marker = c("-", "-", rep("-", 3 * hnc), markers_use),
                               Estimated_value = c(lp, tph, lambda[hnc:1], mp[hnc:1], deg[hnc:1], ae),
@@ -618,7 +622,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt
 
         dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use_1st, lpd_gtc_use_2nd)
 
-        dt_mcmc <- data.table(Parameter = c("Log probability in stan", "Total peak height (1st)", "Total peak height (2nd)", rep("lambda", hnc), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
+        dt_diag <- data.table(Parameter = c("Log probability in stan", "Total peak height (1st)", "Total peak height (2nd)", rep("lambda", hnc), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
                               Contributor = c("-", "-", "-", paste0("U", 1:hnc), paste0("U", 1:hnc), paste0("U", 1:hnc), rep("-", n_mk)),
                               Marker = c("-", "-", "-", rep("-", 3 * hnc), markers_use),
                               Estimated_value = c(lp, tph_1st, tph_2nd, lambda[hnc:1], mp[hnc:1], deg[hnc:1], ae),
@@ -636,32 +640,17 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt
       end_time <- proc.time()
       comp_time <- end_time[3] - start_time[3]
 
-      return(list("dt_csp" = dt_csp,
-                  "dt_af" = dt_af,
-                  "dt_kit" = dt_kit,
-                  "dt_info_mk" = dt_info_mk,
-                  "dt_al_prob" = dt_al_prob,
-                  "dt_gt_fltr" = dt_gt_fltr,
-                  "dt_dropin" = dt_dropin,
-                  "alpha_auto" = alpha_auto,
-                  "cv" = cv,
-                  "list_dt_average_sr" = list_dt_average_sr,
-                  "warmup" = warmup,
-                  "sampling" = sampling,
-                  "chains" = chains,
-                  "hnc" = hnc,
-                  "markers_use" = markers_use,
+      return(list("markers_use" = markers_use,
                   "peaks_list" = peaks_list,
                   "pop_al_list" = pop_al_list,
                   "pop_prob_list" = pop_prob_list,
-                  "theta" = theta,
                   "gtc_use" = gtc_use,
                   "lpd_gtc_use_1st" = lpd_gtc_use_1st,
                   "lpd_gtc_use_2nd" = lpd_gtc_use_2nd,
                   "dt_pg_list" = dt_pg_list,
                   "dt_log10like" = dt_log10like,
                   "dt_mpdeg" = dt_mpdeg,
-                  "dt_mcmc" = dt_mcmc,
+                  "dt_diag" = dt_diag,
                   "traceplot" = traceplot,
                   "comp_time" = comp_time,
                   "error_message" = NULL))
@@ -676,63 +665,33 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt
         error_message <- paste0(error_message, "  - ", markers_unexplainable[i], "<br>")
       }
 
-      return(list("dt_csp" = NULL,
-                  "dt_af" = NULL,
-                  "dt_kit" = NULL,
-                  "dt_info_mk" = NULL,
-                  "dt_al_prob" = NULL,
-                  "dt_gt_fltr" = NULL,
-                  "dt_dropin" = NULL,
-                  "alpha_auto" = NULL,
-                  "cv" = NULL,
-                  "list_dt_average_sr" = NULL,
-                  "warmup" = NULL,
-                  "sampling" = NULL,
-                  "chains" = NULL,
-                  "hnc" = NULL,
-                  "markers_use" = NULL,
+      return(list("markers_use" = NULL,
                   "peaks_list" = NULL,
                   "pop_al_list" = NULL,
                   "pop_prob_list" = NULL,
-                  "theta" = NULL,
                   "gtc_use" = NULL,
                   "lpd_gtc_use_1st" = NULL,
                   "lpd_gtc_use_2nd" = NULL,
                   "dt_pg_list" = NULL,
                   "dt_log10like" = NULL,
                   "dt_mpdeg" = NULL,
-                  "dt_mcmc" = NULL,
+                  "dt_diag" = NULL,
                   "traceplot" = NULL,
                   "comp_time" = NULL,
                   "error_message" = error_message))
     }
   }else{
-    return(list("dt_csp" = NULL,
-                "dt_af" = NULL,
-                "dt_kit" = NULL,
-                "dt_info_mk" = NULL,
-                "dt_al_prob" = NULL,
-                "dt_gt_fltr" = NULL,
-                "dt_dropin" = NULL,
-                "alpha_auto" = NULL,
-                "cv" = NULL,
-                "list_dt_average_sr" = NULL,
-                "warmup" = NULL,
-                "sampling" = NULL,
-                "chains" = NULL,
-                "hnc" = NULL,
-                "markers_use" = NULL,
+    return(list("markers_use" = NULL,
                 "peaks_list" = NULL,
                 "pop_al_list" = NULL,
                 "pop_prob_list" = NULL,
-                "theta" = NULL,
                 "gtc_use" = NULL,
                 "lpd_gtc_use_1st" = NULL,
                 "lpd_gtc_use_2nd" = NULL,
                 "dt_pg_list" = NULL,
                 "dt_log10like" = NULL,
                 "dt_mpdeg" = NULL,
-                "dt_mcmc" = NULL,
+                "dt_diag" = NULL,
                 "traceplot" = NULL,
                 "comp_time" = NULL,
                 "error_message" = "All markers are ignored!"))

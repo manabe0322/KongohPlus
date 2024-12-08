@@ -66,7 +66,7 @@ deconvo_result_server <- function(id, rv_deconvo){
         hnc <- data_deconvo$hnc
         dt_log10like <- data_deconvo$dt_log10like
         dt_mpdeg <- data_deconvo$dt_mpdeg
-        dt_mcmc <- data_deconvo$dt_mcmc
+        dt_diag <- data_deconvo$dt_diag
         traceplot <- data_deconvo$traceplot
         message_sr <- data_deconvo$message_sr
 
@@ -89,18 +89,18 @@ deconvo_result_server <- function(id, rv_deconvo){
         observeEvent(input$act_pardiag, {
           showModal(modalDialog(
             title = "Parameters and diagnostics",
-            dataTableOutput(session$ns("dt_mcmc")),
+            dataTableOutput(session$ns("dt_diag")),
             easyClose = TRUE,
             footer = NULL,
             size = "l"
           ))
         })
 
-        output$dt_mcmc <- renderDataTable(server = FALSE, {
+        output$dt_diag <- renderDataTable(server = FALSE, {
           datatable(
-            dt_mcmc,
+            dt_diag,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_mcmc), ordering = FALSE, autowidth = TRUE,
+            options = list(dom = "t", iDisplayLength = nrow(dt_diag), ordering = FALSE, autowidth = TRUE,
                            columnDefs = list(list(width = "200px", targets = c(0)),
                                              list(width = "100px", targets = c(1, 2, 3, 4)))),
             rownames = FALSE,

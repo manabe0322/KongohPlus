@@ -94,9 +94,7 @@ hd_true_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true){
           lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
 
           dt_af <- data_deconvo$dt_af
-          dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", data_deconvo$anameth, ".csv"))
-          method_al_prob <- dt_anameth$Value[dt_anameth$Category == "Allele_probability" & dt_anameth$Subcategory == "Method"]
-          tmp <- set_al_prob_randgt(markers_use, dt_af, method_al_prob)
+          tmp <- set_al_prob_randgt(markers_use, dt_af)
           pop_al_list_randgt <- tmp$pop_al_list
           pop_prob_list_randgt <- tmp$pop_prob_list
           randgt <- t(generate_randgt(n_simu, pop_al_list_randgt, pop_prob_list_randgt))

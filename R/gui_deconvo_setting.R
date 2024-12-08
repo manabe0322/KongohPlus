@@ -27,6 +27,7 @@ deconvo_setting_ui <- function(id){
                     )
              ),
              column(4,
+                    h4("Ignored marker"),
                     rHandsontableOutput(ns("dt_ignore_mk"))
              ),
              column(5,
@@ -68,9 +69,6 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       rv_deconvo_setting$fn_af <- NULL
       rv_deconvo_setting$fn_anameth_deconvo <- NULL
       rv_deconvo_setting$dt_anameth <- NULL
-      rv_deconvo_setting$warmup <- 1200
-      rv_deconvo_setting$sampling <- 300
-      rv_deconvo_setting$chains <- 4
 
       rv_deconvo <- reactiveValues()
       rv_deconvo$data_deconvo <- NULL
@@ -111,8 +109,8 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
           output$dt_ignore_mk <- renderRHandsontable({
             rhandsontable(dt_ignore_mk, rowHeaders = FALSE) %>%
               hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-              hot_col("Ignore", type = "checkbox") %>%
-              hot_col("Marker", type = "text", readOnly = TRUE)
+              hot_col("Ignore", type = "checkbox", width = 100) %>%
+              hot_col("Marker", type = "text", readOnly = TRUE, width = 100)
           })
 
           output$title_at <- renderText({"Analytical threshold"})
@@ -177,13 +175,12 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
 
         # Fix setting
         hnc_deconvo <- input$noc_deconvo
+        fn_csp <- rv_deconvo_setting$fn_csp
         dt_csp <- rv_deconvo_setting$dt_csp
+        fn_af <- rv_deconvo_setting$fn_af
         dt_af <- rv_deconvo_setting$dt_af
+        anameth <- rv_deconvo_setting$fn_anameth_deconvo
         dt_anameth <- rv_deconvo_setting$dt_anameth
-        warmup <- rv_deconvo_setting$warmup
-        sampling <- rv_deconvo_setting$sampling
-        chains <- rv_deconvo_setting$chains
-        anameth <- input$anameth_deconvo
 
         # Extract information on the kit
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Value[dt_anameth$Category == "Kit"], ".csv"))
@@ -194,14 +191,19 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         load(paste0(path_pack, "/extdata/param/", dt_anameth$Value[dt_anameth$Category == "Parameter"], ".RData"))
         load(paste0(path_pack, "/extdata/stutter_file/", dt_anameth$Value[dt_anameth$Category == "Stutter file"], ".RData"))
 
-        dt_al_prob <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Allele_probability"],
-                                 Value = dt_anameth$Value[dt_anameth$Category == "Allele_probability"])
-        dt_gt_fltr <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype_filter"],
-                                 Value = dt_anameth$Value[dt_anameth$Category == "Genotype_filter"])
+        dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
+                            AT = dt_anameth$Value[dt_anameth$Category == "AT"])
+
+        dt_al_prob <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype probability"],
+                                 Value = dt_anameth$Value[dt_anameth$Category == "Genotype probability"])
+        dt_gt_fltr <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype filter"],
+                                 Value = dt_anameth$Value[dt_anameth$Category == "Genotype filter"])
         dt_dropin <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Drop-in"],
                                 Value = dt_anameth$Value[dt_anameth$Category == "Drop-in"])
+        dt_mcmc <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "MCMC"],
+                              Value = dt_anameth$Value[dt_anameth$Category == "MCMC"])
 
-        dt_info_mk <- hot_to_r(input$dt_info_mk)
+        dt_ignore_mk <- hot_to_r(input$dt_ignore_mk)
 
         # Check input files
         error_message <- check_main_file(dt_csp, NULL, dt_af, markers_auto, method = "deconvo")
@@ -210,23 +212,32 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           # Check registration of the stutter ratio
-          message_sr <- check_csp_sr(dt_csp, dt_info_mk, list_dt_average_sr)
+          message_sr <- check_csp_sr(dt_csp, dt_ignore_mk, dt_at, list_dt_average_sr)
 
           if(message_sr == "error"){
             waiter_hide()
             showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
           }else{
-            data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_info_mk, dt_al_prob, dt_gt_fltr, dt_dropin,
+            data_deconvo <- perform_deconvo(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_prob, dt_gt_fltr, dt_dropin, dt_mcmc,
                                             median_alpha, median_cv, list_dt_average_sr,
-                                            hnc_deconvo, warmup, sampling, chains)
+                                            hnc_deconvo)
             if(!is.null(data_deconvo$error_message)){
               waiter_hide()
               showModal(modalDialog(title = "Error", HTML(data_deconvo$error_message), easyClose = TRUE, footer = NULL))
             }else{
-              data_deconvo$message_sr <- message_sr
-              data_deconvo$fn_csp <- rv_deconvo_setting$fn_csp
-              data_deconvo$fn_af <- rv_deconvo_setting$fn_af
+              data_deconvo$fn_csp <- fn_csp
+              data_deconvo$dt_csp <- dt_csp
+              data_deconvo$fn_af <- fn_af
+              data_deconvo$dt_af <- dt_af
               data_deconvo$anameth <- anameth
+              data_deconvo$dt_anameth <- dt_anameth
+              data_deconvo$dt_kit <- dt_kit
+              data_deconvo$dt_ignore_mk <- dt_ignore_mk
+              data_deconvo$alpha_auto <- median_alpha
+              data_deconvo$cv <- median_cv
+              data_deconvo$list_dt_average_sr <- list_dt_average_sr
+              data_deconvo$hnc <- hnc_deconvo
+              data_deconvo$message_sr <- message_sr
               rv_deconvo$data_deconvo <- data_deconvo
 
               waiter_hide()
