@@ -67,7 +67,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       rv_deconvo_setting$dt_af <- NULL
       rv_deconvo_setting$fn_csp <- NULL
       rv_deconvo_setting$fn_af <- NULL
-      rv_deconvo_setting$fn_anameth_deconvo <- NULL
+      rv_deconvo_setting$fn_anameth_deconvo <- ""
       rv_deconvo_setting$dt_anameth <- NULL
 
       rv_deconvo <- reactiveValues()
@@ -96,10 +96,19 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
 
       observeEvent(input$load_anameth_deconvo, {
         req(input$load_anameth_deconvo)
-        path_anameth_deconvo <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/anameth")), input$load_anameth_deconvo)$datapath
+        path_anameth <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/anameth")), input$load_anameth_deconvo)$datapath
+        if(length(path_anameth) > 0){
+          rv_deconvo_setting$fn_anameth_deconvo <- basename(path_anameth)
+        }
+      })
 
-        if(length(path_anameth_deconvo) > 0){
-          rv_deconvo_setting$fn_anameth_deconvo <- fn_anameth_deconvo <- basename(path_anameth_deconvo)
+      output$anameth_deconvo <- renderUI({
+        disabled(textInput(session$ns("anameth_deconvo"), label = "", value = rv_deconvo_setting$fn_anameth_deconvo))
+      })
+
+      observeEvent(input$anameth_deconvo, {
+        fn_anameth_deconvo <- input$anameth_deconvo
+        if(fn_anameth_deconvo != ""){
           rv_deconvo_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth_deconvo))
           markers_auto <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
 
@@ -164,10 +173,6 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
               hot_col(col = 2, type = "numeric", readOnly = TRUE, width = 100)
           })
         }
-      })
-
-      output$anameth_deconvo <- renderUI({
-        disabled(textInput(session$ns("anameth_deconvo"), label = "", value = rv_deconvo_setting$fn_anameth_deconvo))
       })
 
       observeEvent(input$act_analyze_deconvo, {

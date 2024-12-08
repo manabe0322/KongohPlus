@@ -42,7 +42,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_pr
     dt_kit_auto <- extract_kit_auto(dt_kit)
 
     # Extract ATs of the used markers
-    ats_use <- dt_at$AT[match(markers_use, dt_at$Marker)]
+    ats_use <- as.numeric(dt_at$AT[match(markers_use, dt_at$Marker)])
 
     # Extract peak data from crime stain profiles
     tmp <- make_peak_data(dt_csp, dt_kit_auto, markers_use, ats_use)
