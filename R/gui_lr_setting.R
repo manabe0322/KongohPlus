@@ -31,7 +31,7 @@ lr_setting_ui <- function(id){
                     )
              ),
              column(4,
-                    h4("Ignored marker"),
+                    h4(textOutput(ns("title_ignore_mk"))),
                     rHandsontableOutput(ns("dt_ignore_mk"))
              ),
              column(5,
@@ -193,6 +193,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
               hot_col("Marker", type = "text", readOnly = TRUE, width = 100)
           })
 
+          output$title_ignore_mk <- renderText({"Ignored marker"})
           output$title_at <- renderText({"Analytical threshold"})
           output$title_al_gt_prob <- renderText({"Genotype probability"})
           output$title_gt_fltr <- renderText({"Genotype filter"})
