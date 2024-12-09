@@ -296,7 +296,10 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
             data_lr <- list("dt_ref" = dt_ref,
                             "fn_ref" = rv_lr_setting$fn_ref,
-                            "dt_lr" = dt_lr)
+                            "dt_lr" = dt_lr,
+                            "refs" = refs,
+                            "hp" = hp,
+                            "hd" = hd)
             rv_lr$data_lr <- data_lr
             rv_lr$data_deconvo_hp <- data_deconvo
             rv_lr$data_deconvo_hd <- data_deconvo
@@ -417,7 +420,10 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
                   data_lr <- list("dt_ref" = dt_ref,
                                   "fn_ref" = rv_lr_setting$fn_ref,
-                                  "dt_lr" = dt_lr)
+                                  "dt_lr" = dt_lr,
+                                  "refs" = refs,
+                                  "hp" = hp,
+                                  "hd" = hd)
                   rv_lr$data_lr <- data_lr
                   rv_lr$data_deconvo_hp <- data_deconvo_hp
                   rv_lr$data_deconvo_hd <- data_deconvo_hd
