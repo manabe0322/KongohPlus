@@ -8,8 +8,7 @@ lr_ui <- function(id){
            tabsetPanel(id = ns("tabset_lr"),
                        type = "tabs",
                        lr_setting_ui(ns("lr_setting")),
-                       lr_result_ui(ns("lr_result"))#,
-                       #lr_pg_ui(ns("lr_pg"))
+                       lr_result_ui(ns("lr_result"))
            )
   )
 }
@@ -26,7 +25,6 @@ lr_server <- function(id, path_pack, rv_file, rv_deconvo){
       observe({
         req(rv_lr)
         lr_result_server("lr_result", rv_lr)
-        #lr_pg_server("lr_pg", rv_lr)
         if(!is.null(rv_lr$data_lr)){
           updateTabsetPanel(session, "tabset_lr", selected = "Result")
         }

@@ -50,7 +50,7 @@ lr_result_ui <- function(id){
                                uiOutput(ns("select_noc_diag"))
                         ),
                         column(6,
-                               actionButton(ns("act_traceplot_lp"), label = "Trace plot")
+                               uiOutput(ns("button_traceplot"))
                         )
                       ),
                       rHandsontableOutput(ns("dt_diag")),
@@ -79,13 +79,15 @@ lr_result_server <- function(id, rv_lr){
         markers_use <- data_deconvo_hp$markers_use
         message_sr <- data_deconvo_hp$message_sr
         hnc_hp <- data_deconvo_hp$hnc
-        dt_diag_hp <- data_deconvo_hp$dt_diag
         dt_pg_list_hp <- data_deconvo_hp$dt_pg_list
+        traceplot_hp <- data_deconvo_hp$traceplot
+        dt_diag_hp <- data_deconvo_hp$dt_diag
 
         data_deconvo_hd <- rv_lr$data_deconvo_hd
         hnc_hd <- data_deconvo_hd$hnc
-        dt_diag_hd <- data_deconvo_hd$dt_diag
         dt_pg_list_hd <- data_deconvo_hd$dt_pg_list
+        traceplot_hd <- data_deconvo_hd$traceplot
+        dt_diag_hd <- data_deconvo_hd$dt_diag
 
         rv_tmp <- reactiveValues()
         rv_tmp$update <- FALSE
@@ -199,6 +201,31 @@ lr_result_server <- function(id, rv_lr){
         output$select_noc_diag <- renderUI({
           cand_noc <- sort(unique(c(hnc_hp, hnc_hd)))
           selectInput(session$ns("select_noc_diag"), label = "Number of contributors", choices = cand_noc, selected = cand_noc[1], multiple = FALSE, selectize = FALSE)
+        })
+
+        output$button_traceplot <- renderUI({
+          actionButton(session$ns("act_traceplot_lp"), label = "Trace plot")
+        })
+
+        observeEvent(input$act_traceplot_lp, {
+          showModal(modalDialog(
+            title = "Trace plot",
+            plotOutput(session$ns("traceplot_lp")),
+            footer = tagList(
+              modalButton("Close")
+            ),
+            size = "l"
+          ))
+        })
+
+        output$traceplot_lp <- renderPlot({
+          noc_diag <- input$select_noc_diag
+          if(noc_diag == hnc_hp){
+            traceplot <- traceplot_hp
+          }else{
+            traceplot <- traceplot_hd
+          }
+          traceplot
         })
 
         observeEvent(input$select_noc_diag, {

@@ -40,7 +40,14 @@ deconvo_result_ui <- function(id){
              column(4,
                     wellPanel(
                       h4(textOutput(ns("title_par_diag"))),
-                      actionButton(ns("act_traceplot_lp"), label = "Trace plot"),
+                      fluidRow(
+                        column(6,
+                               uiOutput(ns("select_noc_diag"))
+                        ),
+                        column(6,
+                               uiOutput(ns("button_traceplot"))
+                        )
+                      ),
                       rHandsontableOutput(ns("dt_diag")),
                       br()
                     )
@@ -158,14 +165,12 @@ deconvo_result_server <- function(id, rv_deconvo){
 
         ## Parameters and diagnostics
 
-        output$dt_diag <- renderRHandsontable({
-          rhandsontable(dt_diag, rowHeaders = FALSE) %>%
-            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-            hot_col("Parameter", type = "text", readOnly = TRUE, width = 175) %>%
-            hot_col("Contributor", type = "text", readOnly = TRUE, width = 90) %>%
-            hot_col("Marker", type = "text", readOnly = TRUE, width = 100) %>%
-            hot_col("Estimated value", type = "numeric", readOnly = TRUE, width = 125) %>%
-            hot_col("Rhat", type = "numeric", readOnly = TRUE, width = 50)
+        output$select_noc_diag <- renderUI({
+          disabled(selectInput(session$ns("select_noc_diag"), label = "Number of contributors", choices = hnc, selected = hnc[1], multiple = FALSE, selectize = FALSE))
+        })
+
+        output$button_traceplot <- renderUI({
+          actionButton(session$ns("act_traceplot_lp"), label = "Trace plot")
         })
 
         observeEvent(input$act_traceplot_lp, {
@@ -181,6 +186,16 @@ deconvo_result_server <- function(id, rv_deconvo){
 
         output$traceplot_lp <- renderPlot({
           traceplot
+        })
+
+        output$dt_diag <- renderRHandsontable({
+          rhandsontable(dt_diag, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Parameter", type = "text", readOnly = TRUE, width = 175) %>%
+            hot_col("Contributor", type = "text", readOnly = TRUE, width = 90) %>%
+            hot_col("Marker", type = "text", readOnly = TRUE, width = 100) %>%
+            hot_col("Estimated value", type = "numeric", readOnly = TRUE, width = 125) %>%
+            hot_col("Rhat", type = "numeric", readOnly = TRUE, width = 50)
         })
       }
     }

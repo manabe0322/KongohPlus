@@ -4,7 +4,7 @@
 \alias{set_al_prob}
 \title{set_al_prob}
 \usage{
-set_al_prob(markers_use, dt_af, peaks_list, method_al_prob, maf)
+set_al_prob(markers_use, dt_af, peaks_list)
 }
 \arguments{
 \item{markers_use}{A vector of the autosomal markers used}
@@ -12,10 +12,6 @@ set_al_prob(markers_use, dt_af, peaks_list, method_al_prob, maf)
 \item{dt_af}{The data.table of the allele frequencies}
 
 \item{peaks_list}{The peak list of all markers}
-
-\item{method_al_prob}{The method to correct allele probabilities (Dirichlet or Observed)}
-
-\item{maf}{The minimum allele frequency}
 }
 \description{
 The function to set allele probabilities

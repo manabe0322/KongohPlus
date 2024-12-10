@@ -4,14 +4,12 @@
 \alias{set_al_prob_randgt}
 \title{set_al_prob_randgt}
 \usage{
-set_al_prob_randgt(markers_use, dt_af, method_al_prob)
+set_al_prob_randgt(markers_use, dt_af)
 }
 \arguments{
 \item{markers_use}{A vector of the autosomal markers used}
 
 \item{dt_af}{The data.table of the allele frequencies}
-
-\item{method_al_prob}{The method to correct allele probabilities (Dirichlet or Observed)}
 }
 \description{
 The function to set allele probabilities for generating random genotypes

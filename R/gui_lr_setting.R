@@ -26,6 +26,8 @@ lr_setting_ui <- function(id){
                       shinyFilesButton(ns("load_anameth_lr"), label = "Load", title = "Select a file", multiple = FALSE),
                       uiOutput(ns("anameth_lr")),
                       br(),
+                      checkboxInput(ns("sub_source"), label = "Sub-source LR", value = TRUE),
+                      br(),
                       br(),
                       actionButton(ns("act_analyze_lr"), label = "Analyze", class = "btn btn-primary btn-lg")
                     )
@@ -261,6 +263,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         anameth <- rv_lr_setting$fn_anameth_lr
         dt_anameth <- rv_lr_setting$dt_anameth
         use_deconvo <- input$use_deconvo
+        sub_source <- input$sub_source
 
         # Extract information on the kit
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Name[dt_anameth$Category == "Kit"], ".csv"))
@@ -286,8 +289,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
             lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
             lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
 
-            log10like_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hp, refs)
-            log10like_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hd, refs)
+            log10like_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hp, refs, sub_source)
+            log10like_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hd, refs, sub_source)
             dt_lr <- data.table(Marker = c(markers_use, "Total"),
                                 Log10_Likelihood_Hp = log10like_hp,
                                 Log10_Likelihood_Hd = log10like_hd,
@@ -398,7 +401,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
 
                   theta <- as.numeric(dt_al_prob$Value[dt_al_prob$Subcategory == "Theta"])
 
-                  log10like_hp <- assign_log10like(hnc_lr_hp, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hp, refs)
+                  log10like_hp <- assign_log10like(hnc_lr_hp, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hp, refs, sub_source)
 
                   # Extract data from data_deconvo for Hd
                   hnc <- data_deconvo_hd$hnc
@@ -410,7 +413,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                   lpd_gtc_use_1st <- data_deconvo_hd$lpd_gtc_use_1st
                   lpd_gtc_use_2nd <- data_deconvo_hd$lpd_gtc_use_2nd
 
-                  log10like_hd <- assign_log10like(hnc_lr_hd, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hd, refs)
+                  log10like_hd <- assign_log10like(hnc_lr_hd, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref, hd, refs, sub_source)
 
                   dt_lr <- data.table(Marker = c(markers_use, "Total"),
                                       Log10_Likelihood_Hp = log10like_hp,

@@ -8,17 +8,16 @@ perform_deconvo(
   dt_csp,
   dt_af,
   dt_kit,
-  dt_info_mk,
+  dt_ignore_mk,
+  dt_at,
   dt_al_prob,
   dt_gt_fltr,
   dt_dropin,
+  dt_mcmc,
   alpha_auto,
   cv,
   list_dt_average_sr,
-  hnc,
-  warmup,
-  sampling,
-  chains
+  hnc
 )
 }
 \arguments{
@@ -28,13 +27,17 @@ perform_deconvo(
 
 \item{dt_kit}{The data.table of the information on the kit}
 
-\item{dt_info_mk}{The data.table of the information on the ignored marker and the analytical thresholds for each marker}
+\item{dt_ignore_mk}{The data.table of the information on the ignored markers}
+
+\item{dt_at}{The data.table of the analytical thresholds}
 
 \item{dt_al_prob}{The data.table of the setting of the allele probabilities}
 
 \item{dt_gt_fltr}{The data.table of the genotype filters}
 
 \item{dt_dropin}{The data.table of the setting of the drop-in}
+
+\item{dt_mcmc}{The data.table of the MCMC parameters}
 
 \item{alpha_auto}{A vector of the estimated alpha values for Dirichlet distribution of the locus-specific amplification efficiencies}
 
@@ -43,12 +46,6 @@ perform_deconvo(
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 
 \item{hnc}{The hypothesized number of contributors}
-
-\item{warmup}{The number of warm-up iterations for each chain}
-
-\item{sampling}{The number of sampling iterations for each chain}
-
-\item{chains}{The number of chains}
 }
 \description{
 The function to perform mixture deconvolution
