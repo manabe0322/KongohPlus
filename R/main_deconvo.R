@@ -78,7 +78,6 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_pr
     logprob_di <- log(dropin_value[dropin_subcategory == "Probability of drop-in"])
     shape_di <- dropin_value[dropin_subcategory == "Shape parameter"]
     rate_di <- dropin_value[dropin_subcategory == "Rate parameter"]
-    mt_di <- dropin_value[dropin_subcategory == "Minimum threshold"]
 
     # Extract MCMC parameters
     mcmc_subcategory <- dt_mcmc$Subcategory
@@ -246,7 +245,7 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_pr
           oph_dedup1_ignore_use[[j]][[i]] <- oph_dedup1_tmp[index_ignore]
 
           if(length(index_dropin) != 0){
-            loglike_di_use[[j]][[i]] <- log(dgamma(oph_dedup1_tmp[index_dropin] - mt_di + 1, shape_di, rate_di)) + logprob_di
+            loglike_di_use[[j]][[i]] <- log(dgamma(oph_dedup1_tmp[index_dropin], shape_di, rate_di)) + logprob_di
           }
         }
       }

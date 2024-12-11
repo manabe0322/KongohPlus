@@ -90,20 +90,20 @@ create_default_dt_anameth <- function(path_pack, parameter_name, stutter_file_na
                                                 rep("AT", n_mk),
                                                 rep("Genotype probability", 1),
                                                 rep("Genotype filter", 6),
-                                                rep("Drop-in", 4),
+                                                rep("Drop-in", 3),
                                                 rep("MCMC", 3)),
                                    Subcategory = c("", "", "",
                                                    markers_auto,
                                                    "Theta",
                                                    "Maximum BSR", "Maximum FSR", "Maximum DSR", "Maximum M2SR", "Maximum number of drop-in", "Maximum height of drop-in",
-                                                   "Probability of drop-in", "Shape parameter", "Rate parameter", "Minimum threshold",
+                                                   "Probability of drop-in", "Shape parameter", "Rate parameter",
                                                    "Warmup", "Sampling", "Chains"),
                                    Name = c(parameter_name, stutter_file_name, kit_name, rep("", n_mk + 14)),
                                    Value = c(rep(NA, 3),
                                              rep(100, n_mk),
                                              0,
                                              0.3, 0.15, 0.05, 0.05, 2, 300,
-                                             0.00335,1.22, 0.0503, 50,
+                                             0.0037081, 14.8712, 0.2029315,
                                              1200, 300, 4))
   return(default_dt_anameth)
 }

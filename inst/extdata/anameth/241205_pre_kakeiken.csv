@@ -30,10 +30,9 @@ Genotype filter,Maximum DSR,,0.05
 Genotype filter,Maximum M2SR,,0.05
 Genotype filter,Maximum number of drop-in,,2
 Genotype filter,Maximum height of drop-in,,300
-Drop-in,Probability of drop-in,,0.00335
-Drop-in,Shape parameter,,1.22
-Drop-in,Rate parameter,,0.0503
-Drop-in,Minimum threshold,,50
+Drop-in,Probability of drop-in,,0.0037081
+Drop-in,Shape parameter,,14.8712
+Drop-in,Rate parameter,,0.2029315
 MCMC,Warmup,,1200
 MCMC,Sampling,,300
 MCMC,Chains,,4
