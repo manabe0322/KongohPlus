@@ -6,10 +6,15 @@
 #' @param unobs_al A vector of the unobserved alleles in the population database
 correct_af_dirichlet <- function(pop_al, pop_freq, unobs_al = numeric(0)){
   n_unobs <- length(unobs_al)
-  if(n_unobs > 0){
+
+  if(n_unobs == 0){
+    pop_al <- c(pop_al, 0) # Add a dimension for an unobserved allele named allele '0'
+    pop_freq <- c(pop_freq, 0)
+  }else{
     pop_al <- c(pop_al, unobs_al)
     pop_freq <- c(pop_freq, rep(0, n_unobs))
   }
+
   pop_prob <- (pop_freq + 1) / (sum(pop_freq) + length(pop_al))
 
   order_al <- order(pop_al)
