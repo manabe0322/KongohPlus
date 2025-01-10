@@ -25,23 +25,20 @@ correct_af_dirichlet <- function(pop_al, pop_freq, unobs_al = numeric(0)){
               "pop_prob" = pop_prob))
 }
 
-#' add_al_prob_drop
+#' calc_al_prob_drop
 #'
-#' @description The function to add an allele probability for drop-out
+#' @description The function to calculate an allele probability for drop-out
 #' @param al_csp A vector of alleles detected in crime stain profiles
 #' @param pop_al A vector of the alleles in the population database
 #' @param pop_prob A vector of the allele probabilities
-add_al_prob_drop <- function(al_csp, pop_al, pop_prob){
+calc_al_prob_drop <- function(al_csp, pop_al, pop_prob){
   index_drop <- which(!is.element(pop_al, al_csp))
   if(length(index_drop) != 0){
     pop_prob_drop <- sum(pop_prob[index_drop])
   }else{
     pop_prob_drop <- 0
   }
-  pop_al <- c(pop_al, 99)
-  pop_prob <- c(pop_prob, pop_prob_drop)
-  return(list("pop_al" = pop_al,
-              "pop_prob" = pop_prob))
+  return(pop_prob_drop)
 }
 
 #' set_al_prob
@@ -65,9 +62,9 @@ set_al_prob <- function(markers_use, dt_af, peaks_list){
     unobs_al <- setdiff(al_csp, pop_al)
 
     tmp <- correct_af_dirichlet(pop_al, pop_freq, unobs_al)
-    tmp <- add_al_prob_drop(al_csp, tmp$pop_al, tmp$pop_prob)
-    pop_al <- tmp$pop_al
-    pop_prob <- tmp$pop_prob
+    pop_prob_drop <- calc_al_prob_drop(al_csp, tmp$pop_al, tmp$pop_prob)
+    pop_al <- c(pop_al, 99)
+    pop_prob <- c(pop_prob, pop_prob_drop)
 
     index_target <- match(peaks, pop_al)
     pop_al_list[[i]] <- pop_al[index_target]
