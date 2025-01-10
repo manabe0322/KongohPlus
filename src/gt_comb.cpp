@@ -189,11 +189,11 @@ std::vector<bool> judge_gtc_sr(std::vector<double> gtc,
             }
 
             if(over_m2sr){
-              if(height_stutter <= h_dropin_fltr && n_dropin < n_dropin_fltr){
+              if(height_stutter <= h_dropin_fltr && n_dropin < n_dropin_fltr){ // The peak cannot be explained by any stutters, but can be explained by drop-in.
                 index_di = find_index_double(cand_stutter, peaks);
                 bool_gtc_di_new[index_di + 1] = true;
                 n_dropin += 1;
-              }else{
+              }else{ // The peak cannot be explained by any stutters and drop-in.
                 bool_gtc_di_new = bool_gtc_di;
                 bool_gtc_di_new[0] = false;
                 break;
