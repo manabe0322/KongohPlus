@@ -92,7 +92,8 @@ hd_true_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true){
           peaks_list <- data_deconvo$peaks_list
           pop_al_list <- data_deconvo$pop_al_list
           pop_prob_list <- data_deconvo$pop_prob_list
-          theta <- data_deconvo$theta
+          dt_anameth <- data_deconvo$dt_anameth
+          theta <- dt_anameth$Value[dt_anameth$Subcategory == "Theta"]
           gtc_use <- data_deconvo$gtc_use
           lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
           lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
@@ -112,8 +113,10 @@ hd_true_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true){
                                       Marker = markers_use,
                                       Allele1 = ref1[, 1],
                                       Allele2 = ref1[, 2])
+
             log10like_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref_rand, refs, refs, sub_source)
             log10like_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref_rand, NULL, refs, sub_source)
+
             lr_rand[i] <- 10^(log10like_hp["Total"] - log10like_hd["Total"])
           }
           rv_hd_true$lr_rand <- lr_rand
