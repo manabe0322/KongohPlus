@@ -27,6 +27,9 @@ hd_true_ui_sub <- function(id){
                     wellPanel(
                       numericInput(ns("n_simu"), label = h4("Number of simulations"), value = 100),
                       br(),
+                      checkboxInput(ns("sub_source"), label = "Sub-source LR", value = TRUE),
+                      br(),
+                      br(),
                       actionButton(ns("act_analyze_hd_true"), label = "Analyze", class = "btn btn-primary btn-lg"),
                       span(textOutput(ns("error_message")), style = "color:red; font-weight:bold;")
                     )
@@ -81,6 +84,7 @@ hd_true_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true){
           waiter_show(html = spin_3k(), color = "white")
 
           n_simu <- input$n_simu
+          sub_source <- input$sub_source
 
           # Extract data from data_deconvo
           hnc <- data_deconvo$hnc
@@ -108,9 +112,9 @@ hd_true_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true){
                                       Marker = markers_use,
                                       Allele1 = ref1[, 1],
                                       Allele2 = ref1[, 2])
-            data_hp <- assign_log10like_randgt(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref_rand, refs, refs)
-            data_hd <- assign_log10like_randgt(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref_rand, NULL, refs)
-            lr_rand[i] <- 10^(data_hp$combined_log10like_adopt - data_hd$combined_log10like_adopt)
+            log10like_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref_rand, refs, refs, sub_source)
+            log10like_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref_rand, NULL, refs, sub_source)
+            lr_rand[i] <- 10^(log10like_hp["Total"] - log10like_hd["Total"])
           }
           rv_hd_true$lr_rand <- lr_rand
 
