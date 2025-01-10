@@ -61,8 +61,13 @@ set_al_prob <- function(markers_use, dt_af, peaks_list){
 
     unobs_al <- setdiff(al_csp, pop_al)
 
+    # Calculate the expected allele probabilities based on the Dirichlet distribution
     tmp <- correct_af_dirichlet(pop_al, pop_freq, unobs_al)
-    pop_prob_drop <- calc_al_prob_drop(al_csp, tmp$pop_al, tmp$pop_prob)
+    pop_al <- tmp$pop_al
+    pop_prob <- tmp$pop_prob
+
+    # Calculate the allele probability for drop-out alleles
+    pop_prob_drop <- calc_al_prob_drop(al_csp, pop_al, pop_prob)
     pop_al <- c(pop_al, 99)
     pop_prob <- c(pop_prob, pop_prob_drop)
 
