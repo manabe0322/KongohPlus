@@ -101,7 +101,8 @@ deconvo_result_server <- function(id, rv_deconvo){
             colnames = c("Marker", "Log<sub>10</sub>(Likelihood)"),
             escape = FALSE
           ) %>%
-            formatSignif(columns = c("Log10_Likelihood"), digits = 3)
+            formatSignif(columns = c("Log10_Likelihood"), digits = 3) %>%
+            formatStyle(names(dt_log10like), lineHeight = "80%")
         })
 
         ## Probabilistic genotyping ##
@@ -200,10 +201,10 @@ deconvo_result_server <- function(id, rv_deconvo){
         output$dt_diag <- renderRHandsontable({
           rhandsontable(dt_diag, rowHeaders = FALSE) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-            hot_col("Parameter", type = "text", readOnly = TRUE, width = 175) %>%
-            hot_col("Contributor", type = "text", readOnly = TRUE, width = 90) %>%
-            hot_col("Marker", type = "text", readOnly = TRUE, width = 100) %>%
-            hot_col("Estimated value", type = "numeric", readOnly = TRUE, width = 125) %>%
+            hot_col("Parameter", type = "text", readOnly = TRUE, width = 170) %>%
+            hot_col("Contributor", type = "text", readOnly = TRUE, width = 80) %>%
+            hot_col("Marker", type = "text", readOnly = TRUE, width = 80) %>%
+            hot_col("Estimated value", type = "numeric", readOnly = TRUE, width = 110) %>%
             hot_col("Rhat", type = "numeric", readOnly = TRUE, width = 50)
         })
       }
