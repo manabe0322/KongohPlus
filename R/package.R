@@ -5,6 +5,7 @@
 #' @importFrom data.table as.data.table data.table copy fread setDT setindex
 #' @importFrom dplyr arrange desc full_join group_by_at summarise
 #' @importFrom DT datatable dataTableOutput formatRound formatSignif formatStyle JS renderDataTable
+#' @importFrom formattable formattable formattableOutput formatter normalize_bar renderFormattable style
 #' @import gluedown
 #' @importFrom gtools combinations permutations
 #' @importFrom instantiate stan_package_model

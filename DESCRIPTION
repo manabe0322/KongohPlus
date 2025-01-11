@@ -17,6 +17,7 @@ Imports:
     data.table, 
     dplyr, 
     DT, 
+    formattable, 
     gluedown, 
     gtools, 
     instantiate, 

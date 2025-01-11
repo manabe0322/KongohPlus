@@ -56,6 +56,15 @@ deconvo_result_ui <- function(id){
   )
 }
 
+aggregate_pg_contrib <- function(dt_pg, contrib){
+  aggregated_data <- dt_pg %>%
+    group_by_at(which(names(dt_pg) == contrib)) %>%
+    summarise(Probability = sum(Probability))
+  aggregated_data <- aggregated_data %>%
+    arrange(desc(Probability))
+  return(aggregated_data)
+}
+
 #' deconvo_result_server
 #'
 #' @description The function to create the server module for results of deconvolution

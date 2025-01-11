@@ -22,7 +22,7 @@ lr_result_ui <- function(id){
              column(2,
                     wellPanel(
                       h4(textOutput(ns("title_lr"))),
-                      dataTableOutput(ns("dt_lr")),
+                      formattableOutput(ns("dt_lr")),
                       br()
                     )
              ),
@@ -53,7 +53,7 @@ lr_result_ui <- function(id){
                                uiOutput(ns("button_traceplot"))
                         )
                       ),
-                      rHandsontableOutput(ns("dt_diag")),
+                      formattableOutput(ns("dt_diag")),
                       br()
                     )
              )
@@ -236,26 +236,42 @@ lr_result_server <- function(id, rv_lr){
             dt_diag <- dt_diag_hd
           }
 
-          output$dt_diag <- renderRHandsontable({
-            rhandsontable(dt_diag, rowHeaders = FALSE) %>%
-              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-              hot_col("Parameter", type = "text", readOnly = TRUE, width = 175) %>%
-              hot_col("Contributor", type = "text", readOnly = TRUE, width = 90) %>%
-              hot_col("Marker", type = "text", readOnly = TRUE, width = 100) %>%
-              hot_col("Estimated value", type = "numeric", readOnly = TRUE, width = 125) %>%
-              hot_col("Rhat", type = "numeric", readOnly = TRUE, width = 50)
+          output$dt_diag <- renderFormattable({
+            dt_diag %>% formattable(
+              list(
+                `Parameter` = formatter("span"),
+                `Contributor` = formatter("span"),
+                `Marker` = formatter("span"),
+                `Estimated value` = formatter("span",
+                                              x ~ style(signif(x, digits = 3))
+                ),
+                `Rhat` = formatter("span",
+                                   style = x ~ ifelse(x >= 1.1, "color: #ff0033", "color: #333333"),
+                                   x ~ style(signif(x, digits = 3))
+                )
+              )
+            )
           })
         })
 
-        output$dt_lr <- renderDataTable(server = FALSE, {
-          datatable(
-            dt_lr,
-            selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_lr), ordering = FALSE, autowidth = TRUE,
-                           columnDefs = list(list(targets = c(1, 2), visible = FALSE))),
-            rownames = FALSE
-          ) %>%
-            formatSignif(columns = c("LR"), digits = 3)
+        output$dt_lr <- renderFormattable({
+          dt_lr_display <- dt_lr[, c("Marker", "LR")]
+          dt_lr_display %>% formattable(
+            list(
+              `LR` = formatter("span",
+                               style = x ~ ifelse(seq_along(x) == nrow(dt_lr_display),
+                                                  ifelse(x < 1, "font-weight: bold; color: #ff33cc",
+                                                         ifelse(x == 1, "font-weight: bold; color: #333333",
+                                                                "font-weight: bold; color: #006400")
+                                                         ),
+                                                  ifelse(x < 1, "color: #ff33cc",
+                                                         ifelse(x == 1, "color: #333333",
+                                                                "color: #006400")
+                                                  )),
+                               x ~ style(signif(x, digits = 3))
+                               )
+            )
+          )
         })
       }
     }
