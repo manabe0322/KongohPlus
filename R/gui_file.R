@@ -89,62 +89,65 @@ file_server <- function(id, session_top){
       # Display the crime stain profile
       output$dt_csp <- renderDataTable(server = FALSE, {
         dt_csp <- rv_file$dt_csp
+
         if(!is.null(dt_csp)){
-          dt_csp_display <- copy(dt_csp)
-          dt_csp_display$SampleName <- as.factor(dt_csp_display$SampleName)
-          dt_csp_display$Marker <- as.factor(dt_csp_display$Marker)
-          name_dt_csp <- names(dt_csp_display)
+          name_dt_csp <- names(dt_csp)
           index_sn <- which(name_dt_csp == "SampleName") - 1
           index_mk <- which(name_dt_csp == "Marker") - 1
-          index_search_disable <- setdiff(0:(ncol(dt_csp_display) - 1), c(index_sn, index_mk))
+          index_num <- setdiff(0:(ncol(dt_csp) - 1), c(index_sn, index_mk))
 
           datatable(
-            dt_csp_display,
-            filter = "top",
+            dt_csp,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_csp_display), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 200px)",
-                           columnDefs = list(list(targets = index_search_disable, searchable = FALSE, width = "40px"),
+            extensions = c("FixedColumns", "FixedHeader"),
+            options = list(dom = "t", iDisplayLength = nrow(dt_csp), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 200px)",
+                           fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0),
+                           columnDefs = list(list(targets = index_num, width = "40px"),
                                              list(targets = c(index_sn, index_mk), width = "100px"))),
             rownames = FALSE
-          )
+          ) %>%
+            formatStyle(names(dt_csp), lineHeight = "80%")
         }
       })
 
       # Display the reference profile
       output$dt_ref <- renderDataTable(server = FALSE, {
         dt_ref <- rv_file$dt_ref
+
         if(!is.null(dt_ref)){
-          dt_ref_display <- copy(dt_ref)
-          dt_ref_display$SampleName <- as.factor(dt_ref_display$SampleName)
-          dt_ref_display$Marker <- as.factor(dt_ref_display$Marker)
-          name_dt_ref <- names(dt_ref_display)
+          name_dt_ref <- names(dt_ref)
           index_sn <- which(name_dt_ref == "SampleName") - 1
           index_mk <- which(name_dt_ref == "Marker") - 1
-          index_search_disable <- setdiff(0:(ncol(dt_ref_display) - 1), c(index_sn, index_mk))
+          index_num <- setdiff(0:(ncol(dt_ref) - 1), c(index_sn, index_mk))
 
           datatable(
-            dt_ref_display,
-            filter = "top",
+            dt_ref,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_ref_display), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 200px)",
-                           columnDefs = list(list(targets = index_search_disable, searchable = FALSE, width = "40px"),
+            extensions = c("FixedColumns", "FixedHeader"),
+            options = list(dom = "t", iDisplayLength = nrow(dt_ref), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 200px)",
+                           fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0),
+                           columnDefs = list(list(targets = index_num, width = "40px"),
                                              list(targets = c(index_sn, index_mk), width = "100px"))),
             rownames = FALSE
-          )
+          ) %>%
+            formatStyle(names(dt_ref), lineHeight = "80%")
         }
       })
 
       # Display the allele frequency
       output$dt_af <- renderDataTable(server = FALSE, {
         dt_af <- rv_file$dt_af
-        datatable(
-          dt_af,
-          selection = "none",
-          extensions = c("FixedColumns", "FixedHeader"),
-          options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 150px)",
-                         fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0)),
-          rownames = FALSE
-        )
+        if(!is.null(dt_af)){
+          datatable(
+            dt_af,
+            selection = "none",
+            extensions = c("FixedColumns", "FixedHeader"),
+            options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 150px)",
+                           fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0)),
+            rownames = FALSE
+          ) %>%
+            formatStyle(names(dt_af), lineHeight = "80%")
+        }
       })
 
       observeEvent(input$act_deconvo, {
