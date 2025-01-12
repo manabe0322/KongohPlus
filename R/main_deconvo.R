@@ -193,7 +193,8 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_pr
 
         # Calculate genotype probabilities
         n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
-        gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = rep(0, hnc), n_obs)
+        obs_al <- as.numeric(names(n_obs))
+        gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = rep(0, hnc), n_obs, obs_al)
         gtc_logprob_use[[i]] <- log(gtc_prob_mk)
 
         for(j in 1:n_rep){

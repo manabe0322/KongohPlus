@@ -401,36 +401,9 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// make_n_obs
-std::vector<int> make_n_obs(std::vector<double> pop_al, std::vector<double> prof_ref);
-RcppExport SEXP _KongohPlus_make_n_obs(SEXP pop_alSEXP, SEXP prof_refSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type pop_al(pop_alSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type prof_ref(prof_refSEXP);
-    rcpp_result_gen = Rcpp::wrap(make_n_obs(pop_al, prof_ref));
-    return rcpp_result_gen;
-END_RCPP
-}
-// calc_gt_prob
-double calc_gt_prob(std::vector<double> gt, std::vector<double> pop_al, std::vector<double> pop_prob, double theta, std::vector<int> n_obs);
-RcppExport SEXP _KongohPlus_calc_gt_prob(SEXP gtSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP thetaSEXP, SEXP n_obsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< std::vector<double> >::type gt(gtSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type pop_al(pop_alSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type pop_prob(pop_probSEXP);
-    Rcpp::traits::input_parameter< double >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< std::vector<int> >::type n_obs(n_obsSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_gt_prob(gt, pop_al, pop_prob, theta, n_obs));
-    return rcpp_result_gen;
-END_RCPP
-}
 // calc_gtc_prob
-double calc_gtc_prob(std::vector<double> gtc, std::vector<double> pop_al, std::vector<double> pop_prob, double theta, std::vector<double> prof_ref, std::vector<int> hyp_id, std::vector<int> n_obs);
-RcppExport SEXP _KongohPlus_calc_gtc_prob(SEXP gtcSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP thetaSEXP, SEXP prof_refSEXP, SEXP hyp_idSEXP, SEXP n_obsSEXP) {
+double calc_gtc_prob(std::vector<double> gtc, std::vector<double> pop_al, std::vector<double> pop_prob, double theta, std::vector<double> prof_ref_99, std::vector<int> hyp_id, std::vector<int> n_obs, std::vector<double> obs_al);
+RcppExport SEXP _KongohPlus_calc_gtc_prob(SEXP gtcSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP thetaSEXP, SEXP prof_ref_99SEXP, SEXP hyp_idSEXP, SEXP n_obsSEXP, SEXP obs_alSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -438,16 +411,17 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<double> >::type pop_al(pop_alSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type pop_prob(pop_probSEXP);
     Rcpp::traits::input_parameter< double >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type prof_ref(prof_refSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type prof_ref_99(prof_ref_99SEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type hyp_id(hyp_idSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type n_obs(n_obsSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_gtc_prob(gtc, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs));
+    Rcpp::traits::input_parameter< std::vector<double> >::type obs_al(obs_alSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_gtc_prob(gtc, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al));
     return rcpp_result_gen;
 END_RCPP
 }
 // calc_gtc_prob_mk
-std::vector<double> calc_gtc_prob_mk(std::vector<std::vector<double>> gtc_mk, std::vector<double> pop_al, std::vector<double> pop_prob, double theta, std::vector<double> prof_ref, std::vector<int> hyp_id, std::vector<int> n_obs);
-RcppExport SEXP _KongohPlus_calc_gtc_prob_mk(SEXP gtc_mkSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP thetaSEXP, SEXP prof_refSEXP, SEXP hyp_idSEXP, SEXP n_obsSEXP) {
+std::vector<double> calc_gtc_prob_mk(std::vector<std::vector<double>> gtc_mk, std::vector<double> pop_al, std::vector<double> pop_prob, double theta, std::vector<double> prof_ref_99, std::vector<int> hyp_id, std::vector<int> n_obs, std::vector<double> obs_al);
+RcppExport SEXP _KongohPlus_calc_gtc_prob_mk(SEXP gtc_mkSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP thetaSEXP, SEXP prof_ref_99SEXP, SEXP hyp_idSEXP, SEXP n_obsSEXP, SEXP obs_alSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -455,10 +429,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<double> >::type pop_al(pop_alSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type pop_prob(pop_probSEXP);
     Rcpp::traits::input_parameter< double >::type theta(thetaSEXP);
-    Rcpp::traits::input_parameter< std::vector<double> >::type prof_ref(prof_refSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type prof_ref_99(prof_ref_99SEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type hyp_id(hyp_idSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type n_obs(n_obsSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref, hyp_id, n_obs));
+    Rcpp::traits::input_parameter< std::vector<double> >::type obs_al(obs_alSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -596,10 +571,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_judge_gtc", (DL_FUNC) &_KongohPlus_judge_gtc, 15},
     {"_KongohPlus_judge_gtc_mk", (DL_FUNC) &_KongohPlus_judge_gtc_mk, 14},
     {"_KongohPlus_extract_gtc_adopt", (DL_FUNC) &_KongohPlus_extract_gtc_adopt, 2},
-    {"_KongohPlus_make_n_obs", (DL_FUNC) &_KongohPlus_make_n_obs, 2},
-    {"_KongohPlus_calc_gt_prob", (DL_FUNC) &_KongohPlus_calc_gt_prob, 5},
-    {"_KongohPlus_calc_gtc_prob", (DL_FUNC) &_KongohPlus_calc_gtc_prob, 7},
-    {"_KongohPlus_calc_gtc_prob_mk", (DL_FUNC) &_KongohPlus_calc_gtc_prob_mk, 7},
+    {"_KongohPlus_calc_gtc_prob", (DL_FUNC) &_KongohPlus_calc_gtc_prob, 8},
+    {"_KongohPlus_calc_gtc_prob_mk", (DL_FUNC) &_KongohPlus_calc_gtc_prob_mk, 8},
     {"_KongohPlus_calc_rph_dedup1_cpp", (DL_FUNC) &_KongohPlus_calc_rph_dedup1_cpp, 9},
     {"_KongohPlus_gamma_pdf", (DL_FUNC) &_KongohPlus_gamma_pdf, 3},
     {"_KongohPlus_gamma_cdf", (DL_FUNC) &_KongohPlus_gamma_cdf, 3},
