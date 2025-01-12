@@ -165,15 +165,18 @@ lr_result_server <- function(id, rv_lr){
             if(meth_pg == "Per combination"){
               disable("select_contrib_pg")
 
+              dt_pg_select <- dt_pg_display[[input$select_mk_pg]]
+
               output$dt_pg <- renderDataTable(server = FALSE, {
                 datatable(
-                  dt_pg_display[[input$select_mk_pg]],
-                  selection = list(mode = "single", target = "row"),
+                  dt_pg_select,
+                  selection = "none",
                   options = list(iDisplayLength = 10, ordering = FALSE, autowidth = TRUE, searching = FALSE,
                                  columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
                   rownames = FALSE
                 ) %>%
-                  formatSignif(columns = c("Probability"), digits = 3)
+                  formatSignif(columns = c("Probability"), digits = 3) %>%
+                  formatStyle(names(dt_pg_select), lineHeight = "80%")
               })
             }else{
               enable("select_contrib_pg")
@@ -184,11 +187,12 @@ lr_result_server <- function(id, rv_lr){
               output$dt_pg <- renderDataTable(server = FALSE, {
                 datatable(
                   aggregated_data,
-                  selection = list(mode = "single", target = "row"),
+                  selection = "none",
                   options = list(iDisplayLength = 10, ordering = FALSE, autowidth = TRUE, searching = FALSE),
                   rownames = FALSE
                 ) %>%
-                  formatSignif(columns = c("Probability"), digits = 3)
+                  formatSignif(columns = c("Probability"), digits = 3) %>%
+                  formatStyle(names(aggregated_data), lineHeight = "80%")
               })
             }
 
@@ -241,11 +245,9 @@ lr_result_server <- function(id, rv_lr){
               dt_diag,
               selection = "none",
               options = list(dom = "t", iDisplayLength = nrow(dt_diag), ordering = FALSE, autowidth = TRUE,
-                             columnDefs = list(list(width = "175px", targets = 0),
-                                               list(width = "90px", targets = 1),
-                                               list(width = "100px", targets = 2),
-                                               list(width = "125px", targets = 3),
-                                               list(width = "50px", targets = 4))),
+                             columnDefs = list(list(width = "200px", targets = 0),
+                                               list(width = "125px", targets = 1),
+                                               list(width = "50px", targets = 2))),
               rownames = FALSE
             ) %>%
               formatSignif(columns = c("Estimated value", "Rhat"), digits = 4) %>%

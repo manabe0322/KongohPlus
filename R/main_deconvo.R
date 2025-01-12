@@ -398,14 +398,12 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_pr
         rhats <- fit_main_summary$rhat
         lp <- medians[which(variables == "lp__")]
         tph <- medians[which(variables == "tph")]
-        lambda <- medians[grep("lambda", variables)]
         mp <- medians[grep("mp", variables)]
         deg <- medians[grep("deg", variables)]
         pae <- medians[grep("pae", variables)]
         ae <- n_mk * pae
         rhat_lp <- rhats[which(variables == "lp__")]
         rhat_tph <- rhats[which(variables == "tph")]
-        rhat_lambda <- rhats[grep("lambda", variables)]
         rhat_mp <- rhats[grep("mp", variables)]
         rhat_deg <- rhats[grep("deg", variables)]
         rhat_pae <- rhats[grep("pae", variables)]
@@ -423,11 +421,9 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_pr
 
         dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use_1st)
 
-        dt_diag <- data.table("Parameter" = c("Log probability in stan", "Total peak height", rep("lambda", hnc), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
-                              "Contributor" = c("-", "-", paste0("U", 1:hnc), paste0("U", 1:hnc), paste0("U", 1:hnc), rep("-", n_mk)),
-                              "Marker" = c("-", "-", rep("-", 3 * hnc), markers_use),
-                              "Estimated value" = c(lp, tph, lambda[hnc:1], mp[hnc:1], deg[hnc:1], ae),
-                              "Rhat" = c(rhat_lp, rhat_tph, rhat_lambda[hnc:1], rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
+        dt_diag <- data.table("Parameter" = c("lp__", "Total peak height", paste0("Mixture proportion (U", 1:hnc, ")"), paste0("Degradation (U", 1:hnc, ")"), paste0("Amplification efficiency (", markers_use, ")")),
+                              "Estimated value" = c(lp, tph, mp[hnc:1], deg[hnc:1], ae),
+                              "Rhat" = c(rhat_lp, rhat_tph, rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
 
       #######################
       # Duplicated profiles #
@@ -589,7 +585,6 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_pr
         lp <- medians[which(variables == "lp__")]
         tph_1st <- medians[which(variables == "tph_1st")]
         tph_2nd <- medians[which(variables == "tph_2nd")]
-        lambda <- medians[grep("lambda", variables)]
         mp <- medians[grep("mp", variables)]
         deg <- medians[grep("deg", variables)]
         pae <- medians[grep("pae", variables)]
@@ -597,7 +592,6 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_pr
         rhat_lp <- rhats[which(variables == "lp__")]
         rhat_tph_1st <- rhats[which(variables == "tph_1st")]
         rhat_tph_2nd <- rhats[which(variables == "tph_2nd")]
-        rhat_lambda <- rhats[grep("lambda", variables)]
         rhat_mp <- rhats[grep("mp", variables)]
         rhat_deg <- rhats[grep("deg", variables)]
         rhat_pae <- rhats[grep("pae", variables)]
@@ -621,11 +615,9 @@ perform_deconvo <- function(dt_csp, dt_af, dt_kit, dt_ignore_mk, dt_at, dt_al_pr
 
         dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use_1st, lpd_gtc_use_2nd)
 
-        dt_diag <- data.table("Parameter" = c("Log probability in stan", "Total peak height (1st)", "Total peak height (2nd)", rep("lambda", hnc), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
-                              "Contributor" = c("-", "-", "-", paste0("U", 1:hnc), paste0("U", 1:hnc), paste0("U", 1:hnc), rep("-", n_mk)),
-                              "Marker" = c("-", "-", "-", rep("-", 3 * hnc), markers_use),
-                              "Estimated value" = c(lp, tph_1st, tph_2nd, lambda[hnc:1], mp[hnc:1], deg[hnc:1], ae),
-                              "Rhat" = c(rhat_lp, rhat_tph_1st, rhat_tph_2nd, rhat_lambda[hnc:1], rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
+        dt_diag <- data.table("Parameter" = c("lp__", "Total peak height (1st)", "Total peak height (2nd)", paste0("Mixture proportion (U", 1:hnc, ")"), paste0("Degradation (U", 1:hnc, ")"), paste0("Amplification efficiency (", markers_use, ")")),
+                              "Estimated value" = c(lp, tph_1st, tph_2nd, mp[hnc:1], deg[hnc:1], ae),
+                              "Rhat" = c(rhat_lp, rhat_tph_1st, rhat_tph_2nd, rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
       }
 
       dt_log10like <- data.table(Marker = c(markers_use, "Total"),
