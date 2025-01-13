@@ -135,19 +135,19 @@ lr_result_server <- function(id, rv_lr){
           selectInput(session$ns("select_contrib_pg"), label = "Contributor", choices = rv_tmp$cand_contrib, selected = rv_tmp$cand_contrib[1], selectize = FALSE)
         })
 
-        observeEvent(input$select_meth_pg, {
+        observeEvent(input$select_meth_pg, ignoreInit = TRUE, {
           rv_tmp$update <- TRUE
         })
 
-        observeEvent(input$select_noc_pg, {
+        observeEvent(input$select_noc_pg, ignoreInit = TRUE, {
           rv_tmp$update <- TRUE
         })
 
-        observeEvent(input$select_mk_pg, {
+        observeEvent(input$select_mk_pg, ignoreInit = TRUE, {
           rv_tmp$update <- TRUE
         })
 
-        observeEvent(input$select_contrib_pg, {
+        observeEvent(input$select_contrib_pg, ignoreInit = TRUE, {
           rv_tmp$update <- TRUE
         })
 

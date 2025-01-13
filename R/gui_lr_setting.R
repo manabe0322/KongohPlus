@@ -79,6 +79,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
       rv_lr_setting$refs <- NULL
       rv_lr_setting$fn_anameth_lr <- ""
       rv_lr_setting$dt_anameth <- NULL
+      rv_lr_setting$dt_ignore_mk <- NULL
+      rv_lr_setting$readonly_ignore_mk <- FALSE
       rv_lr_setting$warmup <- 1200
       rv_lr_setting$sampling <- 300
       rv_lr_setting$chains <- 4
@@ -105,7 +107,15 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
       observe({
         req(rv_deconvo)
         rv_lr_setting$data_deconvo <- rv_deconvo$data_deconvo
-        rv_lr_setting$fn_anameth_lr <- rv_deconvo$data_deconvo$anameth
+        fn_anameth_lr <- rv_deconvo$data_deconvo$anameth
+        if(!is.null(fn_anameth_lr)){
+          dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth_lr))
+          markers_auto <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
+          markers_use <- rv_deconvo$data_deconvo$markers_use
+          rv_lr_setting$dt_ignore_mk <- data.table(Ignore = !is.element(markers_auto, markers_use),
+                                                   Marker = markers_auto)
+          rv_lr_setting$readonly_ignore_mk <- TRUE
+        }
       })
 
       output$use_deconvo <- renderUI({
@@ -120,6 +130,8 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         use_deconvo <- input$use_deconvo
         data_deconvo <- rv_lr_setting$data_deconvo
         if(use_deconvo){
+          rv_lr_setting$fn_anameth_lr <- data_deconvo$anameth
+
           disable("noc_lr_hp")
           disable("noc_lr_hd")
           disable("load_anameth_lr")
@@ -127,11 +139,20 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
           updateNumericInput(session, "noc_lr_hp", value = data_deconvo$hnc)
           updateNumericInput(session, "noc_lr_hd", value = data_deconvo$hnc)
           updateTextInput(session, "anameth_lr", value = data_deconvo$anameth)
+
+          dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", rv_lr_setting$fn_anameth_lr))
+          markers_auto <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
+          markers_use <- data_deconvo$markers_use
+
+          rv_lr_setting$dt_ignore_mk <- data.table(Ignore = !is.element(markers_auto, markers_use),
+                                                   Marker = markers_auto)
+          rv_lr_setting$readonly_ignore_mk <- TRUE
         }else{
           enable("noc_lr_hp")
           enable("noc_lr_hd")
           enable("load_anameth_lr")
           enable("act_advance_lr")
+          rv_lr_setting$readonly_ignore_mk <- FALSE
         }
       })
 
@@ -183,17 +204,11 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         fn_anameth_lr <- input$anameth_lr
         if(fn_anameth_lr != ""){
           rv_lr_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth_lr))
-          markers_auto <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
-
-          dt_ignore_mk <- data.table(Ignore = rep(FALSE, length(markers_auto)),
-                                     Marker = markers_auto)
-
-          output$dt_ignore_mk <- renderRHandsontable({
-            rhandsontable(dt_ignore_mk, rowHeaders = FALSE) %>%
-              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-              hot_col("Ignore", type = "checkbox", width = 100) %>%
-              hot_col("Marker", type = "text", readOnly = TRUE, width = 100)
-          })
+          if(!input$use_deconvo){
+            markers_auto <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
+            rv_lr_setting$dt_ignore_mk <- dt_ignore_mk <- data.table(Ignore = rep(FALSE, length(markers_auto)),
+                                                                     Marker = markers_auto)
+          }
 
           output$title_ignore_mk <- renderText({"Ignored marker"})
           output$title_at <- renderText({"Analytical threshold"})
@@ -249,6 +264,16 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         }
       })
 
+      output$dt_ignore_mk <- renderRHandsontable({
+        dt_ignore_mk <- rv_lr_setting$dt_ignore_mk
+        if(!is.null(dt_ignore_mk)){
+          rhandsontable(dt_ignore_mk, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Ignore", type = "checkbox", readOnly = rv_lr_setting$readonly_ignore_mk, width = 100) %>%
+            hot_col("Marker", type = "text", readOnly = TRUE, width = 100)
+        }
+      })
+
       observeEvent(input$act_analyze_lr, {
         waiter_show(html = spin_3k(), color = "white")
 
@@ -260,6 +285,9 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
         dt_csp <- rv_lr_setting$dt_csp
         dt_ref <- rv_lr_setting$dt_ref
         dt_af <- rv_lr_setting$dt_af
+        fn_csp <- rv_lr_setting$fn_csp
+        fn_ref <- rv_lr_setting$fn_ref
+        fn_af <- rv_lr_setting$fn_af
         anameth <- rv_lr_setting$fn_anameth_lr
         dt_anameth <- rv_lr_setting$dt_anameth
         use_deconvo <- input$use_deconvo
@@ -373,7 +401,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                   data_deconvo_hp$cv <- median_cv
                   data_deconvo_hp$list_dt_average_sr <- list_dt_average_sr
                   data_deconvo_hp$hnc <- hnc_lr_hp
-                  data_deconvo$message_sr <- message_sr
+                  data_deconvo_hp$message_sr <- message_sr
 
                   data_deconvo_hd$fn_csp <- fn_csp
                   data_deconvo_hd$dt_csp <- dt_csp
@@ -422,7 +450,7 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                   names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
 
                   data_lr <- list("dt_ref" = dt_ref,
-                                  "fn_ref" = rv_lr_setting$fn_ref,
+                                  "fn_ref" = fn_ref,
                                   "dt_lr" = dt_lr,
                                   "refs" = refs,
                                   "hp" = hp,
