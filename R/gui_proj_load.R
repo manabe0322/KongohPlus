@@ -22,9 +22,6 @@ load_proj_server <- function(id, session_top){
     id,
     function(input, output, session){
       rv_load_proj <- reactiveValues()
-      rv_load_proj$dt_csp <- NULL
-      rv_load_proj$dt_ref <- NULL
-      rv_load_proj$dt_af <- NULL
       rv_load_proj$data_deconvo <- NULL
       rv_load_proj$data_lr <- NULL
       rv_load_proj$data_deconvo_hp <- NULL
@@ -47,9 +44,6 @@ load_proj_server <- function(id, session_top){
         }else{
           waiter_show(html = spin_3k(), color = "white")
           load(input$file_proj$datapath)
-          rv_load_proj$dt_csp <- dt_csp
-          rv_load_proj$dt_ref <- dt_ref
-          rv_load_proj$dt_af <- dt_af
           rv_load_proj$data_deconvo <- data_deconvo
           rv_load_proj$data_lr <- data_lr
           rv_load_proj$data_deconvo_hp <- data_deconvo_hp

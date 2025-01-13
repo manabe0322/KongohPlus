@@ -231,10 +231,10 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
               waiter_hide()
               showModal(modalDialog(title = "Error", HTML(data_deconvo$error_message), easyClose = TRUE, footer = NULL))
             }else{
-              data_deconvo$fn_csp <- fn_csp
               data_deconvo$dt_csp <- dt_csp
-              data_deconvo$fn_af <- fn_af
               data_deconvo$dt_af <- dt_af
+              data_deconvo$fn_csp <- fn_csp
+              data_deconvo$fn_af <- fn_af
               data_deconvo$anameth <- anameth
               data_deconvo$dt_anameth <- dt_anameth
               data_deconvo$dt_kit <- dt_kit

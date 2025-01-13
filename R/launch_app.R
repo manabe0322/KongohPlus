@@ -90,20 +90,23 @@ KongohPlus <- function(){
       req(rv_lr)
       req(rv_hd_true)
 
-      rv_file$dt_csp <- rv_load_proj$dt_csp
-      rv_file$dt_ref <- rv_load_proj$dt_ref
-      rv_file$dt_af <- rv_load_proj$dt_af
-
       data_deconvo <- rv_load_proj$data_deconvo
       if(!is.null(data_deconvo)){
         rv_deconvo$data_deconvo <- data_deconvo
+        rv_file$dt_csp <- data_deconvo$dt_csp
+        rv_file$dt_af <- data_deconvo$dt_af
       }
 
       data_lr <- rv_load_proj$data_lr
       if(!is.null(data_lr)){
         rv_lr$data_lr <- data_lr
-        rv_lr$data_deconvo_hp <- rv_load_proj$data_deconvo_hp
-        rv_lr$data_deconvo_hd <- rv_load_proj$data_deconvo_hd
+        data_deconvo_hp <- rv_load_proj$data_deconvo_hp
+        data_deconvo_hd <- rv_load_proj$data_deconvo_hd
+        rv_lr$data_deconvo_hp <- data_deconvo_hp
+        rv_lr$data_deconvo_hd <- data_deconvo_hd
+        rv_file$dt_csp <- data_deconvo_hp$dt_csp
+        rv_file$dt_ref <- data_lr$dt_ref
+        rv_file$dt_af <- data_deconvo_hp$dt_af
       }
 
       lr_rand <- rv_load_proj$lr_rand

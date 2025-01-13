@@ -389,10 +389,10 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                   waiter_hide()
                   showModal(modalDialog(title = "Error", HTML(data_deconvo_hd$error_message), easyClose = TRUE, footer = NULL))
                 }else{
-                  data_deconvo_hp$fn_csp <- fn_csp
                   data_deconvo_hp$dt_csp <- dt_csp
-                  data_deconvo_hp$fn_af <- fn_af
                   data_deconvo_hp$dt_af <- dt_af
+                  data_deconvo_hp$fn_csp <- fn_csp
+                  data_deconvo_hp$fn_af <- fn_af
                   data_deconvo_hp$anameth <- anameth
                   data_deconvo_hp$dt_anameth <- dt_anameth
                   data_deconvo_hp$dt_kit <- dt_kit
@@ -403,10 +403,10 @@ lr_setting_server <- function(id, path_pack, rv_file, rv_deconvo){
                   data_deconvo_hp$hnc <- hnc_lr_hp
                   data_deconvo_hp$message_sr <- message_sr
 
-                  data_deconvo_hd$fn_csp <- fn_csp
                   data_deconvo_hd$dt_csp <- dt_csp
-                  data_deconvo_hd$fn_af <- fn_af
                   data_deconvo_hd$dt_af <- dt_af
+                  data_deconvo_hd$fn_csp <- fn_csp
+                  data_deconvo_hd$fn_af <- fn_af
                   data_deconvo_hd$anameth <- anameth
                   data_deconvo_hd$dt_anameth <- dt_anameth
                   data_deconvo_hd$dt_kit <- dt_kit

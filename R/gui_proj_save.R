@@ -22,9 +22,6 @@ save_proj_server <- function(id, rv_file, rv_deconvo, rv_lr, rv_hd_true){
   moduleServer(
     id,
     function(input, output, session){
-      dt_csp <- rv_file$dt_csp
-      dt_ref <- rv_file$dt_ref
-      dt_af <- rv_file$dt_af
       data_deconvo <- rv_deconvo$data_deconvo
       data_lr <- rv_lr$data_lr
       data_deconvo_hp <- rv_lr$data_deconvo_hp
@@ -42,10 +39,7 @@ save_proj_server <- function(id, rv_file, rv_deconvo, rv_lr, rv_hd_true){
 
         content = function(file){
           waiter_show(html = spin_3k(), color = "white")
-          save(list = c("dt_csp",
-                        "dt_ref",
-                        "dt_af",
-                        "data_deconvo",
+          save(list = c("data_deconvo",
                         "data_lr",
                         "data_deconvo_hp",
                         "data_deconvo_hd",
