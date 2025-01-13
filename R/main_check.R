@@ -31,7 +31,7 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, markers_auto, method){
     sn_all_csp <- unique(dt_csp[, SampleName])
     n_rep <- length(sn_all_csp)
     if(n_rep > 2){
-      error_message <- paste0(error_message, "Three or more crime stain profiles cannot be analyzed concurrently!<br>")
+      error_message <- paste0(error_message, "Three or more PCR replicates cannot be analyzed concurrently!<br>")
     }
     for(i in 1:length(sn_all_csp)){
       sn1_csp <- sn_all_csp[i]
