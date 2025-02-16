@@ -62,9 +62,9 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, markers_auto, method){
 #' @description The function to check whether the corrected alleles for all peaks are registered or not
 #' @param dt_csp The data.table of the crime stain profiles
 #' @param dt_ignore_mk The data.table of the information on the ignored markers
-#' @param dt_at The data.table of the analytical thresholds
+#' @param dt_anameth The data.table of the analysis method
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
-check_csp_sr <- function(dt_csp, dt_ignore_mk, dt_at, list_dt_average_sr){
+check_csp_sr <- function(dt_csp, dt_ignore_mk, dt_anameth, list_dt_average_sr){
   message_sr <- ""
 
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
@@ -80,7 +80,8 @@ check_csp_sr <- function(dt_csp, dt_ignore_mk, dt_at, list_dt_average_sr){
     setindex(dt_csp, SampleName)
     sn_all_csp <- unique(dt_csp[, SampleName])
 
-    setindex(dt_at, Marker)
+    markers_at <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
+    ats_auto <- dt_anameth$Value[dt_anameth$Category == "AT"]
 
     for(i in 1:length(sn_all_csp)){
       n_warning_mk <- 0
@@ -95,8 +96,7 @@ check_csp_sr <- function(dt_csp, dt_ignore_mk, dt_at, list_dt_average_sr){
         peaks <- peaks[!is.na(heights)]
         heights <- heights[!is.na(heights)]
 
-        dt_at_mk1 <- dt_at[Marker == mk]
-        at <- as.numeric(dt_at_mk1$AT)
+        at <- ats_auto[markers_at == mk]
         peaks <- peaks[heights >= at]
 
         dt_ave_sr <- list_dt_average_sr[[mk]]

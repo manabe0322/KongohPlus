@@ -8,7 +8,8 @@ deconvo_ui <- function(id){
            tabsetPanel(id = ns("tabset_deconvo"),
                        type = "tabs",
                        deconvo_setting_ui(ns("deconvo_setting")),
-                       deconvo_result_ui(ns("deconvo_result"))
+                       deconvo_result_ui(ns("deconvo_result")),
+                       deconvo_pg_ui(ns("deconvo_pg"))
            )
   )
 }
@@ -25,6 +26,7 @@ deconvo_server <- function(id, path_pack, rv_file){
       observe({
         req(rv_deconvo)
         deconvo_result_server("deconvo_result", rv_deconvo)
+        deconvo_pg_server("deconvo_pg", rv_deconvo)
         if(!is.null(rv_deconvo$data_deconvo)){
           updateTabsetPanel(session, "tabset_deconvo", selected = "Result")
         }

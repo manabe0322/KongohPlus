@@ -4,14 +4,14 @@
 \alias{check_csp_sr}
 \title{check_csp_sr}
 \usage{
-check_csp_sr(dt_csp, dt_ignore_mk, dt_at, list_dt_average_sr)
+check_csp_sr(dt_csp, dt_ignore_mk, dt_anameth, list_dt_average_sr)
 }
 \arguments{
 \item{dt_csp}{The data.table of the crime stain profiles}
 
 \item{dt_ignore_mk}{The data.table of the information on the ignored markers}
 
-\item{dt_at}{The data.table of the analytical thresholds}
+\item{dt_anameth}{The data.table of the analysis method}
 
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 }
