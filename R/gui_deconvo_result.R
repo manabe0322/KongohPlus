@@ -48,15 +48,15 @@ deconvo_result_server <- function(id, rv_deconvo){
     function(input, output, session){
       data_deconvo <- rv_deconvo$data_deconvo
       if(!is.null(data_deconvo)){
-        rv_deconvo_result <- reactiveValues()
-        rv_deconvo_result$dt_diag <- NULL
-        rv_deconvo_result$error_message <- NULL
-        rv_deconvo_result$traceplot <- NULL
-
         markers_use <- data_deconvo$markers_use
         message_sr <- data_deconvo$message_sr
         hnc_all <- data_deconvo$hnc_all
         data_hnc_list <- data_deconvo$data_hnc_list
+
+        rv_deconvo_result <- reactiveValues()
+        rv_deconvo_result$dt_diag <- NULL
+        rv_deconvo_result$error_message <- NULL
+        rv_deconvo_result$traceplot <- NULL
 
         output$title_warnings <- renderText({"Warnings"})
         output$title_like <- renderText({"Likelihood"})
