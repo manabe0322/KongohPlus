@@ -11,11 +11,7 @@ file_ui <- function(id){
                           fileInput(ns("file_ref"), label = h4("Reference profile"), accept = ".csv", buttonLabel = "Load"),
                           fileInput(ns("file_af"), label = h4("Allele frequency"), accept = ".csv", buttonLabel = "Load"),
                           br(),
-                          actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg"),
-                          br(),
-                          br(),
-                          br(),
-                          actionButton(ns("act_lr"), label = "Likelihood ratio", class = "btn btn-primary btn-lg")
+                          actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 9,
                        tabsetPanel(id = ns("tabset_load_file"),
@@ -152,10 +148,6 @@ file_server <- function(id, session_top){
 
       observeEvent(input$act_deconvo, {
         updateNavbarPage(session = session_top, inputId = "navbar", selected = "Deconvolution")
-      })
-
-      observeEvent(input$act_lr, {
-        updateNavbarPage(session = session_top, inputId = "navbar", selected = "Likelihood ratio")
       })
 
       return(rv_file)

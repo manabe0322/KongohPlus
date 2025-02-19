@@ -11,7 +11,9 @@ deconvo_result_ui <- function(id){
                     wellPanel(
                       h4(textOutput(ns("title_warnings"))),
                       htmlOutput(ns("warning_message"))
-                    )
+                    ),
+                    br(),
+                    uiOutput(ns("act_lr"))
              ),
              column(4,
                     wellPanel(
@@ -42,7 +44,7 @@ deconvo_result_ui <- function(id){
 #' deconvo_result_server
 #'
 #' @description The function to create the server module for results of deconvolution
-deconvo_result_server <- function(id, rv_deconvo){
+deconvo_result_server <- function(id, session_top, rv_deconvo){
   moduleServer(
     id,
     function(input, output, session){
@@ -64,6 +66,12 @@ deconvo_result_server <- function(id, rv_deconvo){
         output$title_par_diag <- renderText({"Parameters and diagnostics"})
 
         output$warning_message <- renderUI({HTML(message_sr)})
+
+        output$act_lr <- renderUI({actionButton(session$ns("act_lr"), label = "Likelihood ratio", class = "btn btn-primary btn-lg")})
+
+        observeEvent(input$act_lr, {
+          updateNavbarPage(session = session_top, inputId = "navbar", selected = "Likelihood ratio")
+        })
 
         rowCallback <- c(
           "function(row, data){",

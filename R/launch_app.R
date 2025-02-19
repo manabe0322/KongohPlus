@@ -65,7 +65,7 @@ KongohPlus <- function(){
 
   server <- function(input, output, session){
     rv_file <- file_server("file", session)
-    rv_deconvo <- deconvo_server("deconvo", path_pack, rv_file)
+    rv_deconvo <- deconvo_server("deconvo", path_pack, session, rv_file)
     rv_lr <- lr_server("lr", rv_file, rv_deconvo)
     rv_hd_true <- hd_true_server("hd_true", path_pack, rv_deconvo)
 

@@ -17,7 +17,7 @@ deconvo_ui <- function(id){
 #' deconvo_server
 #'
 #' @description The function to create the server module for deconvolution
-deconvo_server <- function(id, path_pack, rv_file){
+deconvo_server <- function(id, path_pack, session_top, rv_file){
   moduleServer(
     id,
     function(input, output, session){
@@ -25,7 +25,7 @@ deconvo_server <- function(id, path_pack, rv_file){
 
       observe({
         req(rv_deconvo)
-        deconvo_result_server("deconvo_result", rv_deconvo)
+        deconvo_result_server("deconvo_result", session_top, rv_deconvo)
         deconvo_pg_server("deconvo_pg", rv_deconvo)
         if(!is.null(rv_deconvo$data_deconvo)){
           updateTabsetPanel(session, "tabset_deconvo", selected = "Result")
