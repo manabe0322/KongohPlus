@@ -23,9 +23,8 @@ load_proj_server <- function(id, session_top){
     function(input, output, session){
       rv_load_proj <- reactiveValues()
       rv_load_proj$data_deconvo <- NULL
-      rv_load_proj$data_lr <- NULL
-      rv_load_proj$data_deconvo_hp <- NULL
-      rv_load_proj$data_deconvo_hd <- NULL
+      rv_load_proj$data_lr_list <- NULL
+      rv_load_proj$dt_lr_calc_record <- NULL
       rv_load_proj$lr_rand <- NULL
 
       load_proj <- reactive({
@@ -45,23 +44,17 @@ load_proj_server <- function(id, session_top){
           waiter_show(html = spin_3k(), color = "white")
           load(input$file_proj$datapath)
           rv_load_proj$data_deconvo <- data_deconvo
-          rv_load_proj$data_lr <- data_lr
-          rv_load_proj$data_deconvo_hp <- data_deconvo_hp
-          rv_load_proj$data_deconvo_hd <- data_deconvo_hd
+          rv_load_proj$dt_ref <- dt_ref
+          rv_load_proj$fn_ref <- fn_ref
+          rv_load_proj$refs <- refs
+          rv_load_proj$data_lr_list <- data_lr_list
+          rv_load_proj$dt_lr_calc_record <- dt_lr_calc_record
           rv_load_proj$lr_rand <- lr_rand
 
           if(is.null(data_deconvo)){
-            if(is.null(data_lr)){
-              updateNavbarPage(session = session_top, "navbar", selected = "File")
-            }else{
-              updateNavbarPage(session = session_top, "navbar", selected = "Likelihood ratio")
-            }
+            updateNavbarPage(session = session_top, "navbar", selected = "File")
           }else{
-            if(is.null(data_lr)){
-              updateNavbarPage(session = session_top, "navbar", selected = "Deconvolution")
-            }else{
-              updateNavbarPage(session = session_top, "navbar", selected = "Likelihood ratio")
-            }
+            updateNavbarPage(session = session_top, "navbar", selected = "Deconvolution")
           }
           waiter_hide()
         }

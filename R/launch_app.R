@@ -97,16 +97,18 @@ KongohPlus <- function(){
         rv_file$dt_af <- data_deconvo$dt_af
       }
 
-      data_lr <- rv_load_proj$data_lr
-      if(!is.null(data_lr)){
-        rv_lr$data_lr <- data_lr
-        data_deconvo_hp <- rv_load_proj$data_deconvo_hp
-        data_deconvo_hd <- rv_load_proj$data_deconvo_hd
-        rv_lr$data_deconvo_hp <- data_deconvo_hp
-        rv_lr$data_deconvo_hd <- data_deconvo_hd
-        rv_file$dt_csp <- data_deconvo_hp$dt_csp
-        rv_file$dt_ref <- data_lr$dt_ref
-        rv_file$dt_af <- data_deconvo_hp$dt_af
+      dt_ref <- rv_load_proj$dt_ref
+      if(!is.null(dt_ref)){
+        rv_file$dt_ref <- dt_ref
+        rv_lr$dt_ref <- dt_ref
+        rv_lr$fn_ref <- rv_load_proj$fn_ref
+        rv_lr$refs <- rv_load_proj$refs
+      }
+
+      data_lr_list <- rv_load_proj$data_lr_list
+      if(length(data_lr_list) != 0){
+        rv_lr$data_lr_list <- data_lr_list
+        rv_lr$dt_lr_calc_record <- rv_load_proj$dt_lr_calc_record
       }
 
       lr_rand <- rv_load_proj$lr_rand

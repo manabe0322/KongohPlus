@@ -23,9 +23,11 @@ save_proj_server <- function(id, rv_file, rv_deconvo, rv_lr, rv_hd_true){
     id,
     function(input, output, session){
       data_deconvo <- rv_deconvo$data_deconvo
-      data_lr <- rv_lr$data_lr
-      data_deconvo_hp <- rv_lr$data_deconvo_hp
-      data_deconvo_hd <- rv_lr$data_deconvo_hd
+      dt_ref <- rv_lr$dt_ref
+      fn_ref <- rv_lr$fn_ref
+      refs <- rv_lr$refs
+      data_lr_list <- rv_lr$data_lr_list
+      dt_lr_calc_record <- rv_lr$dt_lr_calc_record
       lr_rand <- rv_hd_true$lr_rand
 
       output$download_proj <- downloadHandler(
@@ -40,9 +42,11 @@ save_proj_server <- function(id, rv_file, rv_deconvo, rv_lr, rv_hd_true){
         content = function(file){
           waiter_show(html = spin_3k(), color = "white")
           save(list = c("data_deconvo",
-                        "data_lr",
-                        "data_deconvo_hp",
-                        "data_deconvo_hd",
+                        "dt_ref",
+                        "fn_ref",
+                        "refs",
+                        "data_lr_list",
+                        "dt_lr_calc_record",
                         "lr_rand"),
                file = file)
           waiter_hide()
