@@ -1,6 +1,6 @@
 Category,Subcategory,Name,Value
-Parameter,,241205_pre_kakeiken_parameter,
-Stutter file,,241205_pre_kakeiken,
+Parameter,,param_GF_default,
+Stutter file,,stutter_GF_default,
 Kit,,GlobalFiler,
 AT,D3S1358,,100
 AT,vWA,,100
