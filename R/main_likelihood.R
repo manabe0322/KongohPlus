@@ -23,6 +23,12 @@ extract_prof_ref <- function(dt_ref, mk){
 replace_prof_ref_99 <- function(prof_ref, peaks){
   prof_ref_99 <- prof_ref
   prof_ref_99[!is.element(prof_ref, peaks)] <- 99
+
+  n_ref <- length(prof_ref) / 2
+  for(i in 1:n_ref){
+    prof_ref_99[c(2 * i - 1, 2 * i)] <- sort(prof_ref_99[c(2 * i - 1, 2 * i)])
+  }
+
   return(prof_ref_99)
 }
 
@@ -252,6 +258,7 @@ assign_log10like <- function(hnc, markers_use, peaks_list, pop_al_list, pop_prob
     mk <- markers_use[i]
     prof_ref <- prof_ref_all[mk, ]
     prof_ref_99 <- prof_ref_99_all[mk, ]
+
     pop_al <- pop_al_list[[mk]]
     pop_prob <- pop_prob_list[[mk]]
     gtc_mk <- gtc_use[[mk]]

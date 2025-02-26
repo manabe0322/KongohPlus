@@ -153,8 +153,9 @@ lr_server <- function(id, rv_file, rv_deconvo){
               lpd_gtc_use_2nd_hd <- data_hd$lpd_gtc_use_2nd
 
               n_row <- length(markers_use) + 1
-              n_ref <- length(refs)
-              if(n_ref > noc_hp || n_ref > noc_hd){
+              n_ref_hp <- length(hp)
+              n_ref_hd <- length(hd)
+              if(n_ref_hp > noc_hp || n_ref_hd > noc_hd){
                 waiter_hide()
                 showModal(modalDialog(title = "Error", "The number of contributors is smaller than the number of known individuals who have been checked as contributors.", easyClose = TRUE, footer = NULL))
               }else{
