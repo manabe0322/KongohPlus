@@ -28,30 +28,28 @@ deconvo_setting_ui <- function(id){
                       actionButton(ns("act_analyze_deconvo"), label = "Analyze", class = "btn btn-primary btn-lg")
                     )
              ),
-             column(4,
+             column(3,
                     h4(textOutput(ns("title_ignore_mk"))),
                     rHandsontableOutput(ns("dt_ignore_mk"))
              ),
-             column(5,
-                    fluidRow(
-                      column(4,
-                             h4(textOutput(ns("title_at"))),
-                             rHandsontableOutput(ns("anameth_at"))
-                      ),
-                      column(8,
-                             h4(textOutput(ns("title_al_gt_prob"))),
-                             rHandsontableOutput(ns("anameth_algt_prob")),
-                             br(),
-                             h4(textOutput(ns("title_gt_fltr"))),
-                             rHandsontableOutput(ns("anameth_gt_fltr")),
-                             br(),
-                             h4(textOutput(ns("title_dropin"))),
-                             rHandsontableOutput(ns("anameth_dropin")),
-                             br(),
-                             h4(textOutput(ns("title_mcmc"))),
-                             rHandsontableOutput(ns("anameth_mcmc"))
-                      )
-                    )
+             column(3,
+                    h4(textOutput(ns("title_at"))),
+                    dataTableOutput(ns("anameth_at")),
+                    br()
+             ),
+             column(3,
+                    h4(textOutput(ns("title_al_gt_prob"))),
+                    dataTableOutput(ns("anameth_algt_prob")),
+                    br(),
+                    h4(textOutput(ns("title_gt_fltr"))),
+                    dataTableOutput(ns("anameth_gt_fltr")),
+                    br(),
+                    h4(textOutput(ns("title_dropin"))),
+                    dataTableOutput(ns("anameth_dropin")),
+                    br(),
+                    h4(textOutput(ns("title_mcmc"))),
+                    dataTableOutput(ns("anameth_mcmc")),
+                    br()
              )
            )
   )
@@ -148,46 +146,71 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
           output$anameth_at <- renderRHandsontable({
             dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
                                 AT = dt_anameth$Value[dt_anameth$Category == "AT"])
-            rhandsontable(dt_at, rowHeaders = FALSE) %>%
-              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-              hot_col("Marker", type = "text", readOnly = TRUE, width = 100) %>%
-              hot_col("AT", type = "numeric", format = "0", readOnly = TRUE, width = 100)
+
+            datatable(
+              dt_at,
+              selection = "none",
+              options = list(dom = "t", iDisplayLength = nrow(dt_at), ordering = FALSE, autowidth = TRUE),
+              rownames = FALSE,
+              escape = FALSE
+            ) %>%
+              formatStyle(names(dt_at), lineHeight = "80%")
           })
 
           output$anameth_algt_prob <- renderRHandsontable({
             dt_algt_prob <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype probability"],
                                        Value = dt_anameth$Value[dt_anameth$Category == "Genotype probability"])
-            rhandsontable(dt_algt_prob, rowHeaders = FALSE, colHeaders = FALSE) %>%
-              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-              hot_col(col = 1, type = "text", readOnly = TRUE, width = 300) %>%
-              hot_col(col = 2, type = "numeric", readOnly = TRUE, width = 100)
+
+            datatable(
+              dt_algt_prob,
+              selection = "none",
+              options = list(dom = "t", iDisplayLength = nrow(dt_algt_prob), ordering = FALSE, autowidth = TRUE),
+              rownames = FALSE,
+              escape = FALSE
+            ) %>%
+              formatStyle(names(dt_algt_prob), lineHeight = "80%")
           })
 
           output$anameth_gt_fltr <- renderRHandsontable({
             dt_gt_fltr <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype filter"],
                                      Value = dt_anameth$Value[dt_anameth$Category == "Genotype filter"])
-            rhandsontable(dt_gt_fltr , rowHeaders = FALSE, colHeaders = FALSE) %>%
-              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-              hot_col(col = 1, type = "text", readOnly = TRUE, width = 300) %>%
-              hot_col(col = 2, type = "numeric", readOnly = TRUE, width = 100)
+
+            datatable(
+              dt_gt_fltr,
+              selection = "none",
+              options = list(dom = "t", iDisplayLength = nrow(dt_gt_fltr), ordering = FALSE, autowidth = TRUE),
+              rownames = FALSE,
+              escape = FALSE
+            ) %>%
+              formatStyle(names(dt_gt_fltr), lineHeight = "80%")
           })
 
           output$anameth_dropin <- renderRHandsontable({
             dt_dropin <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Drop-in"],
                                     Value = dt_anameth$Value[dt_anameth$Category == "Drop-in"])
-            rhandsontable(dt_dropin, rowHeaders = FALSE, colHeaders = FALSE) %>%
-              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-              hot_col(col = 1, type = "text", readOnly = TRUE, width = 300) %>%
-              hot_col(col = 2, type = "numeric", readOnly = TRUE, width = 100)
+
+            datatable(
+              dt_dropin,
+              selection = "none",
+              options = list(dom = "t", iDisplayLength = nrow(dt_dropin), ordering = FALSE, autowidth = TRUE),
+              rownames = FALSE,
+              escape = FALSE
+            ) %>%
+              formatStyle(names(dt_dropin), lineHeight = "80%")
           })
 
           output$anameth_mcmc <- renderRHandsontable({
             dt_mcmc <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "MCMC"],
                                   Value = dt_anameth$Value[dt_anameth$Category == "MCMC"])
-            rhandsontable(dt_mcmc, rowHeaders = FALSE, colHeaders = FALSE) %>%
-              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-              hot_col(col = 1, type = "text", readOnly = TRUE, width = 300) %>%
-              hot_col(col = 2, type = "numeric", readOnly = TRUE, width = 100)
+
+            datatable(
+              dt_mcmc,
+              selection = "none",
+              options = list(dom = "t", iDisplayLength = nrow(dt_mcmc), ordering = FALSE, autowidth = TRUE),
+              rownames = FALSE,
+              escape = FALSE
+            ) %>%
+              formatStyle(names(dt_mcmc), lineHeight = "80%")
           })
         }
       })
