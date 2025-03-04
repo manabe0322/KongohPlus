@@ -39,6 +39,7 @@ functions{
 
 data{
   int hnc;
+  int n_rep;
   int n_mk;
   real ltph;
   real htph;
@@ -49,19 +50,23 @@ data{
   real cv;
   real mean_size;
 
+  array[n_rep] int n_dedup1_sum_per_rep;
   int n_dedup1_sum;
   array[2 * hnc, n_dedup1_sum] int index_dedup1_use;
   vector[n_dedup1_sum] size_dedup1_use;
   vector[n_dedup1_sum] oph_dedup1_use;
   array[n_dedup1_sum] int id_mk_dedup1;
 
-  int n_general_sum;
+  array[n_rep] int n_general_sum_per_rep;
+  array[n_rep] int n_dropout_sum_per_rep;
   int n_dropout_sum;
   vector[n_dropout_sum] at_dropout;
+  array[n_rep] int n_dropin_sum_per_rep;
   int n_dropin_sum;
   vector[n_dropin_sum] loglike_di;
 
   int n_dedup2_sum;
+  array[n_rep] int n_dedup2_sum_per_rep;
   array[n_mk] int n_dedup2_use;
   array[n_dedup2_sum] int index_dedup2_use;
 
@@ -71,14 +76,12 @@ data{
 }
 
 transformed data{
-  real tph_mean = (ltph + htph) / 2;
-  real tph_sd = (htph - ltph) / 2;
   real cv_m2 = pow(cv, -2);
   real cv_p2 = pow(cv, 2);
 }
 
 parameters{
-  real<lower = ltph, upper = htph> tph;
+  vector<lower = ltph, upper = htph>[n_rep] tph;
   ordered[hnc] lambda;
   vector<lower = 0, upper = 1>[hnc] deg;
   simplex[n_mk] pae;
@@ -90,45 +93,69 @@ transformed parameters{
 }
 
 model{
-  tph ~ normal(tph_mean, tph_sd);
   lambda ~ normal(0, 10);
   pae ~ dirichlet(ae_alpha_use);
 
-  vector[n_dedup1_sum] ae_dedup1_use = n_mk * pae[id_mk_dedup1];
+  int index_dedup1_start = 1;
+  int index_dropout_start = 1;
+  int index_dropin_start = 1;
+  int index_dedup2_start = 1;
 
-  vector[n_dedup1_sum] rph_dedup1_use = calc_rph_dedup1(mp, deg, hnc, n_dedup1_sum, rph_base_use, index_dedup1_use, size_dedup1_use, mean_size, ae_dedup1_use);
+  for(i in 1:n_rep){
+    // Extract data for one replicate
+    int n_dedup1_sum_rep1 = n_dedup1_sum_per_rep[i];
+    array[2 * hnc, n_dedup1_sum_rep1] int index_dedup1_use_rep1 = index_dedup1_use[, index_dedup1_start:(index_dedup1_start + n_dedup1_sum_rep1 - 1)];
+    vector[n_dedup1_sum_rep1] size_dedup1_use_rep1 = size_dedup1_use[index_dedup1_start:(index_dedup1_start + n_dedup1_sum_rep1 - 1)];
+    array[n_dedup1_sum_rep1] int id_mk_dedup1_rep1 = id_mk_dedup1[index_dedup1_start:(index_dedup1_start + n_dedup1_sum_rep1 - 1)];
+    vector[n_dedup1_sum_rep1] ae_dedup1_use_rep1 = n_mk * pae[id_mk_dedup1_rep1];
+    vector[n_dedup1_sum_rep1] oph_dedup1_use_rep1 = oph_dedup1_use[index_dedup1_start:(index_dedup1_start + n_dedup1_sum_rep1 - 1)];
+    int n_general_sum_rep1 = n_general_sum_per_rep[i];
+    int n_dropout_sum_rep1 = n_dropout_sum_per_rep[i];
+    int n_dropin_sum_rep1 = n_dropin_sum_per_rep[i];
+    int n_dedup2_sum_rep1 = n_dedup2_sum_per_rep[i];
+    array[n_dedup2_sum_rep1] int index_dedup2_use_rep1 = index_dedup2_use[index_dedup2_start:(index_dedup2_start + n_dedup2_sum_rep1 - 1)];
 
-  vector[n_dedup1_sum] lpd_dedup1_use = rep_vector(0, n_dedup1_sum);
+    vector[n_dedup1_sum_rep1] rph_dedup1_use_rep1 = calc_rph_dedup1(mp, deg, hnc, n_dedup1_sum_rep1, rph_base_use, index_dedup1_use_rep1, size_dedup1_use_rep1, mean_size, ae_dedup1_use_rep1);
+    vector[n_dedup1_sum_rep1] lpd_dedup1_use_rep1 = rep_vector(0, n_dedup1_sum_rep1);
 
-  if(n_general_sum != 0){
-    vector[n_general_sum] oph_general = oph_dedup1_use[1:n_general_sum];
-    vector[n_general_sum] rph_general = rph_dedup1_use[1:n_general_sum];
-    lpd_dedup1_use[1:n_general_sum] = calc_lpd_general(n_general_sum, oph_general, rph_general, cv_m2, cv_p2, tph);
-  }
+    if(n_general_sum_rep1 != 0){
+      vector[n_general_sum_rep1] oph_general = oph_dedup1_use_rep1[1:n_general_sum_rep1];
+      vector[n_general_sum_rep1] rph_general = rph_dedup1_use_rep1[1:n_general_sum_rep1];
+      lpd_dedup1_use_rep1[1:n_general_sum_rep1] = calc_lpd_general(n_general_sum_rep1, oph_general, rph_general, cv_m2, cv_p2, tph[i]);
+    }
 
-  if(n_dropout_sum != 0){
-    vector[n_dropout_sum] rph_dropout = rph_dedup1_use[(n_general_sum + 1):(n_general_sum + n_dropout_sum)];
-    lpd_dedup1_use[(n_general_sum + 1):(n_general_sum + n_dropout_sum)] = calc_lpd_dropout(n_dropout_sum, at_dropout, rph_dropout, cv_m2, cv_p2, tph);
-  }
+    if(n_dropout_sum_rep1 != 0){
+      vector[n_dropout_sum_rep1] at_dropout_rep1 = at_dropout[index_dropout_start:(index_dropout_start + n_dropout_sum_rep1 - 1)];
+      vector[n_dropout_sum_rep1] rph_dropout = rph_dedup1_use_rep1[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1)];
+      lpd_dedup1_use_rep1[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1)] = calc_lpd_dropout(n_dropout_sum_rep1, at_dropout_rep1, rph_dropout, cv_m2, cv_p2, tph[i]);
+    }
 
-  if(n_dropin_sum != 0){
-    lpd_dedup1_use[(n_general_sum + n_dropout_sum + 1):(n_general_sum + n_dropout_sum + n_dropin_sum)] = loglike_di;
-  }
+    if(n_dropin_sum_rep1 != 0){
+      vector[n_dropin_sum_rep1] loglike_di_rep1 = loglike_di[index_dropin_start:(index_dropin_start + n_dropin_sum_rep1 - 1)];
+      lpd_dedup1_use_rep1[(n_general_sum_rep1 + n_dropout_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1 + n_dropin_sum_rep1)] = loglike_di_rep1;
+    }
 
-  vector[n_dedup2_sum] lpd_dedup2_use = lpd_dedup1_use[index_dedup2_use];
-  int dedup2_start = 1;
-  int gtc_start = 1;
-  for(i in 1:n_mk){
-    int n_peak = n_peak_use[i];
-    int n_gtc = n_gtc_use[i];
-    int n_dedup2 = n_dedup2_use[i];
-    matrix[n_peak, n_gtc] lpd_dedup2 = to_matrix(lpd_dedup2_use[dedup2_start:(dedup2_start + n_dedup2 - 1)], n_peak, n_gtc);
-    row_vector[n_gtc] gtc_logprob_mk = gtc_logprob_use[gtc_start:(gtc_start + n_gtc - 1)];
-    row_vector[n_gtc] loglike_gtc = calc_loglike_gtc(n_peak, n_gtc, lpd_dedup2, gtc_logprob_mk);
+    vector[n_dedup2_sum_rep1] lpd_dedup2_use_rep1 = lpd_dedup1_use_rep1[index_dedup2_use_rep1];
 
-    target += log_sum_exp(loglike_gtc);
+    int index_lpd_start = 1;
+    int index_gtc_start = 1;
+    for(j in 1:n_mk){
+      int n_peak = n_peak_use[j];
+      int n_gtc = n_gtc_use[j];
+      int n_dedup2 = n_dedup2_use[j];
+      matrix[n_peak, n_gtc] lpd_dedup2 = to_matrix(lpd_dedup2_use_rep1[index_lpd_start:(index_lpd_start + n_dedup2 - 1)], n_peak, n_gtc);
+      row_vector[n_gtc] gtc_logprob_mk = gtc_logprob_use[index_gtc_start:(index_gtc_start + n_gtc - 1)];
+      row_vector[n_gtc] loglike_gtc = calc_loglike_gtc(n_peak, n_gtc, lpd_dedup2, gtc_logprob_mk);
 
-    dedup2_start += n_dedup2;
-    gtc_start += n_gtc;
+      target += log_sum_exp(loglike_gtc);
+
+      index_lpd_start += n_dedup2;
+      index_gtc_start += n_gtc;
+    }
+
+    index_dedup1_start += n_dedup1_sum_rep1;
+    index_dropout_start += n_dropout_sum_rep1;
+    index_dropin_start += n_dropin_sum_rep1;
+    index_dedup2_start += n_dedup2_sum_rep1;
   }
 }
