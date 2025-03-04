@@ -149,6 +149,25 @@ deconvo_pg_server <- function(id, rv_deconvo){
           }
         })
 
+        observeEvent(input$dt_pg_per_comb_rows_selected, {
+          index_select <- input$dt_pg_per_comb_rows_selected
+
+          if(is.null(index_select)){
+
+          }else{
+
+          }
+        })
+
+        observeEvent(input$dt_pg_per_contrib_rows_selected, {
+          index_select <- input$dt_pg_per_contrib_rows_selected
+
+          if(is.null(index_select)){
+
+          }else{
+
+          }
+        })
       }
     }
   )
