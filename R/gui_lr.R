@@ -141,16 +141,21 @@ lr_server <- function(id, rv_file, rv_deconvo){
               # Extract data for Hp
               data_hp <- data_hnc_list[[which(hnc_all == noc_hp)]]
               error_message_hp <- data_hp$error_message
-              gtc_use_hp <- data_hp$gtc_use
-              lpd_gtc_use_1st_hp <- data_hp$lpd_gtc_use_1st
-              lpd_gtc_use_2nd_hp <- data_hp$lpd_gtc_use_2nd
+              dt_pg_list_hp <- data_hp$dt_pg_list
+
+
+              #gtc_use_hp <- data_hp$gtc_use
+              #lpd_gtc_use_1st_hp <- data_hp$lpd_gtc_use_1st
+              #lpd_gtc_use_2nd_hp <- data_hp$lpd_gtc_use_2nd
 
               # Extract data for Hd
               data_hd <- data_hnc_list[[which(hnc_all == noc_hd)]]
               error_message_hd <- data_hd$error_message
-              gtc_use_hd <- data_hd$gtc_use
-              lpd_gtc_use_1st_hd <- data_hd$lpd_gtc_use_1st
-              lpd_gtc_use_2nd_hd <- data_hd$lpd_gtc_use_2nd
+              dt_pg_list_hd <- data_hp$dt_pg_list
+
+              #gtc_use_hd <- data_hd$gtc_use
+              #lpd_gtc_use_1st_hd <- data_hd$lpd_gtc_use_1st
+              #lpd_gtc_use_2nd_hd <- data_hd$lpd_gtc_use_2nd
 
               n_row <- length(markers_use) + 1
               n_ref_hp <- length(hp)
@@ -160,8 +165,8 @@ lr_server <- function(id, rv_file, rv_deconvo){
                 showModal(modalDialog(title = "Error", "The number of contributors is smaller than the number of known individuals who have been checked as contributors.", easyClose = TRUE, footer = NULL))
               }else{
                 if(is.null(error_message_hp) && is.null(error_message_hd)){
-                  log10like_hp <- assign_log10like(noc_hp, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use_hp, lpd_gtc_use_1st_hp, lpd_gtc_use_2nd_hp, dt_ref, hp, refs, sub_source)
-                  log10like_hd <- assign_log10like(noc_hd, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use_hd, lpd_gtc_use_1st_hd, lpd_gtc_use_2nd_hd, dt_ref, hd, refs, sub_source)
+                  log10like_hp <- assign_log10like(noc_hp, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hp, refs, sub_source)
+                  log10like_hd <- assign_log10like(noc_hd, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hd, refs, sub_source)
                   dt_lr <- data.table(Marker = c(markers_use, "Total"),
                                       Log10_Likelihood_Hp = log10like_hp,
                                       Log10_Likelihood_Hd = log10like_hd,
@@ -177,6 +182,12 @@ lr_server <- function(id, rv_file, rv_deconvo){
                                 "hd" = hd,
                                 "dt_lr" = dt_lr)
 
+                if(sub_source){
+                  meth_lr <- "Sub-source"
+                }else{
+                  meth_lr <- "Sub-sub-source"
+                }
+
                 if(setequal(rv_lr$refs, refs)){
                   data_lr_list <- rv_lr$data_lr_list
                   data_lr_list[[length(data_lr_list) + 1]] <- data_lr
@@ -184,7 +195,8 @@ lr_server <- function(id, rv_file, rv_deconvo){
 
                   n_unk_hp <- noc_hp - length(hp)
                   n_unk_hd <- noc_hd - length(hd)
-                  dt_tmp <- data.table(Hp = create_string_hyp(n_unk_hp, hp),
+                  dt_tmp <- data.table(Method = meth_lr,
+                                       Hp = create_string_hyp(n_unk_hp, hp),
                                        Hd = create_string_hyp(n_unk_hd, hd),
                                        LR = dt_lr$LR[n_row])
                   rv_lr$dt_lr_calc_record <- rbind(rv_lr$dt_lr_calc_record, dt_tmp)
@@ -199,7 +211,8 @@ lr_server <- function(id, rv_file, rv_deconvo){
 
                   n_unk_hp <- noc_hp - length(hp)
                   n_unk_hd <- noc_hd - length(hd)
-                  rv_lr$dt_lr_calc_record <- data.table(Hp = create_string_hyp(n_unk_hp, hp),
+                  rv_lr$dt_lr_calc_record <- data.table(Method = meth_lr,
+                                                        Hp = create_string_hyp(n_unk_hp, hp),
                                                         Hd = create_string_hyp(n_unk_hd, hd),
                                                         LR = dt_lr$LR[n_row])
 

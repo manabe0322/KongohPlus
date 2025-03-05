@@ -9,8 +9,7 @@ make_dt_pg_list(
   label_contrib,
   gtc_use,
   gtc_logprob_use,
-  lpd_gtc_use_1st,
-  lpd_gtc_use_2nd = NULL
+  lpd_gtc_use
 )
 }
 \arguments{
@@ -22,9 +21,7 @@ make_dt_pg_list(
 
 \item{gtc_logprob_use}{A list of the genotype probabilities in each used marker}
 
-\item{lpd_gtc_use_1st}{A list of the log likelihood of each genotype in each used marker (replicate 1)}
-
-\item{lpd_gtc_use_2nd}{A list of the log likelihood of each genotype in each used marker (replicate 2)}
+\item{lpd_gtc_use}{A list of the log likelihood of each genotype in all markers and replicates}
 }
 \description{
 The function to make a list of data.tables for the result of probabilistic genotyping

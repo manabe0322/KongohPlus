@@ -4,14 +4,14 @@
 \alias{calc_loglike_gtc}
 \title{calc_loglike_gtc}
 \usage{
-calc_loglike_gtc(gtc_logprob_mk, lpd_gtc_mk_1st, lpd_gtc_mk_2nd = NULL)
+calc_loglike_gtc(gtc_logprob_mk, lpd_gtc_use, index_mk)
 }
 \arguments{
 \item{gtc_logprob_mk}{A vector of the genotype probabilities in one marker}
 
-\item{lpd_gtc_mk_1st}{A vector of the log likelihood of each genotype in one marker (replicate 1)}
+\item{lpd_gtc_use}{A list of the vector of the log likelihood of each genotype in one marker of all replicates}
 
-\item{lpd_gtc_mk_2nd}{A vector of the log likelihood of each genotype in one marker (replicate 2)}
+\item{index_mk}{The index of the targeted marker}
 }
 \description{
 The function to calculate the log likelihood of each genotype combination in one marker

@@ -391,7 +391,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     rhat_deg <- rhats[grep("deg", variables)]
     rhat_pae <- rhats[grep("pae", variables)]
 
-    # Calculate likelihood under the estimated parameter
+    ######################################################
+    # Calculate likelihood under the estimated parameter #
+    ######################################################
+
     index_dedup1_start <- 1
     index_dedup2_start <- 1
     index_dropout_start <- 1
@@ -437,31 +440,26 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       index_dedup2_start <- index_dedup2_start + n_dedup2_sum_rep1
     }
 
-    log10like_use <- calc_log10like_use(gtc_logprob_use, lpd_gtc_use_1st)
+    dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use)
 
-    dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use_1st)
+    log10like_use <- calc_log10like_use(dt_pg_list)
 
-    dt_diag <- data.table("Parameter" = c("lp__", "Total peak height", paste0("Mixture proportion (U", 1:hnc, ")"), paste0("Degradation (U", 1:hnc, ")"), paste0("Amplification efficiency (", markers_use, ")")),
+    dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
+                               Log10_Likelihood = log10like_use)
+
+    dt_diag <- data.table("Parameter" = c("lp__", rep("Total peak height", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
+                          "Contributor" = c(NA, rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc), rep(NA, n_mk)),
+                          "Replicate" = c(NA, 1:n_rep, rep(NA, hnc), rep(NA, hnc), rep(NA, n_mk)),
+                          "Marker" = c(NA, rep(NA, n_rep), rep(NA, hnc), rep(NA, hnc), markers_use),
                           "Estimated value" = c(lp, tph, mp[hnc:1], deg[hnc:1], ae),
                           "Rhat" = c(rhat_lp, rhat_tph, rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
-
-    dt_log10like <- data.table(Marker = c(markers_use, "Total"),
-                               Log10_Likelihood = c(log10like_use, sum(log10like_use)))
-
-    dt_mpdeg <- data.table(Contributor = paste0("U", 1:hnc),
-                           MP = mp[hnc:1],
-                           Deg = deg[hnc:1])
 
     # End computation
     end_time <- proc.time()
     comp_time <- end_time[3] - start_time[3]
 
-    return(list("gtc_use" = gtc_use,
-                "lpd_gtc_use_1st" = lpd_gtc_use_1st,
-                "lpd_gtc_use_2nd" = lpd_gtc_use_2nd,
-                "dt_pg_list" = dt_pg_list,
+    return(list("dt_pg_list" = dt_pg_list,
                 "dt_log10like" = dt_log10like,
-                "dt_mpdeg" = dt_mpdeg,
                 "dt_diag" = dt_diag,
                 "traceplot" = traceplot,
                 "comp_time" = comp_time,
@@ -477,12 +475,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       error_message <- paste0(error_message, "  - ", markers_unexplainable[i], "<br>")
     }
 
-    return(list("gtc_use" = NULL,
-                "lpd_gtc_use_1st" = NULL,
-                "lpd_gtc_use_2nd" = NULL,
-                "dt_pg_list" = NULL,
+    return(list("dt_pg_list" = NULL,
                 "dt_log10like" = NULL,
-                "dt_mpdeg" = NULL,
                 "dt_diag" = NULL,
                 "traceplot" = NULL,
                 "comp_time" = NULL,

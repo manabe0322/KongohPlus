@@ -93,7 +93,7 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
               mat_tmp[, i] <- round(data_hnc$dt_log10like$Log10_Likelihood, 2)
             }
           }
-          dt_log10like_display <- data.table(Marker = c(markers_use, "Total"))
+          dt_log10like_display <- data.table(Marker = c(markers_use, "Overall"))
           dt_log10like_display <- cbind(dt_log10like_display, as.data.table(mat_tmp))
           names(dt_log10like_display) <- c("Marker", paste0("NoC = ", hnc_all))
 
@@ -147,9 +147,12 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
               dt_diag,
               selection = "none",
               options = list(dom = "t", iDisplayLength = nrow(dt_diag), ordering = FALSE, autowidth = TRUE,
-                             columnDefs = list(list(width = "200px", targets = 0),
-                                               list(width = "125px", targets = 1),
-                                               list(width = "50px", targets = 2))),
+                             columnDefs = list(list(width = "150px", targets = 0),
+                                               list(width = "70px", targets = 1),
+                                               list(width = "50px", targets = 2),
+                                               list(width = "50px", targets = 3),
+                                               list(width = "70px", targets = 4),
+                                               list(width = "50px", targets = 5))),
               rownames = FALSE
             ) %>%
               formatSignif(columns = c("Estimated value", "Rhat"), digits = 4) %>%

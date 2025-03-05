@@ -4,15 +4,11 @@
 \alias{calc_log10like_use}
 \title{calc_log10like_use}
 \usage{
-calc_log10like_use(gtc_logprob_use, lpd_gtc_use_1st, lpd_gtc_use_2nd = NULL)
+calc_log10like_use(dt_pg_list)
 }
 \arguments{
-\item{gtc_logprob_use}{A list of the genotype probabilities in each used marker}
-
-\item{lpd_gtc_use_1st}{A list of the log likelihood of each genotype in each used marker (replicate 1)}
-
-\item{lpd_gtc_use_2nd}{A list of the log likelihood of each genotype in each used marker (replicate 2)}
+\item{dt_pg_list}{A list of the PG data.table for all markers}
 }
 \description{
-The function to calculate the log10 likelihood of the used markers
+The function to calculate the log10 likelihood of all markers
 }
