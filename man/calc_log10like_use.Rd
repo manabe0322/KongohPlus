@@ -4,10 +4,12 @@
 \alias{calc_log10like_use}
 \title{calc_log10like_use}
 \usage{
-calc_log10like_use(dt_pg_list)
+calc_log10like_use(dt_pg_list, gtc_logprob_list = NULL)
 }
 \arguments{
 \item{dt_pg_list}{A list of the PG data.table for all markers}
+
+\item{gtc_logprob_list}{A list of the lob probabilities of each genotype combination for all markers when assuming POI or known contributors}
 }
 \description{
 The function to calculate the log10 likelihood of all markers

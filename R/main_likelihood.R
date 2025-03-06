@@ -206,9 +206,7 @@ calc_subsub_source_like <- function(log10like_all_hyp){
 #' @param pop_al_list A list of the alleles in population database
 #' @param pop_prob_list A list of the allele probabilities in population database
 #' @param theta The theta correction to consider sub-population
-#' @param gtc_use A list of the genotype combinations in used markers
-#' @param lpd_gtc_use_1st A list of the log likelihood of each genotype in each used marker (replicate 1)
-#' @param lpd_gtc_use_2nd A list of the log likelihood of each genotype in each used marker (replicate 2)
+#' @param dt_pg_list A list of the PG data.table for all markers
 #' @param dt_ref The data.table for the reference profiles
 #' @param hyp Known contributors in a hypothesis
 #' @param refs The names of all references

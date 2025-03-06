@@ -252,7 +252,9 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
             waiter_hide()
             showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
           }else{
-            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, median_alpha, median_cv, list_dt_average_sr, hnc_from:hnc_to)
+            hnc_all <- hnc_from:hnc_to
+            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, median_alpha, median_cv, list_dt_average_sr, hnc_all)
+            data_deconvo$hnc_all <- hnc_all
             data_deconvo$dt_csp <- dt_csp
             data_deconvo$dt_af <- dt_af
             data_deconvo$fn_csp <- fn_csp

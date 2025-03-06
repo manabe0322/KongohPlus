@@ -557,15 +557,19 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     }
   }else{
     peaks_list <- NULL
+    heights_list <- NULL
     pop_al_list <- NULL
     pop_prob_list <- NULL
+    mean_size <- NULL
     data_hnc_list <- NULL
   }
 
   return(list("hnc_all" = hnc_all,
               "markers_use" = markers_use,
               "peaks_list" = peaks_list,
+              "heights_list" = heights_list,
               "pop_al_list" = pop_al_list,
               "pop_prob_list" = pop_prob_list,
+              "mean_size" = mean_size,
               "data_hnc_list" = data_hnc_list))
 }

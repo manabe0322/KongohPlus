@@ -11,9 +11,7 @@ assign_log10like(
   pop_al_list,
   pop_prob_list,
   theta,
-  gtc_use,
-  lpd_gtc_use_1st,
-  lpd_gtc_use_2nd,
+  dt_pg_list,
   dt_ref,
   hyp,
   refs,
@@ -33,11 +31,7 @@ assign_log10like(
 
 \item{theta}{The theta correction to consider sub-population}
 
-\item{gtc_use}{A list of the genotype combinations in used markers}
-
-\item{lpd_gtc_use_1st}{A list of the log likelihood of each genotype in each used marker (replicate 1)}
-
-\item{lpd_gtc_use_2nd}{A list of the log likelihood of each genotype in each used marker (replicate 2)}
+\item{dt_pg_list}{A list of the PG data.table for all markers}
 
 \item{dt_ref}{The data.table for the reference profiles}
 
