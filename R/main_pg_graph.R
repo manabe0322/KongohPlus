@@ -1,5 +1,36 @@
+#' change_var_al_plot
+#'
+#' @description The function to change the format of the variant alleles for plot
+#' @param pk A peak number
+#' @param rep_unit_len The length of the repeat unit
+change_var_al_plot <- function(pk, rep_unit_len){
+  return(round(pk %/% 1 + 10 * pk %% 1 / rep_unit_len, 3))
+}
 
+#' create_peaks_plot
+#'
+#' @description The function to create the format of peaks for plot
+#' @param peaks A numeric vector of peaks
+#' @param rep_unit_len The length of the repeat unit
+#' @param q_distance The distance of the position Q from the maximum peak number
+create_peaks_plot <- function(peaks, rep_unit_len, q_distance = 3){
+  peaks_plot <- change_var_al_plot(peaks, rep_unit_len)
+  pk_q <- max(setdiff(peaks_plot, 99)) + q_distance
+  peaks_plot[peaks_plot == 99] <- pk_q
+  return(peaks_plot)
+}
 
+#' calc_eph
+#'
+#' @description The function to calculate the expected peak heights under the selected genotype combination
+#' @param gt_select_list A list of genotypes in each contributor
+#' @param tph The total peak height
+#' @param mp The mixture proportions of each contributor
+#' @param deg The degradation parameters of each contributor
+#' @param ae The locus-specific amplification efficiencies in each marker
+#' @param dt_average_sr The data.table for the average stutter ratios
+#' @param dt_size The data.table for sizes
+#' @param mean_size The mean size of the profile
 calc_eph <- function(gt_select_list, tph, mp, deg, ae, dt_average_sr, dt_size, mean_size){
   # Extract SR
   al_contrib <- unlist(gt_select_list)

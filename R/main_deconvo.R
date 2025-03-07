@@ -296,7 +296,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         sumup_index_dedup1 <- sumup_index_dedup1 + n_rph_base_use[j]
       }
 
-      index_general_start <- index_general_start + n_dedup1_sum_per_rep[i]
+      index_general_start <- 1 + sum(n_dedup1_sum_per_rep[1:i])
     }
 
     ##################################################

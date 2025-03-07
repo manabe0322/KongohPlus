@@ -1,4 +1,5 @@
-dt_csp <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/CSP_example.csv")
+dt_csp <- fread("D:/研究プロジェクト管理/research_note_KongohPlus/250226_extdata/extdata/examples/mix3-4_CSP.csv")
+#dt_csp <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/CSP_example.csv")
 dt_csp <- change_data_type_csp(dt_csp)
 
 dt_af <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/Allele-count_GF_Japanese.csv")

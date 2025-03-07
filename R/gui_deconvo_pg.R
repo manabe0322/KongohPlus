@@ -24,7 +24,8 @@ deconvo_pg_ui <- function(id){
                     )
              ),
              column(6,
-                    plotOutput(ns("ph_graph"))
+                    uiOutput(ns("slider")),
+                    uiOutput(ns("ph_graph"))
              )
            )
   )
@@ -62,12 +63,19 @@ deconvo_pg_server <- function(id, rv_deconvo){
         peaks_list <- data_deconvo$peaks_list
         heights_list <- data_deconvo$heights_list
         mean_size <- data_deconvo$mean_size
+        n_rep <- length(heights_list[[1]])
 
         rv_deconvo_pg <- reactiveValues()
         rv_deconvo_pg$cand_contrib <- paste0("U", 1:hnc_all[1])
         rv_deconvo_pg$dt_pg_per_comb <- NULL
         rv_deconvo_pg$dt_pg_per_contrib <- NULL
         rv_deconvo_pg$error_message <- NULL
+        rv_deconvo_pg$df_combined_list <- NULL
+        rv_deconvo_pg$peaks_plot <- NULL
+        rv_deconvo_pg$peaks_label <- NULL
+        rv_deconvo_pg$x_min <- 0
+        rv_deconvo_pg$x_max <- 50
+        rv_deconvo_pg$plot_mk <- NULL
 
         output$select_meth_pg <- renderUI({
           selectInput(session$ns("select_meth_pg"), label = "Method", choices = c("Per combination", "Per contributor"), selected = "Per combination", selectize = FALSE)
@@ -129,13 +137,15 @@ deconvo_pg_server <- function(id, rv_deconvo){
 
         output$dt_pg_per_comb <- renderDataTable(server = FALSE, {
           dt_pg_per_comb <- rv_deconvo_pg$dt_pg_per_comb
+          label_dt_pg <- names(dt_pg_per_comb)
           hnc <- as.numeric(input$select_noc_pg)
+
           if(!is.null(dt_pg_per_comb)){
             datatable(
               dt_pg_per_comb,
               selection = list(mode = "single", target = "row"),
               options = list(iDisplayLength = 10, ordering = FALSE, autowidth = TRUE, searching = FALSE,
-                             columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
+                             columnDefs = list(list(targets = c(which(is.element(label_dt_pg, "Logprob_gtc")), grep("Loglike", label_dt_pg)) - 1, visible = FALSE))),
               rownames = FALSE
             ) %>%
               formatSignif(columns = c("Probability"), digits = 3) %>%
@@ -161,7 +171,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
           index_select <- input$dt_pg_per_comb_rows_selected
 
           if(is.null(index_select)){
-
+            output$ph_graph_comb <- renderPlot({NULL})
           }else{
             hnc <- input$select_noc_pg
             mk <- input$select_mk_pg
@@ -191,45 +201,44 @@ deconvo_pg_server <- function(id, rv_deconvo){
             dt_average_sr <- list_dt_average_sr[[mk]]
 
             dt_size <- dt_kit[Marker == mk]
+            rep_unit_len <- dt_size$Repeat_unit_length[1]
             dt_size <- dt_size[, c("Allele", "Size")]
 
-            # Calculate expected peak heights under the selected genotype combination
-            n_rep <- length(tphs)
-            eph_list <- vector(mode = "list", length = n_rep)
+            df_combined_list <- vector(mode = "list", length = n_rep)
             for(i in 1:n_rep){
-              eph_list[[i]] <- calc_eph(gt_select_list, tphs[i], mp, deg, ae, dt_average_sr, dt_size, mean_size)
+              # Calculate expected peak heights under the selected genotype combination
+              eph <- calc_eph(gt_select_list, tphs[i], mp, deg, ae, dt_average_sr, dt_size, mean_size)
+              peaks_eph <- as.numeric(names(eph))
+
+              if(i == 1){
+                peaks_oph <- as.numeric(peaks_list[[mk]])
+                peaks_all <- sort(unique(c(peaks_oph, peaks_eph)))
+                peaks_plot <- create_peaks_plot(peaks_all, rep_unit_len)
+                peaks_label <- peaks_all
+                peaks_label[peaks_label == 99] <- "Q"
+              }
+
+              eph_graph <- oph_graph <- rep(0, length(peaks_all))
+              eph_graph[match(peaks_eph, peaks_all)] <- eph
+              oph_graph[match(peaks_oph, peaks_all)] <- heights_all_rep[[i]]
+
+              df_eph <- data.frame(peak = peaks_plot,
+                                   height = eph_graph,
+                                   Label = "Expected")
+
+              df_oph <- data.frame(peak = peaks_plot,
+                                   height = oph_graph,
+                                   Label = "Observed")
+
+              df_combined_list[[i]] <- rbind(df_eph, df_oph)
             }
 
-            # Plot (1st replicate)
-            peaks_eph <- as.numeric(names(eph_list[[1]]))
-            peaks_oph <- as.numeric(peaks_list[[mk]])
-            peaks_all <- sort(unique(c(peaks_oph, peaks_eph)))
-            peaks_all[peaks_all == 99] <- max(setdiff(peaks_all, 99)) + 3
-            x_min <- min(peaks_all)
-            x_max <- max(peaks_all)
-            peaks_eph[peaks_eph == 99] <- x_max
-            peaks_oph[peaks_oph == 99] <- x_max
-
-            ephs <- ophs <- rep(0, length(peaks_all))
-            ephs[match(peaks_eph, peaks_all)] <- eph_list[[1]]
-            ophs[match(peaks_oph, peaks_all)] <- heights_all_rep[[1]]
-
-            df_eph <- data.frame(peak = peaks_all,
-                                 height = ephs,
-                                 Label = "Expected")
-
-            df_oph <- data.frame(peak = peaks_all,
-                                 height = ophs,
-                                 Label = "Observed")
-
-            df_combined <- rbind(df_eph, df_oph)
-
-            output$ph_graph <- renderPlot({
-              ggplot(df_combined, aes(x = peak, y = height, fill = Label)) +
-                geom_col(position = "dodge", width = 0.2) +
-                labs(title = "", x = "Allele", y = "Peak height (RFU)") +
-                theme_minimal()
-            })
+            rv_deconvo_pg$peaks_plot <- peaks_plot
+            rv_deconvo_pg$peaks_label <- peaks_label
+            rv_deconvo_pg$df_combined_list <- df_combined_list
+            rv_deconvo_pg$x_min <- floor(min(peaks_plot))
+            rv_deconvo_pg$x_max <- ceiling(max(peaks_plot))
+            rv_deconvo_pg$plot_mk <- mk
           }
         })
 
@@ -240,6 +249,64 @@ deconvo_pg_server <- function(id, rv_deconvo){
 
           }else{
 
+          }
+        })
+
+        output$slider <- renderUI({
+          x_min <- rv_deconvo_pg$x_min
+          x_max <- rv_deconvo_pg$x_max
+
+          sliderInput(session$ns("x_range"),
+                      "Range of the x-axis",
+                      min = x_min,
+                      max = x_max,
+                      value = c(x_min, x_max),
+                      step = 1)
+        })
+
+        output$ph_graph <- renderUI({
+          select_meth_pg <- input$select_meth_pg
+          if(!is.null(select_meth_pg)){
+            if(input$select_meth_pg == "Per combination"){
+              plot_height <- paste0(350 * n_rep, "px")
+              plotOutput(session$ns("ph_graph_comb"), width = "100%", height = plot_height)
+            }else{
+
+            }
+          }
+        })
+
+        output$ph_graph_comb <- renderPlot({
+          df_combined_list <- rv_deconvo_pg$df_combined_list
+          if(!is.null(df_combined_list)){
+            peaks_plot <- rv_deconvo_pg$peaks_plot
+            peaks_label <- rv_deconvo_pg$peaks_label
+            mk <- rv_deconvo_pg$plot_mk
+            ggplot_list <- vector(mode = "list", length = n_rep)
+            options(warn = -1)
+            for(i in 1:n_rep){
+              df_combined <- df_combined_list[[i]]
+
+              ggplot_list[[i]] <- ggplot(df_combined, aes(x = peak, y = height, fill = Label)) +
+                geom_col(position = "dodge", width = 0.1) +
+                scale_x_continuous(
+                  breaks = peaks_plot,
+                  labels = peaks_label,
+                  limits = c(input$x_range[1], input$x_range[2])
+                ) +
+                labs(title = paste0(mk, ", Replicate ", i), x = "Allele", y = "Peak height (RFU)", fill = NULL) +
+                theme_minimal() +
+                theme(
+                  plot.title = element_text(size = 16),
+                  legend.text = element_text(size = 14),
+                  axis.title.x = element_text(size = 14, margin = margin(t = 20)),
+                  axis.title.y = element_text(size = 14, margin = margin(r = 20)),
+                  axis.text.x = element_text(size = 14),
+                  axis.text.y = element_text(size = 14)
+                )
+            }
+            grid.arrange(grobs = ggplot_list[1:n_rep], ncol = 1, nrow = n_rep)
+            options(warn = 0)
           }
         })
       }

@@ -8,7 +8,7 @@ load_proj_ui <- function(id){
            useWaiter(),
            h2("Load project"),
            br(),
-           fileInput(ns("file_proj"), label = "Select a project file", accept = ".RData"),
+           fileInput(ns("file_proj"), label = "Select a project file", accept = ".RData", buttonLabel = "Load"),
            br(),
            actionButton(ns("act_load_proj"), label = "Load project", class = "btn btn-primary btn-lg")
   )
