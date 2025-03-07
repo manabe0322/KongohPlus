@@ -5,7 +5,7 @@
 change_data_type_kit <- function(dt_kit){
   col_char <- c("Marker", "Dye", "Chr", "Allele")
   dt_kit[, (col_char) := lapply(.SD, as.character), .SDcols = col_char]
-  col_numeric <- c("Length_of_the_repeat_unit", "Size")
+  col_numeric <- c("Repeat_unit_length", "Size")
   dt_kit[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
   return(dt_kit)
 }
