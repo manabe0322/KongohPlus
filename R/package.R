@@ -5,16 +5,14 @@
 #' @importFrom data.table as.data.table data.table copy fread setDT setindex
 #' @importFrom dplyr arrange desc full_join group_by_at summarise
 #' @importFrom DT datatable dataTableOutput formatRound formatSignif formatStyle JS renderDataTable
-#' @importFrom ggplot2 aes geom_col ggplot labs theme_minimal
-#' @import gluedown
+#' @importFrom ggplot2 aes element_text geom_col ggplot labs margin scale_x_continuous theme theme_minimal
+#' @importFrom gridExtra grid.arrange
 #' @importFrom gtools combinations permutations
 #' @importFrom instantiate stan_package_model
-#' @importFrom pandoc pandoc_activate pandoc_install
 #' @importFrom magrittr %>%
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
 #' @importFrom rhandsontable hot_cell hot_col hot_table hot_to_r renderRHandsontable rhandsontable rHandsontableOutput
-#' @import rmarkdown
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
 #' @importFrom shinyFiles parseFilePaths shinyFilesButton shinyFileChoose
 #' @importFrom shinyjs disable disabled enable refresh useShinyjs
