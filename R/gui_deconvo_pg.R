@@ -25,7 +25,7 @@ deconvo_pg_ui <- function(id){
              ),
              column(6,
                     uiOutput(ns("slider")),
-                    uiOutput(ns("ph_graph"))
+                    uiOutput(ns("ph_graph_ui"))
              )
            )
   )
@@ -170,20 +170,17 @@ deconvo_pg_server <- function(id, rv_deconvo){
         observeEvent(input$dt_pg_per_comb_rows_selected, {
           index_select <- input$dt_pg_per_comb_rows_selected
 
-          if(is.null(index_select)){
-            output$ph_graph_comb <- renderPlot({NULL})
-          }else{
+          if(!is.null(index_select)){
             hnc <- input$select_noc_pg
             mk <- input$select_mk_pg
             index_hnc <- which(hnc_all == hnc)
             data_hnc <- data_hnc_list[[index_hnc]]
             heights_all_rep <- heights_list[[mk]]
 
-            dt_pg_list <- data_hnc$dt_pg_list
-            dt_pg <- dt_pg_list[[mk]]
+            dt_pg_per_comb <- rv_deconvo_pg$dt_pg_per_comb
             gt_select_list <- vector(mode = "list", length = hnc)
             for(i in 1:hnc){
-              tmp <- strsplit(dt_pg[[paste0("U", i)]][index_select], ", ")[[1]]
+              tmp <- strsplit(dt_pg_per_comb[[paste0("U", i)]][index_select], ", ")[[1]]
               tmp[tmp == "Q"] <- "99"
               gt_select_list[[i]] <- as.numeric(tmp)
             }
@@ -245,10 +242,75 @@ deconvo_pg_server <- function(id, rv_deconvo){
         observeEvent(input$dt_pg_per_contrib_rows_selected, {
           index_select <- input$dt_pg_per_contrib_rows_selected
 
-          if(is.null(index_select)){
+          if(!is.null(index_select)){
+            hnc <- input$select_noc_pg
+            mk <- input$select_mk_pg
+            contrib <- input$select_contrib_pg
+            index_hnc <- which(hnc_all == hnc)
+            data_hnc <- data_hnc_list[[index_hnc]]
+            heights_all_rep <- heights_list[[mk]]
 
-          }else{
+            dt_pg_per_contrib <- rv_deconvo_pg$dt_pg_per_contrib
+            gt_select_list <- vector(mode = "list", length = 1)
+            tmp <- strsplit(dt_pg_per_contrib[[contrib]][index_select], ", ")[[1]]
+            tmp[tmp == "Q"] <- "99"
+            gt_select_list[[1]] <- as.numeric(tmp)
 
+            index_contrib <- as.integer(gsub("U", "", contrib))
+
+            dt_diag <- data_hnc$dt_diag
+            param_names <- dt_diag[["Parameter"]]
+            est_vals <- dt_diag[["Estimated value"]]
+            tphs <- est_vals[param_names == "Total peak height"]
+            mp <- est_vals[param_names == "Mixture proportion"]
+            mp_c1 <- mp[index_contrib]
+            deg <- est_vals[param_names == "Degradation"]
+            deg_c1 <- deg[index_contrib]
+            ae_use <- est_vals[param_names == "Amplification efficiency"]
+            markers_use <- dt_diag$Marker[param_names == "Amplification efficiency"]
+            ae <- ae_use[markers_use == mk]
+
+            dt_average_sr <- list_dt_average_sr[[mk]]
+
+            dt_size <- dt_kit[Marker == mk]
+            rep_unit_len <- dt_size$Repeat_unit_length[1]
+            dt_size <- dt_size[, c("Allele", "Size")]
+
+            df_combined_list <- vector(mode = "list", length = n_rep)
+            for(i in 1:n_rep){
+              # Calculate expected peak heights under the selected genotype combination
+              eph <- calc_eph(gt_select_list, tphs[i], mp_c1, deg_c1, ae, dt_average_sr, dt_size, mean_size)
+              peaks_eph <- as.numeric(names(eph))
+
+              if(i == 1){
+                peaks_oph <- as.numeric(peaks_list[[mk]])
+                peaks_all <- sort(unique(c(peaks_oph, peaks_eph)))
+                peaks_plot <- create_peaks_plot(peaks_all, rep_unit_len)
+                peaks_label <- peaks_all
+                peaks_label[peaks_label == 99] <- "Q"
+              }
+
+              eph_graph <- oph_graph <- rep(0, length(peaks_all))
+              eph_graph[match(peaks_eph, peaks_all)] <- eph
+              oph_graph[match(peaks_oph, peaks_all)] <- heights_all_rep[[i]]
+
+              df_eph <- data.frame(peak = peaks_plot,
+                                   height = eph_graph,
+                                   Label = "Expected")
+
+              df_oph <- data.frame(peak = peaks_plot,
+                                   height = oph_graph,
+                                   Label = "Observed")
+
+              df_combined_list[[i]] <- rbind(df_eph, df_oph)
+            }
+
+            rv_deconvo_pg$peaks_plot <- peaks_plot
+            rv_deconvo_pg$peaks_label <- peaks_label
+            rv_deconvo_pg$df_combined_list <- df_combined_list
+            rv_deconvo_pg$x_min <- floor(min(peaks_plot))
+            rv_deconvo_pg$x_max <- ceiling(max(peaks_plot))
+            rv_deconvo_pg$plot_mk <- mk
           }
         })
 
@@ -264,19 +326,15 @@ deconvo_pg_server <- function(id, rv_deconvo){
                       step = 1)
         })
 
-        output$ph_graph <- renderUI({
+        output$ph_graph_ui <- renderUI({
           select_meth_pg <- input$select_meth_pg
           if(!is.null(select_meth_pg)){
-            if(input$select_meth_pg == "Per combination"){
-              plot_height <- paste0(350 * n_rep, "px")
-              plotOutput(session$ns("ph_graph_comb"), width = "100%", height = plot_height)
-            }else{
-
-            }
+            plot_height <- paste0(350 * n_rep, "px")
+            plotOutput(session$ns("ph_graph"), width = "100%", height = plot_height)
           }
         })
 
-        output$ph_graph_comb <- renderPlot({
+        output$ph_graph <- renderPlot({
           df_combined_list <- rv_deconvo_pg$df_combined_list
           if(!is.null(df_combined_list)){
             peaks_plot <- rv_deconvo_pg$peaks_plot
