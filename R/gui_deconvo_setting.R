@@ -69,6 +69,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       rv_deconvo_setting$fn_af <- NULL
       rv_deconvo_setting$fn_anameth_deconvo <- ""
       rv_deconvo_setting$dt_anameth <- NULL
+      rv_deconvo_setting$bool_correct_noc <- TRUE
 
       rv_deconvo <- reactiveValues()
       rv_deconvo$data_deconvo <- NULL
@@ -87,21 +88,33 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
 
         hideFeedback("noc_from")
         hideFeedback("noc_to")
-        enable("act_analyze_deconvo")
+        bool_correct_noc <- TRUE
 
         if(!is.integer(noc_from) || noc_from < 1 || noc_from > 4){
           showFeedbackDanger(inputId = "noc_from", text = "Only 1, 2, 3, and 4 is allowed.")
-          disable("act_analyze_deconvo")
+          bool_correct_noc <- FALSE
         }
 
         if(!is.integer(noc_to) || noc_to < 1 || noc_to > 4){
           showFeedbackDanger(inputId = "noc_to", text = "Only 1, 2, 3, and 4 is allowed.")
-          disable("act_analyze_deconvo")
+          bool_correct_noc <- FALSE
         }
 
         if(is.integer(noc_from) && is.integer(noc_to) && noc_from > noc_to){
           showFeedbackDanger(inputId = "noc_from", text = "The From number must not exceed the To number.")
           showFeedbackDanger(inputId = "noc_to", text = "The From number must not exceed the To number.")
+          bool_correct_noc <- FALSE
+        }
+
+        rv_deconvo_setting$bool_correct_noc <- bool_correct_noc
+
+        if(bool_correct_noc){
+          if(rv_deconvo_setting$fn_anameth_deconvo == ""){
+            disable("act_analyze_deconvo")
+          }else{
+            enable("act_analyze_deconvo")
+          }
+        }else{
           disable("act_analyze_deconvo")
         }
       })
@@ -113,6 +126,13 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         path_anameth <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/anameth")), input$load_anameth_deconvo)$datapath
         if(length(path_anameth) > 0){
           rv_deconvo_setting$fn_anameth_deconvo <- basename(path_anameth)
+          if(rv_deconvo_setting$bool_correct_noc){
+            enable("act_analyze_deconvo")
+          }else{
+            disable("act_analyze_deconvo")
+          }
+        }else{
+          disable("act_analyze_deconvo")
         }
       })
 
