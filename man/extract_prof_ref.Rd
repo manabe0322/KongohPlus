@@ -4,12 +4,14 @@
 \alias{extract_prof_ref}
 \title{extract_prof_ref}
 \usage{
-extract_prof_ref(dt_ref, mk)
+extract_prof_ref(dt_ref, mk, refs)
 }
 \arguments{
 \item{dt_ref}{The data.table of the reference profile}
 
 \item{mk}{The target marker}
+
+\item{refs}{The reference names}
 }
 \description{
 The function to extract reference profiles of one marker

@@ -72,6 +72,7 @@ lr_server <- function(id, rv_file, rv_deconvo){
       rv_lr$refs <- NULL
       rv_lr$data_lr_list <- list()
       rv_lr$dt_lr_calc_record <- NULL
+      rv_lr$dt_lr_display <- NULL
 
       observe({
         req(rv_file)
@@ -143,19 +144,10 @@ lr_server <- function(id, rv_file, rv_deconvo){
               error_message_hp <- data_hp$error_message
               dt_pg_list_hp <- data_hp$dt_pg_list
 
-
-              #gtc_use_hp <- data_hp$gtc_use
-              #lpd_gtc_use_1st_hp <- data_hp$lpd_gtc_use_1st
-              #lpd_gtc_use_2nd_hp <- data_hp$lpd_gtc_use_2nd
-
               # Extract data for Hd
               data_hd <- data_hnc_list[[which(hnc_all == noc_hd)]]
               error_message_hd <- data_hd$error_message
               dt_pg_list_hd <- data_hp$dt_pg_list
-
-              #gtc_use_hd <- data_hd$gtc_use
-              #lpd_gtc_use_1st_hd <- data_hd$lpd_gtc_use_1st
-              #lpd_gtc_use_2nd_hd <- data_hd$lpd_gtc_use_2nd
 
               n_row <- length(markers_use) + 1
               n_ref_hp <- length(hp)
@@ -167,12 +159,9 @@ lr_server <- function(id, rv_file, rv_deconvo){
                 if(is.null(error_message_hp) && is.null(error_message_hd)){
                   log10like_hp <- assign_log10like(noc_hp, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hp, refs, sub_source)
                   log10like_hd <- assign_log10like(noc_hd, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hd, refs, sub_source)
-                  dt_lr <- data.table(Marker = c(markers_use, "Total"),
-                                      Log10_Likelihood_Hp = log10like_hp,
-                                      Log10_Likelihood_Hd = log10like_hd,
-                                      LR = 10^(log10like_hp - log10like_hd))
+                  dt_lr <- create_dt_lr(markers_use, log10like_hp, log10like_hd)
                 }else{
-                  dt_lr <- data.table(Marker = c(markers_use, "Total"),
+                  dt_lr <- data.table(Marker = c(markers_use, "Overall"),
                                       Log10_Likelihood_Hp = rep(NA, n_row),
                                       Log10_Likelihood_Hd = rep(NA, n_row),
                                       LR = rep(NA, n_row))
@@ -217,6 +206,7 @@ lr_server <- function(id, rv_file, rv_deconvo){
                                                         LR = dt_lr$LR[n_row])
 
                 }
+                rv_lr$dt_lr_display <- dt_lr
                 waiter_hide()
               }
             }
@@ -243,11 +233,8 @@ lr_server <- function(id, rv_file, rv_deconvo){
           })
 
           output$dt_lr <- renderDataTable({
-            dt_lr_calc_record <- rv_lr$dt_lr_calc_record
-            if(!is.null(dt_lr_calc_record)){
-              data_lr <- rv_lr$data_lr_list[[nrow(dt_lr_calc_record)]]
-              dt_lr <- data_lr$dt_lr
-
+            dt_lr <- rv_lr$dt_lr_display
+            if(!is.null(dt_lr)){
               datatable(
                 dt_lr,
                 selection = "none",
@@ -274,12 +261,21 @@ lr_server <- function(id, rv_file, rv_deconvo){
             if(!is.null(dt_lr_calc_record)){
               datatable(
                 dt_lr_calc_record,
-                selection = "none",
+                selection = list(mode = "single", target = "row"),
                 options = list(dom = "t", iDisplayLength = nrow(dt_lr_calc_record), ordering = FALSE, autowidth = TRUE, rowCallback = JS(rowCallback)),
                 rownames = FALSE
               ) %>%
                 formatSignif(columns = c("LR"), digits = 3) %>%
                 formatStyle(names(dt_lr_calc_record), lineHeight = "80%")
+            }
+          })
+
+          observeEvent(input$dt_lr_calc_record_rows_selected, {
+            index_select <- input$dt_lr_calc_record_rows_selected
+
+            if(!is.null(index_select)){
+              data_lr <- rv_lr$data_lr_list[[index_select]]
+              rv_lr$dt_lr_display <- data_lr$dt_lr
             }
           })
         }

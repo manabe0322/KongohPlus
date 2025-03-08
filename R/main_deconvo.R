@@ -445,7 +445,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     log10like_use <- calc_log10like_use(dt_pg_list)
 
     dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
-                               Log10_Likelihood = log10like_use)
+                               Log10_Likelihood = c(log10like_use, sum(log10like_use)))
 
     dt_diag <- data.table("Parameter" = c("lp__", rep("Total peak height", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
                           "Contributor" = c(NA, rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc), rep(NA, n_mk)),

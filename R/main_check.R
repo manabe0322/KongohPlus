@@ -47,8 +47,8 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, markers_auto, method){
       for(i in 1:length(sn_all_ref)){
         sn1_ref <- sn_all_ref[i]
         dt_ref_sn1 <- dt_ref[SampleName == sn1_ref]
-        if(!all(is.element(markers_auto, dt_ref_sn1[, Marker]))){
-          error_message <- paste0(error_message, "Marker set of the reference profile '", sn1_ref, "' is not correct!<br>")
+        if(!any(is.element(markers_auto, dt_ref_sn1[, Marker]))){
+          error_message <- paste0(error_message, "At least one of the CSP markers must be included in the reference profile '", sn1_ref, "'!<br>")
         }
       }
     }
