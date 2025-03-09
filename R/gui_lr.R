@@ -17,7 +17,7 @@ lr_ui <- function(id){
                       checkboxInput(ns("sub_source"), label = "Sub-source LR", value = TRUE),
                       br(),
                       br(),
-                      actionButton(ns("act_analyze_lr"), label = "Calculate", class = "btn btn-primary btn-lg")
+                      uiOutput(ns("act_analyze_lr"))
                     )
              ),
              column(3,
@@ -104,6 +104,10 @@ lr_server <- function(id, rv_file, rv_deconvo){
 
           output$noc_hd <- renderUI({
             selectInput(session$ns("noc_hd"), label = "Number of contributors", choices = hnc_all, selected = hnc_all[1], selectize = FALSE)
+          })
+
+          output$"act_analyze_lr" <- renderUI({
+            actionButton(session$ns("act_analyze_lr"), label = "Calculate", class = "btn btn-primary btn-lg")
           })
 
           observeEvent(input$act_analyze_lr, {
