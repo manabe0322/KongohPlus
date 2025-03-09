@@ -67,7 +67,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       rv_deconvo_setting$dt_af <- NULL
       rv_deconvo_setting$fn_csp <- NULL
       rv_deconvo_setting$fn_af <- NULL
-      rv_deconvo_setting$fn_anameth_deconvo <- ""
+      rv_deconvo_setting$fn_anameth <- ""
       rv_deconvo_setting$dt_anameth <- NULL
       rv_deconvo_setting$bool_correct_noc <- TRUE
 
@@ -109,7 +109,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         rv_deconvo_setting$bool_correct_noc <- bool_correct_noc
 
         if(bool_correct_noc){
-          if(rv_deconvo_setting$fn_anameth_deconvo == ""){
+          if(rv_deconvo_setting$fn_anameth == ""){
             disable("act_analyze_deconvo")
           }else{
             enable("act_analyze_deconvo")
@@ -125,7 +125,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         req(input$load_anameth_deconvo)
         path_anameth <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/anameth")), input$load_anameth_deconvo)$datapath
         if(length(path_anameth) > 0){
-          rv_deconvo_setting$fn_anameth_deconvo <- basename(path_anameth)
+          rv_deconvo_setting$fn_anameth <- basename(path_anameth)
           if(rv_deconvo_setting$bool_correct_noc){
             enable("act_analyze_deconvo")
           }else{
@@ -137,13 +137,13 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       })
 
       output$anameth_deconvo <- renderUI({
-        disabled(textInput(session$ns("anameth_deconvo"), label = "", value = rv_deconvo_setting$fn_anameth_deconvo))
+        disabled(textInput(session$ns("anameth_deconvo"), label = "", value = rv_deconvo_setting$fn_anameth))
       })
 
       observeEvent(input$anameth_deconvo, {
-        fn_anameth_deconvo <- input$anameth_deconvo
-        if(fn_anameth_deconvo != ""){
-          rv_deconvo_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth_deconvo))
+        fn_anameth <- input$anameth_deconvo
+        if(fn_anameth != ""){
+          rv_deconvo_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth))
           markers_auto <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
 
           dt_ignore_mk <- data.table(Ignore = rep(FALSE, length(markers_auto)),
@@ -245,7 +245,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
         dt_csp <- rv_deconvo_setting$dt_csp
         fn_af <- rv_deconvo_setting$fn_af
         dt_af <- rv_deconvo_setting$dt_af
-        anameth <- rv_deconvo_setting$fn_anameth_deconvo
+        fn_anameth <- rv_deconvo_setting$fn_anameth
         dt_anameth <- rv_deconvo_setting$dt_anameth
 
         # Extract information on the kit
@@ -279,7 +279,7 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
             data_deconvo$dt_af <- dt_af
             data_deconvo$fn_csp <- fn_csp
             data_deconvo$fn_af <- fn_af
-            data_deconvo$anameth <- anameth
+            data_deconvo$fn_anameth <- fn_anameth
             data_deconvo$dt_anameth <- dt_anameth
             data_deconvo$dt_kit <- dt_kit
             data_deconvo$dt_ignore_mk <- dt_ignore_mk
