@@ -91,6 +91,7 @@ KongohPlus <- function(){
         rv_deconvo$data_deconvo <- data_deconvo
         rv_input$dt_csp <- data_deconvo$dt_csp
         rv_input$dt_af <- data_deconvo$dt_af
+        rv_input$fn_anameth <- data_deconvo$fn_anameth
       }
 
       dt_ref <- rv_load_proj$dt_ref

@@ -68,7 +68,6 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$fn_csp <- NULL
       rv_deconvo_setting$fn_af <- NULL
       rv_deconvo_setting$fn_anameth <- ""
-      rv_deconvo_setting$dt_anameth <- NULL
       rv_deconvo_setting$bool_correct_noc <- TRUE
 
       rv_deconvo <- reactiveValues()
@@ -80,43 +79,44 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         rv_deconvo_setting$dt_af <- rv_input$dt_af
         rv_deconvo_setting$fn_csp <- rv_input$fn_csp
         rv_deconvo_setting$fn_af <- rv_input$fn_af
-      })
+        rv_deconvo_setting$fn_anameth <- rv_input$fn_anameth
 
-      observeEvent(input$noc_from | input$noc_to, {
-        noc_from <- input$noc_from
-        noc_to <- input$noc_to
+        observeEvent(input$noc_from | input$noc_to, {
+          noc_from <- input$noc_from
+          noc_to <- input$noc_to
 
-        hideFeedback("noc_from")
-        hideFeedback("noc_to")
-        bool_correct_noc <- TRUE
+          hideFeedback("noc_from")
+          hideFeedback("noc_to")
+          bool_correct_noc <- TRUE
 
-        if(!is.integer(noc_from) || noc_from < 1 || noc_from > 4){
-          showFeedbackDanger(inputId = "noc_from", text = "Only 1, 2, 3, and 4 is allowed.")
-          bool_correct_noc <- FALSE
-        }
-
-        if(!is.integer(noc_to) || noc_to < 1 || noc_to > 4){
-          showFeedbackDanger(inputId = "noc_to", text = "Only 1, 2, 3, and 4 is allowed.")
-          bool_correct_noc <- FALSE
-        }
-
-        if(is.integer(noc_from) && is.integer(noc_to) && noc_from > noc_to){
-          showFeedbackDanger(inputId = "noc_from", text = "The From number must not exceed the To number.")
-          showFeedbackDanger(inputId = "noc_to", text = "The From number must not exceed the To number.")
-          bool_correct_noc <- FALSE
-        }
-
-        rv_deconvo_setting$bool_correct_noc <- bool_correct_noc
-
-        if(bool_correct_noc){
-          if(rv_deconvo_setting$fn_anameth == ""){
-            disable("act_analyze_deconvo")
-          }else{
-            enable("act_analyze_deconvo")
+          if(!is.integer(noc_from) || noc_from < 1 || noc_from > 4){
+            showFeedbackDanger(inputId = "noc_from", text = "Only 1, 2, 3, and 4 is allowed.")
+            bool_correct_noc <- FALSE
           }
-        }else{
-          disable("act_analyze_deconvo")
-        }
+
+          if(!is.integer(noc_to) || noc_to < 1 || noc_to > 4){
+            showFeedbackDanger(inputId = "noc_to", text = "Only 1, 2, 3, and 4 is allowed.")
+            bool_correct_noc <- FALSE
+          }
+
+          if(is.integer(noc_from) && is.integer(noc_to) && noc_from > noc_to){
+            showFeedbackDanger(inputId = "noc_from", text = "The From number must not exceed the To number.")
+            showFeedbackDanger(inputId = "noc_to", text = "The From number must not exceed the To number.")
+            bool_correct_noc <- FALSE
+          }
+
+          rv_deconvo_setting$bool_correct_noc <- bool_correct_noc
+
+          if(bool_correct_noc){
+            if(rv_deconvo_setting$fn_anameth == ""){
+              disable("act_analyze_deconvo")
+            }else{
+              enable("act_analyze_deconvo")
+            }
+          }else{
+            disable("act_analyze_deconvo")
+          }
+        })
       })
 
       shinyFileChoose(input, "load_anameth_deconvo", roots = c(documents = paste0(path_pack, "/extdata/anameth")), session = session, filetypes = c("csv"))
@@ -143,7 +143,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       observeEvent(input$anameth_deconvo, {
         fn_anameth <- input$anameth_deconvo
         if(fn_anameth != ""){
-          rv_deconvo_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth))
+          dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth))
           markers_auto <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
 
           dt_ignore_mk <- data.table(Ignore = rep(FALSE, length(markers_auto)),
@@ -237,6 +237,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
 
       observeEvent(input$act_analyze_deconvo, {
         waiter_show(html = spin_3k(), color = "white")
+        rv_deconvo$data_deconvo <- NULL
 
         # Fix setting
         hnc_from <- input$noc_from
@@ -246,7 +247,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         fn_af <- rv_deconvo_setting$fn_af
         dt_af <- rv_deconvo_setting$dt_af
         fn_anameth <- rv_deconvo_setting$fn_anameth
-        dt_anameth <- rv_deconvo_setting$dt_anameth
+
+        dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth))
 
         # Extract information on the kit
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Name[dt_anameth$Category == "Kit"], ".csv"))

@@ -69,7 +69,6 @@ lr_server <- function(id, rv_input, rv_deconvo){
       rv_lr <- reactiveValues()
       rv_lr$dt_ref <- NULL
       rv_lr$fn_ref <- NULL
-      rv_lr$refs <- NULL
       rv_lr$data_lr_list <- list()
       rv_lr$dt_lr_calc_record <- NULL
       rv_lr$dt_lr_display <- NULL
@@ -109,179 +108,164 @@ lr_server <- function(id, rv_input, rv_deconvo){
           output$"act_analyze_lr" <- renderUI({
             actionButton(session$ns("act_analyze_lr"), label = "Calculate", class = "btn btn-primary btn-lg")
           })
+        }
+      })
 
-          observeEvent(input$act_analyze_lr, {
-            waiter_show(html = spin_3k(), color = "white")
+      observeEvent(input$act_analyze_lr, {
+        waiter_show(html = spin_3k(), color = "white")
 
-            # Fix setting
-            hp <- input$hp
-            noc_hp <- as.numeric(input$noc_hp)
-            hd <- input$hd
-            noc_hd <- as.numeric(input$noc_hd)
-            refs <- rv_lr_setting$refs
-            dt_ref <- rv_lr_setting$dt_ref
-            fn_ref <- rv_lr_setting$fn_ref
-            sub_source <- input$sub_source
+        # Fix setting
+        hp <- input$hp
+        noc_hp <- as.numeric(input$noc_hp)
+        hd <- input$hd
+        noc_hd <- as.numeric(input$noc_hd)
+        refs <- rv_lr_setting$refs
+        dt_ref <- rv_lr_setting$dt_ref
+        fn_ref <- rv_lr_setting$fn_ref
+        sub_source <- input$sub_source
 
-            dt_csp <- data_deconvo$dt_csp
-            dt_af <- data_deconvo$dt_af
-            dt_kit <- data_deconvo$dt_kit
-            dt_kit_auto <- extract_kit_auto(dt_kit)
-            markers_auto <- unique(dt_kit_auto[, Marker])
-            error_message <- check_main_file(dt_csp, dt_ref, dt_af, markers_auto, method = "lr")
+        data_deconvo <- rv_deconvo$data_deconvo
+        hnc_all <- data_deconvo$hnc_all
+        dt_csp <- data_deconvo$dt_csp
+        dt_af <- data_deconvo$dt_af
+        dt_kit <- data_deconvo$dt_kit
+        dt_kit_auto <- extract_kit_auto(dt_kit)
+        markers_auto <- unique(dt_kit_auto[, Marker])
+        error_message <- check_main_file(dt_csp, dt_ref, dt_af, markers_auto, method = "lr")
 
-            if(error_message != ""){
-              waiter_hide()
-              showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
+        if(error_message != ""){
+          waiter_hide()
+          showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
+        }else{
+          # Extract data from data_deconvo
+          markers_use <- data_deconvo$markers_use
+          peaks_list <- data_deconvo$peaks_list
+          pop_al_list <- data_deconvo$pop_al_list
+          pop_prob_list <- data_deconvo$pop_prob_list
+          dt_anameth <- data_deconvo$dt_anameth
+          theta <- as.numeric(dt_anameth$Value[dt_anameth$Subcategory == "Theta"])
+          data_hnc_list <- data_deconvo$data_hnc_list
+
+          # Extract data for Hp
+          data_hp <- data_hnc_list[[which(hnc_all == noc_hp)]]
+          error_message_hp <- data_hp$error_message
+          dt_pg_list_hp <- data_hp$dt_pg_list
+
+          # Extract data for Hd
+          data_hd <- data_hnc_list[[which(hnc_all == noc_hd)]]
+          error_message_hd <- data_hd$error_message
+          dt_pg_list_hd <- data_hp$dt_pg_list
+
+          n_row <- length(markers_use) + 1
+          n_ref_hp <- length(hp)
+          n_ref_hd <- length(hd)
+          if(n_ref_hp > noc_hp || n_ref_hd > noc_hd){
+            waiter_hide()
+            showModal(modalDialog(title = "Error", "The number of contributors is smaller than the number of known individuals who have been checked as contributors.", easyClose = TRUE, footer = NULL))
+          }else{
+            if(is.null(error_message_hp) && is.null(error_message_hd)){
+              log10like_hp <- assign_log10like(noc_hp, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hp, refs, sub_source)
+              log10like_hd <- assign_log10like(noc_hd, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hd, refs, sub_source)
+              dt_lr <- create_dt_lr(markers_use, log10like_hp, log10like_hd)
             }else{
-              # Extract data from data_deconvo
-              markers_use <- data_deconvo$markers_use
-              peaks_list <- data_deconvo$peaks_list
-              pop_al_list <- data_deconvo$pop_al_list
-              pop_prob_list <- data_deconvo$pop_prob_list
-              dt_anameth <- data_deconvo$dt_anameth
-              theta <- as.numeric(dt_anameth$Value[dt_anameth$Subcategory == "Theta"])
-              data_hnc_list <- data_deconvo$data_hnc_list
-
-              # Extract data for Hp
-              data_hp <- data_hnc_list[[which(hnc_all == noc_hp)]]
-              error_message_hp <- data_hp$error_message
-              dt_pg_list_hp <- data_hp$dt_pg_list
-
-              # Extract data for Hd
-              data_hd <- data_hnc_list[[which(hnc_all == noc_hd)]]
-              error_message_hd <- data_hd$error_message
-              dt_pg_list_hd <- data_hp$dt_pg_list
-
-              n_row <- length(markers_use) + 1
-              n_ref_hp <- length(hp)
-              n_ref_hd <- length(hd)
-              if(n_ref_hp > noc_hp || n_ref_hd > noc_hd){
-                waiter_hide()
-                showModal(modalDialog(title = "Error", "The number of contributors is smaller than the number of known individuals who have been checked as contributors.", easyClose = TRUE, footer = NULL))
-              }else{
-                if(is.null(error_message_hp) && is.null(error_message_hd)){
-                  log10like_hp <- assign_log10like(noc_hp, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hp, refs, sub_source)
-                  log10like_hd <- assign_log10like(noc_hd, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hd, refs, sub_source)
-                  dt_lr <- create_dt_lr(markers_use, log10like_hp, log10like_hd)
-                }else{
-                  dt_lr <- data.table(Marker = c(markers_use, "Overall"),
-                                      Log10_Likelihood_Hp = rep(NA, n_row),
-                                      Log10_Likelihood_Hd = rep(NA, n_row),
-                                      LR = rep(NA, n_row))
-                }
-                names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
-                data_lr <- list("hp" = hp,
-                                "hd" = hd,
-                                "dt_lr" = dt_lr)
-
-                if(sub_source){
-                  meth_lr <- "Sub-source"
-                }else{
-                  meth_lr <- "Sub-sub-source"
-                }
-
-                if(setequal(rv_lr$refs, refs)){
-                  data_lr_list <- rv_lr$data_lr_list
-                  data_lr_list[[length(data_lr_list) + 1]] <- data_lr
-                  rv_lr$data_lr_list <- data_lr_list
-
-                  n_unk_hp <- noc_hp - length(hp)
-                  n_unk_hd <- noc_hd - length(hd)
-                  dt_tmp <- data.table(Method = meth_lr,
-                                       Hp = create_string_hyp(n_unk_hp, hp),
-                                       Hd = create_string_hyp(n_unk_hd, hd),
-                                       LR = dt_lr$LR[n_row])
-                  rv_lr$dt_lr_calc_record <- rbind(rv_lr$dt_lr_calc_record, dt_tmp)
-                }else{
-                  rv_lr$dt_ref <- dt_ref
-                  rv_lr$fn_ref <- fn_ref
-                  rv_lr$refs <- refs
-
-                  data_lr_list <- list()
-                  data_lr_list[[1]] <- data_lr
-                  rv_lr$data_lr_list <- data_lr_list
-
-                  n_unk_hp <- noc_hp - length(hp)
-                  n_unk_hd <- noc_hd - length(hd)
-                  rv_lr$dt_lr_calc_record <- data.table(Method = meth_lr,
-                                                        Hp = create_string_hyp(n_unk_hp, hp),
-                                                        Hd = create_string_hyp(n_unk_hd, hd),
-                                                        LR = dt_lr$LR[n_row])
-
-                }
-                rv_lr$dt_lr_display <- dt_lr
-                waiter_hide()
-              }
+              dt_lr <- data.table(Marker = c(markers_use, "Overall"),
+                                  Log10_Likelihood_Hp = rep(NA, n_row),
+                                  Log10_Likelihood_Hd = rep(NA, n_row),
+                                  LR = rep(NA, n_row))
             }
-          })
+            names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
+            data_lr <- list("hp" = hp,
+                            "hd" = hd,
+                            "dt_lr" = dt_lr)
 
-          rowCallback <- c(
-            "function(row, data){",
-            "  for(var i=0; i<data.length; i++){",
-            "    if(data[i] === null){",
-            "      $('td:eq('+i+')', row).html('NA')",
-            "        .css({'color': 'rgb(151,151,151)', 'font-style': 'italic'});",
-            "    }",
-            "  }",
-            "}"
-          )
-
-          output$title_lr <- renderText({
-            dt_lr_calc_record <- rv_lr$dt_lr_calc_record
-            if(is.null(dt_lr_calc_record)){
-              ""
+            if(sub_source){
+              meth_lr <- "Sub-source"
             }else{
-              "Likelihood ratio"
+              meth_lr <- "Sub-sub-source"
             }
-          })
 
-          output$dt_lr <- renderDataTable({
-            dt_lr <- rv_lr$dt_lr_display
-            if(!is.null(dt_lr)){
-              datatable(
-                dt_lr,
-                selection = "none",
-                options = list(dom = "t", iDisplayLength = nrow(dt_lr), ordering = FALSE, autowidth = TRUE, rowCallback = JS(rowCallback),
-                               columnDefs = list(list(targets = c(1, 2), visible = FALSE))),
-                rownames = FALSE
-              ) %>%
-                formatSignif(columns = c("LR"), digits = 3) %>%
-                formatStyle(names(dt_lr), lineHeight = "80%")
-            }
-          })
+            data_lr_list <- rv_lr$data_lr_list
+            data_lr_list[[length(data_lr_list) + 1]] <- data_lr
+            rv_lr$data_lr_list <- data_lr_list
 
-          output$title_lr_calc_record <- renderText({
-            dt_lr_calc_record <- rv_lr$dt_lr_calc_record
-            if(is.null(dt_lr_calc_record)){
-              ""
-            }else{
-              "Calculation record"
-            }
-          })
+            n_unk_hp <- noc_hp - length(hp)
+            n_unk_hd <- noc_hd - length(hd)
+            dt_tmp <- data.table(Method = meth_lr,
+                                 Hp = create_string_hyp(n_unk_hp, hp),
+                                 Hd = create_string_hyp(n_unk_hd, hd),
+                                 LR = dt_lr$LR[n_row])
+            rv_lr$dt_lr_calc_record <- rbind(rv_lr$dt_lr_calc_record, dt_tmp)
 
-          output$dt_lr_calc_record <- renderDataTable({
-            dt_lr_calc_record <- rv_lr$dt_lr_calc_record
-            if(!is.null(dt_lr_calc_record)){
-              datatable(
-                dt_lr_calc_record,
-                selection = list(mode = "single", target = "row"),
-                options = list(dom = "t", iDisplayLength = nrow(dt_lr_calc_record), ordering = FALSE, autowidth = TRUE, rowCallback = JS(rowCallback)),
-                rownames = FALSE
-              ) %>%
-                formatSignif(columns = c("LR"), digits = 3) %>%
-                formatStyle(names(dt_lr_calc_record), lineHeight = "80%")
-            }
-          })
+            rv_lr$dt_lr_display <- dt_lr
+            waiter_hide()
+          }
+        }
+      })
 
-          observeEvent(input$dt_lr_calc_record_rows_selected, {
-            index_select <- input$dt_lr_calc_record_rows_selected
+      rowCallback <- c(
+        "function(row, data){",
+        "  for(var i=0; i<data.length; i++){",
+        "    if(data[i] === null){",
+        "      $('td:eq('+i+')', row).html('NA')",
+        "        .css({'color': 'rgb(151,151,151)', 'font-style': 'italic'});",
+        "    }",
+        "  }",
+        "}"
+      )
 
-            if(!is.null(index_select)){
-              data_lr <- rv_lr$data_lr_list[[index_select]]
-              rv_lr$dt_lr_display <- data_lr$dt_lr
-            }
-          })
+      output$title_lr <- renderText({
+        dt_lr_calc_record <- rv_lr$dt_lr_calc_record
+        if(is.null(dt_lr_calc_record)){
+          ""
+        }else{
+          "Likelihood ratio"
+        }
+      })
+
+      output$dt_lr <- renderDataTable({
+        dt_lr <- rv_lr$dt_lr_display
+        if(!is.null(dt_lr)){
+          datatable(
+            dt_lr,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_lr), ordering = FALSE, autowidth = TRUE, rowCallback = JS(rowCallback),
+                           columnDefs = list(list(targets = c(1, 2), visible = FALSE))),
+            rownames = FALSE
+          ) %>%
+            formatSignif(columns = c("LR"), digits = 3) %>%
+            formatStyle(names(dt_lr), lineHeight = "80%")
+        }
+      })
+
+      output$title_lr_calc_record <- renderText({
+        dt_lr_calc_record <- rv_lr$dt_lr_calc_record
+        if(is.null(dt_lr_calc_record)){
+          ""
+        }else{
+          "Calculation record"
+        }
+      })
+
+      output$dt_lr_calc_record <- renderDataTable({
+        dt_lr_calc_record <- rv_lr$dt_lr_calc_record
+        if(!is.null(dt_lr_calc_record)){
+          datatable(
+            dt_lr_calc_record,
+            selection = list(mode = "single", target = "row"),
+            options = list(dom = "t", iDisplayLength = nrow(dt_lr_calc_record), ordering = FALSE, autowidth = TRUE, rowCallback = JS(rowCallback)),
+            rownames = FALSE
+          ) %>%
+            formatSignif(columns = c("LR"), digits = 3) %>%
+            formatStyle(names(dt_lr_calc_record), lineHeight = "80%")
+        }
+      })
+
+      observeEvent(input$dt_lr_calc_record_rows_selected, {
+        index_select <- input$dt_lr_calc_record_rows_selected
+
+        if(!is.null(index_select)){
+          data_lr <- rv_lr$data_lr_list[[index_select]]
+          rv_lr$dt_lr_display <- data_lr$dt_lr
         }
       })
 

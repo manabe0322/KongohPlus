@@ -45,6 +45,7 @@ file_server <- function(id, session_top){
       rv_input$fn_csp <- NULL
       rv_input$fn_ref <- NULL
       rv_input$fn_af <- NULL
+      rv_input$fn_anameth <- ""
 
       # Load the crime stain profile
       observeEvent(input$file_csp, {
