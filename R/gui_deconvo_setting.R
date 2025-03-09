@@ -58,7 +58,7 @@ deconvo_setting_ui <- function(id){
 #' deconvo_setting_server
 #'
 #' @description The function to create the server module for setting conditions of deconvolution
-deconvo_setting_server <- function(id, path_pack, rv_file){
+deconvo_setting_server <- function(id, path_pack, rv_input){
   moduleServer(
     id,
     function(input, output, session){
@@ -75,11 +75,11 @@ deconvo_setting_server <- function(id, path_pack, rv_file){
       rv_deconvo$data_deconvo <- NULL
 
       observe({
-        req(rv_file)
-        rv_deconvo_setting$dt_csp <- rv_file$dt_csp
-        rv_deconvo_setting$dt_af <- rv_file$dt_af
-        rv_deconvo_setting$fn_csp <- rv_file$fn_csp
-        rv_deconvo_setting$fn_af <- rv_file$fn_af
+        req(rv_input)
+        rv_deconvo_setting$dt_csp <- rv_input$dt_csp
+        rv_deconvo_setting$dt_af <- rv_input$dt_af
+        rv_deconvo_setting$fn_csp <- rv_input$fn_csp
+        rv_deconvo_setting$fn_af <- rv_input$fn_af
       })
 
       observeEvent(input$noc_from | input$noc_to, {

@@ -57,7 +57,7 @@ create_string_hyp <- function(n_unk, knowns = NULL){
 #' lr_server
 #'
 #' @description The function to create the server module for the likelihood ratio
-lr_server <- function(id, rv_file, rv_deconvo){
+lr_server <- function(id, rv_input, rv_deconvo){
   moduleServer(
     id,
     function(input, output, session){
@@ -75,9 +75,9 @@ lr_server <- function(id, rv_file, rv_deconvo){
       rv_lr$dt_lr_display <- NULL
 
       observe({
-        req(rv_file)
-        rv_lr_setting$dt_ref <- dt_ref <- rv_file$dt_ref
-        rv_lr_setting$fn_ref <- rv_file$fn_ref
+        req(rv_input)
+        rv_lr_setting$dt_ref <- dt_ref <- rv_input$dt_ref
+        rv_lr_setting$fn_ref <- rv_input$fn_ref
         if(!is.null(dt_ref)){
           rv_lr_setting$refs <- unique(dt_ref[, SampleName])
         }

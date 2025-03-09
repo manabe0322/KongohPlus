@@ -60,9 +60,9 @@ KongohPlus <- function(){
   )
 
   server <- function(input, output, session){
-    rv_file <- file_server("file", session)
-    rv_deconvo <- deconvo_server("deconvo", path_pack, session, rv_file)
-    rv_lr <- lr_server("lr", rv_file, rv_deconvo)
+    rv_input <- file_server("file", session)
+    rv_deconvo <- deconvo_server("deconvo", path_pack, session, rv_input)
+    rv_lr <- lr_server("lr", rv_input, rv_deconvo)
     rv_hd_true <- hd_true_server("hd_true", path_pack, rv_deconvo)
 
     anameth_server("anameth", path_pack)
@@ -81,7 +81,7 @@ KongohPlus <- function(){
     rv_load_proj <- load_proj_server("load_proj", session)
     observe({
       req(rv_load_proj)
-      req(rv_file)
+      req(rv_input)
       req(rv_deconvo)
       req(rv_lr)
       req(rv_hd_true)
@@ -89,13 +89,13 @@ KongohPlus <- function(){
       data_deconvo <- rv_load_proj$data_deconvo
       if(!is.null(data_deconvo)){
         rv_deconvo$data_deconvo <- data_deconvo
-        rv_file$dt_csp <- data_deconvo$dt_csp
-        rv_file$dt_af <- data_deconvo$dt_af
+        rv_input$dt_csp <- data_deconvo$dt_csp
+        rv_input$dt_af <- data_deconvo$dt_af
       }
 
       dt_ref <- rv_load_proj$dt_ref
       if(!is.null(dt_ref)){
-        rv_file$dt_ref <- dt_ref
+        rv_input$dt_ref <- dt_ref
         rv_lr$dt_ref <- dt_ref
         rv_lr$fn_ref <- rv_load_proj$fn_ref
         rv_lr$refs <- rv_load_proj$refs
@@ -114,11 +114,10 @@ KongohPlus <- function(){
     })
 
     observe({
-      req(rv_file)
       req(rv_deconvo)
       req(rv_lr)
       req(rv_hd_true)
-      save_proj_server("save_proj", rv_file, rv_deconvo, rv_lr, rv_hd_true)
+      save_proj_server("save_proj", rv_deconvo, rv_lr, rv_hd_true)
     })
   }
 

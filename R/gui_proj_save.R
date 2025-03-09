@@ -18,7 +18,7 @@ save_proj_ui <- function(id){
 #' save_proj_server
 #'
 #' @description The function to create the server module for saving the project
-save_proj_server <- function(id, rv_file, rv_deconvo, rv_lr, rv_hd_true){
+save_proj_server <- function(id, rv_deconvo, rv_lr, rv_hd_true){
   moduleServer(
     id,
     function(input, output, session){

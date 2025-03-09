@@ -38,13 +38,13 @@ file_server <- function(id, session_top){
   moduleServer(
     id,
     function(input, output, session){
-      rv_file <- reactiveValues()
-      rv_file$dt_csp <- NULL
-      rv_file$dt_ref <- NULL
-      rv_file$dt_af <- NULL
-      rv_file$fn_csp <- NULL
-      rv_file$fn_ref <- NULL
-      rv_file$fn_af <- NULL
+      rv_input <- reactiveValues()
+      rv_input$dt_csp <- NULL
+      rv_input$dt_ref <- NULL
+      rv_input$dt_af <- NULL
+      rv_input$fn_csp <- NULL
+      rv_input$fn_ref <- NULL
+      rv_input$fn_af <- NULL
 
       # Load the crime stain profile
       observeEvent(input$file_csp, {
@@ -52,8 +52,8 @@ file_server <- function(id, session_top){
         if(!is.null(file_input)){
           dt_csp <- fread(file_input$datapath)
           dt_csp <- change_data_type_csp(dt_csp)
-          rv_file$dt_csp <- dt_csp
-          rv_file$fn_csp <- file_input$name
+          rv_input$dt_csp <- dt_csp
+          rv_input$fn_csp <- file_input$name
           updateTabsetPanel(inputId = "tabset_load_file", selected = "Crime stain profile")
         }
       })
@@ -64,8 +64,8 @@ file_server <- function(id, session_top){
         if(!is.null(file_input)){
           dt_ref <- fread(file_input$datapath)
           dt_ref <- change_data_type_ref(dt_ref)
-          rv_file$dt_ref <- dt_ref
-          rv_file$fn_ref <- file_input$name
+          rv_input$dt_ref <- dt_ref
+          rv_input$fn_ref <- file_input$name
           updateTabsetPanel(inputId = "tabset_load_file", selected = "Reference profile")
         }
       })
@@ -76,15 +76,15 @@ file_server <- function(id, session_top){
         if(!is.null(file_input)){
           dt_af <- fread(file_input$datapath)
           dt_af <- change_data_type_af(dt_af)
-          rv_file$dt_af <- dt_af
-          rv_file$fn_af <- file_input$name
+          rv_input$dt_af <- dt_af
+          rv_input$fn_af <- file_input$name
           updateTabsetPanel(inputId = "tabset_load_file", selected = "Allele frequency")
         }
       })
 
       # Display the crime stain profile
       output$dt_csp <- renderDataTable(server = FALSE, {
-        dt_csp <- rv_file$dt_csp
+        dt_csp <- rv_input$dt_csp
 
         if(!is.null(dt_csp)){
           name_dt_csp <- names(dt_csp)
@@ -108,7 +108,7 @@ file_server <- function(id, session_top){
 
       # Display the reference profile
       output$dt_ref <- renderDataTable(server = FALSE, {
-        dt_ref <- rv_file$dt_ref
+        dt_ref <- rv_input$dt_ref
 
         if(!is.null(dt_ref)){
           name_dt_ref <- names(dt_ref)
@@ -132,7 +132,7 @@ file_server <- function(id, session_top){
 
       # Display the allele frequency
       output$dt_af <- renderDataTable(server = FALSE, {
-        dt_af <- rv_file$dt_af
+        dt_af <- rv_input$dt_af
         if(!is.null(dt_af)){
           datatable(
             dt_af,
@@ -150,7 +150,7 @@ file_server <- function(id, session_top){
         updateNavbarPage(session = session_top, inputId = "navbar", selected = "Deconvolution")
       })
 
-      return(rv_file)
+      return(rv_input)
     }
   )
 }
