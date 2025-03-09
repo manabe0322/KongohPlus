@@ -94,6 +94,7 @@ KongohPlus <- function(){
         rv_input$hnc_from <- min(data_deconvo$hnc_all)
         rv_input$hnc_to <- max(data_deconvo$hnc_all)
         rv_input$fn_anameth <- data_deconvo$fn_anameth
+        rv_input$dt_ignore_mk <- data_deconvo$dt_ignore_mk
       }
 
       dt_ref <- rv_load_proj$dt_ref

@@ -73,6 +73,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$dt_anameth <- NULL
       rv_deconvo_setting$bool_correct_noc <- TRUE
       rv_deconvo_setting$bool_before_deconvo <- TRUE
+      rv_deconvo_setting$dt_ignore_mk <- NULL
+      rv_deconvo_setting$bool_ignore_readonly <- FALSE
 
       rv_deconvo <- reactiveValues()
       rv_deconvo$data_deconvo <- NULL
@@ -86,16 +88,19 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         rv_deconvo_setting$hnc_from <- rv_input$hnc_from
         rv_deconvo_setting$hnc_to <- rv_input$hnc_to
         rv_deconvo_setting$fn_anameth <- rv_input$fn_anameth
+        rv_deconvo_setting$dt_ignore_mk <- rv_input$dt_ignore_mk
       })
 
       observe({
         req(rv_deconvo)
         if(is.null(rv_deconvo$data_deconvo)){
           rv_deconvo_setting$bool_before_deconvo <- TRUE
+          rv_deconvo_setting$bool_ignore_readonly <- FALSE
           enable("load_anameth_deconvo")
           enable("act_analyze_deconvo")
         }else{
           rv_deconvo_setting$bool_before_deconvo <- FALSE
+          rv_deconvo_setting$bool_ignore_readonly <- TRUE
           disable("load_anameth_deconvo")
           disable("act_analyze_deconvo")
         }
@@ -181,15 +186,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           rv_deconvo_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth))
           markers_auto <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
 
-          dt_ignore_mk <- data.table(Ignore = rep(FALSE, length(markers_auto)),
-                                     Marker = markers_auto)
-
-          output$dt_ignore_mk <- renderRHandsontable({
-            rhandsontable(dt_ignore_mk, rowHeaders = FALSE) %>%
-              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-              hot_col("Ignore", type = "checkbox", width = 100) %>%
-              hot_col("Marker", type = "text", readOnly = TRUE, width = 100)
-          })
+          rv_deconvo_setting$dt_ignore_mk <- data.table(Ignore = rep(FALSE, length(markers_auto)),
+                                                        Marker = markers_auto)
 
           output$title_ignore_mk <- renderText({"Ignored marker"})
           output$title_at <- renderText({"Analytical threshold"})
@@ -270,12 +268,23 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         }
       })
 
+      output$dt_ignore_mk <- renderRHandsontable({
+        dt_ignore_mk <- rv_deconvo_setting$dt_ignore_mk
+
+        if(!is.null(dt_ignore_mk)){
+          rhandsontable(dt_ignore_mk, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Ignore", type = "checkbox", readOnly = rv_deconvo_setting$bool_ignore_readonly, width = 100) %>%
+            hot_col("Marker", type = "text", readOnly = TRUE, width = 100)
+        }
+      })
+
       observeEvent(input$act_analyze_deconvo, {
         waiter_show(html = spin_3k(), color = "white")
 
         # Fix setting
-        hnc_from <- input$noc_from
-        hnc_to <- input$noc_to
+        rv_deconvo_setting$hnc_from <- hnc_from <- input$noc_from
+        rv_deconvo_setting$hnc_to <- hnc_to <- input$noc_to
         fn_csp <- rv_deconvo_setting$fn_csp
         dt_csp <- rv_deconvo_setting$dt_csp
         fn_af <- rv_deconvo_setting$fn_af
@@ -292,7 +301,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         load(paste0(path_pack, "/extdata/param/", dt_anameth$Name[dt_anameth$Category == "Parameter"], ".RData"))
         load(paste0(path_pack, "/extdata/stutter_file/", dt_anameth$Name[dt_anameth$Category == "Stutter file"], ".RData"))
 
-        dt_ignore_mk <- hot_to_r(input$dt_ignore_mk)
+        rv_deconvo_setting$dt_ignore_mk <- dt_ignore_mk <- hot_to_r(input$dt_ignore_mk)
 
         # Check input files
         error_message <- check_main_file(dt_csp, NULL, dt_af, markers_auto, method = "deconvo")
