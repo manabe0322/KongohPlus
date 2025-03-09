@@ -69,7 +69,6 @@ lr_server <- function(id, rv_input, rv_deconvo){
       rv_lr <- reactiveValues()
       rv_lr$dt_ref <- NULL
       rv_lr$fn_ref <- NULL
-      rv_lr$refs <- NULL
       rv_lr$data_lr_list <- list()
       rv_lr$dt_lr_calc_record <- NULL
       rv_lr$dt_lr_display <- NULL
@@ -181,35 +180,18 @@ lr_server <- function(id, rv_input, rv_deconvo){
                   meth_lr <- "Sub-sub-source"
                 }
 
-                if(setequal(rv_lr$refs, refs)){
-                  data_lr_list <- rv_lr$data_lr_list
-                  data_lr_list[[length(data_lr_list) + 1]] <- data_lr
-                  rv_lr$data_lr_list <- data_lr_list
+                data_lr_list <- rv_lr$data_lr_list
+                data_lr_list[[length(data_lr_list) + 1]] <- data_lr
+                rv_lr$data_lr_list <- data_lr_list
 
-                  n_unk_hp <- noc_hp - length(hp)
-                  n_unk_hd <- noc_hd - length(hd)
-                  dt_tmp <- data.table(Method = meth_lr,
-                                       Hp = create_string_hyp(n_unk_hp, hp),
-                                       Hd = create_string_hyp(n_unk_hd, hd),
-                                       LR = dt_lr$LR[n_row])
-                  rv_lr$dt_lr_calc_record <- rbind(rv_lr$dt_lr_calc_record, dt_tmp)
-                }else{
-                  rv_lr$dt_ref <- dt_ref
-                  rv_lr$fn_ref <- fn_ref
-                  rv_lr$refs <- refs
+                n_unk_hp <- noc_hp - length(hp)
+                n_unk_hd <- noc_hd - length(hd)
+                dt_tmp <- data.table(Method = meth_lr,
+                                     Hp = create_string_hyp(n_unk_hp, hp),
+                                     Hd = create_string_hyp(n_unk_hd, hd),
+                                     LR = dt_lr$LR[n_row])
+                rv_lr$dt_lr_calc_record <- rbind(rv_lr$dt_lr_calc_record, dt_tmp)
 
-                  data_lr_list <- list()
-                  data_lr_list[[1]] <- data_lr
-                  rv_lr$data_lr_list <- data_lr_list
-
-                  n_unk_hp <- noc_hp - length(hp)
-                  n_unk_hd <- noc_hd - length(hd)
-                  rv_lr$dt_lr_calc_record <- data.table(Method = meth_lr,
-                                                        Hp = create_string_hyp(n_unk_hp, hp),
-                                                        Hd = create_string_hyp(n_unk_hd, hd),
-                                                        LR = dt_lr$LR[n_row])
-
-                }
                 rv_lr$dt_lr_display <- dt_lr
                 waiter_hide()
               }

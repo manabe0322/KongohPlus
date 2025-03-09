@@ -46,7 +46,6 @@ load_proj_server <- function(id, session_top){
           rv_load_proj$data_deconvo <- data_deconvo
           rv_load_proj$dt_ref <- dt_ref
           rv_load_proj$fn_ref <- fn_ref
-          rv_load_proj$refs <- refs
           rv_load_proj$data_lr_list <- data_lr_list
           rv_load_proj$dt_lr_calc_record <- dt_lr_calc_record
           rv_load_proj$lr_rand <- lr_rand

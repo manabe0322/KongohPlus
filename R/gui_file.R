@@ -7,9 +7,9 @@ file_ui <- function(id){
   tabPanel("File",
            sidebarLayout(
              sidebarPanel(width = 3,
-                          fileInput(ns("file_csp"), label = h4("Crime stain profile"), accept = ".csv", buttonLabel = "Load"),
+                          uiOutput(ns("file_csp")),
                           fileInput(ns("file_ref"), label = h4("Reference profile"), accept = ".csv", buttonLabel = "Load"),
-                          fileInput(ns("file_af"), label = h4("Allele frequency"), accept = ".csv", buttonLabel = "Load"),
+                          uiOutput(ns("file_af")),
                           br(),
                           actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg")
              ),
@@ -34,7 +34,7 @@ file_ui <- function(id){
 #' file_server
 #'
 #' @description The function to create the server module for loading files
-file_server <- function(id, session_top){
+file_server <- function(id, session_top, bool_load_proj){
   moduleServer(
     id,
     function(input, output, session){
@@ -51,6 +51,14 @@ file_server <- function(id, session_top){
       rv_input$dt_ignore_mk <- NULL
 
       # Load the crime stain profile
+      output$file_csp <- renderUI({
+        if(bool_load_proj()){
+          disabled(textInput(session$ns("fn_csp_load_proj"), label = h4("Crime stain profile"), value = rv_input$fn_csp))
+        }else{
+          fileInput(session$ns("file_csp"), label = h4("Crime stain profile"), accept = ".csv", buttonLabel = "Load")
+        }
+      })
+
       observeEvent(input$file_csp, {
         file_input <- input$file_csp
         if(!is.null(file_input)){
@@ -75,6 +83,14 @@ file_server <- function(id, session_top){
       })
 
       # Load the allele frequency
+      output$file_af <- renderUI({
+        if(bool_load_proj()){
+          disabled(textInput(session$ns("fn_af_load_proj"), label = h4("Allele frequency"), value = rv_input$fn_af))
+        }else{
+          fileInput(session$ns("file_af"), label = h4("Allele frequency"), accept = ".csv", buttonLabel = "Load")
+        }
+      })
+
       observeEvent(input$file_af, {
         file_input <- input$file_af
         if(!is.null(file_input)){

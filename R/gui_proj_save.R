@@ -25,7 +25,6 @@ save_proj_server <- function(id, rv_deconvo, rv_lr, rv_hd_true){
       data_deconvo <- rv_deconvo$data_deconvo
       dt_ref <- rv_lr$dt_ref
       fn_ref <- rv_lr$fn_ref
-      refs <- rv_lr$refs
       data_lr_list <- rv_lr$data_lr_list
       dt_lr_calc_record <- rv_lr$dt_lr_calc_record
       lr_rand <- rv_hd_true$lr_rand
@@ -44,7 +43,6 @@ save_proj_server <- function(id, rv_deconvo, rv_lr, rv_hd_true){
           save(list = c("data_deconvo",
                         "dt_ref",
                         "fn_ref",
-                        "refs",
                         "data_lr_list",
                         "dt_lr_calc_record",
                         "lr_rand"),
