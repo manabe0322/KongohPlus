@@ -17,8 +17,8 @@ deconvo_setting_ui <- function(id){
              column(3,
                     wellPanel(
                       h4("Number of contributors"),
-                      numericInput(ns("noc_from"), label = "From", value = 1),
-                      numericInput(ns("noc_to"), label = "To", value = 1),
+                      uiOutput(ns("noc_from")),
+                      uiOutput(ns("noc_to")),
                       br(),
                       h4("Analysis method"),
                       shinyFilesButton(ns("load_anameth_deconvo"), label = "Load", title = "Select a file", multiple = FALSE),
@@ -67,9 +67,12 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$dt_af <- NULL
       rv_deconvo_setting$fn_csp <- NULL
       rv_deconvo_setting$fn_af <- NULL
+      rv_deconvo_setting$hnc_from <- 1
+      rv_deconvo_setting$hnc_to <- 1
       rv_deconvo_setting$fn_anameth <- ""
       rv_deconvo_setting$dt_anameth <- NULL
       rv_deconvo_setting$bool_correct_noc <- TRUE
+      rv_deconvo_setting$bool_before_deconvo <- TRUE
 
       rv_deconvo <- reactiveValues()
       rv_deconvo$data_deconvo <- NULL
@@ -80,6 +83,38 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         rv_deconvo_setting$dt_af <- rv_input$dt_af
         rv_deconvo_setting$fn_csp <- rv_input$fn_csp
         rv_deconvo_setting$fn_af <- rv_input$fn_af
+        rv_deconvo_setting$hnc_from <- rv_input$hnc_from
+        rv_deconvo_setting$hnc_to <- rv_input$hnc_to
+        rv_deconvo_setting$fn_anameth <- rv_input$fn_anameth
+      })
+
+      observe({
+        req(rv_deconvo)
+        if(is.null(rv_deconvo$data_deconvo)){
+          rv_deconvo_setting$bool_before_deconvo <- TRUE
+          enable("load_anameth_deconvo")
+          enable("act_analyze_deconvo")
+        }else{
+          rv_deconvo_setting$bool_before_deconvo <- FALSE
+          disable("load_anameth_deconvo")
+          disable("act_analyze_deconvo")
+        }
+      })
+
+      output$noc_from <- renderUI({
+        if(rv_deconvo_setting$bool_before_deconvo){
+          numericInput(session$ns("noc_from"), label = "From", value = rv_deconvo_setting$hnc_from)
+        }else{
+          disabled(numericInput(session$ns("noc_from"), label = "From", value = rv_deconvo_setting$hnc_from))
+        }
+      })
+
+      output$noc_to <- renderUI({
+        if(rv_deconvo_setting$bool_before_deconvo){
+          numericInput(session$ns("noc_to"), label = "To", value = rv_deconvo_setting$hnc_to)
+        }else{
+          disabled(numericInput(session$ns("noc_to"), label = "To", value = rv_deconvo_setting$hnc_to))
+        }
       })
 
       observeEvent(input$noc_from | input$noc_to, {
@@ -108,7 +143,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
 
         rv_deconvo_setting$bool_correct_noc <- bool_correct_noc
 
-        if(bool_correct_noc){
+        if(bool_correct_noc && rv_deconvo_setting$bool_before_deconvo){
           if(rv_deconvo_setting$fn_anameth == ""){
             disable("act_analyze_deconvo")
           }else{
@@ -126,7 +161,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         path_anameth <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/anameth")), input$load_anameth_deconvo)$datapath
         if(length(path_anameth) > 0){
           rv_deconvo_setting$fn_anameth <- basename(path_anameth)
-          if(rv_deconvo_setting$bool_correct_noc){
+          if(rv_deconvo_setting$bool_correct_noc && rv_deconvo_setting$bool_before_deconvo){
             enable("act_analyze_deconvo")
           }else{
             disable("act_analyze_deconvo")
