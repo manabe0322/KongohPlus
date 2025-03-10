@@ -4,12 +4,6 @@ date: "`r Sys.Date()`"
 output: html_document
 params:
   dt_csp: NA
-  hnc: NA
-  markers_use: NA
-  dt_mpdeg: NA
-  dt_mcmc: NA
-  dt_pg_list: NA
-  dt_log10like: NA
 ---
 
 ```{css, echo = FALSE}
@@ -52,16 +46,9 @@ p{
 ```{r setup, include = FALSE}
 library(data.table)
 library(DT)
-library(gluedown)
 library(magrittr)
 
 dt_csp <- params$dt_csp
-hnc <- params$hnc
-markers_use <- params$markers_use
-dt_mpdeg <- params$dt_mpdeg
-dt_mcmc <- params$dt_mcmc
-dt_pg_list <- params$dt_pg_list
-dt_log10like <- params$dt_log10like
 ```
 
 ---
@@ -71,120 +58,9 @@ dt_log10like <- params$dt_log10like
 ### Crime stain profile
 
 ```{r echo = FALSE, results='asis'}
-sn_csp <- unique(params$dt_csp[, SampleName])
-md_bullet(sn_csp, marker = "-")
-```
-
-### Reference profile
-
-```{r echo = FALSE, results='asis'}
-
-```
-
-### Allele frequency
-
----
-
-## Deconvolution
-
-### Mixture proportion and degradation parameter
-
-```{r echo = FALSE}
-datatable(dt_mpdeg,
+datatable(dt_csp,
           selection = "none",
-          options = list(dom = "t", iDisplayLength = nrow(dt_mpdeg), ordering = FALSE, autowidth = TRUE),
-          rownames = FALSE,
-          colnames = c("Contributor", "Mixture proportion", "Degradation")
-          ) %>%
-            formatSignif(columns = c("MP", "Deg"), digits = 3)
-```
-
-### Genotype combination
-
-```{r echo = FALSE, results='asis'}
-n_mk <- length(markers_use)
-for(i in 1:n_mk){
-  print(md_bullet(markers_use[i], marker = "-"))
-  
-  dt_pg <- dt_pg_list[[i]]
-  print(htmltools::tagList(datatable(dt_pg_list[[i]],
-                                     selection = "none",
-                                     options = list(dom = "tp", iDisplayLength = 10, ordering = FALSE, autowidth = TRUE,
-                                     columnDefs = list(list(targets = c(hnc, hnc + 1, hnc + 2), visible = FALSE))),
-                                     rownames = FALSE
-                                     ) %>%
-                                     formatSignif(columns = c("post_prob"), digits = 3)
-                           )
-        )
-}
-```
-
-### Genotype per contributor
-
-### Parameter and diagnostics
-
-```{r echo = FALSE}
-datatable(dt_mcmc,
-          selection = "none",
-          options = list(dom = "t", iDisplayLength = nrow(dt_mcmc), ordering = FALSE, autowidth = TRUE,
-                         columnDefs = list(list(width = "200px", targets = c(0)),
-                                           list(width = "150px", targets = c(1, 2, 3, 4)))),
-          rownames = FALSE,
-          colnames = c("Parameter", "Contributor", "Marker", "Estimated value", "Rhat")
-          ) %>%
-            formatSignif(columns = c("Estimated_value", "Rhat"), digits = 3)
-```
-
----
-
-## Likelihood
-
-```{r echo = FALSE}
-datatable(dt_log10like,
-          selection = "none",
-          options = list(dom = "t", iDisplayLength = nrow(dt_log10like), ordering = FALSE, autowidth = TRUE),
+          options = list(dom = "t", iDisplayLength = nrow(dt_csp), ordering = FALSE, autowidth = TRUE),
           rownames = FALSE
-          ) %>%
-            formatSignif(columns = c("Log10_Likelihood"), digits = 3)
+          )
 ```
-
----
-
-## Crime stain profile
-
-## Reference profile
-
-## Analysis method
-
-### Analytycal threshold
-
-### Allele probability
-
-- corrected method
-
-- unobserved allele
-
-### Expected locus-specific amplification efficiency
-
-- alpha times NL
-
-### Back stutter ratio
-
-### Forward stutter ratio
-
-### Double-back stutter ratio
-
-### Minus 2-nt stutter ratio
-
-### Filter to remove unrealistic genotype combination
-
-### Other parameter
-
-- theta
-
-- Gamma
-
-## Advanced setting
-
-
-

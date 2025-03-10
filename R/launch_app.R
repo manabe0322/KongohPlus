@@ -126,6 +126,7 @@ KongohPlus <- function(){
       req(rv_lr)
       req(rv_hd_true)
       save_proj_server("save_proj", rv_deconvo, rv_lr, rv_hd_true)
+      report_server("report", path_pack, rv_deconvo)
     })
   }
 

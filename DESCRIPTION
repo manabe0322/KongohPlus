@@ -25,6 +25,7 @@ Imports:
     parallel, 
     Rcpp, 
     rhandsontable, 
+    rmarkdown, 
     shinyFeedback,
     shinyFiles, 
     shinyjs, 
