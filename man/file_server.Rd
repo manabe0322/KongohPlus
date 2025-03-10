@@ -4,7 +4,7 @@
 \alias{file_server}
 \title{file_server}
 \usage{
-file_server(id, session_top)
+file_server(id, session_top, bool_load_proj)
 }
 \description{
 The function to create the server module for loading files

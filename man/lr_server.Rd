@@ -4,7 +4,7 @@
 \alias{lr_server}
 \title{lr_server}
 \usage{
-lr_server(id, rv_file, rv_deconvo)
+lr_server(id, rv_input, rv_deconvo)
 }
 \description{
 The function to create the server module for the likelihood ratio

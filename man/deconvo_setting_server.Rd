@@ -4,7 +4,7 @@
 \alias{deconvo_setting_server}
 \title{deconvo_setting_server}
 \usage{
-deconvo_setting_server(id, path_pack, rv_file)
+deconvo_setting_server(id, path_pack, rv_input)
 }
 \description{
 The function to create the server module for setting conditions of deconvolution
