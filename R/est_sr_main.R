@@ -540,6 +540,11 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, stutter_type, markers_auto, meth_
       }else{
         if(meth == "Uniform (Multiple loci)"){
           index_multi_mk <- c(index_multi_mk, i)
+          tmp_alname <- names(wlus_auto[[mk]])
+          alcor <- sort(unique(as.numeric(tmp_alname)))
+          alname <- as.character(alcor)
+          tmp_alname_multi_mk[[i]] <- alname
+          tmp_alcor_multi_mk[[i]] <- alcor
         }
       }
     }else{
