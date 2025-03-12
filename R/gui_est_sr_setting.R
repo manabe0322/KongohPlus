@@ -45,7 +45,7 @@ create_init_dt_setting_est_sr <- function(dt_kit){
   dt_setting_est_sr <- data.table(Marker = markers, Dye = dyes)
 
   if(nrow(dt_setting_est_sr) == 21){
-    dt_setting_est_sr$AT <- c(rep(12, 5), rep(20, 3), rep(13, 4), rep(16, 5), rep(19, 4))
+    dt_setting_est_sr$AT <- c(rep(35, 5), rep(40, 3), rep(25, 4), rep(25, 5), rep(45, 4))
     dt_setting_est_sr$Model_BSR <- c("Allele", "Allele", "Allele", "Allele", "Allele",
                                      "LUS", "Multi-seq", "Allele",
                                      "LUS", "LUS", "LUS", "LUS",
