@@ -601,15 +601,9 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, stutter_type, markers_auto, meth_
 #' estimate_average_sr
 #'
 #' @description The function to estimate average stutter ratios
-estimate_average_sr <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_setting_est_sr, kit_name,
+estimate_average_sr <- function(dt_exp, dt_gt, dt_seq, dt_setting_est_sr, kit_name,
                                 model_sr_gen, model_sr_uni,
-                                warmup, sampling, chains, pu_remove, pu_dist, at_sex,
-                                n_parallel_chains = detectCores()){
-  # Extract information on the kit
-  markers_all <- unique(dt_kit$Marker)
-  n_mk_all <- length(markers_all)
-  dye_all_mk <- extract_dye(dt_kit, markers_all)
-
+                                warmup, sampling, chains, n_parallel_chains = detectCores()){
   # Extract information on setting
   markers_auto <- dt_setting_est_sr$Marker
   n_mk_auto <- length(markers_auto)
@@ -619,12 +613,6 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_setting_est_sr
   meth_model_fsr <- dt_setting_est_sr[["FSR model"]]
   meth_model_dsr <- dt_setting_est_sr[["DSR model"]]
   meth_model_m2sr <- dt_setting_est_sr[["M2SR model"]]
-
-  # Make an object for ATs of all markers
-  at_all_mk <- rep(NA, n_mk_all)
-  names(at_all_mk) <- markers_all
-  at_all_mk[match(markers_auto, markers_all)] <- at_auto
-  at_all_mk[is.na(at_all_mk)] <- at_sex
 
   # Information on considering stutter ratios
   sr_consider_auto <- matrix(TRUE, n_mk_auto, 4)
@@ -637,11 +625,8 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_seq, dt_kit, dt_setting_est_sr
 
   # Arrange experimental data
   tmp <- arrange_exp_data(dt_exp, dt_gt,
-                          markers_auto, sr_consider_auto,
-                          markers_all, at_all_mk, dye_all_mk,
-                          pu_remove, pu_dist)
+                          markers_auto, sr_consider_auto, at_auto)
   peak_list <- tmp$peak_list
-  size_list <- tmp$size_list
   height_list <- tmp$height_list
   gt_list <- tmp$gt_list
 

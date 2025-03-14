@@ -8,7 +8,7 @@ change_data_type_exp <- function(dt_exp){
   name_dt_exp <- names(dt_exp)
   col_char <- c("SampleName", "Marker", name_dt_exp[grep("Allele", name_dt_exp)])
   dt_exp[, (col_char) := lapply(.SD, as.character), .SDcols = col_char]
-  col_numeric <- c(name_dt_exp[grep("Size", name_dt_exp)], name_dt_exp[grep("Height", name_dt_exp)])
+  col_numeric <- c(name_dt_exp[grep("Height", name_dt_exp)])
   dt_exp[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
 
   dt_exp[which(dt_exp == "", arr.ind = TRUE)] <- NA

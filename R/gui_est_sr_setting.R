@@ -87,15 +87,11 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       rv_est_sr$dt_exp <- NULL
       rv_est_sr$dt_gt <- NULL
       rv_est_sr$dt_seq <- NULL
-      rv_est_sr$dt_kit <- NULL
       rv_est_sr$dt_setting_est_sr <- NULL
       rv_est_sr$kit_name <- NULL
       rv_est_sr$warmup <- 2000
       rv_est_sr$sampling <- 2000
       rv_est_sr$chains <- 4
-      rv_est_sr$pu_remove <- TRUE
-      rv_est_sr$pu_dist <- 1
-      rv_est_sr$at_sex <- 100
       rv_est_sr$data_est_sr <- NULL
 
       # Load experimental data
@@ -144,7 +140,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       observeEvent(input$kit_name, ignoreInit = TRUE, {
         rv_est_sr$kit_name <- kit_name <- input$kit_name
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", kit_name, ".csv"))
-        rv_est_sr$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
+        dt_kit <- change_data_type_kit(dt_kit)
         dt_setting_est_sr <- create_init_dt_setting_est_sr(dt_kit)
 
         output$dt_setting_est_sr <- renderRHandsontable({
@@ -161,20 +157,10 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       observeEvent(input$act_advance_sr, {
         showModal(modalDialog(
           title = "Advanced setting",
-          fluidRow(
-            column(6,
-                   h4("MCMC conditions"),
-                   numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_est_sr$warmup),
-                   numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_est_sr$sampling),
-                   numericInput(session$ns("chains"), label = "Number of chains", value = rv_est_sr$chains)
-            ),
-            column(6,
-                   h4("Pull-up"),
-                   checkboxInput(session$ns("pu_remove"), label = "Automatically removed", value = rv_est_sr$pu_remove),
-                   numericInput(session$ns("pu_dist"), label = "Maximum pull-up distance (bp)", value = rv_est_sr$pu_dist),
-                   numericInput(session$ns("at_sex"), label = "AT of the sex-chromosomal markers", value = rv_est_sr$at_sex)
-            )
-          ),
+          h4("MCMC conditions"),
+          numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_est_sr$warmup),
+          numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_est_sr$sampling),
+          numericInput(session$ns("chains"), label = "Number of chains", value = rv_est_sr$chains),
           footer = tagList(
             actionButton(session$ns("act_advance_save"), "Save"),
             modalButton("Cancel")
@@ -216,50 +202,20 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         }
       })
 
-      observeEvent(input$pu_dist, {
-        pu_dist <- input$pu_dist
-        if(!is.numeric(pu_dist)){
-          showFeedbackDanger(inputId = "pu_dist", text = "A positive number is required!")
-        }else if(pu_dist <= 0){
-          showFeedbackDanger(inputId = "pu_dist", text = "A positive number is required!")
-        }else{
-          hideFeedback("pu_dist")
-        }
-      })
-
-      observeEvent(input$at_sex, {
-        at_sex <- input$at_sex
-        if(!is.numeric(at_sex)){
-          showFeedbackDanger(inputId = "at_sex", text = "A positive number is required!")
-        }else if(at_sex <= 0){
-          showFeedbackDanger(inputId = "at_sex", text = "A positive number is required!")
-        }else{
-          hideFeedback("at_sex")
-        }
-      })
-
       observeEvent(input$act_advance_save, {
         req(input$warmup)
         req(input$sampling)
         req(input$chains)
-        req(input$pu_dist)
-        req(input$at_sex)
 
         isolate(warmup <- input$warmup)
         isolate(sampling <- input$sampling)
         isolate(chains <- input$chains)
-        isolate(pu_remove <- input$pu_remove)
-        isolate(pu_dist <- input$pu_dist)
-        isolate(at_sex <- input$at_sex)
 
-        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains), is.numeric(pu_dist), is.numeric(at_sex))){
-          if(all(warmup > 0, sampling > 0, chains > 0, pu_dist > 0, at_sex > 0)){
+        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains))){
+          if(all(warmup > 0, sampling > 0, chains > 0)){
             rv_est_sr$warmup <- warmup
             rv_est_sr$sampling <- sampling
             rv_est_sr$chains <- chains
-            rv_est_sr$pu_remove <- pu_remove
-            rv_est_sr$pu_dist <- pu_dist
-            rv_est_sr$at_sex <- at_sex
             removeModal()
           }
         }
@@ -270,15 +226,11 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         dt_exp <- rv_est_sr$dt_exp
         dt_gt <- rv_est_sr$dt_gt
         dt_seq <- rv_est_sr$dt_seq
-        dt_kit <- rv_est_sr$dt_kit
         rv_est_sr$dt_setting_est_sr <- dt_setting_est_sr <- hot_to_r(input$dt_setting_est_sr)
         kit_name <- rv_est_sr$kit_name
         warmup <- rv_est_sr$warmup
         sampling <- rv_est_sr$sampling
         chains <- rv_est_sr$chains
-        pu_remove <- rv_est_sr$pu_remove
-        pu_dist <- rv_est_sr$pu_dist
-        at_sex <- rv_est_sr$at_sex
 
         error_message <- check_est_sr(dt_exp, dt_gt, dt_seq, dt_setting_est_sr)
         if(error_message != ""){
@@ -288,9 +240,9 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           model_sr_gen <- stan_package_model(name = "model_sr_gen", package = "KongohPlus")
           model_sr_uni <- stan_package_model(name = "model_sr_uni", package = "KongohPlus")
 
-          rv_est_sr$data_est_sr <- estimate_average_sr(dt_exp, dt_gt, dt_seq, dt_kit, dt_setting_est_sr, kit_name,
+          rv_est_sr$data_est_sr <- estimate_average_sr(dt_exp, dt_gt, dt_seq, dt_setting_est_sr, kit_name,
                                                        model_sr_gen, model_sr_uni,
-                                                       warmup, sampling, chains, pu_remove, pu_dist, at_sex)
+                                                       warmup, sampling, chains)
 
           updateTabsetPanel(session = session_est_sr_top, inputId = "tabset_est_sr", selected = "Result")
         }

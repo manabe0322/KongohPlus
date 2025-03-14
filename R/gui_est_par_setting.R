@@ -44,7 +44,7 @@ create_init_dt_setting_est_par <- function(dt_kit){
 
   dt_setting_est_par <- data.table(Marker = markers,
                                    Dye = dyes,
-                                   AT = c(rep(12, 5), rep(20, 3), rep(13, 4), rep(16, 5), rep(19, 4)))
+                                   AT = c(rep(35, 5), rep(40, 3), rep(25, 4), rep(25, 5), rep(45, 4)))
   col_int <- c("AT")
   dt_setting_est_par[, (col_int) := lapply(.SD, as.integer), .SDcols = col_int]
 
@@ -61,14 +61,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       rv_est_par <- reactiveValues()
       rv_est_par$dt_exp <- NULL
       rv_est_par$dt_gt <- NULL
-      rv_est_par$dt_kit <- NULL
       rv_est_par$kit_name <- NULL
       rv_est_par$warmup <- 2000
       rv_est_par$sampling <- 2000
       rv_est_par$chains <- 4
-      rv_est_par$pu_remove <- TRUE
-      rv_est_par$pu_dist <- 1
-      rv_est_par$at_sex <- 100
       rv_est_par$data_est_par <- NULL
       rv_est_par$list_dt_average_sr <- NULL
       rv_est_par$fn_stutter_file <- NULL
@@ -110,7 +106,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       observeEvent(input$kit_name, ignoreInit = TRUE, {
         rv_est_par$kit_name <- kit_name <- input$kit_name
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", kit_name, ".csv"))
-        rv_est_par$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
+        dt_kit <- change_data_type_kit(dt_kit)
         dt_setting_est_par <- create_init_dt_setting_est_par(dt_kit)
 
         output$dt_setting_est_par <- renderRHandsontable({
@@ -127,20 +123,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       observeEvent(input$act_advance_par, {
         showModal(modalDialog(
           title = "Advanced setting",
-          fluidRow(
-            column(6,
-                   h4("MCMC conditions"),
-                   numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_est_par$warmup),
-                   numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_est_par$sampling),
-                   numericInput(session$ns("chains"), label = "Number of chains", value = rv_est_par$chains)
-            ),
-            column(6,
-                   h4("Pull-up"),
-                   checkboxInput(session$ns("pu_remove"), label = "Automatically removed", value = rv_est_par$pu_remove),
-                   numericInput(session$ns("pu_dist"), label = "Maximum pull-up distance (bp)", value = rv_est_par$pu_dist),
-                   numericInput(session$ns("at_sex"), label = "AT of the sex-chromosomal markers", value = rv_est_par$at_sex)
-            )
-          ),
+          h4("MCMC conditions"),
+          numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_est_par$warmup),
+          numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_est_par$sampling),
+          numericInput(session$ns("chains"), label = "Number of chains", value = rv_est_par$chains),
           footer = tagList(
             actionButton(session$ns("act_advance_save"), "Save"),
             modalButton("Cancel")
@@ -182,50 +168,20 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         }
       })
 
-      observeEvent(input$pu_dist, {
-        pu_dist <- input$pu_dist
-        if(!is.numeric(pu_dist)){
-          showFeedbackDanger(inputId = "pu_dist", text = "A positive number is required!")
-        }else if(pu_dist <= 0){
-          showFeedbackDanger(inputId = "pu_dist", text = "A positive number is required!")
-        }else{
-          hideFeedback("pu_dist")
-        }
-      })
-
-      observeEvent(input$at_sex, {
-        at_sex <- input$at_sex
-        if(!is.numeric(at_sex)){
-          showFeedbackDanger(inputId = "at_sex", text = "A positive number is required!")
-        }else if(at_sex <= 0){
-          showFeedbackDanger(inputId = "at_sex", text = "A positive number is required!")
-        }else{
-          hideFeedback("at_sex")
-        }
-      })
-
       observeEvent(input$act_advance_save, {
         req(input$warmup)
         req(input$sampling)
         req(input$chains)
-        req(input$pu_dist)
-        req(input$at_sex)
 
         isolate(warmup <- input$warmup)
         isolate(sampling <- input$sampling)
         isolate(chains <- input$chains)
-        isolate(pu_remove <- input$pu_remove)
-        isolate(pu_dist <- input$pu_dist)
-        isolate(at_sex <- input$at_sex)
 
-        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains), is.numeric(pu_dist), is.numeric(at_sex))){
-          if(all(warmup > 0, sampling > 0, chains > 0, pu_dist > 0, at_sex > 0)){
+        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains))){
+          if(all(warmup > 0, sampling > 0, chains > 0)){
             rv_est_par$warmup <- warmup
             rv_est_par$sampling <- sampling
             rv_est_par$chains <- chains
-            rv_est_par$pu_remove <- pu_remove
-            rv_est_par$pu_dist <- pu_dist
-            rv_est_par$at_sex <- at_sex
             removeModal()
           }
         }
@@ -236,15 +192,11 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         # Fix data
         dt_exp <- rv_est_par$dt_exp
         dt_gt <- rv_est_par$dt_gt
-        dt_kit <- rv_est_par$dt_kit
         dt_setting_est_par <- hot_to_r(input$dt_setting_est_par)
         kit_name <- rv_est_par$kit_name
         warmup <- rv_est_par$warmup
         sampling <- rv_est_par$sampling
         chains <- rv_est_par$chains
-        pu_remove <- rv_est_par$pu_remove
-        pu_dist <- rv_est_par$pu_dist
-        at_sex <- rv_est_par$at_sex
 
         fn_stutter_file <- input$stutter_file
         load(paste0(path_pack, "/extdata/stutter_file/", fn_stutter_file))
@@ -258,9 +210,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           model_ae <- stan_package_model(name = "model_ae", package = "KongohPlus")
           model_gamma <- stan_package_model(name = "model_gamma", package = "KongohPlus")
 
-          rv_est_par$data_est_par <- estimate_parameters(dt_exp, dt_gt, list_dt_average_sr, dt_kit, dt_setting_est_par,
+          rv_est_par$data_est_par <- estimate_parameters(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
                                                          model_ae, model_gamma,
-                                                         warmup, sampling, chains, pu_remove, pu_dist, at_sex)
+                                                         warmup, sampling, chains)
           rv_est_par$list_dt_average_sr <- list_dt_average_sr
           rv_est_par$kit_name <- kit_name
           rv_est_par$fn_stutter_file <- fn_stutter_file
