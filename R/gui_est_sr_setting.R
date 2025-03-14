@@ -52,7 +52,7 @@ create_init_dt_setting_est_sr <- function(dt_kit){
                                      "Allele", "Allele", "Allele", "LUS", "Multi-seq",
                                      "Allele", "LUS", "LUS", "LUS")
     dt_setting_est_sr$Model_FSR <- "Uniform (Multiple loci)"
-    dt_setting_est_sr$Model_FSR[13] <- "LUS"
+    dt_setting_est_sr$Model_FSR[13] <- "Allele"
     dt_setting_est_sr$Model_DSR <- "Uniform (Multiple loci)"
     dt_setting_est_sr$Model_M2SR <- "Not consider"
     dt_setting_est_sr$Model_M2SR[17] <- "Uniform"
