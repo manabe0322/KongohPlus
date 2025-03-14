@@ -40,9 +40,8 @@ est_sr_setting_ui <- function(id){
 create_init_dt_setting_est_sr <- function(dt_kit){
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers <- unique(dt_kit_auto$Marker)
-  dyes <- extract_dye(dt_kit_auto, markers)
 
-  dt_setting_est_sr <- data.table(Marker = markers, Dye = dyes)
+  dt_setting_est_sr <- data.table(Marker = markers)
 
   if(nrow(dt_setting_est_sr) == 21){
     dt_setting_est_sr$AT <- c(rep(35, 5), rep(40, 3), rep(25, 4), rep(25, 5), rep(45, 4))
@@ -71,7 +70,7 @@ create_init_dt_setting_est_sr <- function(dt_kit){
   col_int <- c("AT", "X_Multi")
   dt_setting_est_sr[, (col_int) := lapply(.SD, as.integer), .SDcols = col_int]
 
-  names(dt_setting_est_sr) <- c("Marker", "Dye", "AT", "BSR model", "FSR model", "DSR model", "M2SR model", "Minimum uninterrupted stretch (for Multi-seq)")
+  names(dt_setting_est_sr) <- c("Marker", "AT", "BSR model", "FSR model", "DSR model", "M2SR model", "Minimum uninterrupted stretch (for Multi-seq)")
 
   return(dt_setting_est_sr)
 }
@@ -147,7 +146,6 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           rhandsontable(dt_setting_est_sr, rowHeaders = FALSE) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
             hot_col(c("Marker"), type = "text", readOnly = TRUE, width = 100) %>%
-            hot_col(c("Dye"), type = "text", readOnly = TRUE, width = 50) %>%
             hot_col(c("AT"), type = "numeric", format = "0", width = 50) %>%
             hot_col(c("BSR model", "FSR model", "DSR model", "M2SR model"), type = "dropdown", source = c("Allele", "LUS", "Multi-seq", "Uniform", "Uniform (Multiple loci)", "Not consider"), width = 175) %>%
             hot_col(c("Minimum uninterrupted stretch (for Multi-seq)"), type = "numeric", format = "0", width = 450)

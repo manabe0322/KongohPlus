@@ -40,10 +40,8 @@ est_par_setting_ui <- function(id){
 create_init_dt_setting_est_par <- function(dt_kit){
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers <- unique(dt_kit_auto$Marker)
-  dyes <- extract_dye(dt_kit_auto, markers)
 
   dt_setting_est_par <- data.table(Marker = markers,
-                                   Dye = dyes,
                                    AT = c(rep(35, 5), rep(40, 3), rep(25, 4), rep(25, 5), rep(45, 4)))
   col_int <- c("AT")
   dt_setting_est_par[, (col_int) := lapply(.SD, as.integer), .SDcols = col_int]
@@ -113,7 +111,6 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           rhandsontable(dt_setting_est_par, rowHeaders = FALSE) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
             hot_col(c("Marker"), type = "text", readOnly = TRUE, width = 100) %>%
-            hot_col(c("Dye"), type = "text", readOnly = TRUE, width = 50) %>%
             hot_col(c("AT"), type = "numeric", format = "0", width = 50)
         })
       })
