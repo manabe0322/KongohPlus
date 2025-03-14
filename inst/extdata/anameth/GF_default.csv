@@ -2,37 +2,37 @@ Category,Subcategory,Name,Value
 Parameter,,param_GF_default,
 Stutter file,,stutter_GF_default,
 Kit,,GlobalFiler,
-AT,D3S1358,,100
-AT,vWA,,100
-AT,D16S539,,100
-AT,CSF1PO,,100
-AT,TPOX,,100
-AT,D8S1179,,100
-AT,D21S11,,100
-AT,D18S51,,100
-AT,D2S441,,100
-AT,D19S433,,100
-AT,TH01,,100
-AT,FGA,,100
-AT,D22S1045,,100
-AT,D5S818,,100
-AT,D13S317,,100
-AT,D7S820,,100
-AT,SE33,,100
-AT,D10S1248,,100
-AT,D1S1656,,100
-AT,D12S391,,100
-AT,D2S1338,,100
+AT,D3S1358,,45
+AT,vWA,,45
+AT,D16S539,,45
+AT,CSF1PO,,45
+AT,TPOX,,45
+AT,D8S1179,,45
+AT,D21S11,,45
+AT,D18S51,,45
+AT,D2S441,,45
+AT,D19S433,,45
+AT,TH01,,45
+AT,FGA,,45
+AT,D22S1045,,45
+AT,D5S818,,45
+AT,D13S317,,45
+AT,D7S820,,45
+AT,SE33,,45
+AT,D10S1248,,45
+AT,D1S1656,,45
+AT,D12S391,,45
+AT,D2S1338,,45
 Genotype probability,Theta,,0
 Genotype filter,Maximum BSR,,0.3
-Genotype filter,Maximum FSR,,0.15
+Genotype filter,Maximum FSR,,0.2
 Genotype filter,Maximum DSR,,0.05
-Genotype filter,Maximum M2SR,,0.05
+Genotype filter,Maximum M2SR,,0.1
 Genotype filter,Maximum number of drop-in,,2
-Genotype filter,Maximum height of drop-in,,300
-Drop-in,Probability of drop-in,,0.0037081
-Drop-in,Shape parameter,,14.8712
-Drop-in,Rate parameter,,0.2029315
+Genotype filter,Maximum height of drop-in,,150
+Drop-in,Probability of drop-in,,0.0029876
+Drop-in,Shape parameter,,6.06315
+Drop-in,Rate parameter,,0.101305
 MCMC,Warmup,,1200
 MCMC,Sampling,,300
 MCMC,Chains,,4
