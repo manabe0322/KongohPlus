@@ -12,10 +12,12 @@ dt_kit <- change_data_type_kit(dt_kit)
 
 kit_name <- "GlobalFiler"
 
+dt_setting_est_sr <- create_init_dt_setting_est_sr(dt_kit)
+
 warmup <- 2000
 sampling <- 2000
 chains <- 4
-pu_remove <- TRUE
+pu_remove <- FALSE # 250314変更
 pu_dist <- 1
 at_sex <- 40
 data_est_sr <- NULL

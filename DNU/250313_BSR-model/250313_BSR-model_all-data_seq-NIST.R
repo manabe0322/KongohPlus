@@ -1,4 +1,4 @@
-dt_exp <- fread("D:/研究プロジェクト管理/research_note_KongohPlus/250311_KMU30_estimate-parameter/KMU30_stutter-ratio_all-data/dt_exp_rm_dropin.csv")
+dt_exp <- fread("D:/研究プロジェクト管理/research_note_KongohPlus/250311_KMU30_estimate-parameter/KMU30_stutter-ratio_all-data/dt_exp_rm_art.csv")
 dt_exp <- change_data_type_exp(dt_exp)
 
 dt_gt <- fread("D:/研究プロジェクト管理/research_note_KongohPlus/250311_KMU30_estimate-parameter/KMU30_stutter-ratio_all-data/genotype-data_KMU30.csv")
@@ -15,7 +15,7 @@ kit_name <- "GlobalFiler"
 warmup <- 2000
 sampling <- 2000
 chains <- 4
-pu_remove <- TRUE
+pu_remove <- FALSE # 250314変更
 pu_dist <- 1
 at_sex <- 40
 data_est_sr <- NULL
