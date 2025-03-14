@@ -4,17 +4,7 @@
 \alias{arrange_exp_data}
 \title{arrange_exp_data}
 \usage{
-arrange_exp_data(
-  dt_exp,
-  dt_gt,
-  markers_auto,
-  sr_consider_auto,
-  markers_all,
-  at_all_mk,
-  dye_all_mk,
-  pu_remove,
-  pu_dist
-)
+arrange_exp_data(dt_exp, dt_gt, markers_auto, sr_consider_auto, at_auto)
 }
 \arguments{
 \item{dt_exp}{The data.table of the experimental data}
@@ -25,15 +15,7 @@ arrange_exp_data(
 
 \item{sr_consider_auto}{Information on consideration of back, forward, double-back, and minus 2-nt stutters in autosomal markers}
 
-\item{markers_all}{All markers}
-
-\item{at_all_mk}{Analytical thresholds of all markers}
-
-\item{dye_all_mk}{Dyes of all markers}
-
-\item{pu_remove}{TRUE or FALSE (whether pull-up peaks are automatically removed or not)}
-
-\item{pu_dist}{The maximum distance between a pull-up peak and the parent allele}
+\item{at_auto}{Analytical thresholds for autosomal markers}
 }
 \description{
 The function to arrange the experimental data

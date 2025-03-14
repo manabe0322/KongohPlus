@@ -8,7 +8,6 @@ estimate_average_sr(
   dt_exp,
   dt_gt,
   dt_seq,
-  dt_kit,
   dt_setting_est_sr,
   kit_name,
   model_sr_gen,
@@ -16,9 +15,6 @@ estimate_average_sr(
   warmup,
   sampling,
   chains,
-  pu_remove,
-  pu_dist,
-  at_sex,
   n_parallel_chains = detectCores()
 )
 }

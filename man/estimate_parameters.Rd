@@ -8,16 +8,12 @@ estimate_parameters(
   dt_exp,
   dt_gt,
   list_dt_average_sr,
-  dt_kit,
   dt_setting_est_par,
   model_ae,
   model_gamma,
   warmup,
   sampling,
   chains,
-  pu_remove,
-  pu_dist,
-  at_sex,
   n_parallel_chains = detectCores()
 )
 }
