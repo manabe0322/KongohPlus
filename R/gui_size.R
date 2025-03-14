@@ -50,7 +50,6 @@ create_init_dt_info_size <- function(path_pack){
 create_dt_info_size <- function(dt_kit, marker){
   index_mk <- which(dt_kit$Marker == marker)
   dt_info_size <- data.table(Marker = dt_kit$Marker[index_mk],
-                             Dye = dt_kit$Dye[index_mk],
                              Repeat_unit_length = dt_kit$Repeat_unit_length[index_mk],
                              Chr = dt_kit$Chr[index_mk],
                              Allele = dt_kit$Allele[index_mk],
@@ -247,7 +246,6 @@ size_server <- function(id, path_pack){
         size_add <- input$size_add
 
         info_marker <- dt_info_size$Marker
-        info_dye <- dt_info_size$Dye
         info_rep <- dt_info_size$Repeat_unit_length
         info_chr <- dt_info_size$Chr
         info_allele <- dt_info_size$Allele
@@ -288,14 +286,12 @@ size_server <- function(id, path_pack){
         # Update information on allele sizes
         if(n_al == 1){
           dt_info_size_add <- data.table(Marker = info_marker,
-                                         Dye = info_dye,
                                          Repeat_unit_length = info_rep,
                                          Chr = info_chr,
                                          Allele = alleles_char,
                                          Size = sizes)
         }else{
           dt_info_size_add <- data.table(Marker = c(info_marker, info_marker[1]),
-                                         Dye = c(info_dye, info_dye[1]),
                                          Repeat_unit_length = c(info_rep, info_rep[1]),
                                          Chr = c(info_chr, info_chr[1]),
                                          Allele = alleles_char,
@@ -351,7 +347,6 @@ size_server <- function(id, path_pack){
         marker <- input$select_marker_size
 
         info_marker <- dt_info_size$Marker
-        info_dye <- dt_info_size$Dye
         info_rep <- dt_info_size$Repeat_unit_length
         info_chr <- dt_info_size$Chr
         info_allele <- dt_info_size$Allele
@@ -359,14 +354,12 @@ size_server <- function(id, path_pack){
 
         if(length(info_marker) == 1){
           dt_info_size_delete <- data.table(Marker = info_marker,
-                                            Dye = info_dye,
                                             Repeat_unit_length = info_rep,
                                             Chr = info_chr,
                                             Allele = "",
                                             Size = NA)
         }else{
           dt_info_size_delete <- data.table(Marker = info_marker[- pos_select],
-                                            Dye = info_dye[- pos_select],
                                             Repeat_unit_length = info_rep[- pos_select],
                                             Chr = info_chr[- pos_select],
                                             Allele = info_allele[- pos_select],
@@ -402,7 +395,7 @@ size_server <- function(id, path_pack){
         if(!is.null(dt_info_size)){
           datatable(
             dt_info_size,
-            colnames = c("Marker", "Dye", "Length of the repeat unit", "Chromosome", "Allele", "Size"),
+            colnames = c("Marker", "Length of the repeat unit", "Chromosome", "Allele", "Size"),
             selection = list(mode = "single", target = "row"),
             options = list(dom = "t", iDisplayLength = nrow(dt_info_size), ordering = FALSE, autoWidth = TRUE),
             rownames = FALSE
