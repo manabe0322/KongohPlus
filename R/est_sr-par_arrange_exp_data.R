@@ -222,10 +222,10 @@ arrange_exp_data <- function(dt_exp, dt_gt,
         heights_use <- heights[index_use]
 
         # Remove two or more peaks which are located in the same bin
-        tmp <- remove_same_bin(peaks_use, sizes_use, heights_use)
-        peaks_use <- tmp$peaks
-        sizes_use <- tmp$sizes
-        heights_use <- tmp$heights
+        #tmp <- remove_same_bin(peaks_use, sizes_use, heights_use)
+        #peaks_use <- tmp$peaks
+        #sizes_use <- tmp$sizes
+        #heights_use <- tmp$heights
 
         # Remove pull-up peaks
         if(pu_remove){
