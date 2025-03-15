@@ -9,45 +9,27 @@ kit_ui <- function(id){
            br(),
            sidebarLayout(
              sidebarPanel(width = 3,
-                          actionButton(ns("act_kit_new"), label = "New"),
+                          textInput(ns("name_kit"), label = h4("Kit name"), value = ""),
+                          br(),
+                          h4("Add marker"),
+                          textInput(ns("marker_add"), label = "Enter the marker name", value = ""),
+                          br(),
+                          actionButton(ns("act_add_marker"), label = "Add"),
                           br(),
                           br(),
-                          actionButton(ns("act_kit_edit"), label = "Edit"),
+                          h4("Delete marker"),
+                          uiOutput(ns("ui_marker_delete")),
+                          br(),
+                          actionButton(ns("act_delete_marker"), label = "Delete"),
                           br(),
                           br(),
-                          actionButton(ns("act_kit_delete"), label = "Delete")
+                          actionButton(ns("act_register_kit"), label = "Register", class = "btn btn-primary btn-lg")
              ),
              mainPanel(width = 9,
-                       dataTableOutput(ns("dt_info_kit"))
+                       rHandsontableOutput(ns("dt_info_kit"))
              )
            )
   )
-}
-
-#' create_dt_info_kit
-#'
-#' @description The function to create the data.table for information on the kit
-#' @param path_pack The package path
-create_dt_info_kit <- function(path_pack){
-  fn_kit <- list.files(paste0(path_pack, "/extdata/kit"))
-  n_kit <- length(fn_kit)
-
-  if(n_kit != 0){
-    info_auto_mk <- info_sex_mk <- rep("", n_kit)
-    for(i in 1:n_kit){
-      dt_kit_1 <- fread(paste0(path_pack, "/extdata/kit/", fn_kit[i]))
-      dt_kit_1 <- change_data_type_kit(dt_kit_1)
-      info_auto_mk[i] <- length(unique(dt_kit_1$Marker[dt_kit_1$Chr == "Auto"]))
-      info_sex_mk[i] <- length(unique(dt_kit_1$Marker[dt_kit_1$Chr == "Sex"]))
-    }
-
-    dt_info_kit <- data.table(Kit = gsub(".{4}$", "", fn_kit),
-                              N_Auto_Mk = info_auto_mk,
-                              N_Sex_Mk = info_sex_mk)
-    return(dt_info_kit)
-  }else{
-    return(NULL)
-  }
 }
 
 #' kit_server
@@ -57,40 +39,46 @@ kit_server <- function(id, path_pack){
   moduleServer(
     id,
     function(input, output, session){
-
-      ######################################
-      # Define the initial reactive values #
-      ######################################
-
       rv_kit <- reactiveValues()
-      rv_kit$dt_info_kit <- create_dt_info_kit(path_pack)
+      rv_kit$dt_info_kit <- data.table("Marker" = character(0),
+                                       "Repeat unit length" = integer(0),
+                                       "Chromosome" = character(0))
 
+      observeEvent(input$act_add_marker, {
+        marker_add <- input$marker_add
+        if(marker_add != ""){
+          dt_info_kit <- rv_kit$dt_info_kit
+          dt_tmp <- data.table("Marker" = marker_add,
+                               "Repeat unit length" = NA,
+                               "Chromosome" = "Auto")
+          rv_kit$dt_info_kit <- rbind(dt_info_kit, dt_tmp)
+        }
+      })
 
+      output$ui_marker_delete <- renderUI({
+        markers <- rv_kit$dt_info_kit$Marker
+        selectInput(session$ns("marker_delete"), label = "", choices = markers, selected = markers[1], multiple = FALSE, selectize = FALSE)
+      })
 
-      # New
-      ## side-panel
-        # Edit marker -> set marker name, and Chr (Auto or sex)
-        # Add marker  -> set marker name, and Chr (Auto or sex)
-        # Delete marker
-      ## main-panel
-        # data.table
-          # Marker
-          # Chr (Auto or sex)
+      observeEvent(input$act_delete_marker, ignoreInit = TRUE, {
+        marker_delete <- input$marker_delete
+        markers <- rv_kit$dt_info_kit$Marker
+        index_delete <- which(markers == marker_delete)
+        if(length(index_delete) == 1){
+          rv_kit$dt_info_kit <- rv_kit$dt_info_kit[-index_delete]
+        }
+      })
 
+      output$dt_info_kit <- renderRHandsontable({
+        rhandsontable(rv_kit$dt_info_kit, rowHeaders = FALSE, overflow = "visible") %>%
+          hot_table(fillHandle = FALSE, stretchH = "all", rowHeights = 30) %>%
+          hot_col(c("Marker"), type = "text", readOnly = TRUE) %>%
+          hot_col(c("Repeat unit length"), type = "numeric", format = "0") %>%
+          hot_col(c("Chromosome"), type = "dropdown", source = c("Autosomal", "Sex"))
+      })
 
-      ##############################################
-      # Display information on the analysis method #
-      ##############################################
-
-      output$dt_info_kit <- renderDataTable({
+      observeEvent(input$act_register_kit, {
         dt_info_kit <- rv_kit$dt_info_kit
-        datatable(
-          dt_info_kit,
-          colnames = c("Kit", "Number of autosomal markers", "Number of sex-chromosomal markers"),
-          selection = list(mode = "single", target = "row"),
-          options = list(dom = "t", iDisplayLength = nrow(dt_info_kit), ordering = FALSE, autoWidth = TRUE),
-          rownames = FALSE
-        )
       })
     }
   )

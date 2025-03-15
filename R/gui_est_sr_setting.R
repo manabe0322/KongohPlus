@@ -144,7 +144,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         dt_setting_est_sr <- create_init_dt_setting_est_sr(dt_kit)
 
         output$dt_setting_est_sr <- renderRHandsontable({
-          rhandsontable(dt_setting_est_sr, rowHeaders = FALSE) %>%
+          rhandsontable(dt_setting_est_sr, rowHeaders = FALSE, overflow = "visible") %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
             hot_col(c("Marker"), type = "text", readOnly = TRUE, width = 100) %>%
             hot_col(c("AT"), type = "numeric", format = "0", width = 50) %>%
