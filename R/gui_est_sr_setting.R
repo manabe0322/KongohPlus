@@ -47,8 +47,8 @@ create_init_dt_setting_est_sr <- function(dt_kit){
     dt_setting_est_sr$AT <- c(rep(35, 5), rep(40, 3), rep(25, 4), rep(25, 5), rep(45, 4))
     dt_setting_est_sr$Model_BSR <- c("Allele", "Allele", "Allele", "Allele", "Allele",
                                      "LUS", "LUS", "Allele",
-                                     "LUS", "LUS", "LUS", "LUS",
-                                     "Allele", "Allele", "Allele", "LUS", "Multi-seq",
+                                     "LUS", "Allele", "LUS", "Allele",
+                                     "Allele", "Allele", "Allele", "Allele", "Multi-seq",
                                      "Allele", "LUS", "LUS", "LUS")
     dt_setting_est_sr$Model_FSR <- "Uniform (Multiple loci)"
     dt_setting_est_sr$Model_FSR[13] <- "Allele"
