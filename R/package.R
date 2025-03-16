@@ -18,6 +18,7 @@
 #' @importFrom shinyFiles parseFilePaths shinyFilesButton shinyFileChoose
 #' @importFrom shinyjs disable disabled enable refresh useShinyjs
 #' @importFrom shinythemes shinytheme
+#' @importFrom stringr str_replace
 #' @importFrom waiter useWaiter waiter_show waiter_hide spin_3k
 "_PACKAGE"
 

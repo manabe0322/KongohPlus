@@ -39,7 +39,7 @@ KongohPlus <- function(){
                              navbarMenu("Setting",
                                         anameth_ui("anameth"),
                                         kit_ui("kit"),
-                                        size_ui("size")
+                                        info_al_ui("info_al")
                              ),
 
                              navbarMenu("Experimental parameters",
@@ -69,7 +69,7 @@ KongohPlus <- function(){
 
     anameth_server("anameth", path_pack)
     kit_server("kit", path_pack)
-    size_server("size", path_pack)
+    info_al_server("info_al", path_pack)
 
     seq_data_server("seq_data", path_pack)
     rv_est_sr <- est_sr_server("est_sr", path_pack)

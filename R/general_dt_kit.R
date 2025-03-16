@@ -3,9 +3,11 @@
 #' @description The function to change data type of dt_kit
 #' @param dt_kit The data.table of the information on the kit
 change_data_type_kit <- function(dt_kit){
-  col_char <- c("Marker", "Chr", "Allele")
+  col_char <- c("Marker", "Chromosome", "Allele")
   dt_kit[, (col_char) := lapply(.SD, as.character), .SDcols = col_char]
-  col_numeric <- c("Repeat_unit_length", "Size")
+  col_integer <- c("Repeat Unit Length")
+  dt_kit[, (col_integer) := lapply(.SD, as.integer), .SDcols = col_integer]
+  col_numeric <- c("Corrected Allele", "Size")
   dt_kit[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
   return(dt_kit)
 }

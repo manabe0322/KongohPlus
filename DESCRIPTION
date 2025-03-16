@@ -30,6 +30,7 @@ Imports:
     shinyFiles, 
     shinyjs, 
     shinythemes, 
+    stringr, 
     waiter
 LinkingTo: 
     Rcpp
