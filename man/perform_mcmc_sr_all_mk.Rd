@@ -6,11 +6,10 @@
 \usage{
 perform_mcmc_sr_all_mk(
   dt_sr_data,
+  dt_kit,
   stutter_type,
   markers_auto,
   meth_model_sr,
-  wlus_auto,
-  wca_auto,
   model_sr_gen,
   model_sr_uni,
   warmup,

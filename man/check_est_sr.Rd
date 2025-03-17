@@ -4,14 +4,14 @@
 \alias{check_est_sr}
 \title{check_est_sr}
 \usage{
-check_est_sr(dt_exp, dt_gt, dt_seq, dt_setting_est_sr)
+check_est_sr(dt_exp, dt_gt, dt_kit, dt_setting_est_sr)
 }
 \arguments{
 \item{dt_exp}{The data.table of the experimental data}
 
 \item{dt_gt}{The data.table of the genotype data}
 
-\item{dt_seq}{The data.table of the sequence data}
+\item{dt_kit}{The data.table of information on the kit}
 
 \item{dt_setting_est_sr}{The data.table in the setting tab for estimating average stutter ratios}
 }

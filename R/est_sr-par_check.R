@@ -24,24 +24,33 @@ check_dt_mk <- function(dt, markers_est_sr){
 #' @description The function to check files for estimating average stutter ratios
 #' @param dt_exp The data.table of the experimental data
 #' @param dt_gt The data.table of the genotype data
-#' @param dt_seq The data.table of the sequence data
+#' @param dt_kit The data.table of information on the kit
 #' @param dt_setting_est_sr The data.table in the setting tab for estimating average stutter ratios
-check_est_sr <- function(dt_exp, dt_gt, dt_seq, dt_setting_est_sr){
+check_est_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr){
   error_message <- ""
+  markers_est_sr <- dt_setting_est_sr$Marker
 
-  # Whether all required data is loaded or not
-  if(is.null(dt_exp)){
-    error_message <- paste0(error_message, "Load experimental data!<br>")
+  # Check the marker set of the experimental data
+  sn_mk_problem_exp <- check_dt_mk(dt_exp, markers_est_sr)
+  if(length(sn_mk_problem_exp) > 0){
+    error_message <- paste0(error_message, "Inappropriate marker set of the following sample(s) in the experimental data: ", paste0(sn_mk_problem_exp, collapse = ", "), ".<br>")
   }
-  if(is.null(dt_gt)){
-    error_message <- paste0(error_message, "Load genotype data!<br>")
+
+  # Check the marker set of the genotype data
+  sn_mk_problem_gt <- check_dt_mk(dt_gt, markers_est_sr)
+  if(length(sn_mk_problem_gt) > 0){
+    error_message <- paste0(error_message, "Inappropriate marker set of the following sample(s) in the genotype data: ", paste0(sn_mk_problem_gt, collapse = ", "), ".<br>")
   }
-  if(is.null(dt_seq)){
-    error_message <- paste0(error_message, "Set sequence data!<br>")
+
+  # Check the sample names
+  sn_exp <- unique(dt_exp$SampleName)
+  sn_gt <- unique(dt_gt$SampleName)
+  sn_without_gt <- setdiff(sn_exp, sn_gt)
+  if(length(sn_without_gt) > 0){
+    error_message <- paste0(error_message, "No genotype data of the following samples: ", paste0(sn_without_gt, collapse = ", "), ".<br>")
   }
 
   # Check the analytical thresholds
-  markers_est_sr <- dt_setting_est_sr$Marker
   at_all_mk <- dt_setting_est_sr$AT
   bool_without_at <- is.na(at_all_mk)
   if(any(bool_without_at)){
@@ -76,44 +85,22 @@ check_est_sr <- function(dt_exp, dt_gt, dt_seq, dt_setting_est_sr){
     error_message <- paste0(error_message, "Set the M2SR model of the following marker(s): ", paste0(markers_est_sr[index_without_model_m2sr], collapse = ", "), ".<br>")
   }
 
-  # Check the minimum number of repeats that affects stuttering (for multi-seq model)
-  param_x <- dt_setting_est_sr[["Min. number of repeats that affects stuttering (for Multi-seq)"]]
-  index_multiseq <- sort(unique(c(which(model_bsr == "Multi-seq"), which(model_fsr == "Multi-seq"), which(model_dsr == "Multi-seq"), which(model_m2sr == "Multi-seq"))))
-  if(length(index_multiseq) != 0){
-    index_without_x <- which(is.na(param_x))
-    index_error_x <- intersect(index_multiseq, index_without_x)
-    if(length(index_error_x) != 0){
-      error_message <- paste0(error_message, "Set the minimum number of repeats that affects stuttering of the following marker(s): ", paste0(markers_est_sr[index_error_x], collapse = ", "), ".<br>")
+  # Check corrected alleles
+  n_mk <- length(markers_est_sr)
+  setindex(dt_kit, Marker)
+  markers_error_ca <- character(0)
+  for(i in 1:n_mk){
+    if(is.element("Linear (Corrected Allele)", c(model_bsr[i], model_fsr[i], model_dsr[i], model_m2sr[i]))){
+      mk <- markers_est_sr[i]
+      dt_kit_mk <- dt_kit[Marker == mk]
+      ca_mk <- dt_kit_mk[["Corrected Allele"]]
+      if(any(is.na(ca_mk))){
+        markers_error_ca <- c(markers_error_ca, mk)
+      }
     }
   }
-
-  if(all(!is.null(dt_exp), !is.null(dt_gt), !is.null(dt_seq))){
-    # Check the marker set of the experimental data
-    sn_mk_problem_exp <- check_dt_mk(dt_exp, markers_est_sr)
-    if(length(sn_mk_problem_exp) > 0){
-      error_message <- paste0(error_message, "Inappropriate marker set of the following sample(s) in the experimental data: ", paste0(sn_mk_problem_exp, collapse = ", "), ".<br>")
-    }
-
-    # Check the marker set of the genotype data
-    sn_mk_problem_gt <- check_dt_mk(dt_gt, markers_est_sr)
-    if(length(sn_mk_problem_gt) > 0){
-      error_message <- paste0(error_message, "Inappropriate marker set of the following sample(s) in the genotype data: ", paste0(sn_mk_problem_gt, collapse = ", "), ".<br>")
-    }
-
-    # Check the marker set of the sequence data
-    markers_seq <- unique(dt_seq$Marker)
-    markers_without_seq <- setdiff(markers_est_sr, markers_seq)
-    if(length(markers_without_seq) > 0){
-      error_message <- paste0(error_message, "The following marker(s) are not included in the sequence data: ", paste0(markers_without_seq, collapse = ", "), ".<br>")
-    }
-
-    # Check the sample names
-    sn_exp <- unique(dt_exp$SampleName)
-    sn_gt <- unique(dt_gt$SampleName)
-    sn_without_gt <- setdiff(sn_exp, sn_gt)
-    if(length(sn_without_gt) > 0){
-      error_message <- paste0(error_message, "No genotype data of the following samples: ", paste0(sn_without_gt, collapse = ", "), ".<br>")
-    }
+  if(length(markers_error_ca) != 0){
+    error_message <- paste0(error_message, "Define the 'Corrected Allele' for all alleles in the following marker(s): ", paste0(markers_error_ca, collapse = ", "), ".<br>")
   }
 
   return(error_message)

@@ -7,9 +7,8 @@
 estimate_average_sr(
   dt_exp,
   dt_gt,
-  dt_seq,
+  dt_kit,
   dt_setting_est_sr,
-  kit_name,
   model_sr_gen,
   model_sr_uni,
   warmup,

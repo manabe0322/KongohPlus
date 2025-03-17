@@ -4,7 +4,7 @@
 \alias{create_dt_sr_data}
 \title{create_dt_sr_data}
 \usage{
-create_dt_sr_data(peak_list, height_list, gt_list, sr_consider_auto, wlus_auto)
+create_dt_sr_data(peak_list, height_list, gt_list, sr_consider_auto, dt_kit)
 }
 \arguments{
 \item{peak_list}{A list of peaks}
@@ -15,7 +15,7 @@ create_dt_sr_data(peak_list, height_list, gt_list, sr_consider_auto, wlus_auto)
 
 \item{sr_consider_auto}{Information on consideration of back, forward, double-back, and minus 2-nt stutters in autosomal markers}
 
-\item{wlus_auto}{A list of weight LUS values in autosomal markers}
+\item{dt_kit}{The data.table of information on the kit}
 }
 \description{
 The function to create a data.table of the stutter ratios
