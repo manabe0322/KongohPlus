@@ -4,8 +4,8 @@
 kit_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("Kit",
-           titlePanel("Kit"),
+  tabPanel("1. Register kits",
+           titlePanel("1. Register kits"),
            br(),
            sidebarLayout(
              sidebarPanel(width = 3,

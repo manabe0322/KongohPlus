@@ -4,8 +4,8 @@
 est_sr_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("Estimate average stutter ratios",
-           titlePanel("Estimate average stutter ratios"),
+  tabPanel("3. Estimate stutter ratios",
+           titlePanel("3. Estimate stutter ratios"),
            br(),
            tabsetPanel(id = ns("tabset_est_sr"),
                        type = "tabs",

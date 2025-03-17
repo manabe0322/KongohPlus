@@ -4,8 +4,8 @@
 est_par_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("Estimate parameters",
-           titlePanel("Estimate parameters"),
+  tabPanel("5. Estimate parameters",
+           titlePanel("5. Estimate parameters"),
            br(),
            tabsetPanel(id = ns("tabset_est_par"),
                        type = "tabs",

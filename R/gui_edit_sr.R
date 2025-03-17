@@ -4,8 +4,8 @@
 edit_sr_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("Edit average stutter ratio",
-           titlePanel("Edit average stutter ratio"),
+  tabPanel("4. Edit stutter ratios",
+           titlePanel("4. Edit stutter ratios"),
            br(),
            fluidRow(
              column(1,

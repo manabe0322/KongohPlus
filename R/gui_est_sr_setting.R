@@ -86,6 +86,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       rv_est_sr$dt_gt <- NULL
       rv_est_sr$dt_kit <- NULL
       rv_est_sr$dt_setting_est_sr <- NULL
+      rv_est_sr$name_kit <- ""
       rv_est_sr$warmup <- 2000
       rv_est_sr$sampling <- 2000
       rv_est_sr$chains <- 4
@@ -121,7 +122,12 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           dt_kit <- fread(path_kit)
           rv_est_sr$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
           rv_est_sr$dt_setting_est_sr <- create_init_dt_setting_est_sr(dt_kit)
+          rv_est_sr$name_kit <- str_replace(basename(path_kit), ".{4}$", "")
         }
+      })
+
+      output$name_kit <- renderUI({
+        disabled(textInput(session$ns("name_kit"), label = "", value = rv_est_sr$name_kit))
       })
 
       observeEvent(input$act_advance_sr, {
@@ -196,9 +202,9 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         dt_gt <- rv_est_sr$dt_gt
         dt_kit <- rv_est_sr$dt_kit
         if(any(is.null(dt_exp), is.null(dt_gt), is.null(dt_kit))){
-          disabled(actionButton(ns("act_analyze_est_sr"), label = "Analyze", class = "btn btn-primary btn-lg"))
+          disabled(actionButton(session$ns("act_analyze_est_sr"), label = "Analyze", class = "btn btn-primary btn-lg"))
         }else{
-          actionButton(ns("act_analyze_est_sr"), label = "Analyze", class = "btn btn-primary btn-lg")
+          actionButton(session$ns("act_analyze_est_sr"), label = "Analyze", class = "btn btn-primary btn-lg")
         }
       })
 
@@ -229,11 +235,14 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       })
 
       output$dt_setting_est_sr <- renderRHandsontable({
-        rhandsontable(rv_est_sr$dt_setting_est_sr, rowHeaders = FALSE, overflow = "visible") %>%
-          hot_table(fillHandle = FALSE, stretchH = "all", rowHeights = 30) %>%
-          hot_col(c("Marker"), type = "text", readOnly = TRUE) %>%
-          hot_col(c("AT"), type = "numeric", format = "0") %>%
-          hot_col(c("BSR model", "FSR model", "DSR model", "M2SR model"), type = "dropdown", source = c("Linear (Allele)", "Linear (Corrected Allele)", "Uniform", "Uniform (Multiple loci)", "Not consider"))
+        dt_setting_est_sr <- rv_est_sr$dt_setting_est_sr
+        if(!is.null(dt_setting_est_sr)){
+          rhandsontable(rv_est_sr$dt_setting_est_sr, rowHeaders = FALSE, overflow = "visible") %>%
+            hot_table(fillHandle = FALSE, stretchH = "all", rowHeights = 30) %>%
+            hot_col(c("Marker"), type = "text", readOnly = TRUE) %>%
+            hot_col(c("AT"), type = "numeric", format = "0") %>%
+            hot_col(c("BSR model", "FSR model", "DSR model", "M2SR model"), type = "dropdown", source = c("Linear (Allele)", "Linear (Corrected Allele)", "Uniform", "Uniform (Multiple loci)", "Not consider"))
+        }
       })
 
       return(rv_est_sr)

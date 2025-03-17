@@ -4,8 +4,8 @@
 info_al_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("Allele information",
-           titlePanel("Allele information"),
+  tabPanel("2. Register alleles",
+           titlePanel("2. Register alleles"),
            br(),
            sidebarLayout(
              sidebarPanel(width = 3,

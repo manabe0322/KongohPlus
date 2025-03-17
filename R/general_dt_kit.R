@@ -18,7 +18,7 @@ change_data_type_kit <- function(dt_kit){
 #' @param dt_kit The data.table of the information on the kit
 extract_kit_auto <- function(dt_kit){
   dt_kit_auto <- copy(dt_kit)
-  index_auto <- which(dt_kit_auto[, Chr] == "Autosomal")
+  index_auto <- which(dt_kit_auto[["Chromosome"]] == "Autosomal")
   dt_kit_auto <- dt_kit_auto[index_auto]
   return(dt_kit_auto)
 }
