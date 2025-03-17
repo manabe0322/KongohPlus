@@ -85,8 +85,8 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_use, ats_use){
     height_list_mk_new <- update_heights_list_mk(peaks_all_rep, peaks_list_mk, heights_list_mk)
 
     # Extract information on sizes
-    alleles_kit <- as.numeric(dt_kit_auto_mk[, Allele])
-    sizes_kit <- dt_kit_auto_mk[, Size]
+    alleles_kit <- as.numeric(dt_kit_auto_mk[["Allele"]])
+    sizes_kit <- dt_kit_auto_mk[["Size"]]
     sizes_all_rep <- rep(0, length(peaks_all_rep))
     if(length(peaks_all_rep) != 0){
       index_sizes <- match(peaks_all_rep, alleles_kit)
