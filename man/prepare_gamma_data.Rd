@@ -8,7 +8,7 @@ prepare_gamma_data(
   markers_auto,
   peak_use,
   gt_use,
-  est_alpha,
+  ae_data_use,
   ave_het_ph_use,
   list_dt_average_sr
 )
@@ -20,7 +20,7 @@ prepare_gamma_data(
 
 \item{gt_use}{A list of the genotypes used for estimating the gamma distribution}
 
-\item{est_alpha}{A vector of the alpha parameters of the Dirichlet distribution for the locus-specific amplification efficiencies}
+\item{ae_data_use}{A matrix of the actual locus-specific amplification efficiencies in each sample}
 
 \item{ave_het_ph_use}{A vector of the average heterozygote allele peak heights used for estimating the gamma distribution}
 

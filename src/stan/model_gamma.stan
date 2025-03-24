@@ -6,11 +6,12 @@ data{
 }
 
 parameters{
-  real<lower = 0, upper = 1> cv;
+  real<lower = 0, upper = 10> cv;
 }
 
 model{
   for(i in 1:N){
-    OPH[i] ~ gamma(pow(cv, -2) * RPH[i], 1 / (TPH[i] * pow(cv, 2)));
+    real sigma = cv / sqrt(TPH[i]);
+    OPH[i] ~ gamma(pow(sigma, -2) * RPH[i], 1 / (TPH[i] * pow(sigma, 2)));
   }
 }

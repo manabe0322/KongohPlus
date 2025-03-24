@@ -7,7 +7,7 @@
 calc_relative_ph(
   peaks,
   gt,
-  expect_ae,
+  ae,
   allele_sr,
   bsr_average,
   fsr_average,
@@ -20,7 +20,7 @@ calc_relative_ph(
 
 \item{gt}{A vector of the genotype in one locus}
 
-\item{expect_ae}{The expected amplification efficiency in one locus}
+\item{ae}{The amplification efficiency in one locus}
 
 \item{allele_sr}{A vector of the alleles for stutter ratios}
 

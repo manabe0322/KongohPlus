@@ -153,19 +153,17 @@ perform_mcmc_ae_all_mk <- function(prop_ae_data_use, markers_auto,
 #' @description The function to calculate the relative peak heights in one locus
 #' @param peaks A vector of the peaks in one locus
 #' @param gt A vector of the genotype in one locus
-#' @param expect_ae The expected amplification efficiency in one locus
+#' @param ae The amplification efficiency in one locus
 #' @param allele_sr A vector of the alleles for stutter ratios
 #' @param bsr_average A vector of the average back stutter ratios
 #' @param fsr_average A vector of the average forward stutter ratios
 #' @param dsr_average A vector of the average double-back stutter ratios
 #' @param m2sr_average A vector of the average minus 2-nt stutter ratios
-calc_relative_ph <- function(peaks, gt, expect_ae,
+calc_relative_ph <- function(peaks, gt, ae,
                              allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average){
   peaks <- round(as.numeric(peaks), 1)
   gt <- round(as.numeric(gt), 1)
   allele_sr <- round(as.numeric(allele_sr), 1)
-
-  rph_base <- expect_ae
 
   rph_al_1 <- rph_bs_1 <- rph_fs_1 <- rph_ds_1 <- rph_m2s_1 <- rep(0, length(peaks))
   rph_al_2 <- rph_bs_2 <- rph_fs_2 <- rph_ds_2 <- rph_m2s_2 <- rep(0, length(peaks))
@@ -198,32 +196,32 @@ calc_relative_ph <- function(peaks, gt, expect_ae,
       index_m2s <- which(is.element(peaks, m2s))
 
       if(i == 1){
-        rph_al_1[index_al] <- rph_base / (1 + bsr + fsr + dsr + m2sr)
+        rph_al_1[index_al] <- ae / (1 + bsr + fsr + dsr + m2sr)
         if(length(index_bs) == 1){
-          rph_bs_1[index_bs] <- rph_base * bsr / (1 + bsr + fsr + dsr + m2sr)
+          rph_bs_1[index_bs] <- ae * bsr / (1 + bsr + fsr + dsr + m2sr)
         }
         if(length(index_fs) == 1){
-          rph_fs_1[index_fs] <- rph_base * fsr / (1 + bsr + fsr + dsr + m2sr)
+          rph_fs_1[index_fs] <- ae * fsr / (1 + bsr + fsr + dsr + m2sr)
         }
         if(length(index_ds) == 1){
-          rph_ds_1[index_ds] <- rph_base * dsr / (1 + bsr + fsr + dsr + m2sr)
+          rph_ds_1[index_ds] <- ae * dsr / (1 + bsr + fsr + dsr + m2sr)
         }
         if(length(index_m2s) == 1){
-          rph_m2s_1[index_m2s] <- rph_base * m2sr / (1 + bsr + fsr + dsr + m2sr)
+          rph_m2s_1[index_m2s] <- ae * m2sr / (1 + bsr + fsr + dsr + m2sr)
         }
       }else{
-        rph_al_2[index_al] <- rph_base / (1 + bsr + fsr + dsr + m2sr)
+        rph_al_2[index_al] <- ae / (1 + bsr + fsr + dsr + m2sr)
         if(length(index_bs) == 1){
-          rph_bs_2[index_bs] <- rph_base * bsr / (1 + bsr + fsr + dsr + m2sr)
+          rph_bs_2[index_bs] <- ae * bsr / (1 + bsr + fsr + dsr + m2sr)
         }
         if(length(index_fs) == 1){
-          rph_fs_2[index_fs] <- rph_base * fsr / (1 + bsr + fsr + dsr + m2sr)
+          rph_fs_2[index_fs] <- ae * fsr / (1 + bsr + fsr + dsr + m2sr)
         }
         if(length(index_ds) == 1){
-          rph_ds_2[index_ds] <- rph_base * dsr / (1 + bsr + fsr + dsr + m2sr)
+          rph_ds_2[index_ds] <- ae * dsr / (1 + bsr + fsr + dsr + m2sr)
         }
         if(length(index_m2s) == 1){
-          rph_m2s_2[index_m2s] <- rph_base * m2sr / (1 + bsr + fsr + dsr + m2sr)
+          rph_m2s_2[index_m2s] <- ae * m2sr / (1 + bsr + fsr + dsr + m2sr)
         }
       }
     }
@@ -238,10 +236,10 @@ calc_relative_ph <- function(peaks, gt, expect_ae,
 #' @param markers_auto A vector of the autosomal markers
 #' @param peak_use A list of the peaks used for estimating the gamma distribution
 #' @param gt_use A list of the genotypes used for estimating the gamma distribution
-#' @param est_alpha A vector of the alpha parameters of the Dirichlet distribution for the locus-specific amplification efficiencies
+#' @param ae_data_use A matrix of the actual locus-specific amplification efficiencies in each sample
 #' @param ave_het_ph_use A vector of the average heterozygote allele peak heights used for estimating the gamma distribution
 #' @param list_dt_average_sr A list of the average stutter ratios
-prepare_gamma_data <- function(markers_auto, peak_use, gt_use, est_alpha, ave_het_ph_use, list_dt_average_sr){
+prepare_gamma_data <- function(markers_auto, peak_use, gt_use, ae_data_use, ave_het_ph_use, list_dt_average_sr){
   n_gt <- length(gt_use)
   n_mk <- length(markers_auto)
 
@@ -257,11 +255,13 @@ prepare_gamma_data <- function(markers_auto, peak_use, gt_use, est_alpha, ave_he
     gt_s1 <- gt_use[[i]]
     ave_het_ph_s1 <- ave_het_ph_use[i]
 
+    ae_all_mk <- ae_data_use[, i]
+
     for(j in 1:n_mk){
       peaks <- peak_s1[[j]]
       n_peak <- length(peaks)
       if(n_peak != 0){
-        expect_ae <- expect_ae_all_mk[j]
+        ae <- ae_all_mk[j]
 
         mk <- markers_auto[j]
         dt_average_sr <- list_dt_average_sr[[mk]]
@@ -271,7 +271,7 @@ prepare_gamma_data <- function(markers_auto, peak_use, gt_use, est_alpha, ave_he
         dsr_average <- dt_average_sr[["Average DSR"]]
         m2sr_average <- dt_average_sr[["Average M2SR"]]
 
-        rphs_gamma[index_start:(index_start + n_peak - 1), ] <- calc_relative_ph(peaks, gt_s1[j, ], expect_ae,
+        rphs_gamma[index_start:(index_start + n_peak - 1), ] <- calc_relative_ph(peaks, gt_s1[j, ], ae,
                                                                                  allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average)
         tphs_gamma[index_start:(index_start + n_peak - 1)] <- ave_het_ph_s1
         index_start <- index_start + n_peak
@@ -297,8 +297,7 @@ prepare_gamma_data <- function(markers_auto, peak_use, gt_use, est_alpha, ave_he
 perform_mcmc_gamma <- function(rphs_gamma, ophs_gamma, tphs_gamma,
                                model_gamma,
                                warmup, sampling, chains, n_parallel_chains){
-  rphs_sum <- apply(rphs_gamma, 1, sum)
-  data_list_gamma <- list(N = length(rphs_sum), OPH = ophs_gamma, RPH = rphs_sum, TPH = tphs_gamma)
+  data_list_gamma <- list(N = length(rphs_gamma), OPH = ophs_gamma, RPH = rphs_gamma, TPH = tphs_gamma)
 
   fit_gamma <- model_gamma$sample(
     data_list_gamma,
@@ -348,10 +347,10 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   for(i in 1:n_mk_auto){
     mk <- markers_auto[i]
     dt_average_sr <- list_dt_average_sr[[mk]]
-    sr_consider_auto[i, "BS"] <- any(!is.na(dt_average_sr[["Average BSR"]]))
-    sr_consider_auto[i, "FS"] <- any(!is.na(dt_average_sr[["Average FSR"]]))
-    sr_consider_auto[i, "DS"] <- any(!is.na(dt_average_sr[["Average DSR"]]))
-    sr_consider_auto[i, "M2S"] <- any(!is.na(dt_average_sr[["Average M2SR"]]))
+    sr_consider_auto[i, "BS"] <- any(dt_average_sr[["Average BSR"]] != 0)
+    sr_consider_auto[i, "FS"] <- any(dt_average_sr[["Average FSR"]] != 0)
+    sr_consider_auto[i, "DS"] <- any(dt_average_sr[["Average DSR"]] != 0)
+    sr_consider_auto[i, "M2S"] <- any(dt_average_sr[["Average M2SR"]] != 0)
   }
 
   # Arrange experimental data
@@ -382,14 +381,15 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   traceplot_ae <- tmp$traceplot_ae
 
   # Prepare peak height data for estimating gamma distribution
-  tmp <- prepare_gamma_data(markers_auto, peak_list[index_prop_ae_use], gt_list[index_prop_ae_use], median_alpha, ave_het_ph_use, list_dt_average_sr)
+  tmp <- prepare_gamma_data(markers_auto, peak_list[index_prop_ae_use], gt_list[index_prop_ae_use], prop_ae_data_use * n_mk_auto, ave_het_ph_use, list_dt_average_sr)
   rphs_gamma <- tmp$rphs_gamma
+  rphs_gamma <- apply(rphs_gamma, 1, sum)
   tphs_gamma <- tmp$tphs_gamma
   ophs_gamma <- unlist(height_list[index_prop_ae_use])
 
-  index_rm <- which(apply(rphs_gamma, 1, sum) == 0)
+  index_rm <- which(rphs_gamma == 0)
   if(length(index_rm) != 0){
-    rphs_gamma <- rphs_gamma[-index_rm, , drop = FALSE]
+    rphs_gamma <- rphs_gamma[-index_rm]
     tphs_gamma <- tphs_gamma[-index_rm]
     ophs_gamma <- ophs_gamma[-index_rm]
   }
@@ -397,7 +397,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   # Remove data with oph > 30000 RFU
   index_rm <- which(ophs_gamma > 30000)
   if(length(index_rm) != 0){
-    rphs_gamma <- rphs_gamma[-index_rm, , drop = FALSE]
+    rphs_gamma <- rphs_gamma[-index_rm]
     tphs_gamma <- tphs_gamma[-index_rm]
     ophs_gamma <- ophs_gamma[-index_rm]
   }
