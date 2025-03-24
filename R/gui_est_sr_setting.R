@@ -45,7 +45,7 @@ create_init_dt_setting_est_sr <- function(dt_kit){
   dt_setting_est_sr <- data.table(Marker = markers)
 
   if(nrow(dt_setting_est_sr) == 21){
-    dt_setting_est_sr$AT <- c(rep(35, 5), rep(40, 3), rep(25, 4), rep(25, 5), rep(45, 4))
+    dt_setting_est_sr$AT <- 45
     dt_setting_est_sr$Model_BSR <- c("Linear (Allele)", "Linear (Allele)", "Linear (Allele)", "Linear (Allele)", "Linear (Allele)",
                                      "Linear (Corrected Allele)", "Linear (Corrected Allele)", "Linear (Allele)",
                                      "Linear (Corrected Allele)", "Linear (Allele)", "Linear (Corrected Allele)", "Linear (Allele)",
