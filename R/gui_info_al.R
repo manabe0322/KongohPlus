@@ -70,9 +70,16 @@ info_al_server <- function(id, path_pack){
           names(chr_all_mk) <- markers
           for(i in 1:n_mk){
             dt_kit_mk <- dt_kit[Marker == markers[i]]
-            list_dt_info_al[[i]] <- data.table("Allele" = dt_kit_mk[["Allele"]],
-                                               "Corrected Allele" = dt_kit_mk[["Corrected Allele"]],
-                                               "Size" = dt_kit_mk[["Size"]])
+            alleles <- dt_kit_mk[["Allele"]]
+            if(length(alleles) == 1 && alleles == ""){
+              list_dt_info_al[[i]] <- data.table("Allele" = character(0),
+                                                 "Corrected Allele" = numeric(0),
+                                                 "Size" = numeric(0))
+            }else{
+              list_dt_info_al[[i]] <- data.table("Allele" = dt_kit_mk[["Allele"]],
+                                                 "Corrected Allele" = dt_kit_mk[["Corrected Allele"]],
+                                                 "Size" = dt_kit_mk[["Size"]])
+            }
             rep_uni_len_all_mk[i] <- unique(dt_kit_mk[["Repeat Unit Length"]])[1]
             chr_all_mk[i] <- unique(dt_kit_mk[["Chromosome"]])[1]
           }
@@ -99,7 +106,9 @@ info_al_server <- function(id, path_pack){
       observeEvent(input$select_marker, {
         # Keep data for the marker selected one before
         dt_info_al <- hot_to_r(input$dt_info_al)
-        rv_info_al$list_dt_info_al[[rv_info_al$select_marker]] <- dt_info_al
+        if(!is.null(dt_info_al)){
+          rv_info_al$list_dt_info_al[[rv_info_al$select_marker]] <- dt_info_al
+        }
 
         # Update information on the newly selected marker
         select_marker <- input$select_marker
@@ -166,7 +175,12 @@ info_al_server <- function(id, path_pack){
           list_dt_info_al <- rv_info_al$list_dt_info_al
           dt_info_al <- list_dt_info_al[[select_marker]]
           alleles <- dt_info_al[["Allele"]]
-          select_al <- alleles[1]
+          if(length(alleles) == 0){
+            alleles <- NULL
+            select_al <- NULL
+          }else{
+            select_al <- alleles[1]
+          }
         }else{
           alleles <- NULL
           select_al <- NULL
@@ -175,9 +189,12 @@ info_al_server <- function(id, path_pack){
       })
 
       observeEvent(input$act_delete_allele, {
-        dt_info_al <- hot_to_r(input$dt_info_al)
-        index_delete <- which(dt_info_al[["Allele"]] == input$allele_delete)
-        rv_info_al$list_dt_info_al[[input$select_marker]] <- dt_info_al[-index_delete]
+        allele_delete <- input$allele_delete
+        if(!is.null(allele_delete)){
+          dt_info_al <- hot_to_r(input$dt_info_al)
+          index_delete <- which(dt_info_al[["Allele"]] == allele_delete)
+          rv_info_al$list_dt_info_al[[input$select_marker]] <- dt_info_al[-index_delete]
+        }
       })
 
       observeEvent(input$act_save_allele, {
@@ -245,8 +262,9 @@ info_al_server <- function(id, path_pack){
 
       output$dt_info_al <- renderRHandsontable({
         select_marker <- rv_info_al$select_marker
-        if(!is.null(select_marker)){
-          list_dt_info_al <- rv_info_al$list_dt_info_al
+        list_dt_info_al <- rv_info_al$list_dt_info_al
+
+        if(!is.null(select_marker) && !is.null(list_dt_info_al)){
           rhandsontable(list_dt_info_al[[select_marker]], rowHeaders = FALSE, overflow = "visible") %>%
             hot_table(fillHandle = FALSE, stretchH = "all", rowHeights = 30) %>%
             hot_col(c("Allele"), type = "text", readOnly = TRUE) %>%
