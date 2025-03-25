@@ -10,20 +10,20 @@ functions{
     return rph_dedup1;
   }
 
-  vector calc_lpd_general(int n_general_sum, vector oph_general, vector rph_general, real cv_m2, real cv_p2, real tph){
+  vector calc_lpd_general(int n_general_sum, vector oph_general, vector rph_general, real sigma_m2, real sigma_p2, real tph){
     vector[n_general_sum] lpd_general;
-    vector[n_general_sum] gamma_alpha = cv_m2 * rph_general;
-    real gamma_beta = 1 / (tph * cv_p2);
+    vector[n_general_sum] gamma_alpha = sigma_m2 * rph_general;
+    real gamma_beta = 1 / (tph * sigma_p2);
     for(i in 1:n_general_sum){
       lpd_general[i] = gamma_lpdf(oph_general[i] | gamma_alpha[i], gamma_beta);
     }
     return lpd_general;
   }
 
-  vector calc_lpd_dropout(int n_dropout_sum, vector at_dropout, vector rph_dropout, real cv_m2, real cv_p2, real tph){
+  vector calc_lpd_dropout(int n_dropout_sum, vector at_dropout, vector rph_dropout, real sigma_m2, real sigma_p2, real tph){
     vector[n_dropout_sum] lpd_dropout;
-    vector[n_dropout_sum] gamma_alpha = cv_m2 * rph_dropout;
-    real gamma_beta = 1 / (tph * cv_p2);
+    vector[n_dropout_sum] gamma_alpha = sigma_m2 * rph_dropout;
+    real gamma_beta = 1 / (tph * sigma_p2);
     for(i in 1:n_dropout_sum){
       lpd_dropout[i] = gamma_lcdf(at_dropout[i] | gamma_alpha[i], gamma_beta);
     }
@@ -75,13 +75,10 @@ data{
   row_vector[sum(n_gtc_use)] gtc_logprob_use;
 }
 
-transformed data{
-  real cv_m2 = pow(cv, -2);
-  real cv_p2 = pow(cv, 2);
-}
-
 parameters{
+  vector<lower = 0, upper = 1>[n_rep] sigma;
   vector<lower = ltph, upper = htph>[n_rep] tph;
+  //vector<lower = 0>[n_rep] tph;
   ordered[hnc] lambda;
   vector<lower = 0, upper = 1>[hnc] deg;
   simplex[n_mk] pae;
@@ -90,10 +87,12 @@ parameters{
 transformed parameters{
   simplex[hnc] mp;
   mp = softmax(lambda);
+  //vector<lower = 0, upper = 1>[n_rep] sigma = cv / sqrt(tph);
 }
 
 model{
-  lambda ~ normal(0, 10);
+  tph ~ normal((ltph + htph) / 2, (htph - ltph) / 2);
+  lambda ~ normal(0, 5);
   pae ~ dirichlet(ae_alpha_use);
 
   int index_dedup1_start = 1;
@@ -102,6 +101,9 @@ model{
   int index_dedup2_start = 1;
 
   for(i in 1:n_rep){
+    real sigma_m2 = pow(sigma[i], -2);
+    real sigma_p2 = pow(sigma[i], 2);
+
     // Extract data for one replicate
     int n_dedup1_sum_rep1 = n_dedup1_sum_per_rep[i];
     array[2 * hnc, n_dedup1_sum_rep1] int index_dedup1_use_rep1 = index_dedup1_use[, index_dedup1_start:(index_dedup1_start + n_dedup1_sum_rep1 - 1)];
@@ -121,13 +123,13 @@ model{
     if(n_general_sum_rep1 != 0){
       vector[n_general_sum_rep1] oph_general = oph_dedup1_use_rep1[1:n_general_sum_rep1];
       vector[n_general_sum_rep1] rph_general = rph_dedup1_use_rep1[1:n_general_sum_rep1];
-      lpd_dedup1_use_rep1[1:n_general_sum_rep1] = calc_lpd_general(n_general_sum_rep1, oph_general, rph_general, cv_m2, cv_p2, tph[i]);
+      lpd_dedup1_use_rep1[1:n_general_sum_rep1] = calc_lpd_general(n_general_sum_rep1, oph_general, rph_general, sigma_m2, sigma_p2, tph[i]);
     }
 
     if(n_dropout_sum_rep1 != 0){
       vector[n_dropout_sum_rep1] at_dropout_rep1 = at_dropout[index_dropout_start:(index_dropout_start + n_dropout_sum_rep1 - 1)];
       vector[n_dropout_sum_rep1] rph_dropout = rph_dedup1_use_rep1[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1)];
-      lpd_dedup1_use_rep1[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1)] = calc_lpd_dropout(n_dropout_sum_rep1, at_dropout_rep1, rph_dropout, cv_m2, cv_p2, tph[i]);
+      lpd_dedup1_use_rep1[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1)] = calc_lpd_dropout(n_dropout_sum_rep1, at_dropout_rep1, rph_dropout, sigma_m2, sigma_p2, tph[i]);
     }
 
     if(n_dropin_sum_rep1 != 0){

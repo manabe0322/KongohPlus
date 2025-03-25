@@ -6,8 +6,9 @@
 \usage{
 perform_mcmc_gamma(
   rphs_gamma,
-  ophs_gamma,
   tphs_gamma,
+  ophs_gamma,
+  ats_gamma,
   model_gamma,
   warmup,
   sampling,
@@ -18,9 +19,11 @@ perform_mcmc_gamma(
 \arguments{
 \item{rphs_gamma}{The relative peak heights for the gamma distribution}
 
+\item{tphs_gamma}{The total peak heights in one heterozygote allele for the gamma distribution}
+
 \item{ophs_gamma}{The observed peak heights for the gamma distribution}
 
-\item{tphs_gamma}{The total peak heights in one heterozygote allele for the gamma distribution}
+\item{ats_gamma}{The analytical thresholds for the gamma distribution}
 
 \item{model_gamma}{The stan model of the gamma distribution}
 

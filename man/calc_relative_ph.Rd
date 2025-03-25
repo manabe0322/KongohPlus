@@ -5,7 +5,7 @@
 \title{calc_relative_ph}
 \usage{
 calc_relative_ph(
-  peaks,
+  cand_peaks,
   gt,
   ae,
   allele_sr,
@@ -16,7 +16,7 @@ calc_relative_ph(
 )
 }
 \arguments{
-\item{peaks}{A vector of the peaks in one locus}
+\item{cand_peaks}{A vector of the candidate detectable peaks}
 
 \item{gt}{A vector of the genotype in one locus}
 

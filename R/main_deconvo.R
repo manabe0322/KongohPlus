@@ -31,6 +31,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
   n_gtc_use <- rep(NA, n_mk)
   gtc_use <- vector(mode = "list", length = n_mk)
   names(gtc_use) <- markers_use
+  min_tph <- Inf
   max_tph <- 0
   rph_base_use <- vector(mode = "list", length = n_mk)
   gtc_logprob_use <- vector(mode = "list", length = n_mk)
@@ -151,6 +152,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         # Update the maximum of the total peak height per marker
         heights <- heights_all_rep[[j]]
         oph_sum <- sum(heights)
+        if(oph_sum < min_tph){
+          min_tph <- oph_sum
+        }
         if(oph_sum > max_tph){
           max_tph <- oph_sum
         }
@@ -332,7 +336,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     data_list_main <- list(hnc = hnc,
                            n_rep = n_rep,
                            n_mk = n_mk,
-                           ltph = max_tph / 4,
+                           ltph = min_tph / 2,
                            htph = max_tph / 2,
                            n_rph_base_sum = sum(n_rph_base_use),
                            rph_base_use = unlist(rph_base_use),
@@ -362,12 +366,33 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     # Perform MCMC
     model_main <- stan_package_model(name = "model_main", package = "KongohPlus")
+
+    init_values <- function() {
+      list(
+        sigma = runif(hnc, 0.01, 0.99),
+        tph = runif(n_rep, min_tph / 2, max_tph / 2),  # tphの初期値を範囲内に設定
+        lambda = sort(rnorm(hnc, 0, 5)),  # lambdaの順序制約を守るためにソート
+        deg = runif(hnc, 0.01, 0.99),           # degの初期値を[0, 1]範囲でランダムに設定
+        pae = rdirichlet(1, ae_alpha_use)[1, ] # paeの初期値をdirichlet分布から生成
+      )
+    }
+
+    init_values_list <- list(
+      init_values(),  # チェーン1の初期値
+      init_values(),  # チェーン2の初期値
+      init_values(),  # チェーン3の初期値
+      init_values()   # チェーン4の初期値
+    )
+
     fit_main <- model_main$sample(
       data_list_main,
       iter_warmup = warmup,
       iter_sampling = sampling,
       chains = chains,
-      parallel_chains = detectCores()
+      parallel_chains = detectCores(),
+      init = init_values_list,
+      adapt_delta = 0.95,       # 適応的なデルタを変更
+      max_treedepth = 15
     )
 
     # Trace plot

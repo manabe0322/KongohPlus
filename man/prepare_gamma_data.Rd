@@ -6,25 +6,31 @@
 \usage{
 prepare_gamma_data(
   markers_auto,
-  peak_use,
-  gt_use,
-  ae_data_use,
-  ave_het_ph_use,
-  list_dt_average_sr
+  peak_list,
+  height_list,
+  gt_list,
+  median_alpha,
+  ave_het_ph_all_data,
+  list_dt_average_sr,
+  sr_consider_auto
 )
 }
 \arguments{
 \item{markers_auto}{A vector of the autosomal markers}
 
-\item{peak_use}{A list of the peaks used for estimating the gamma distribution}
+\item{peak_list}{A list of the peaks}
 
-\item{gt_use}{A list of the genotypes used for estimating the gamma distribution}
+\item{height_list}{A list of the heights}
 
-\item{ae_data_use}{A matrix of the actual locus-specific amplification efficiencies in each sample}
+\item{gt_list}{A list of the genotypes}
 
-\item{ave_het_ph_use}{A vector of the average heterozygote allele peak heights used for estimating the gamma distribution}
+\item{median_alpha}{A vector of the estimated alpha of the Dirichlet distribution for the locus-specific amplification efficiencies}
+
+\item{ave_het_ph_all_data}{A vector of the average heterozygote allele peak heights}
 
 \item{list_dt_average_sr}{A list of the average stutter ratios}
+
+\item{sr_consider_auto}{Information on consideration of back, forward, double-back, and minus 2-nt stutters in autosomal markers}
 }
 \description{
 The function to prepare data for estimating the gamma distribution
