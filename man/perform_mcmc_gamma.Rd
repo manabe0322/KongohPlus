@@ -8,10 +8,7 @@ perform_mcmc_gamma(
   rphs_gamma,
   tphs_gamma,
   ophs_gamma,
-  sizes_gamma,
   ats_gamma,
-  count_ids_gamma,
-  min_size,
   model_gamma,
   warmup,
   sampling,
@@ -26,8 +23,6 @@ perform_mcmc_gamma(
 
 \item{ophs_gamma}{The observed peak heights for the gamma distribution}
 
-\item{sizes_gamma}{The sizes for the gamma distribution}
-
 \item{ats_gamma}{The analytical thresholds for the gamma distribution}
 
 \item{model_gamma}{The stan model of the gamma distribution}
@@ -39,8 +34,6 @@ perform_mcmc_gamma(
 \item{chains}{The number of chains}
 
 \item{n_parallel_chains}{The number of parallel chains}
-
-\item{ids_gamma}{The sample IDs for the gamma distribution}
 }
 \description{
 The function to perform MCMC for the gamma distribution
