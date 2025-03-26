@@ -1,8 +1,8 @@
 data{
   int N;
-  vector[N] OPH;
   vector[N] RPH;
   vector[N] TPH;
+  vector[N] OPH;
   vector[N] AT;
 }
 

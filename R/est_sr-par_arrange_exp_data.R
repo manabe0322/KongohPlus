@@ -44,29 +44,39 @@ arrange_exp_data <- function(dt_exp, dt_gt,
 
       # Remove NA
       index_not_na <- which(!is.na(peaks))
-      peaks <- peaks[index_not_na]
-      heights <- heights[index_not_na]
-
-      # Remove peaks below AT
-      index_above_at <- which(heights >= at_auto[mk])
-      peaks <- peaks[index_above_at]
-      heights <- heights[index_above_at]
-
-      # Extract the genotype of one marker
-      dt_gt_one_mk <- dt_gt_one[Marker == mk]
-      gt <- as.character(dt_gt_one_mk[, index_gt_allele, with = FALSE])
-      gt_one[j, ] <- gt
-
-      # Make detectable peaks in the profile under the genotype
-      cand_peak <- make_cand_peak(as.numeric(gt), c(sr_consider_auto[mk, ]))
-
-      index_use <- which(is.element(peaks, as.character(cand_peak)))
-      if(length(index_use) > 0){
-        peak_list_one[[j]] <- peaks[index_use]
-        height_list_one[[j]] <- heights[index_use]
-      }else{
+      if(length(index_not_na) == 0){
         peak_list_one[[j]] <- character(0)
         height_list_one[[j]] <- numeric(0)
+      }else{
+        peaks <- peaks[index_not_na]
+        heights <- heights[index_not_na]
+
+        # Remove peaks below AT
+        index_above_at <- which(heights >= at_auto[mk])
+        if(length(index_above_at) == 0){
+          peak_list_one[[j]] <- character(0)
+          height_list_one[[j]] <- numeric(0)
+        }else{
+          peaks <- peaks[index_above_at]
+          heights <- heights[index_above_at]
+
+          # Extract the genotype of one marker
+          dt_gt_one_mk <- dt_gt_one[Marker == mk]
+          gt <- as.character(dt_gt_one_mk[, index_gt_allele, with = FALSE])
+          gt_one[j, ] <- gt
+
+          # Make detectable peaks in the profile under the genotype
+          cand_peak <- make_cand_peak(as.numeric(gt), c(sr_consider_auto[mk, ]))
+
+          index_use <- which(is.element(peaks, as.character(cand_peak)))
+          if(length(index_use) > 0){
+            peak_list_one[[j]] <- peaks_adopt <- peaks[index_use]
+            height_list_one[[j]] <- heights[index_use]
+          }else{
+            peak_list_one[[j]] <- character(0)
+            height_list_one[[j]] <- numeric(0)
+          }
+        }
       }
     }
 

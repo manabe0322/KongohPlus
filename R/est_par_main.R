@@ -264,8 +264,6 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, me
           rphs <- apply(rph_per_component, 1, sum)
 
           index_al <- match(gt, cand_peaks)
-          index_al <- index_al[!is.na(index_al)]
-
           rphs_gamma[i, c(2 * j - 1, 2 * j)] <- rphs[index_al]
           tphs_gamma[i, c(2 * j - 1, 2 * j)] <- ave_het_ph_s1
 
@@ -302,7 +300,7 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, me
 perform_mcmc_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma,
                                model_gamma,
                                warmup, sampling, chains, n_parallel_chains){
-  data_list_gamma <- list(N = length(rphs_gamma), OPH = ophs_gamma, RPH = rphs_gamma, TPH = tphs_gamma, AT = ats_gamma)
+  data_list_gamma <- list(N = length(rphs_gamma), RPH = rphs_gamma, TPH = tphs_gamma, OPH = ophs_gamma, AT = ats_gamma)
 
   fit_gamma <- model_gamma$sample(
     data_list_gamma,
@@ -370,9 +368,6 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   prop_ae_data <- matrix(dt_ae_data$PropAE, nrow = n_mk_auto)
   prop_ae_data_use <- prop_ae_data[, which(apply(prop_ae_data, 2, prod) > 0), drop = FALSE]
 
-  # Prepare data for average heterozygote allele peak heights
-  ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
-
   # Perform MCMC for AE
   tmp <- perform_mcmc_ae_all_mk(prop_ae_data_use, markers_auto,
                                 model_ae,
@@ -382,6 +377,9 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   median_lp_ae <- tmp$median_lp
   rhat_lp_ae <- tmp$rhat_lp
   traceplot_ae <- tmp$traceplot_ae
+
+  # Prepare data for average heterozygote allele peak heights
+  ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
 
   # Prepare peak height data for estimating gamma distribution
   tmp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, median_alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto)
