@@ -41,7 +41,6 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_use, ats_use){
   # Column indices for alleles, sizes, and heights
   names_csp <- names(dt_csp)
   index_allele <- grep("Allele", names_csp)
-  index_size <- grep("Size", names_csp)
   index_height <- grep("Height", names_csp)
 
   name_csp_all <- unique(dt_csp[, SampleName])
@@ -96,10 +95,13 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_use, ats_use){
 
       # Interpolation or extrapolation to determine the sizes without information
       if(length(index_sizes_na) != 0){
-        param_tmp <- simple_linear_regression(alleles_kit, sizes_kit)
+        rep_uni_len <- dt_kit_auto_mk[["Repeat Unit Length"]][1]
+        alleles_scale_change <- change_var_al_plot(alleles_kit, rep_uni_len)
+        param_tmp <- simple_linear_regression(alleles_scale_change, sizes_kit)
         slope <- param_tmp["slope"]
         intercept <- param_tmp["intercept"]
-        sizes_all_rep[index_sizes_na] <- slope * peaks_all_rep[index_sizes_na] + intercept
+        peaks_scale_change <- change_var_al_plot(peaks_all_rep[index_sizes_na], rep_uni_len)
+        sizes_all_rep[index_sizes_na] <- slope * peaks_scale_change + intercept
       }
     }
 

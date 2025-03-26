@@ -87,12 +87,12 @@ parameters{
 transformed parameters{
   simplex[hnc] mp;
   mp = softmax(lambda);
-  vector<lower = 0, upper = 1>[n_rep] sigma = cv / sqrt(tph);
+  vector<lower = 0>[n_rep] sigma = cv / sqrt(tph);
 }
 
 model{
   tph ~ normal((ltph + htph) / 2, (htph - ltph) / 2);
-  lambda ~ normal(0, 5);
+  lambda ~ normal(0, 10);
   pae ~ dirichlet(ae_alpha_use);
 
   int index_dedup1_start = 1;
