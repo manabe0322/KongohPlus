@@ -12,7 +12,7 @@ perform_deconvo(
   peaks_list,
   sizes_list,
   heights_list,
-  mean_size,
+  min_size,
   pop_al_list,
   pop_prob_list,
   theta,

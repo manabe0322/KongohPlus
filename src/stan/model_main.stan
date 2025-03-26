@@ -1,11 +1,11 @@
 functions{
-  vector calc_rph_dedup1(vector mp, vector deg, int hnc, int n_dedup1_sum, vector rph_base_use, array[,] int index_dedup1_use, vector size_dedup1_use, real mean_size, vector ae_dedup1_use){
+  vector calc_rph_dedup1(vector mp, vector deg, int hnc, int n_dedup1_sum, vector rph_base_use, array[,] int index_dedup1_use, vector size_dedup1_use, real min_size, vector ae_dedup1_use){
     vector[n_dedup1_sum] rph_dedup1 = rep_vector(0, n_dedup1_sum);
     for(i in 1:hnc){
       vector[n_dedup1_sum] rph_base_use_c1 = rph_base_use[index_dedup1_use[2 * i - 1, ]] + rph_base_use[index_dedup1_use[2 * i, ]];
       real mp_c1 = mp[i];
       real deg_c1 = deg[i];
-      rph_dedup1 += rph_base_use_c1 * mp_c1 .* deg_c1^((size_dedup1_use - mean_size) / mean_size) .* ae_dedup1_use;
+      rph_dedup1 += rph_base_use_c1 * mp_c1 .* deg_c1^((size_dedup1_use - min_size) / min_size) .* ae_dedup1_use;
     }
     return rph_dedup1;
   }
@@ -48,7 +48,7 @@ data{
   vector[n_rph_base_sum] rph_base_use;
   vector[n_mk] ae_alpha_use;
   real cv;
-  real mean_size;
+  real min_size;
 
   array[n_rep] int n_dedup1_sum_per_rep;
   int n_dedup1_sum;
@@ -76,7 +76,7 @@ data{
 }
 
 parameters{
-  vector<lower = 0, upper = 1>[n_rep] sigma;
+  //vector<lower = 0, upper = 1>[n_rep] sigma;
   vector<lower = ltph, upper = htph>[n_rep] tph;
   //vector<lower = 0>[n_rep] tph;
   ordered[hnc] lambda;
@@ -87,7 +87,7 @@ parameters{
 transformed parameters{
   simplex[hnc] mp;
   mp = softmax(lambda);
-  //vector<lower = 0, upper = 1>[n_rep] sigma = cv / sqrt(tph);
+  vector<lower = 0, upper = 1>[n_rep] sigma = cv / sqrt(tph);
 }
 
 model{
@@ -117,7 +117,7 @@ model{
     int n_dedup2_sum_rep1 = n_dedup2_sum_per_rep[i];
     array[n_dedup2_sum_rep1] int index_dedup2_use_rep1 = index_dedup2_use[index_dedup2_start:(index_dedup2_start + n_dedup2_sum_rep1 - 1)];
 
-    vector[n_dedup1_sum_rep1] rph_dedup1_use_rep1 = calc_rph_dedup1(mp, deg, hnc, n_dedup1_sum_rep1, rph_base_use, index_dedup1_use_rep1, size_dedup1_use_rep1, mean_size, ae_dedup1_use_rep1);
+    vector[n_dedup1_sum_rep1] rph_dedup1_use_rep1 = calc_rph_dedup1(mp, deg, hnc, n_dedup1_sum_rep1, rph_base_use, index_dedup1_use_rep1, size_dedup1_use_rep1, min_size, ae_dedup1_use_rep1);
     vector[n_dedup1_sum_rep1] lpd_dedup1_use_rep1 = rep_vector(0, n_dedup1_sum_rep1);
 
     if(n_general_sum_rep1 != 0){

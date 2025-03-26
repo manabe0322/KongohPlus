@@ -16,7 +16,7 @@ make_index_dedup2_mk <- function(index_rph_gtc, index_dedup1_all_mk){
 #' @param cv A parameter of the gamma distribution
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc The number of contributors
-perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, mean_size,
+perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                             pop_al_list, pop_prob_list, theta,
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             logprob_di, shape_di, rate_di,
@@ -342,7 +342,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                            rph_base_use = unlist(rph_base_use),
                            ae_alpha_use = ae_alpha_use,
                            cv = cv,
-                           mean_size = mean_size,
+                           min_size = min_size,
                            n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
                            n_dedup1_sum = n_dedup1_sum,
                            index_dedup1_use = index_dedup1_use,
@@ -367,33 +367,35 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     # Perform MCMC
     model_main <- stan_package_model(name = "model_main", package = "KongohPlus")
 
-    init_values <- function() {
-      list(
-        sigma = runif(hnc, 0.01, 0.99),
-        tph = runif(n_rep, min_tph / 2, max_tph / 2),  # tphの初期値を範囲内に設定
-        lambda = sort(rnorm(hnc, 0, 5)),  # lambdaの順序制約を守るためにソート
-        deg = runif(hnc, 0.01, 0.99),           # degの初期値を[0, 1]範囲でランダムに設定
-        pae = rdirichlet(1, ae_alpha_use)[1, ] # paeの初期値をdirichlet分布から生成
-      )
-    }
+    #init_values <- function() {
+    #  list(
+    #    sigma = runif(hnc, 0.01, 0.99),
+    #    tph = runif(n_rep, min_tph / 2, max_tph / 2),  # tphの初期値を範囲内に設定
+    #    lambda = sort(rnorm(hnc, 0, 5)),  # lambdaの順序制約を守るためにソート
+    #    deg = runif(hnc, 0.01, 0.99),           # degの初期値を[0, 1]範囲でランダムに設定
+    #    pae = rdirichlet(1, ae_alpha_use)[1, ] # paeの初期値をdirichlet分布から生成
+    #  )
+    #}
 
-    init_values_list <- list(
-      init_values(),  # チェーン1の初期値
-      init_values(),  # チェーン2の初期値
-      init_values(),  # チェーン3の初期値
-      init_values()   # チェーン4の初期値
-    )
+    #init_values_list <- list(
+    #  init_values(),  # チェーン1の初期値
+    #  init_values(),  # チェーン2の初期値
+    #  init_values(),  # チェーン3の初期値
+    #  init_values()   # チェーン4の初期値
+    #)
 
     fit_main <- model_main$sample(
       data_list_main,
       iter_warmup = warmup,
       iter_sampling = sampling,
       chains = chains,
-      parallel_chains = detectCores(),
-      init = init_values_list,
-      adapt_delta = 0.95,       # 適応的なデルタを変更
-      max_treedepth = 15
+      parallel_chains = detectCores()
     )
+    #,
+    #  init = init_values_list,
+    #  adapt_delta = 0.95,       # 適応的なデルタを変更
+    #  max_treedepth = 15
+    #)
 
     # Trace plot
     draws <- fit_main$draws()
@@ -455,7 +457,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       index_dedup2_use_cpp <- index_dedup2_use_rep1 - 1 # C++ index
 
       lpd_gtc_use[[i]] <- calc_lpd_gtc_all_mk_cpp(n_mk, mp, deg, hnc, n_dedup1_sum_rep1, n_general_sum_per_rep[i], n_dropout_sum_per_rep[i], n_dropin_sum_per_rep[i],
-                                                  unlist(rph_base_use), index_dedup1_use_cpp, size_dedup1_use_rep1, mean_size, ae_dedup1_use_rep1, oph_dedup1_use_rep1,
+                                                  unlist(rph_base_use), index_dedup1_use_cpp, size_dedup1_use_rep1, min_size, ae_dedup1_use_rep1, oph_dedup1_use_rep1,
                                                   at_dropout_rep1, loglike_di_rep1, cv, tph[i],
                                                   index_dedup2_use_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
 
@@ -538,7 +540,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     peaks_list <- tmp$peaks_list
     sizes_list <- tmp$sizes_list
     heights_list <- tmp$heights_list
-    mean_size <- mean(dt_kit_auto$Size)
+    min_size <- min(dt_kit_auto$Size)
 
     # Set allele probabilities
     tmp <- set_al_prob(markers_use, dt_af, peaks_list)
@@ -573,7 +575,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     data_hnc_list <- vector(mode = "list", length = n_hnc)
     for(i in 1:n_hnc){
       hnc <- hnc_all[i]
-      data_hnc_list[[i]] <- perform_deconvo(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, mean_size,
+      data_hnc_list[[i]] <- perform_deconvo(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                                             pop_al_list, pop_prob_list, theta,
                                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                             logprob_di, shape_di, rate_di,
@@ -585,7 +587,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     heights_list <- NULL
     pop_al_list <- NULL
     pop_prob_list <- NULL
-    mean_size <- NULL
+    min_size <- NULL
     data_hnc_list <- NULL
   }
 
@@ -595,6 +597,6 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
               "heights_list" = heights_list,
               "pop_al_list" = pop_al_list,
               "pop_prob_list" = pop_prob_list,
-              "mean_size" = mean_size,
+              "min_size" = min_size,
               "data_hnc_list" = data_hnc_list))
 }
