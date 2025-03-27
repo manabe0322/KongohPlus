@@ -11,8 +11,7 @@ perform_deconvo_all_noc(
   dt_ignore_mk,
   dt_anameth,
   alpha_auto,
-  cv_allele,
-  cv_stutter,
+  cv,
   list_dt_average_sr,
   hnc_all
 )
@@ -30,9 +29,7 @@ perform_deconvo_all_noc(
 
 \item{alpha_auto}{A vector of the estimated alpha values for Dirichlet distribution of the locus-specific amplification efficiencies}
 
-\item{cv_allele}{The coefficient of variation for allelels}
-
-\item{cv_stutter}{The coefficient of variation for stutters}
+\item{cv}{A parameter of the gamma distribution}
 
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 
