@@ -29,18 +29,19 @@ perform_deconvo(
   sampling,
   chains,
   ae_alpha_use,
-  cv,
+  cv_allele,
+  cv_stutter,
   list_dt_average_sr
 )
 }
 \arguments{
 \item{hnc}{The number of contributors}
 
-\item{cv}{A parameter of the gamma distribution}
+\item{cv_allele}{The coefficient of variation for allelels}
+
+\item{cv_stutter}{The coefficient of variation for stutters}
 
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
-
-\item{alpha_auto}{A vector of the estimated alpha values for Dirichlet distribution of the locus-specific amplification efficiencies}
 }
 \description{
 The function to perform mixture deconvolution
