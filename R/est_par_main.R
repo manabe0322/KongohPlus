@@ -143,71 +143,66 @@ perform_mcmc_ae_all_mk <- function(prop_ae_data_use, markers_auto,
 #' @param dsr_average A vector of the average double-back stutter ratios
 #' @param m2sr_average A vector of the average minus 2-nt stutter ratios
 calc_relative_ph <- function(cand_peaks, gt, ae, allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average){
-  allele_sr <- round(as.numeric(allele_sr), 1)
-
   rph_al_1 <- rph_bs_1 <- rph_fs_1 <- rph_ds_1 <- rph_m2s_1 <- rep(0, length(cand_peaks))
   rph_al_2 <- rph_bs_2 <- rph_fs_2 <- rph_ds_2 <- rph_m2s_2 <- rep(0, length(cand_peaks))
 
-  # Heterozygote
-  if(gt[1] != gt[2]){
-    for(i in 1:2){
-      al <- gt[i]
-      index_sr_al <- which(is.element(allele_sr, al))
-      if(length(index_sr_al) == 1){
-        bsr <- bsr_average[index_sr_al]
-        fsr <- fsr_average[index_sr_al]
-        dsr <- dsr_average[index_sr_al]
-        m2sr <- m2sr_average[index_sr_al]
-      }else{
-        bsr <- 0
-        fsr <- 0
-        dsr <- 0
-        m2sr <- 0
+  for(i in 1:2){
+    al <- gt[i]
+    index_sr_al <- which(is.element(allele_sr, al))
+    if(length(index_sr_al) == 1){
+      bsr <- bsr_average[index_sr_al]
+      fsr <- fsr_average[index_sr_al]
+      dsr <- dsr_average[index_sr_al]
+      m2sr <- m2sr_average[index_sr_al]
+    }else{
+      bsr <- 0
+      fsr <- 0
+      dsr <- 0
+      m2sr <- 0
+    }
+
+    index_al <- which(is.element(cand_peaks, al))
+    bs <- calc_bs_one(al)
+    index_bs <- which(is.element(cand_peaks, bs))
+    fs <- calc_fs_one(al)
+    index_fs <- which(is.element(cand_peaks, fs))
+    ds <- calc_ds_one(al)
+    index_ds <- which(is.element(cand_peaks, ds))
+    m2s <- calc_m2s_one(al)
+    index_m2s <- which(is.element(cand_peaks, m2s))
+
+    if(i == 1){
+      rph_al_1[index_al] <- ae / (1 + bsr + fsr + dsr + m2sr)
+      if(length(index_bs) == 1){
+        rph_bs_1[index_bs] <- ae * bsr / (1 + bsr + fsr + dsr + m2sr)
       }
-
-      index_al <- which(is.element(cand_peaks, al))
-      bs <- calc_bs_one(al)
-      index_bs <- which(is.element(cand_peaks, bs))
-      fs <- calc_fs_one(al)
-      index_fs <- which(is.element(cand_peaks, fs))
-      ds <- calc_ds_one(al)
-      index_ds <- which(is.element(cand_peaks, ds))
-      m2s <- calc_m2s_one(al)
-      index_m2s <- which(is.element(cand_peaks, m2s))
-
-      if(i == 1){
-        rph_al_1[index_al] <- ae / (1 + bsr + fsr + dsr + m2sr)
-        if(length(index_bs) == 1){
-          rph_bs_1[index_bs] <- ae * bsr / (1 + bsr + fsr + dsr + m2sr)
-        }
-        if(length(index_fs) == 1){
-          rph_fs_1[index_fs] <- ae * fsr / (1 + bsr + fsr + dsr + m2sr)
-        }
-        if(length(index_ds) == 1){
-          rph_ds_1[index_ds] <- ae * dsr / (1 + bsr + fsr + dsr + m2sr)
-        }
-        if(length(index_m2s) == 1){
-          rph_m2s_1[index_m2s] <- ae * m2sr / (1 + bsr + fsr + dsr + m2sr)
-        }
-      }else{
-        rph_al_2[index_al] <- ae / (1 + bsr + fsr + dsr + m2sr)
-        if(length(index_bs) == 1){
-          rph_bs_2[index_bs] <- ae * bsr / (1 + bsr + fsr + dsr + m2sr)
-        }
-        if(length(index_fs) == 1){
-          rph_fs_2[index_fs] <- ae * fsr / (1 + bsr + fsr + dsr + m2sr)
-        }
-        if(length(index_ds) == 1){
-          rph_ds_2[index_ds] <- ae * dsr / (1 + bsr + fsr + dsr + m2sr)
-        }
-        if(length(index_m2s) == 1){
-          rph_m2s_2[index_m2s] <- ae * m2sr / (1 + bsr + fsr + dsr + m2sr)
-        }
+      if(length(index_fs) == 1){
+        rph_fs_1[index_fs] <- ae * fsr / (1 + bsr + fsr + dsr + m2sr)
+      }
+      if(length(index_ds) == 1){
+        rph_ds_1[index_ds] <- ae * dsr / (1 + bsr + fsr + dsr + m2sr)
+      }
+      if(length(index_m2s) == 1){
+        rph_m2s_1[index_m2s] <- ae * m2sr / (1 + bsr + fsr + dsr + m2sr)
+      }
+    }else{
+      rph_al_2[index_al] <- ae / (1 + bsr + fsr + dsr + m2sr)
+      if(length(index_bs) == 1){
+        rph_bs_2[index_bs] <- ae * bsr / (1 + bsr + fsr + dsr + m2sr)
+      }
+      if(length(index_fs) == 1){
+        rph_fs_2[index_fs] <- ae * fsr / (1 + bsr + fsr + dsr + m2sr)
+      }
+      if(length(index_ds) == 1){
+        rph_ds_2[index_ds] <- ae * dsr / (1 + bsr + fsr + dsr + m2sr)
+      }
+      if(length(index_m2s) == 1){
+        rph_m2s_2[index_m2s] <- ae * m2sr / (1 + bsr + fsr + dsr + m2sr)
       }
     }
   }
 
-  return(cbind(rph_al_1, rph_al_2, rph_bs_1, rph_bs_2, rph_fs_1, rph_fs_2, rph_ds_1, rph_ds_2, rph_m2s_1, rph_m2s_2))
+  return(rbind(rph_al_1, rph_al_2, rph_bs_1, rph_bs_2, rph_fs_1, rph_fs_2, rph_ds_1, rph_ds_2, rph_m2s_1, rph_m2s_2))
 }
 
 #' prepare_gamma_data
@@ -221,68 +216,140 @@ calc_relative_ph <- function(cand_peaks, gt, ae, allele_sr, bsr_average, fsr_ave
 #' @param ave_het_ph_all_data A vector of the average heterozygote allele peak heights
 #' @param list_dt_average_sr A list of the average stutter ratios
 #' @param sr_consider_auto Information on consideration of back, forward, double-back, and minus 2-nt stutters in autosomal markers
-prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, median_alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto){
+#' @param at_auto A vector of ATs in each autosomal marker
+prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, median_alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto){
   n_sample <- length(gt_list)
   n_mk <- length(markers_auto)
 
   expect_ae_all_mk <- n_mk * (median_alpha + 1) / (sum(median_alpha) + n_mk)
 
   sum_peaks_all <- length(unlist(peak_list))
-  rphs_gamma <- matrix(-1, n_sample, 2 * n_mk)
-  tphs_gamma <- matrix(-1, n_sample, 2 * n_mk)
-  ophs_gamma <- matrix(-1, n_sample, 2 * n_mk)
+  rphs_gamma_list <- vector(mode = "list", length = n_sample)
+  tphs_gamma_list <- vector(mode = "list", length = n_sample)
+  ophs_gamma_list <- vector(mode = "list", length = n_sample)
+  ats_gamma_list <- vector(mode = "list", length = n_sample)
+  n_adopt_all <- rep(0, n_sample * n_mk)
 
-  index_start <- 1
+  count <- 0
   for(i in 1:n_sample){
     peak_s1 <- peak_list[[i]]
     height_s1 <- height_list[[i]]
     gt_s1 <- gt_list[[i]]
     ave_het_ph_s1 <- ave_het_ph_all_data[i]
 
+    rphs_gamma_list_s1 <- vector(mode = "list", length = n_mk)
+    names(rphs_gamma_list_s1) <- markers_auto
+    tphs_gamma_list_s1 <- vector(mode = "list", length = n_mk)
+    names(tphs_gamma_list_s1) <- markers_auto
+    ophs_gamma_list_s1 <- vector(mode = "list", length = n_mk)
+    names(ophs_gamma_list_s1) <- markers_auto
+    ats_gamma_list_s1 <- vector(mode = "list", length = n_mk)
+    names(ats_gamma_list_s1) <- markers_auto
+
     for(j in 1:n_mk){
+      count <- count + 1
+
       peaks <- peak_s1[[j]]
+      peaks <- round(as.numeric(peaks), 1)
       n_peak <- length(peaks)
       if(n_peak != 0){
         gt <- gt_s1[j, ]
         gt <- round(as.numeric(gt), 1)
 
-        # Only heterozygote
-        if(gt[1] != gt[2]){
-          heights <- height_s1[[j]]
-          ae <- expect_ae_all_mk[j]
-          mk <- markers_auto[j]
-          dt_average_sr <- list_dt_average_sr[[mk]]
-          allele_sr <- dt_average_sr$Allele
-          bsr_average <- dt_average_sr[["Average BSR"]]
-          fsr_average <- dt_average_sr[["Average FSR"]]
-          dsr_average <- dt_average_sr[["Average DSR"]]
-          m2sr_average <- dt_average_sr[["Average M2SR"]]
+        heights <- height_s1[[j]]
+        ae <- expect_ae_all_mk[j]
+        mk <- markers_auto[j]
+        dt_average_sr <- list_dt_average_sr[[mk]]
+        allele_sr <- round(as.numeric(dt_average_sr$Allele), 1)
+        bsr_average <- dt_average_sr[["Average BSR"]]
+        fsr_average <- dt_average_sr[["Average FSR"]]
+        dsr_average <- dt_average_sr[["Average DSR"]]
+        m2sr_average <- dt_average_sr[["Average M2SR"]]
+        at <- at_auto[mk]
 
-          cand_peaks <- make_cand_peak(gt, sr_consider_auto[j, ])
+        cand_peaks <- make_cand_peak(gt, sr_consider_auto[j, ])
 
-          rph_per_component <- calc_relative_ph(cand_peaks, gt, ae, allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average)
-          rphs <- apply(rph_per_component, 1, sum)
+        rphs_per_component <- calc_relative_ph(cand_peaks, gt, ae, allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average)
+        rphs <- apply(rphs_per_component, 2, sum)
 
-          index_al <- match(gt, cand_peaks)
-          rphs_gamma[i, c(2 * j - 1, 2 * j)] <- rphs[index_al]
-          tphs_gamma[i, c(2 * j - 1, 2 * j)] <- ave_het_ph_s1
+        index_rph <- which(rphs != 0) # If the stutter ratio = 0, rph for the stutter product is zero.
+        if(length(index_rph) == 0){
+          rphs_gamma_list_s1[[j]] <- NULL
+          tphs_gamma_list_s1[[j]] <- numeric(0)
+          ophs_gamma_list_s1[[j]] <- numeric(0)
+          ats_gamma_list_s1[[j]] <- numeric(0)
+        }else{
+          rphs_per_component <- rphs_per_component[, index_rph, drop = FALSE]
+          rphs <- rphs[index_rph]
+          cand_peaks_tmp <- cand_peaks[index_rph]
 
-          index_oph <- match(gt, round(as.numeric(peaks), 1))
-          for(k in 1:2){
-            if(is.na(index_oph[k])){
-              ophs_gamma[i, 2 * j - 2 + k] <- 0
-            }else{
-              ophs_gamma[i, 2 * j - 2 + k] <- heights[index_oph[k]]
+          index_gt <- which(is.element(cand_peaks_tmp, gt))
+          index_height <- which(is.element(cand_peaks_tmp, peaks))
+          index_adopt <- sort(unique(c(index_gt, index_height)))
+          n_adopt <- length(index_adopt)
+
+          if(n_adopt == 0){
+            rphs_gamma_list_s1[[j]] <- NULL
+            tphs_gamma_list_s1[[j]] <- numeric(0)
+            ophs_gamma_list_s1[[j]] <- numeric(0)
+            ats_gamma_list_s1[[j]] <- numeric(0)
+          }else{
+            if(all(rphs_per_component[, index_adopt, drop = FALSE] == 0)){
+              print(paste0("Sample: ", i, ", Marker: ", j))
             }
+
+            rphs_gamma_list_s1[[j]] <- rphs_per_component[, index_adopt, drop = FALSE]
+            tphs_gamma_list_s1[[j]] <- rep(ave_het_ph_s1, n_adopt)
+            cand_peaks_adopt <- cand_peaks_tmp[index_adopt]
+
+            ophs <- rep(0, n_adopt)
+            index_oph <- which(is.element(peaks, cand_peaks_adopt))
+            if(length(index_oph) != 0){
+              peaks_adopt <- peaks[index_oph]
+              heights_adopt <- heights[index_oph]
+              ophs[match(peaks_adopt, cand_peaks_adopt)] <- heights_adopt
+            }
+            ophs_gamma_list_s1[[j]] <- ophs
+
+            ats_gamma_list_s1[[j]] <- rep(at, n_adopt)
+
+            n_adopt_all[count] <- n_adopt
           }
         }
+      }else{
+        rphs_gamma_list_s1[[j]] <- NULL
+        tphs_gamma_list_s1[[j]] <- numeric(0)
+        ophs_gamma_list_s1[[j]] <- numeric(0)
+        ats_gamma_list_s1[[j]] <- numeric(0)
+      }
+    }
+    rphs_gamma_list[[i]] <- rphs_gamma_list_s1
+    tphs_gamma_list[[i]] <- tphs_gamma_list_s1
+    ophs_gamma_list[[i]] <- ophs_gamma_list_s1
+    ats_gamma_list[[i]] <- ats_gamma_list_s1
+  }
+
+  # Bind rphs
+  rphs_gamma <- matrix(NA, 10, sum(n_adopt_all))
+  index_start <- 1
+  for(i in 1:n_sample){
+    for(j in 1:n_mk){
+      n_adopt <- n_adopt_all[n_mk * (i - 1) + j]
+      if(n_adopt != 0){
+        rphs_gamma[, index_start:(index_start + n_adopt - 1)] <- rphs_gamma_list[[i]][[j]]
+        index_start <- index_start + n_adopt
       }
     }
   }
 
+  tphs_gamma <- unlist(tphs_gamma_list)
+  ophs_gamma <- unlist(ophs_gamma_list)
+  ats_gamma <- unlist(ats_gamma_list)
+
   return(list("rphs_gamma" = rphs_gamma,
               "tphs_gamma" = tphs_gamma,
-              "ophs_gamma" = ophs_gamma))
+              "ophs_gamma" = ophs_gamma,
+              "ats_gamma" = ats_gamma))
 }
 
 #' perform_mcmc_gamma
@@ -300,7 +367,7 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, me
 perform_mcmc_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma,
                                model_gamma,
                                warmup, sampling, chains, n_parallel_chains){
-  data_list_gamma <- list(N = length(rphs_gamma), RPH = rphs_gamma, TPH = tphs_gamma, OPH = ophs_gamma, AT = ats_gamma)
+  data_list_gamma <- list(N = length(tphs_gamma), RPH = rphs_gamma, TPH = tphs_gamma, OPH = ophs_gamma, AT = ats_gamma)
 
   fit_gamma <- model_gamma$sample(
     data_list_gamma,
@@ -313,22 +380,28 @@ perform_mcmc_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma,
   # Summary data
   fit_gamma_summary <- fit_gamma$summary()
 
-  # Median of the parameter 'cv'
+  # Median of the parameters
   median_lp <- fit_gamma_summary$median[which(fit_gamma_summary$variable == "lp__")]
-  median_cv <- fit_gamma_summary$median[which(fit_gamma_summary$variable == "cv")]
+  median_cv_allele <- fit_gamma_summary$median[which(fit_gamma_summary$variable == "cv_allele")]
+  median_cv_stutter <- fit_gamma_summary$median[which(fit_gamma_summary$variable == "cv_stutter")]
 
-  # rhat of the parameter 'cv' and the likelihood
+  # rhat of the parameters
   rhat_lp <- fit_gamma_summary$rhat[which(fit_gamma_summary$variable == "lp__")]
-  rhat_cv <- fit_gamma_summary$rhat[which(fit_gamma_summary$variable == "cv")]
+  rhat_cv_allele <- fit_gamma_summary$rhat[which(fit_gamma_summary$variable == "cv_allele")]
+  rhat_cv_stutter <- fit_gamma_summary$rhat[which(fit_gamma_summary$variable == "cv_stutter")]
 
   # Trace plot
-  fit_gamma$draws() %>% mcmc_trace(pars = c("cv")) -> traceplot_cv
+  fit_gamma$draws() %>% mcmc_trace(pars = c("cv_allele")) -> traceplot_cv_allele
+  fit_gamma$draws() %>% mcmc_trace(pars = c("cv_stutter")) -> traceplot_cv_stutter
 
   return(list("median_lp" = median_lp,
-              "median_cv" = median_cv,
+              "median_cv_allele" = median_cv_allele,
+              "median_cv_stutter" = median_cv_stutter,
               "rhat_lp" = rhat_lp,
-              "rhat_cv" = rhat_cv,
-              "traceplot_cv" = traceplot_cv))
+              "rhat_cv_allele" = rhat_cv_allele,
+              "rhat_cv_stutter" = rhat_cv_stutter,
+              "traceplot_cv_allele" = traceplot_cv_allele,
+              "traceplot_cv_stutter" = traceplot_cv_stutter))
 }
 
 #' estimate_parameters
@@ -382,39 +455,36 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
 
   # Prepare peak height data for estimating gamma distribution
-  tmp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, median_alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto)
+  tmp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, median_alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto)
   rphs_gamma <- tmp$rphs_gamma
   tphs_gamma <- tmp$tphs_gamma
   ophs_gamma <- tmp$ophs_gamma
-
-  ats_gamma <- rep(as.vector(sapply(at_auto, rep, 2)), length(peak_list))
-
-  index_rm <- which(rphs_gamma == -1)
-  if(length(index_rm) != 0){
-    rphs_gamma <- rphs_gamma[-index_rm]
-    tphs_gamma <- tphs_gamma[-index_rm]
-    ophs_gamma <- ophs_gamma[-index_rm]
-    ats_gamma <- ats_gamma[-index_rm]
-  }
+  ats_gamma <- tmp$ats_gamma
 
   # Perform MCMC for gamma distribution
   tmp <- perform_mcmc_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma,
                             model_gamma,
                             warmup, sampling, chains, n_parallel_chains)
   median_lp_gamma <- tmp$median_lp
-  median_cv <- tmp$median_cv
+  median_cv_allele <- tmp$median_cv_allele
+  median_cv_stutter <- tmp$median_cv_stutter
   rhat_lp_gamma <- tmp$rhat_lp
-  rhat_cv <- tmp$rhat_cv
-  traceplot_cv <- tmp$traceplot
+  rhat_cv_allele <- tmp$rhat_cv_allele
+  rhat_cv_stutter <- tmp$rhat_cv_stutter
+  traceplot_cv_allele <- tmp$traceplot_cv_allele
+  traceplot_cv_stutter <- tmp$traceplot_cv_stutter
 
-  return(list("median_alpha" = median_alpha,
-              "rhat_alpha" = rhat_alpha,
-              "median_lp_ae" = median_lp_ae,
+  return(list("median_lp_ae" = median_lp_ae,
+              "median_alpha" = median_alpha,
               "rhat_lp_ae" = rhat_lp_ae,
+              "rhat_alpha" = rhat_alpha,
               "traceplot_ae" = traceplot_ae,
               "median_lp_gamma" = median_lp_gamma,
-              "median_cv" = median_cv,
+              "median_cv_allele" = median_cv_allele,
+              "median_cv_stutter" = median_cv_stutter,
               "rhat_lp_gamma" = rhat_lp_gamma,
-              "rhat_cv" = rhat_cv,
-              "traceplot_cv" = traceplot_cv))
+              "rhat_cv_allele" = rhat_cv_allele,
+              "rhat_cv_stutter" = rhat_cv_stutter,
+              "traceplot_cv_allele" = traceplot_cv_allele,
+              "traceplot_cv_stutter" = traceplot_cv_stutter))
 }
