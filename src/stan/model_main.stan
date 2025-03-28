@@ -59,7 +59,7 @@ data{
 
   int n_rph_base_sum;
   vector[n_rph_base_sum] rph_base_use;
-  vector[n_mk] ae_alpha_use;
+  vector[n_mk] ae_use;
   real min_size;
 
   array[n_rep] int n_dedup1_sum_per_rep;
@@ -91,11 +91,9 @@ data{
 }
 
 parameters{
-  vector<lower = ltph, upper = htph>[n_rep] tph;
-  //vector<lower = 0>[n_rep] tph;
+  vector<lower = 0>[n_rep] tph;
   ordered[hnc] lambda;
   vector<lower = 0, upper = 1>[hnc] deg;
-  simplex[n_mk] pae;
 }
 
 transformed parameters{
@@ -105,8 +103,8 @@ transformed parameters{
 
 model{
   tph ~ normal((ltph + htph) / 2, (htph - ltph) / 2);
-  lambda ~ normal(0, 10);
-  pae ~ dirichlet(ae_alpha_use);
+  lambda ~ normal(0, 1);
+  deg ~ beta(1, 1);
 
   int index_rph_start = 1;
   int index_dropout_start = 1;
@@ -121,7 +119,7 @@ model{
     vector[n_rph_sum_rep1] size_rep1 = size_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
     vector[n_rph_sum_rep1] oph_rep1 = oph_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
     array[n_rph_sum_rep1] int id_mk_rep1 = id_mk_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
-    vector[n_rph_sum_rep1] ae_rep1 = n_mk * pae[id_mk_rep1];
+    vector[n_rph_sum_rep1] ae_rep1 = ae_use[id_mk_rep1];
 
     // Calculate relative peak heights
     matrix[n_rph_sum_rep1, 2 * hnc] rph_dedup1 = calc_rph_dedup1(mp, deg, hnc, n_rph_sum_rep1, rph_base_use, index_dedup1_rep1, size_rep1, min_size, ae_rep1);

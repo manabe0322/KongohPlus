@@ -1,5 +1,4 @@
 dt_csp <- fread("D:/研究プロジェクト管理/research_note_KongohPlus/240816_KMU_validation/other_data/KMU_csp/KMU_mix14_2_csp.csv")
-#dt_csp <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/CSP_example.csv")
 dt_csp <- change_data_type_csp(dt_csp)
 
 dt_af <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/examples/Allele-count_GF_Japanese.csv")
@@ -19,7 +18,8 @@ dt_ignore_mk <- data.table(Ignore = rep(FALSE, length(markers_auto)),
                            Marker = markers_auto)
 
 alpha_auto <- median_alpha
-cv <- median_cv
+cv_allele <- median_cv_allele
+cv_stutter <- median_cv_stutter
 hnc_from <- 2
 hnc_to <- 2
 hnc_all <- hnc_from:hnc_to

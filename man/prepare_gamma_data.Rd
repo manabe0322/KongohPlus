@@ -12,7 +12,8 @@ prepare_gamma_data(
   median_alpha,
   ave_het_ph_all_data,
   list_dt_average_sr,
-  sr_consider_auto
+  sr_consider_auto,
+  at_auto
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ prepare_gamma_data(
 \item{list_dt_average_sr}{A list of the average stutter ratios}
 
 \item{sr_consider_auto}{Information on consideration of back, forward, double-back, and minus 2-nt stutters in autosomal markers}
+
+\item{at_auto}{A vector of ATs in each autosomal marker}
 }
 \description{
 The function to prepare data for estimating the gamma distribution

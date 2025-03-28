@@ -21,7 +21,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             logprob_di, shape_di, rate_di,
                             warmup, sampling, chains,
-                            ae_alpha_use, cv_allele, cv_stutter, list_dt_average_sr){
+                            ae_use, cv_allele, cv_stutter, list_dt_average_sr){
   # Start computation
   start_time <- proc.time()
 
@@ -340,7 +340,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                            htph = max_tph / 2,
                            n_rph_base_sum = sum(n_rph_base_use),
                            rph_base_use = unlist(rph_base_use),
-                           ae_alpha_use = ae_alpha_use,
+                           ae_use = ae_use,
                            min_size = min_size,
                            n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
                            n_rph_sum_per_rep = n_rph_sum_per_rep,
@@ -389,13 +389,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     tph <- medians[grep("tph", variables)]
     mp <- medians[grep("mp", variables)]
     deg <- medians[grep("deg", variables)]
-    pae <- medians[grep("pae", variables)]
-    ae <- n_mk * pae
     rhat_lp <- rhats[which(variables == "lp__")]
     rhat_tph <- rhats[grep("tph", variables)]
     rhat_mp <- rhats[grep("mp", variables)]
     rhat_deg <- rhats[grep("deg", variables)]
-    rhat_pae <- rhats[grep("pae", variables)]
 
     ######################################################
     # Calculate likelihood under the estimated parameter #
@@ -550,6 +547,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
 
     # Set LSAE
     ae_alpha_use <- alpha_auto[match(markers_use, names(alpha_auto))]
+    ae_use <- n_mk * (ae_alpha_use + 1) / (sum(ae_alpha_use) + n_mk)
 
     n_hnc <- length(hnc_all)
     data_hnc_list <- vector(mode = "list", length = n_hnc)
@@ -560,7 +558,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                             logprob_di, shape_di, rate_di,
                                             warmup, sampling, chains,
-                                            ae_alpha_use, cv_allele, cv_stutter, list_dt_average_sr)
+                                            ae_use, cv_allele, cv_stutter, list_dt_average_sr)
     }
   }else{
     peaks_list <- NULL
