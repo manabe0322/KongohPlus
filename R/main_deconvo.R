@@ -94,7 +94,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     pop_prob <- pop_prob_list[[mk]]
 
     # The base of the relative peak heights
-    rph_base_use[[i]] <- rph_base_mk <- make_rph_base(peaks, bsrs, fsrs, dsrs, m2srs)
+    rph_base_use[[i]] <- rph_base_mk <- make_rph_base(peaks, bsrs, fsrs, dsrs, m2srs, ae_use[mk])
 
     cv_square_base_mk <- c(rep(cv_allele^2, n_peak), rep(cv_stutter^2, 4 * n_peak), 0, -1)
 
@@ -242,7 +242,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     cv_square_mcmc <- matrix(NA, nrow = 2 * hnc, ncol = n_rph_sum)
     size_mcmc <- rep(NA, n_rph_sum)
     oph_mcmc <- rep(NA, n_rph_sum)
-    id_mk_mcmc <- rep(NA, n_rph_sum)
     at_dropout <- rep(NA, n_dropout_sum)
 
     index_general_start <- 1
@@ -266,7 +265,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
           cv_square_mcmc[, index_tmp] <- cv_square_dedup1_general_use[[i]][[j]]
           size_mcmc[index_tmp] <- size_dedup1_general_use[[i]][[j]]
           oph_mcmc[index_tmp] <- oph_dedup1_general_use[[i]][[j]]
-          id_mk_mcmc[index_tmp] <- j
         }
 
         n_dropout <- n_dropout_rep1[j]
@@ -276,7 +274,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
           cv_square_mcmc[, index_tmp] <- cv_square_dedup1_dropout_use[[i]][[j]]
           size_mcmc[index_tmp] <- size_dedup1_dropout_use[[i]][[j]]
           oph_mcmc[index_tmp] <- oph_dedup1_dropout_use[[i]][[j]]
-          id_mk_mcmc[index_tmp] <- j
           at_dropout[index_at_start:(index_at_start + n_dropout - 1)] <- ats_use[j]
         }
 
@@ -340,7 +337,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                            htph = max_tph / 2,
                            n_rph_base_sum = sum(n_rph_base_use),
                            rph_base_use = unlist(rph_base_use),
-                           ae_use = ae_use,
                            min_size = min_size,
                            n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
                            n_rph_sum_per_rep = n_rph_sum_per_rep,
@@ -349,7 +345,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                            cv_square_mcmc = t(cv_square_mcmc),
                            size_mcmc = size_mcmc,
                            oph_mcmc = oph_mcmc,
-                           id_mk_mcmc = id_mk_mcmc,
                            n_general_sum_per_rep = n_general_sum_per_rep,
                            n_dropout_sum_per_rep = n_dropout_sum_per_rep,
                            n_dropout_sum = n_dropout_sum,
@@ -398,21 +393,18 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     # Calculate likelihood under the estimated parameter #
     ######################################################
 
-    index_dedup1_start <- 1
-    index_dedup2_start <- 1
+    index_rph_start <- 1
     index_dropout_start <- 1
     index_dropin_start <- 1
+    index_dedup2_start <- 1
     lpd_gtc_use <- vector(mode = "list", length = n_rep)
     for(i in 1:n_rep){
-      n_dedup1_sum_rep1 <- n_dedup1_sum_per_rep[i]
-      index_dedup1_use_rep1 <- index_dedup1_use[, index_dedup1_start:(index_dedup1_start + n_dedup1_sum_rep1 - 1)]
-      index_dedup1_use_cpp <- asplit(index_dedup1_use_rep1 - 1, 1) # C++ index
-
-      size_dedup1_use_rep1 <- size_dedup1_use[index_dedup1_start:(index_dedup1_start + n_dedup1_sum_rep1 - 1)]
-      oph_dedup1_use_rep1 <- oph_dedup1_use[index_dedup1_start:(index_dedup1_start + n_dedup1_sum_rep1 - 1)]
-
-      id_mk_dedup1_rep1 <- id_mk_dedup1[index_dedup1_start:(index_dedup1_start + n_dedup1_sum_rep1 - 1)]
-      ae_dedup1_use_rep1 <- ae[id_mk_dedup1_rep1]
+      n_rph_sum_rep1 <- n_rph_sum_per_rep[i]
+      index_dedup1_rep1 <- index_dedup1_mcmc[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+      index_dedup1_rep1_cpp <- asplit(index_dedup1_rep1 - 1, 1) # C++ index
+      cv_square_rep1 <- cv_square_mcmc[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+      size_rep1 <- size_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+      oph_rep1 <- oph_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
 
       n_dropout_sum_rep1 <- n_dropout_sum_per_rep[i]
       if(n_dropout_sum_rep1 != 0){
@@ -437,7 +429,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                                   at_dropout_rep1, loglike_di_rep1, cv, tph[i],
                                                   index_dedup2_use_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
 
-      index_dedup1_start <- index_dedup1_start + n_dedup1_sum_rep1
+      index_rph_start <- index_rph_start + n_rph_sum_rep1
       index_dropout_start <- index_dropout_start + n_dropout_sum_rep1
       index_dropin_start <- index_dropin_start + n_dropin_sum_rep1
       index_dedup2_start <- index_dedup2_start + n_dedup2_sum_rep1
@@ -495,12 +487,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param dt_kit_auto The data.table of the information on the autosomal markers in a kit
 #' @param dt_ignore_mk The data.table of the information on the ignored markers
 #' @param dt_anameth The data.table of the analysis method
-#' @param alpha_auto A vector of the estimated alpha values for Dirichlet distribution of the locus-specific amplification efficiencies
+#' @param expect_ae A vector of the expected locus-specific amplification efficiencies
 #' @param cv_allele The coefficient of variation for allelels
 #' @param cv_stutter The coefficient of variation for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc_all A vector of the assumed number of contributors
-perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, alpha_auto, cv_allele, cv_stutter, list_dt_average_sr, hnc_all){
+perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, cv_allele, cv_stutter, list_dt_average_sr, hnc_all){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
   if(n_mk != 0){
@@ -545,9 +537,8 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     sampling <- dt_anameth$Value[dt_anameth$Subcategory == "Sampling"]
     chains <- dt_anameth$Value[dt_anameth$Subcategory == "Chains"]
 
-    # Set LSAE
-    ae_alpha_use <- alpha_auto[match(markers_use, names(alpha_auto))]
-    ae_use <- n_mk * (ae_alpha_use + 1) / (sum(ae_alpha_use) + n_mk)
+    # Extract LSAE
+    ae_use <- expect_ae[match(markers_use, names(expect_ae))]
 
     n_hnc <- length(hnc_all)
     data_hnc_list <- vector(mode = "list", length = n_hnc)

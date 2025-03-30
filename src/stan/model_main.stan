@@ -1,10 +1,10 @@
 functions{
-  matrix calc_rph_dedup1(vector mp, vector deg, int hnc, int n_rph_sum_rep1, vector rph_base_use, array[,] int index_dedup1_rep1, vector size_rep1, real min_size, vector ae_rep1){
+  matrix calc_rph_dedup1(vector mp, vector deg, int hnc, int n_rph_sum_rep1, vector rph_base_use, array[,] int index_dedup1_rep1, vector size_rep1, real min_size){
     matrix[n_rph_sum_rep1, 2 * hnc] rph_dedup1;
     for(i in 1:hnc){
       real mp_c1 = mp[i];
       real deg_c1 = deg[i];
-      vector[n_rph_sum_rep1] rph_param = ae_rep1 .* deg_c1^((size_rep1 - min_size) / min_size) * mp_c1;
+      vector[n_rph_sum_rep1] rph_param = mp_c1 * deg_c1^((size_rep1 - min_size) / min_size);
       for(j in 1:2){
         rph_dedup1[, 2 * i - 2 + j] = rph_base_use[index_dedup1_rep1[2 * i - 2 + j, ]] .* rph_param;
       }
@@ -59,7 +59,6 @@ data{
 
   int n_rph_base_sum;
   vector[n_rph_base_sum] rph_base_use;
-  vector[n_mk] ae_use;
   real min_size;
 
   array[n_rep] int n_dedup1_sum_per_rep;
@@ -70,7 +69,6 @@ data{
   matrix[n_rph_sum, 2 * hnc] cv_square_mcmc;
   vector[n_rph_sum] size_mcmc;
   vector[n_rph_sum] oph_mcmc;
-  array[n_rph_sum] int id_mk_mcmc;
 
   array[n_rep] int n_general_sum_per_rep;
   array[n_rep] int n_dropout_sum_per_rep;
@@ -118,11 +116,9 @@ model{
     matrix[n_rph_sum_rep1, 2 * hnc] cv_square_rep1 = cv_square_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1), ];
     vector[n_rph_sum_rep1] size_rep1 = size_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
     vector[n_rph_sum_rep1] oph_rep1 = oph_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
-    array[n_rph_sum_rep1] int id_mk_rep1 = id_mk_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
-    vector[n_rph_sum_rep1] ae_rep1 = ae_use[id_mk_rep1];
 
     // Calculate relative peak heights
-    matrix[n_rph_sum_rep1, 2 * hnc] rph_dedup1 = calc_rph_dedup1(mp, deg, hnc, n_rph_sum_rep1, rph_base_use, index_dedup1_rep1, size_rep1, min_size, ae_rep1);
+    matrix[n_rph_sum_rep1, 2 * hnc] rph_dedup1 = calc_rph_dedup1(mp, deg, hnc, n_rph_sum_rep1, rph_base_use, index_dedup1_rep1, size_rep1, min_size);
 
     // Calculate gamma parameters
     matrix[n_rph_sum_rep1, 2] gamma_param = calc_gamma_param(rph_dedup1, cv_square_rep1, 2 * hnc, n_rph_sum_rep1, tph[i]);
