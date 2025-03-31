@@ -23,6 +23,7 @@ Imports:
     instantiate, 
     magrittr, 
     parallel, 
+    posterior,
     Rcpp, 
     rhandsontable, 
     rmarkdown, 

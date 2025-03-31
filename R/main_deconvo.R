@@ -377,14 +377,31 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     draws %>% mcmc_trace(pars = c("lp__")) -> traceplot
 
     # Extract parameters
+    tmp <- as_draws_df(fit_main$draws())
+    lp_values <- tmp$lp__
+    density_lp <- density(lp_values)
+    lp_mode_estimated <- density_lp$x[which.max(density_lp$y)]
+    index_hpd <- which.min(abs(lp_values - lp_mode_estimated))
+    lp <- lp_values[index_hpd]
+
+    tph <- rep(NA, n_rep)
+    for(i in 1:n_rep){
+      tph_values <- tmp[[paste0("tph[", i, "]")]]
+      tph[i] <- tph_values[index_hpd]
+    }
+
+    mp <- rep(NA, hnc)
+    deg <- rep(NA, hnc)
+    for(i in 1:hnc){
+      mp_values <- tmp[[paste0("mp[", i, "]")]]
+      mp[i] <- mp_values[index_hpd]
+      deg_values <- tmp[[paste0("deg[", i, "]")]]
+      deg[i] <- deg_values[index_hpd]
+    }
+
     fit_main_summary <- fit_main$summary()
     variables <- fit_main_summary$variable
-    medians <- fit_main_summary$median
     rhats <- fit_main_summary$rhat
-    lp <- medians[which(variables == "lp__")]
-    tph <- medians[grep("tph", variables)]
-    mp <- medians[grep("mp", variables)]
-    deg <- medians[grep("deg", variables)]
     rhat_lp <- rhats[which(variables == "lp__")]
     rhat_tph <- rhats[grep("tph", variables)]
     rhat_mp <- rhats[grep("mp", variables)]
