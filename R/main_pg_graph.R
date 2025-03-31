@@ -24,7 +24,7 @@ create_peaks_plot <- function(peaks, rep_unit_len, q_distance = 3){
 #'
 #' @description The function to calculate the expected peak heights under the selected genotype combination
 #' @param gt_select_list A list of genotypes in each contributor
-#' @param tph The total peak height
+#' @param tph The template amount
 #' @param mp The mixture proportions of each contributor
 #' @param deg The degradation parameters of each contributor
 #' @param ae The locus-specific amplification efficiencies in each marker

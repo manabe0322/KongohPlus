@@ -9,7 +9,7 @@ calc_eph(gt_select_list, tph, mp, deg, ae, dt_average_sr, dt_size, mean_size)
 \arguments{
 \item{gt_select_list}{A list of genotypes in each contributor}
 
-\item{tph}{The total peak height}
+\item{tph}{The template amount}
 
 \item{mp}{The mixture proportions of each contributor}
 

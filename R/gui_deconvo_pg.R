@@ -189,7 +189,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
             dt_diag <- data_hnc$dt_diag
             param_names <- dt_diag[["Parameter"]]
             est_vals <- dt_diag[["Estimated value"]]
-            tphs <- est_vals[param_names == "Total peak height"]
+            tphs <- est_vals[param_names == "Template amount"]
             mp <- est_vals[param_names == "Mixture proportion"]
             deg <- est_vals[param_names == "Degradation"]
             ae <- ae_use[markers_use == mk]
@@ -260,7 +260,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
             dt_diag <- data_hnc$dt_diag
             param_names <- dt_diag[["Parameter"]]
             est_vals <- dt_diag[["Estimated value"]]
-            tphs <- est_vals[param_names == "Total peak height"]
+            tphs <- est_vals[param_names == "Template amount"]
             mp <- est_vals[param_names == "Mixture proportion"]
             mp_c1 <- mp[index_contrib]
             deg <- est_vals[param_names == "Degradation"]
