@@ -319,7 +319,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             hnc_all <- hnc_from:hnc_to
             n_mk <- length(median_alpha)
             expect_ae <- n_mk * (median_alpha + 1) / (sum(median_alpha) + n_mk)
-            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, median_cv, list_dt_average_sr, hnc_all)
+            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, median_cv_allele, median_cv_stutter, list_dt_average_sr, hnc_all)
             data_deconvo$hnc_all <- hnc_all
             data_deconvo$dt_csp <- dt_csp
             data_deconvo$dt_af <- dt_af
@@ -329,8 +329,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             data_deconvo$dt_anameth <- dt_anameth
             data_deconvo$dt_kit <- dt_kit
             data_deconvo$dt_ignore_mk <- dt_ignore_mk
-            data_deconvo$alpha_auto <- median_alpha
-            data_deconvo$cv <- median_cv
+            data_deconvo$median_cv_allele <- median_cv_allele
+            data_deconvo$median_cv_stutter <- median_cv_stutter
             data_deconvo$list_dt_average_sr <- list_dt_average_sr
             data_deconvo$message_sr <- message_sr
             rv_deconvo$data_deconvo <- data_deconvo

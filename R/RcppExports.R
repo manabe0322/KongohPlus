@@ -121,8 +121,12 @@ calc_gtc_prob_mk <- function(gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_i
     .Call(`_KongohPlus_calc_gtc_prob_mk`, gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al)
 }
 
-calc_rph_dedup1_cpp <- function(mp, deg, hnc, n_dedup1_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, mean_size, ae_dedup1_all_mk) {
-    .Call(`_KongohPlus_calc_rph_dedup1_cpp`, mp, deg, hnc, n_dedup1_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, mean_size, ae_dedup1_all_mk)
+calc_rph_dedup1_cpp <- function(mp, deg, hnc, n_rph_sum_rep1, rph_base_use, index_dedup1_rep1_cpp, size_rep1, min_size) {
+    .Call(`_KongohPlus_calc_rph_dedup1_cpp`, mp, deg, hnc, n_rph_sum_rep1, rph_base_use, index_dedup1_rep1_cpp, size_rep1, min_size)
+}
+
+calc_gamma_param_cpp <- function(rph_dedup1, cv_square_rep1, n_roop, n_rph_sum_rep1, tph) {
+    .Call(`_KongohPlus_calc_gamma_param_cpp`, rph_dedup1, cv_square_rep1, n_roop, n_rph_sum_rep1, tph)
 }
 
 gamma_pdf <- function(value, shape, scale) {
@@ -133,15 +137,19 @@ gamma_cdf <- function(threshold, shape, scale) {
     .Call(`_KongohPlus_gamma_cdf`, threshold, shape, scale)
 }
 
-calc_lpd_gtc_all_mk_cpp <- function(n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, mean_size, ae_dedup1_all_mk, oph_dedup1_all_mk, at_dropout, loglike_di, cv, tph, index_dedup2_all_mk_cpp, n_dedup2_all_mk, n_peak_all_mk, n_gtc_all_mk) {
-    .Call(`_KongohPlus_calc_lpd_gtc_all_mk_cpp`, n_mk, mp, deg, hnc, n_dedup1_sum, n_general_sum, n_dropout_sum, n_dropin_sum, rph_base_all_mk, index_dedup1_all_mk_cpp, size_dedup1_all_mk, mean_size, ae_dedup1_all_mk, oph_dedup1_all_mk, at_dropout, loglike_di, cv, tph, index_dedup2_all_mk_cpp, n_dedup2_all_mk, n_peak_all_mk, n_gtc_all_mk)
+calc_lpd_dedup1_all_mk <- function(n_dedup1_sum_rep1, n_general_sum_rep1, n_dropout_sum_rep1, n_dropin_sum_rep1, oph_rep1, gamma_param, at_dropout_rep1, loglike_di) {
+    .Call(`_KongohPlus_calc_lpd_dedup1_all_mk`, n_dedup1_sum_rep1, n_general_sum_rep1, n_dropout_sum_rep1, n_dropin_sum_rep1, oph_rep1, gamma_param, at_dropout_rep1, loglike_di)
+}
+
+calc_lpd_gtc_all_mk_cpp <- function(mp, deg, hnc, n_rph_sum_rep1, rph_base_use, index_dedup1_rep1_cpp, size_rep1, min_size, cv_square_rep1, tph, n_dedup1_sum_rep1, n_general_sum_rep1, n_dropout_sum_rep1, n_dropin_sum_rep1, oph_rep1, at_dropout_rep1, loglike_di, n_mk, index_dedup2_use_rep1_cpp, n_dedup2_use, n_peak_use, n_gtc_use) {
+    .Call(`_KongohPlus_calc_lpd_gtc_all_mk_cpp`, mp, deg, hnc, n_rph_sum_rep1, rph_base_use, index_dedup1_rep1_cpp, size_rep1, min_size, cv_square_rep1, tph, n_dedup1_sum_rep1, n_general_sum_rep1, n_dropout_sum_rep1, n_dropin_sum_rep1, oph_rep1, at_dropout_rep1, loglike_di, n_mk, index_dedup2_use_rep1_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
 }
 
 make_cand_peak <- function(alleles, sr_consider) {
     .Call(`_KongohPlus_make_cand_peak`, alleles, sr_consider)
 }
 
-make_rph_base <- function(peaks, bsrs, fsrs, dsrs, m2srs) {
-    .Call(`_KongohPlus_make_rph_base`, peaks, bsrs, fsrs, dsrs, m2srs)
+make_rph_base <- function(peaks, bsrs, fsrs, dsrs, m2srs, ae) {
+    .Call(`_KongohPlus_make_rph_base`, peaks, bsrs, fsrs, dsrs, m2srs, ae)
 }
 

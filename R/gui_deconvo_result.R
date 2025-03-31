@@ -150,9 +150,8 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
                              columnDefs = list(list(width = "150px", targets = 0),
                                                list(width = "70px", targets = 1),
                                                list(width = "50px", targets = 2),
-                                               list(width = "50px", targets = 3),
-                                               list(width = "70px", targets = 4),
-                                               list(width = "50px", targets = 5))),
+                                               list(width = "70px", targets = 3),
+                                               list(width = "50px", targets = 4))),
               rownames = FALSE
             ) %>%
               formatSignif(columns = c("Estimated value", "Rhat"), digits = 4) %>%

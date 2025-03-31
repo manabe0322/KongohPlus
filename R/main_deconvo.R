@@ -368,7 +368,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       iter_warmup = warmup,
       iter_sampling = sampling,
       chains = chains,
-      parallel_chains = detectCores()
+      parallel_chains = detectCores()#,
+      #show_messages = FALSE
     )
 
     # Trace plot
@@ -403,8 +404,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       index_dedup1_rep1 <- index_dedup1_mcmc[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
       index_dedup1_rep1_cpp <- asplit(index_dedup1_rep1 - 1, 1) # C++ index
       cv_square_rep1 <- cv_square_mcmc[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+      cv_square_rep1 <- asplit(cv_square_rep1, 1)
       size_rep1 <- size_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
       oph_rep1 <- oph_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+
+      n_dedup1_sum_rep1 <- n_dedup1_sum_per_rep[i]
+      n_general_sum_rep1 <- n_general_sum_per_rep[i]
 
       n_dropout_sum_rep1 <- n_dropout_sum_per_rep[i]
       if(n_dropout_sum_rep1 != 0){
@@ -422,12 +427,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
       n_dedup2_sum_rep1 <- n_dedup2_sum_per_rep[i]
       index_dedup2_use_rep1 <- index_dedup2_use[index_dedup2_start:(index_dedup2_start + n_dedup2_sum_rep1 - 1)]
-      index_dedup2_use_cpp <- index_dedup2_use_rep1 - 1 # C++ index
+      index_dedup2_use_rep1_cpp <- index_dedup2_use_rep1 - 1 # C++ index
 
-      lpd_gtc_use[[i]] <- calc_lpd_gtc_all_mk_cpp(n_mk, mp, deg, hnc, n_dedup1_sum_rep1, n_general_sum_per_rep[i], n_dropout_sum_per_rep[i], n_dropin_sum_per_rep[i],
-                                                  unlist(rph_base_use), index_dedup1_use_cpp, size_dedup1_use_rep1, min_size, ae_dedup1_use_rep1, oph_dedup1_use_rep1,
-                                                  at_dropout_rep1, loglike_di_rep1, cv, tph[i],
-                                                  index_dedup2_use_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
+      lpd_gtc_use[[i]] <- calc_lpd_gtc_all_mk_cpp(mp, deg, hnc, n_rph_sum_rep1, unlist(rph_base_use), index_dedup1_rep1_cpp, size_rep1, min_size,
+                                                  cv_square_rep1, tph[i],
+                                                  n_dedup1_sum_rep1, n_general_sum_rep1, n_dropout_sum_rep1, n_dropin_sum_rep1, oph_rep1, at_dropout_rep1, loglike_di_rep1,
+                                                  n_mk, index_dedup2_use_rep1_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
 
       index_rph_start <- index_rph_start + n_rph_sum_rep1
       index_dropout_start <- index_dropout_start + n_dropout_sum_rep1
@@ -442,12 +447,11 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
                                Log10_Likelihood = c(log10like_use, sum(log10like_use)))
 
-    dt_diag <- data.table("Parameter" = c("lp__", rep("Total peak height", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Amplification efficiency", n_mk)),
-                          "Contributor" = c(NA, rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc), rep(NA, n_mk)),
-                          "Replicate" = c(NA, 1:n_rep, rep(NA, hnc), rep(NA, hnc), rep(NA, n_mk)),
-                          "Marker" = c(NA, rep(NA, n_rep), rep(NA, hnc), rep(NA, hnc), markers_use),
-                          "Estimated value" = c(lp, tph, mp[hnc:1], deg[hnc:1], ae),
-                          "Rhat" = c(rhat_lp, rhat_tph, rhat_mp[hnc:1], rhat_deg[hnc:1], rhat_pae))
+    dt_diag <- data.table("Parameter" = c("lp__", rep("Total peak height", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc)),
+                          "Contributor" = c(NA, rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc)),
+                          "Replicate" = c(NA, 1:n_rep, rep(NA, hnc), rep(NA, hnc)),
+                          "Estimated value" = c(lp, tph, mp[hnc:1], deg[hnc:1]),
+                          "Rhat" = c(rhat_lp, rhat_tph, rhat_mp[hnc:1], rhat_deg[hnc:1]))
 
     # End computation
     end_time <- proc.time()
@@ -566,6 +570,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
               "heights_list" = heights_list,
               "pop_al_list" = pop_al_list,
               "pop_prob_list" = pop_prob_list,
+              "ae_use" = ae_use,
               "min_size" = min_size,
               "data_hnc_list" = data_hnc_list))
 }

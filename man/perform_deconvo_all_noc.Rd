@@ -10,7 +10,7 @@ perform_deconvo_all_noc(
   dt_kit_auto,
   dt_ignore_mk,
   dt_anameth,
-  alpha_auto,
+  expect_ae,
   cv_allele,
   cv_stutter,
   list_dt_average_sr,
@@ -28,7 +28,7 @@ perform_deconvo_all_noc(
 
 \item{dt_anameth}{The data.table of the analysis method}
 
-\item{alpha_auto}{A vector of the estimated alpha values for Dirichlet distribution of the locus-specific amplification efficiencies}
+\item{expect_ae}{A vector of the expected locus-specific amplification efficiencies}
 
 \item{cv_allele}{The coefficient of variation for allelels}
 

@@ -17,7 +17,8 @@ load("D:/RStudio_GitHub/KongohPlus/inst/extdata/stutter_file/stutter_GF_default.
 dt_ignore_mk <- data.table(Ignore = rep(FALSE, length(markers_auto)),
                            Marker = markers_auto)
 
-alpha_auto <- median_alpha
+n_mk <- length(median_alpha)
+expect_ae <- n_mk * (median_alpha + 1) / (sum(median_alpha) + n_mk)
 cv_allele <- median_cv_allele
 cv_stutter <- median_cv_stutter
 hnc_from <- 2
