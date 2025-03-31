@@ -62,7 +62,8 @@ deconvo_pg_server <- function(id, rv_deconvo){
         dt_kit <- data_deconvo$dt_kit
         peaks_list <- data_deconvo$peaks_list
         heights_list <- data_deconvo$heights_list
-        mean_size <- data_deconvo$mean_size
+        ae_use <- data_deconvo$ae_use
+        min_size <- data_deconvo$min_size
         n_rep <- length(heights_list[[1]])
 
         rv_deconvo_pg <- reactiveValues()
@@ -191,20 +192,18 @@ deconvo_pg_server <- function(id, rv_deconvo){
             tphs <- est_vals[param_names == "Total peak height"]
             mp <- est_vals[param_names == "Mixture proportion"]
             deg <- est_vals[param_names == "Degradation"]
-            ae_use <- est_vals[param_names == "Amplification efficiency"]
-            markers_use <- dt_diag$Marker[param_names == "Amplification efficiency"]
             ae <- ae_use[markers_use == mk]
 
             dt_average_sr <- list_dt_average_sr[[mk]]
 
             dt_size <- dt_kit[Marker == mk]
-            rep_unit_len <- dt_size$Repeat_unit_length[1]
+            rep_unit_len <- dt_size[["Repeat Unit Length"]][1]
             dt_size <- dt_size[, c("Allele", "Size")]
 
             df_combined_list <- vector(mode = "list", length = n_rep)
             for(i in 1:n_rep){
               # Calculate expected peak heights under the selected genotype combination
-              eph <- calc_eph(gt_select_list, tphs[i], mp, deg, ae, dt_average_sr, dt_size, mean_size)
+              eph <- calc_eph(gt_select_list, tphs[i], mp, deg, ae, dt_average_sr, dt_size, min_size)
               peaks_eph <- as.numeric(names(eph))
 
               if(i == 1){
@@ -266,20 +265,18 @@ deconvo_pg_server <- function(id, rv_deconvo){
             mp_c1 <- mp[index_contrib]
             deg <- est_vals[param_names == "Degradation"]
             deg_c1 <- deg[index_contrib]
-            ae_use <- est_vals[param_names == "Amplification efficiency"]
-            markers_use <- dt_diag$Marker[param_names == "Amplification efficiency"]
             ae <- ae_use[markers_use == mk]
 
             dt_average_sr <- list_dt_average_sr[[mk]]
 
             dt_size <- dt_kit[Marker == mk]
-            rep_unit_len <- dt_size$Repeat_unit_length[1]
+            rep_unit_len <- dt_size[["Repeat Unit Length"]][1]
             dt_size <- dt_size[, c("Allele", "Size")]
 
             df_combined_list <- vector(mode = "list", length = n_rep)
             for(i in 1:n_rep){
               # Calculate expected peak heights under the selected genotype combination
-              eph <- calc_eph(gt_select_list, tphs[i], mp_c1, deg_c1, ae, dt_average_sr, dt_size, mean_size)
+              eph <- calc_eph(gt_select_list, tphs[i], mp_c1, deg_c1, ae, dt_average_sr, dt_size, min_size)
               peaks_eph <- as.numeric(names(eph))
 
               if(i == 1){
