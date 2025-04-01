@@ -39,16 +39,19 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
       data_est_par <- rv_est_par$data_est_par
 
       if(!is.null(data_est_par)){
-        median_alpha <- data_est_par$median_alpha
-        rhat_alpha <- data_est_par$rhat_alpha
         median_lp_ae <- data_est_par$median_lp_ae
+        median_alpha <- data_est_par$median_alpha
         rhat_lp_ae <- data_est_par$rhat_lp_ae
+        rhat_alpha <- data_est_par$rhat_alpha
         traceplot_ae <- data_est_par$traceplot_ae
         median_lp_gamma <- data_est_par$median_lp_gamma
-        median_cv <- data_est_par$median_cv
+        median_cv_allele <- data_est_par$median_cv_allele
+        median_cv_stutter <- data_est_par$median_cv_stutter
         rhat_lp_gamma <- data_est_par$rhat_lp_gamma
-        rhat_cv <- data_est_par$rhat_cv
-        traceplot_cv <- data_est_par$traceplot_cv
+        rhat_cv_allele <- data_est_par$rhat_cv_allele
+        rhat_cv_stutter <- data_est_par$rhat_cv_stutter
+        traceplot_cv_allele <- data_est_par$traceplot_cv_allele
+        traceplot_cv_stutter <- data_est_par$traceplot_cv_stutter
         list_dt_average_sr <- rv_est_par$list_dt_average_sr
         fn_stutter_file <- rv_est_par$fn_stutter_file
         kit_name <- rv_est_par$kit_name
@@ -86,8 +89,8 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         observeEvent(input$act_saveas_est_par_2, {
           fn_est_par <- input$fn_est_par
 
-          save(list = c("median_alpha", "rhat_alpha", "median_lp_ae", "rhat_lp_ae", "traceplot_ae",
-                        "median_lp_gamma", "median_cv", "rhat_lp_gamma", "rhat_cv", "traceplot_cv",
+          save(list = c("median_lp_ae", "median_alpha", "rhat_lp_ae", "rhat_alpha", "traceplot_ae",
+                        "median_lp_gamma", "median_cv_allele", "median_cv_stutter", "rhat_lp_gamma", "rhat_cv_allele", "rhat_cv_stutter", "traceplot_cv_allele", "traceplot_cv_stutter",
                         "list_dt_average_sr", "fn_stutter_file", "kit_name"),
                file = paste0(path_pack, "/extdata/param/", fn_est_par, ".RData"))
 
