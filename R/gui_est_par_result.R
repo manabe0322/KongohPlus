@@ -39,6 +39,16 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
       data_est_par <- rv_est_par$data_est_par
 
       if(!is.null(data_est_par)){
+        fn_exp <- rv_est_par$fn_exp
+        fn_gt <- rv_est_par$fn_gt
+        dt_setting_est_par <- rv_est_par$dt_setting_est_par
+        list_dt_average_sr <- rv_est_par$list_dt_average_sr
+        name_kit <- rv_est_par$name_kit
+        name_sr <- rv_est_par$name_sr
+        warmup <- rv_est_par$warmup
+        sampling <- rv_est_par$sampling
+        chains <- rv_est_par$chains
+
         median_lp_ae <- data_est_par$median_lp_ae
         median_alpha <- data_est_par$median_alpha
         rhat_lp_ae <- data_est_par$rhat_lp_ae
@@ -52,9 +62,6 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         rhat_cv_stutter <- data_est_par$rhat_cv_stutter
         traceplot_cv_allele <- data_est_par$traceplot_cv_allele
         traceplot_cv_stutter <- data_est_par$traceplot_cv_stutter
-        list_dt_average_sr <- rv_est_par$list_dt_average_sr
-        fn_stutter_file <- rv_est_par$fn_stutter_file
-        kit_name <- rv_est_par$kit_name
 
         rv_par_file_names <- reactiveVal(NULL)
 
@@ -89,9 +96,9 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         observeEvent(input$act_saveas_est_par_2, {
           fn_est_par <- input$fn_est_par
 
-          save(list = c("median_lp_ae", "median_alpha", "rhat_lp_ae", "rhat_alpha", "traceplot_ae",
-                        "median_lp_gamma", "median_cv_allele", "median_cv_stutter", "rhat_lp_gamma", "rhat_cv_allele", "rhat_cv_stutter", "traceplot_cv_allele", "traceplot_cv_stutter",
-                        "list_dt_average_sr", "fn_stutter_file", "kit_name"),
+          save(list = c("fn_exp", "fn_gt", "dt_setting_est_par", "list_dt_average_sr", "name_kit", "name_sr", "warmup", "sampling", "chains",
+                        "median_lp_ae", "median_alpha", "rhat_lp_ae", "rhat_alpha", "traceplot_ae",
+                        "median_lp_gamma", "median_cv_allele", "median_cv_stutter", "rhat_lp_gamma", "rhat_cv_allele", "rhat_cv_stutter", "traceplot_cv_allele", "traceplot_cv_stutter"),
                file = paste0(path_pack, "/extdata/param/", fn_est_par, ".RData"))
 
           removeModal()

@@ -10,8 +10,14 @@ est_par_setting_ui <- function(id){
              sidebarPanel(width = 3,
                           fileInput(ns("exp_data"), label = h4("Experimental data"), accept = ".csv", buttonLabel = "Load"),
                           fileInput(ns("gt_data"), label = h4("Genotype data"), accept = ".csv", buttonLabel = "Load"),
-                          uiOutput(ns("stutter_file")),
-                          uiOutput(ns("kit_par")),
+                          h4("Stutter ratio"),
+                          fluidRow(
+                            column(3, br(), shinyFilesButton(ns("load_sr"), label = "Load", title = "Stutter ratio", multiple = FALSE)),
+                            column(9, uiOutput(ns("name_sr")))
+                          ),
+                          br(),
+                          h4("Kit"),
+                          uiOutput(ns("name_kit")),
                           br(),
                           actionButton(ns("act_advance_par"), "Advanced setting"),
                           br(),
@@ -58,14 +64,17 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
     function(input, output, session){
       rv_est_par <- reactiveValues()
       rv_est_par$dt_exp <- NULL
+      rv_est_par$fn_exp <- NULL
       rv_est_par$dt_gt <- NULL
-      rv_est_par$kit_name <- NULL
+      rv_est_par$fn_gt <- NULL
+      rv_est_par$dt_setting_est_par <- NULL
+      rv_est_par$list_dt_average_sr <- NULL
+      rv_est_par$name_kit <- NULL
+      rv_est_par$name_sr <- NULL
       rv_est_par$warmup <- 2000
       rv_est_par$sampling <- 2000
       rv_est_par$chains <- 4
       rv_est_par$data_est_par <- NULL
-      rv_est_par$list_dt_average_sr <- NULL
-      rv_est_par$fn_stutter_file <- NULL
 
       # Load experimental data
       observeEvent(input$exp_data, {
@@ -74,6 +83,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           dt_exp <- fread(file_input$datapath)
           dt_exp <- change_data_type_exp(dt_exp)
           rv_est_par$dt_exp <- dt_exp
+          rv_est_par$fn_exp <- file_input$name
         }
       })
 
@@ -84,35 +94,47 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           dt_gt <- fread(file_input$datapath)
           dt_gt <- change_data_type_gt(dt_gt)
           rv_est_par$dt_gt <- dt_gt
+          rv_est_par$fn_gt <- file_input$name
         }
       })
 
-      # Select a stutter file
-      output$stutter_file <- renderUI({
-        ns <- session$ns
-        stutter_files <- list.files(paste0(path_pack, "/extdata/stutter_file"))
-        selectInput(ns("stutter_file"), label = h4("Stutter file"), choices = stutter_files, selected = stutter_files[1], multiple = FALSE, selectize = FALSE)
+      # Select a file for stutter ratios
+      shinyFileChoose(input, "load_sr", roots = c(documents = paste0(path_pack, "/extdata/stutter")), session = session, filetypes = c("RData"))
+
+      observeEvent(input$load_sr, {
+        req(input$load_sr)
+        path_sr <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/stutter")), input$load_sr)$datapath
+        if(length(path_sr) > 0){
+          load(path_sr)
+          rv_est_par$list_dt_average_sr <- list_dt_average_sr
+          rv_est_par$name_kit <- name_kit
+          rv_est_par$name_sr <- str_replace(basename(path_sr), ".{6}$", "")
+        }
       })
 
-      # Select a kit
-      output$kit_par <- renderUI({
-        kit_names <- list.files(paste0(path_pack, "/extdata/kit"))
-        kit_names <- gsub(".csv", "", kit_names)
-        selectInput(session$ns("kit_name"), label = h4("Kit"), choices = kit_names, selected = kit_names[1], multiple = FALSE, selectize = FALSE)
+      output$name_sr <- renderUI({
+        disabled(textInput(session$ns("name_sr"), label = "", value = rv_est_par$name_sr))
       })
 
-      observeEvent(input$kit_name, ignoreInit = TRUE, {
-        rv_est_par$kit_name <- kit_name <- input$kit_name
-        dt_kit <- fread(paste0(path_pack, "/extdata/kit/", kit_name, ".csv"))
-        dt_kit <- change_data_type_kit(dt_kit)
-        dt_setting_est_par <- create_init_dt_setting_est_par(dt_kit)
+      # Kit
+      output$name_kit <- renderUI({
+        disabled(textInput(session$ns("name_kit"), label = "", value = rv_est_par$name_kit))
+      })
 
-        output$dt_setting_est_par <- renderRHandsontable({
-          rhandsontable(dt_setting_est_par, rowHeaders = FALSE) %>%
-            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-            hot_col(c("Marker"), type = "text", readOnly = TRUE, width = 100) %>%
-            hot_col(c("AT"), type = "numeric", format = "0", width = 50)
-        })
+      observeEvent(input$name_kit, ignoreInit = TRUE, {
+        name_kit <- rv_est_par$name_kit
+        if(!is.null(name_kit)){
+          dt_kit <- fread(paste0(path_pack, "/extdata/kit/", name_kit, ".csv"))
+          dt_kit <- change_data_type_kit(dt_kit)
+          rv_est_par$dt_setting_est_par <- dt_setting_est_par <- create_init_dt_setting_est_par(dt_kit)
+
+          output$dt_setting_est_par <- renderRHandsontable({
+            rhandsontable(dt_setting_est_par, rowHeaders = FALSE) %>%
+              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+              hot_col(c("Marker"), type = "text", readOnly = TRUE, width = 100) %>%
+              hot_col(c("AT"), type = "numeric", format = "0", width = 50)
+          })
+        }
       })
 
       #### Advanced setting ####
@@ -189,14 +211,11 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         # Fix data
         dt_exp <- rv_est_par$dt_exp
         dt_gt <- rv_est_par$dt_gt
-        dt_setting_est_par <- hot_to_r(input$dt_setting_est_par)
-        kit_name <- rv_est_par$kit_name
+        rv_est_par$dt_setting_est_par <- dt_setting_est_par <- hot_to_r(input$dt_setting_est_par)
+        list_dt_average_sr <- rv_est_par$list_dt_average_sr
         warmup <- rv_est_par$warmup
         sampling <- rv_est_par$sampling
         chains <- rv_est_par$chains
-
-        fn_stutter_file <- input$stutter_file
-        load(paste0(path_pack, "/extdata/stutter_file/", fn_stutter_file))
 
         # Check input files and setting
         error_message <- check_est_par(dt_exp, dt_gt, dt_setting_est_par)
@@ -210,9 +229,6 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           rv_est_par$data_est_par <- estimate_parameters(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
                                                          model_ae, model_gamma,
                                                          warmup, sampling, chains)
-          rv_est_par$list_dt_average_sr <- list_dt_average_sr
-          rv_est_par$kit_name <- kit_name
-          rv_est_par$fn_stutter_file <- fn_stutter_file
 
           updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result")
         }

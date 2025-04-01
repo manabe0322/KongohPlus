@@ -10,9 +10,11 @@ est_sr_setting_ui <- function(id){
              sidebarPanel(width = 3,
                           fileInput(ns("exp_data"), label = h4("Experimental data"), accept = ".csv", buttonLabel = "Load"),
                           fileInput(ns("gt_data"), label = h4("Genotype data"), accept = ".csv", buttonLabel = "Load"),
-                          h4("Select a kit"),
-                          shinyFilesButton(ns("load_kit"), label = "Load", title = "Select a kit", multiple = FALSE),
-                          uiOutput(ns("name_kit")),
+                          h4("Kit"),
+                          fluidRow(
+                            column(3, br(), shinyFilesButton(ns("load_kit"), label = "Load", title = "Kit", multiple = FALSE)),
+                            column(9, uiOutput(ns("name_kit")))
+                          ),
                           br(),
                           actionButton(ns("act_advance_sr"), "Advanced setting"),
                           br(),
@@ -45,7 +47,7 @@ create_init_dt_setting_est_sr <- function(dt_kit){
   dt_setting_est_sr <- data.table(Marker = markers)
 
   if(nrow(dt_setting_est_sr) == 21){
-    dt_setting_est_sr$AT <- 45
+    dt_setting_est_sr$AT <- c(rep(35, 5), rep(40, 3), rep(25, 4), rep(25, 5), rep(45, 4))
     dt_setting_est_sr$Model_BSR <- c("Linear (Allele)", "Linear (Allele)", "Linear (Allele)", "Linear (Allele)", "Linear (Allele)",
                                      "Linear (Corrected Allele)", "Linear (Corrected Allele)", "Linear (Allele)",
                                      "Linear (Corrected Allele)", "Linear (Allele)", "Linear (Corrected Allele)", "Linear (Allele)",
@@ -54,7 +56,6 @@ create_init_dt_setting_est_sr <- function(dt_kit){
     dt_setting_est_sr$Model_FSR <- "Uniform (Multiple loci)"
     dt_setting_est_sr$Model_FSR[13] <- "Linear (Allele)"
     dt_setting_est_sr$Model_DSR <- "Uniform (Multiple loci)"
-    dt_setting_est_sr$Model_DSR[13] <- "Linear (Allele)"
     dt_setting_est_sr$Model_M2SR <- "Not consider"
     dt_setting_est_sr$Model_M2SR[17] <- "Uniform"
     dt_setting_est_sr$Model_M2SR[19] <- "Uniform"
@@ -83,10 +84,12 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
     function(input, output, session){
       rv_est_sr <- reactiveValues()
       rv_est_sr$dt_exp <- NULL
+      rv_est_sr$fn_exp <- NULL
       rv_est_sr$dt_gt <- NULL
+      rv_est_sr$fn_gt <- NULL
       rv_est_sr$dt_kit <- NULL
       rv_est_sr$dt_setting_est_sr <- NULL
-      rv_est_sr$name_kit <- ""
+      rv_est_sr$name_kit <- NULL
       rv_est_sr$warmup <- 2000
       rv_est_sr$sampling <- 2000
       rv_est_sr$chains <- 4
@@ -99,6 +102,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           dt_exp <- fread(file_input$datapath)
           dt_exp <- change_data_type_exp(dt_exp)
           rv_est_sr$dt_exp <- dt_exp
+          rv_est_sr$fn_exp <- file_input$name
         }
       })
 
@@ -109,6 +113,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           dt_gt <- fread(file_input$datapath)
           dt_gt <- change_data_type_gt(dt_gt)
           rv_est_sr$dt_gt <- dt_gt
+          rv_est_sr$fn_gt <- file_input$name
         }
       })
 
@@ -213,6 +218,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         dt_exp <- rv_est_sr$dt_exp
         dt_gt <- rv_est_sr$dt_gt
         dt_kit <- rv_est_sr$dt_kit
+        name_kit <- rv_est_sr$name_kit
         rv_est_sr$dt_setting_est_sr <- dt_setting_est_sr <- hot_to_r(input$dt_setting_est_sr)
         warmup <- rv_est_sr$warmup
         sampling <- rv_est_sr$sampling

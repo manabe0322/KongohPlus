@@ -85,23 +85,48 @@ check_est_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr){
     error_message <- paste0(error_message, "Set the M2SR model of the following marker(s): ", paste0(markers_est_sr[index_without_model_m2sr], collapse = ", "), ".<br>")
   }
 
-  # Check corrected alleles
+  # Check the registration of all alleles
   n_mk <- length(markers_est_sr)
+  dt_gt_tmp <- copy(dt_gt)
+  setindex(dt_gt_tmp, Marker)
   setindex(dt_kit, Marker)
-  markers_error_ca <- character(0)
+  error_message_info_al <- character(0)
+  for(i in 1:n_mk){
+    mk <- markers_est_sr[i]
+    dt_gt_tmp_mk <- dt_gt_tmp[Marker == mk]
+    gt_alleles <- unique(c(dt_gt_tmp_mk$Allele1, dt_gt_tmp_mk$Allele2))
+
+    dt_kit_mk <- dt_kit[Marker == mk]
+    kit_alleles <- dt_kit_mk[["Allele"]]
+
+    index_without_info_al <- which(!is.element(gt_alleles, kit_alleles))
+    if(length(index_without_info_al) != 0){
+      if(length(error_message_info_al) == 0){
+        error_message_info_al <- "The following alleles are not included in the kit information: <br>"
+      }
+      error_message_info_al <- paste0(error_message_info_al, "  - ", paste(gt_alleles[index_without_info_al], collapse = ", "), " in ", mk, "<br>")
+    }
+  }
+  error_message <- paste0(error_message, error_message_info_al)
+
+  # Check corrected alleles
+  error_message_info_ca <- character(0)
   for(i in 1:n_mk){
     if(is.element("Linear (Corrected Allele)", c(model_bsr[i], model_fsr[i], model_dsr[i], model_m2sr[i]))){
       mk <- markers_est_sr[i]
       dt_kit_mk <- dt_kit[Marker == mk]
-      ca_mk <- dt_kit_mk[["Corrected Allele"]]
-      if(any(is.na(ca_mk))){
-        markers_error_ca <- c(markers_error_ca, mk)
+      kit_alleles <- dt_kit_mk[["Allele"]]
+      kit_cas <- dt_kit_mk[["Corrected Allele"]]
+      index_without_info_ca <- which(is.na(kit_cas))
+      if(length(index_without_info_ca) != 0){
+        if(length(error_message_info_ca) == 0){
+          error_message_info_ca <- "The corrected alleles for the following alleles are not included in the kit information: <br>"
+        }
+        error_message_info_ca <- paste0(error_message_info_ca, "  - ", paste(kit_alleles[index_without_info_ca], collapse = ", "), " in ", mk, "<br>")
       }
     }
   }
-  if(length(markers_error_ca) != 0){
-    error_message <- paste0(error_message, "Define the 'Corrected Allele' for all alleles in the following marker(s): ", paste0(markers_error_ca, collapse = ", "), ".<br>")
-  }
+  error_message <- paste0(error_message, error_message_info_ca)
 
   return(error_message)
 }

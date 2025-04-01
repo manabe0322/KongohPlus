@@ -299,7 +299,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         markers_auto <- unique(dt_kit_auto[, Marker])
 
         load(paste0(path_pack, "/extdata/param/", dt_anameth$Name[dt_anameth$Category == "Parameter"], ".RData"))
-        load(paste0(path_pack, "/extdata/stutter_file/", dt_anameth$Name[dt_anameth$Category == "Stutter file"], ".RData"))
+        load(paste0(path_pack, "/extdata/stutter/", dt_anameth$Name[dt_anameth$Category == "Stutter file"], ".RData"))
 
         rv_deconvo_setting$dt_ignore_mk <- dt_ignore_mk <- hot_to_r(input$dt_ignore_mk)
 

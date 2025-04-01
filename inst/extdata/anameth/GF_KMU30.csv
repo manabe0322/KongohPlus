@@ -1,6 +1,6 @@
 Category,Subcategory,Name,Value
-Parameter,,param_GF_default,
-Stutter file,,stutter_GF_default,
+Parameter,,Param_GF_KMU30,
+Stutter file,,Stutter_GF_KMU30,
 Kit,,GlobalFiler,
 AT,D3S1358,,45
 AT,vWA,,45

@@ -9,9 +9,11 @@ info_al_ui <- function(id){
            br(),
            sidebarLayout(
              sidebarPanel(width = 3,
-                          h4("Select a kit"),
-                          shinyFilesButton(ns("load_kit"), label = "Load", title = "Select a kit", multiple = FALSE),
-                          uiOutput(ns("name_kit")),
+                          h4("Kit"),
+                          fluidRow(
+                            column(3, br(), shinyFilesButton(ns("load_kit"), label = "Load", title = "Kit", multiple = FALSE)),
+                            column(9, uiOutput(ns("name_kit")))
+                          ),
                           uiOutput(ns("select_marker")),
                           br(),
                           h4("Add an allele"),
@@ -100,7 +102,7 @@ info_al_server <- function(id, path_pack){
 
       output$select_marker <- renderUI({
         markers <- rv_info_al$markers
-        selectInput(session$ns("select_marker"), label = h4("Select a marker"), choices = markers, selected = markers[1], multiple = FALSE, selectize = FALSE)
+        selectInput(session$ns("select_marker"), label = h4("Marker"), choices = markers, selected = markers[1], multiple = FALSE, selectize = FALSE)
       })
 
       observeEvent(input$select_marker, {

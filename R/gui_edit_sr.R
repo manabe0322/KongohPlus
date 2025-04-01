@@ -122,11 +122,11 @@ edit_sr_server <- function(id, path_pack){
       rv_edit_sr$markers_auto <- character(0)
       rv_edit_sr$current_mk <- NULL
 
-      shinyFileChoose(input, "load_stutter_file", roots = c(documents = paste0(path_pack, "/extdata/stutter_file")), session = session, filetypes = c("RData"))
+      shinyFileChoose(input, "load_stutter_file", roots = c(documents = paste0(path_pack, "/extdata/stutter")), session = session, filetypes = c("RData"))
 
       observeEvent(input$load_stutter_file, {
         req(input$load_stutter_file)
-        path_stutter_file <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/stutter_file")), input$load_stutter_file)$datapath
+        path_stutter_file <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/stutter")), input$load_stutter_file)$datapath
 
         if(length(path_stutter_file) > 0){
           rv_edit_sr$fn_stutter_file <- fn_stutter_file <- basename(path_stutter_file)
@@ -346,7 +346,7 @@ edit_sr_server <- function(id, path_pack){
                       "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr",
                       "list_trace_bsr", "list_trace_fsr", "list_trace_dsr", "list_trace_m2sr",
                       "list_dt_average_sr"),
-             file = paste0(path_pack, "/extdata/stutter_file/", input$fn_edit_sr, ".RData"))
+             file = paste0(path_pack, "/extdata/stutter/", input$fn_edit_sr, ".RData"))
 
         removeModal()
       })
@@ -375,7 +375,7 @@ edit_sr_server <- function(id, path_pack){
                       "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr",
                       "list_trace_bsr", "list_trace_fsr", "list_trace_dsr", "list_trace_m2sr",
                       "list_dt_average_sr"),
-             file = paste0(path_pack, "/extdata/stutter_file/", rv_edit_sr$fn_stutter_file))
+             file = paste0(path_pack, "/extdata/stutter/", rv_edit_sr$fn_stutter_file))
       })
     }
   )
