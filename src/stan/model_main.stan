@@ -54,8 +54,8 @@ data{
   int hnc;
   int n_rep;
   int n_mk;
-  real ltph;
-  real htph;
+  real tph_mean;
+  real tph_sd;
 
   int n_rph_base_sum;
   vector[n_rph_base_sum] rph_base_use;
@@ -100,7 +100,7 @@ transformed parameters{
 }
 
 model{
-  tph ~ normal((ltph + htph) / 2, (htph - ltph) / 2);
+  tph ~ normal(tph_mean, tph_sd);
   lambda ~ normal(0, 1);
   deg ~ beta(1, 1);
 

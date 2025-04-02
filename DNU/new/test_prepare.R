@@ -9,10 +9,10 @@ dt_kit <- change_data_type_kit(dt_kit)
 dt_kit_auto <- extract_kit_auto(dt_kit)
 markers_auto <- unique(dt_kit_auto[, Marker])
 
-dt_anameth <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/anameth/GF_default.csv")
+dt_anameth <- fread("D:/RStudio_GitHub/KongohPlus/inst/extdata/anameth/GF_KMU30.csv")
 
-load("D:/RStudio_GitHub/KongohPlus/inst/extdata/param/param_GF_default.Rdata")
-load("D:/RStudio_GitHub/KongohPlus/inst/extdata/stutter_file/stutter_GF_default.Rdata")
+load("D:/RStudio_GitHub/KongohPlus/inst/extdata/param/Param_GF_KMU30.Rdata")
+load("D:/RStudio_GitHub/KongohPlus/inst/extdata/stutter/Stutter_GF_KMU30.Rdata")
 
 dt_ignore_mk <- data.table(Ignore = rep(FALSE, length(markers_auto)),
                            Marker = markers_auto)
@@ -26,3 +26,4 @@ hnc_to <- 2
 hnc_all <- hnc_from:hnc_to
 
 model_main <- cmdstan_model("D:/RStudio_GitHub/KongohPlus/src/stan/model_main.stan")
+model_main_rep1 <- cmdstan_model("D:/RStudio_GitHub/KongohPlus/src/stan/model_main_rep1.stan")

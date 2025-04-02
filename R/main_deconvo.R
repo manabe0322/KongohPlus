@@ -31,7 +31,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
   n_gtc_use <- rep(NA, n_mk)
   gtc_use <- vector(mode = "list", length = n_mk)
   names(gtc_use) <- markers_use
-  min_tph <- Inf
   max_tph <- 0
   rph_base_use <- vector(mode = "list", length = n_mk)
   gtc_logprob_use <- vector(mode = "list", length = n_mk)
@@ -153,9 +152,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         # Update the maximum of the total peak height per marker
         heights <- heights_all_rep[[j]]
         oph_sum <- sum(heights)
-        if(oph_sum < min_tph){
-          min_tph <- oph_sum
-        }
         if(oph_sum > max_tph){
           max_tph <- oph_sum
         }
@@ -325,52 +321,99 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       index_dedup1_start <- index_dedup1_start + n_dedup1_sum_per_rep[i]
     }
 
+    ##########################################################
+    # Determine the prior distribution for the parameter tph #
+    ##########################################################
+
+    tph_mean <- max_tph / 2
+    tph_sd <- max_tph / 2
+
     ################
     # Perform MCMC #
     ################
 
-    # Prepare date list
-    data_list_main <- list(hnc = hnc,
-                           n_rep = n_rep,
-                           n_mk = n_mk,
-                           ltph = min_tph / 2,
-                           htph = max_tph / 2,
-                           n_rph_base_sum = sum(n_rph_base_use),
-                           rph_base_use = unlist(rph_base_use),
-                           min_size = min_size,
-                           n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
-                           n_rph_sum_per_rep = n_rph_sum_per_rep,
-                           n_rph_sum = n_rph_sum,
-                           index_dedup1_mcmc = index_dedup1_mcmc,
-                           cv_square_mcmc = t(cv_square_mcmc),
-                           size_mcmc = size_mcmc,
-                           oph_mcmc = oph_mcmc,
-                           n_general_sum_per_rep = n_general_sum_per_rep,
-                           n_dropout_sum_per_rep = n_dropout_sum_per_rep,
-                           n_dropout_sum = n_dropout_sum,
-                           at_dropout = at_dropout,
-                           n_dropin_sum = n_dropin_sum,
-                           n_dropin_sum_per_rep = n_dropin_sum_per_rep,
-                           loglike_di = loglike_di,
-                           n_dedup2_sum = n_dedup2_sum,
-                           n_dedup2_sum_per_rep = n_dedup2_sum_per_rep,
-                           n_dedup2_use = n_dedup2_use,
-                           index_dedup2_use = index_dedup2_use,
-                           n_peak_use = n_peak_use,
-                           n_gtc_use = n_gtc_use,
-                           gtc_logprob_use = unlist(gtc_logprob_use))
+    if(n_rep == 1){
+      # Prepare date list
+      data_list_main <- list(hnc = hnc,
+                             n_mk = n_mk,
+                             tph_mean = tph_mean,
+                             tph_sd = tph_sd,
+                             n_rph_base_sum = sum(n_rph_base_use),
+                             rph_base_use = unlist(rph_base_use),
+                             min_size = min_size,
+                             n_dedup1_sum = n_dedup1_sum,
+                             n_rph_sum = n_rph_sum,
+                             index_dedup1_rep1 = index_dedup1_mcmc,
+                             cv_square_rep1 = t(cv_square_mcmc),
+                             size_rep1 = size_mcmc,
+                             oph_rep1 = oph_mcmc,
+                             n_general_sum = n_general_sum,
+                             n_dropout_sum = n_dropout_sum,
+                             at_dropout_rep1 = at_dropout,
+                             n_dropin_sum = n_dropin_sum,
+                             loglike_di_rep1 = loglike_di,
+                             n_dedup2_sum = n_dedup2_sum,
+                             n_dedup2_use = n_dedup2_use,
+                             index_dedup2_use_rep1 = index_dedup2_use,
+                             n_peak_use = n_peak_use,
+                             n_gtc_use = n_gtc_use,
+                             gtc_logprob_use = unlist(gtc_logprob_use))
 
-    # Perform MCMC
-    model_main <- stan_package_model(name = "model_main", package = "KongohPlus")
+      # Perform MCMC
+      model_main_rep1 <- stan_package_model(name = "model_main_rep1", package = "KongohPlus")
 
-    fit_main <- model_main$sample(
-      data_list_main,
-      iter_warmup = warmup,
-      iter_sampling = sampling,
-      chains = chains,
-      parallel_chains = detectCores()#,
-      #show_messages = FALSE
-    )
+      fit_main <- model_main_rep1$sample(
+        data_list_main,
+        iter_warmup = warmup,
+        iter_sampling = sampling,
+        chains = chains,
+        parallel_chains = detectCores()#,
+        #show_messages = FALSE
+      )
+    }else{
+      # Prepare date list
+      data_list_main <- list(hnc = hnc,
+                             n_rep = n_rep,
+                             n_mk = n_mk,
+                             tph_mean = tph_mean,
+                             tph_sd = tph_sd,
+                             n_rph_base_sum = sum(n_rph_base_use),
+                             rph_base_use = unlist(rph_base_use),
+                             min_size = min_size,
+                             n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
+                             n_rph_sum_per_rep = n_rph_sum_per_rep,
+                             n_rph_sum = n_rph_sum,
+                             index_dedup1_mcmc = index_dedup1_mcmc,
+                             cv_square_mcmc = t(cv_square_mcmc),
+                             size_mcmc = size_mcmc,
+                             oph_mcmc = oph_mcmc,
+                             n_general_sum_per_rep = n_general_sum_per_rep,
+                             n_dropout_sum_per_rep = n_dropout_sum_per_rep,
+                             n_dropout_sum = n_dropout_sum,
+                             at_dropout = at_dropout,
+                             n_dropin_sum = n_dropin_sum,
+                             n_dropin_sum_per_rep = n_dropin_sum_per_rep,
+                             loglike_di = loglike_di,
+                             n_dedup2_sum = n_dedup2_sum,
+                             n_dedup2_sum_per_rep = n_dedup2_sum_per_rep,
+                             n_dedup2_use = n_dedup2_use,
+                             index_dedup2_use = index_dedup2_use,
+                             n_peak_use = n_peak_use,
+                             n_gtc_use = n_gtc_use,
+                             gtc_logprob_use = unlist(gtc_logprob_use))
+
+      # Perform MCMC
+      model_main <- stan_package_model(name = "model_main", package = "KongohPlus")
+
+      fit_main <- model_main$sample(
+        data_list_main,
+        iter_warmup = warmup,
+        iter_sampling = sampling,
+        chains = chains,
+        parallel_chains = detectCores()#,
+        #show_messages = FALSE
+      )
+    }
 
     # Trace plot
     draws <- fit_main$draws()
@@ -385,9 +428,14 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     lp <- lp_values[index_hpd]
 
     tph <- rep(NA, n_rep)
-    for(i in 1:n_rep){
-      tph_values <- tmp[[paste0("tph[", i, "]")]]
-      tph[i] <- tph_values[index_hpd]
+    if(n_rep == 1){
+      tph_values <- tmp[["tph"]]
+      tph[1] <- tph_values[index_hpd]
+    }else{
+      for(i in 1:n_rep){
+        tph_values <- tmp[[paste0("tph[", i, "]")]]
+        tph[i] <- tph_values[index_hpd]
+      }
     }
 
     mp <- rep(NA, hnc)
