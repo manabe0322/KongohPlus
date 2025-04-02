@@ -78,21 +78,32 @@ run_mcmc_ae <- function(model_ae, data_list_ae, n_mk, warmup, sampling, chains, 
     parallel_chains = n_parallel_chains
   )
 
-  # Summary data
-  fit_ae_summary <- fit_ae$summary()
-  variables <- fit_ae_summary$variable
-  medians <- fit_ae_summary$median
-  rhats <- fit_ae_summary$rhat
-  median_lp <- medians[which(variables == "lp__")]
-  median_alpha <- medians[which(is.element(variables, paste0("alpha[", 1:n_mk, "]")))]
-  rhat_lp <- rhats[which(variables == "lp__")]
-  rhat_alpha <- rhats[which(is.element(variables, paste0("alpha[", 1:n_mk, "]")))]
-
   # Trace plot
   fit_ae$draws() %>% mcmc_trace(pars = paste0("alpha[", 1:n_mk, "]")) -> traceplot_ae
 
-  return(list("median_lp" = median_lp,
-              "median_alpha" = median_alpha,
+  # Extract parameters
+  tmp <- as_draws_df(fit_ae$draws())
+  lp_values <- tmp$lp__
+  density_lp <- density(lp_values)
+  lp_mode_estimated <- density_lp$x[which.max(density_lp$y)]
+  index_hpd <- which.min(abs(lp_values - lp_mode_estimated))
+  lp <- lp_values[index_hpd]
+
+  alpha <- rep(NA, n_mk)
+  for(i in 1:n_mk){
+    alpha_mk_values <- tmp[[paste0("alpha[", i, "]")]]
+    alpha[i] <- alpha_mk_values[index_hpd]
+  }
+
+  # Summary data
+  fit_ae_summary <- fit_ae$summary()
+  variables <- fit_ae_summary$variable
+  rhats <- fit_ae_summary$rhat
+  rhat_lp <- rhats[which(variables == "lp__")]
+  rhat_alpha <- rhats[which(is.element(variables, paste0("alpha[", 1:n_mk, "]")))]
+
+  return(list("lp" = lp,
+              "alpha" = alpha,
               "rhat_lp" = rhat_lp,
               "rhat_alpha" = rhat_alpha,
               "traceplot_ae" = traceplot_ae))
@@ -115,19 +126,19 @@ perform_mcmc_ae_all_mk <- function(prop_ae_data_use, markers_auto,
   data_list_ae <- list(N = ncol(prop_ae_data_use), N_Mk = nrow(prop_ae_data_use), PAE = prop_ae_data_use)
 
   tmp <- run_mcmc_ae(model_ae, data_list_ae, n_mk, warmup, sampling, chains, n_parallel_chains)
-  median_alpha <- tmp$median_alpha
-  median_lp <- tmp$median_lp
-  rhat_alpha <- tmp$rhat_alpha
+  lp <- tmp$lp
+  alpha <- tmp$alpha
   rhat_lp <- tmp$rhat_lp
+  rhat_alpha <- tmp$rhat_alpha
   traceplot_ae <- tmp$traceplot_ae
 
-  names(median_alpha) <- markers_auto
+  names(alpha) <- markers_auto
   names(rhat_alpha) <- markers_auto
 
-  return(list("median_alpha" = median_alpha,
-              "median_lp" = median_lp,
-              "rhat_alpha" = rhat_alpha,
+  return(list("lp" = lp,
+              "alpha" = alpha,
               "rhat_lp" = rhat_lp,
+              "rhat_alpha" = rhat_alpha,
               "traceplot_ae" = traceplot_ae))
 }
 
@@ -212,16 +223,16 @@ calc_relative_ph <- function(cand_peaks, gt, ae, allele_sr, bsr_average, fsr_ave
 #' @param peak_list A list of the peaks
 #' @param height_list A list of the heights
 #' @param gt_list A list of the genotypes
-#' @param median_alpha A vector of the estimated alpha of the Dirichlet distribution for the locus-specific amplification efficiencies
+#' @param alpha A vector of the estimated alpha of the Dirichlet distribution for the locus-specific amplification efficiencies
 #' @param ave_het_ph_all_data A vector of the average heterozygote allele peak heights
 #' @param list_dt_average_sr A list of the average stutter ratios
 #' @param sr_consider_auto Information on consideration of back, forward, double-back, and minus 2-nt stutters in autosomal markers
 #' @param at_auto A vector of ATs in each autosomal marker
-prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, median_alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto){
+prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto){
   n_sample <- length(gt_list)
   n_mk <- length(markers_auto)
 
-  expect_ae_all_mk <- n_mk * (median_alpha + 1) / (sum(median_alpha) + n_mk)
+  expect_ae_all_mk <- n_mk * (alpha + 1) / (sum(alpha) + n_mk)
 
   sum_peaks_all <- length(unlist(peak_list))
   rphs_gamma_list <- vector(mode = "list", length = n_sample)
@@ -377,26 +388,34 @@ perform_mcmc_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma,
     parallel_chains = n_parallel_chains
   )
 
-  # Summary data
-  fit_gamma_summary <- fit_gamma$summary()
-
-  # Median of the parameters
-  median_lp <- fit_gamma_summary$median[which(fit_gamma_summary$variable == "lp__")]
-  median_cv_allele <- fit_gamma_summary$median[which(fit_gamma_summary$variable == "cv_allele")]
-  median_cv_stutter <- fit_gamma_summary$median[which(fit_gamma_summary$variable == "cv_stutter")]
-
-  # rhat of the parameters
-  rhat_lp <- fit_gamma_summary$rhat[which(fit_gamma_summary$variable == "lp__")]
-  rhat_cv_allele <- fit_gamma_summary$rhat[which(fit_gamma_summary$variable == "cv_allele")]
-  rhat_cv_stutter <- fit_gamma_summary$rhat[which(fit_gamma_summary$variable == "cv_stutter")]
-
   # Trace plot
   fit_gamma$draws() %>% mcmc_trace(pars = c("cv_allele")) -> traceplot_cv_allele
   fit_gamma$draws() %>% mcmc_trace(pars = c("cv_stutter")) -> traceplot_cv_stutter
 
-  return(list("median_lp" = median_lp,
-              "median_cv_allele" = median_cv_allele,
-              "median_cv_stutter" = median_cv_stutter,
+  # Extract parameters
+  tmp <- as_draws_df(fit_gamma$draws())
+  lp_values <- tmp$lp__
+  density_lp <- density(lp_values)
+  lp_mode_estimated <- density_lp$x[which.max(density_lp$y)]
+  index_hpd <- which.min(abs(lp_values - lp_mode_estimated))
+  lp <- lp_values[index_hpd]
+
+  cv_allele_values <- tmp$cv_allele
+  cv_allele <- cv_allele_values[index_hpd]
+
+  cv_stutter_values <- tmp$cv_stutter
+  cv_stutter <- cv_stutter_values[index_hpd]
+
+  fit_gamma_summary <- fit_gamma$summary()
+  variables <- fit_gamma_summary$variable
+  rhats <- fit_gamma_summary$rhat
+  rhat_lp <- rhats[which(variables == "lp__")]
+  rhat_cv_allele <- rhats[which(variables == "cv_allele")]
+  rhat_cv_stutter <- rhats[which(variables == "cv_stutter")]
+
+  return(list("lp" = lp,
+              "cv_allele" = cv_allele,
+              "cv_stutter" = cv_stutter,
               "rhat_lp" = rhat_lp,
               "rhat_cv_allele" = rhat_cv_allele,
               "rhat_cv_stutter" = rhat_cv_stutter,
@@ -445,17 +464,17 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   tmp <- perform_mcmc_ae_all_mk(prop_ae_data_use, markers_auto,
                                 model_ae,
                                 warmup, sampling, chains, n_parallel_chains)
-  median_alpha <- tmp$median_alpha
-  rhat_alpha <- tmp$rhat_alpha
-  median_lp_ae <- tmp$median_lp
+  lp_ae <- tmp$lp
+  alpha <- tmp$alpha
   rhat_lp_ae <- tmp$rhat_lp
+  rhat_alpha <- tmp$rhat_alpha
   traceplot_ae <- tmp$traceplot_ae
 
   # Prepare data for average heterozygote allele peak heights
   ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
 
   # Prepare peak height data for estimating gamma distribution
-  tmp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, median_alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto)
+  tmp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto)
   rphs_gamma <- tmp$rphs_gamma
   tphs_gamma <- tmp$tphs_gamma
   ophs_gamma <- tmp$ophs_gamma
@@ -465,23 +484,23 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   tmp <- perform_mcmc_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma,
                             model_gamma,
                             warmup, sampling, chains, n_parallel_chains)
-  median_lp_gamma <- tmp$median_lp
-  median_cv_allele <- tmp$median_cv_allele
-  median_cv_stutter <- tmp$median_cv_stutter
+  lp_gamma <- tmp$lp
+  cv_allele <- tmp$cv_allele
+  cv_stutter <- tmp$cv_stutter
   rhat_lp_gamma <- tmp$rhat_lp
   rhat_cv_allele <- tmp$rhat_cv_allele
   rhat_cv_stutter <- tmp$rhat_cv_stutter
   traceplot_cv_allele <- tmp$traceplot_cv_allele
   traceplot_cv_stutter <- tmp$traceplot_cv_stutter
 
-  return(list("median_lp_ae" = median_lp_ae,
-              "median_alpha" = median_alpha,
+  return(list("lp_ae" = lp_ae,
+              "alpha" = alpha,
               "rhat_lp_ae" = rhat_lp_ae,
               "rhat_alpha" = rhat_alpha,
               "traceplot_ae" = traceplot_ae,
-              "median_lp_gamma" = median_lp_gamma,
-              "median_cv_allele" = median_cv_allele,
-              "median_cv_stutter" = median_cv_stutter,
+              "lp_gamma" = lp_gamma,
+              "cv_allele" = cv_allele,
+              "cv_stutter" = cv_stutter,
               "rhat_lp_gamma" = rhat_lp_gamma,
               "rhat_cv_allele" = rhat_cv_allele,
               "rhat_cv_stutter" = rhat_cv_stutter,

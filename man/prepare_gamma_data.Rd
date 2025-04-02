@@ -9,7 +9,7 @@ prepare_gamma_data(
   peak_list,
   height_list,
   gt_list,
-  median_alpha,
+  alpha,
   ave_het_ph_all_data,
   list_dt_average_sr,
   sr_consider_auto,
@@ -25,7 +25,7 @@ prepare_gamma_data(
 
 \item{gt_list}{A list of the genotypes}
 
-\item{median_alpha}{A vector of the estimated alpha of the Dirichlet distribution for the locus-specific amplification efficiencies}
+\item{alpha}{A vector of the estimated alpha of the Dirichlet distribution for the locus-specific amplification efficiencies}
 
 \item{ave_het_ph_all_data}{A vector of the average heterozygote allele peak heights}
 

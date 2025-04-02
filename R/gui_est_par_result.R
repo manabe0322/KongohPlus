@@ -49,14 +49,14 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         sampling <- rv_est_par$sampling
         chains <- rv_est_par$chains
 
-        median_lp_ae <- data_est_par$median_lp_ae
-        median_alpha <- data_est_par$median_alpha
+        lp_ae <- data_est_par$lp_ae
+        alpha <- data_est_par$alpha
         rhat_lp_ae <- data_est_par$rhat_lp_ae
         rhat_alpha <- data_est_par$rhat_alpha
         traceplot_ae <- data_est_par$traceplot_ae
-        median_lp_gamma <- data_est_par$median_lp_gamma
-        median_cv_allele <- data_est_par$median_cv_allele
-        median_cv_stutter <- data_est_par$median_cv_stutter
+        lp_gamma <- data_est_par$lp_gamma
+        cv_allele <- data_est_par$cv_allele
+        cv_stutter <- data_est_par$cv_stutter
         rhat_lp_gamma <- data_est_par$rhat_lp_gamma
         rhat_cv_allele <- data_est_par$rhat_cv_allele
         rhat_cv_stutter <- data_est_par$rhat_cv_stutter
@@ -97,8 +97,8 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
           fn_est_par <- input$fn_est_par
 
           save(list = c("fn_exp", "fn_gt", "dt_setting_est_par", "list_dt_average_sr", "name_kit", "name_sr", "warmup", "sampling", "chains",
-                        "median_lp_ae", "median_alpha", "rhat_lp_ae", "rhat_alpha", "traceplot_ae",
-                        "median_lp_gamma", "median_cv_allele", "median_cv_stutter", "rhat_lp_gamma", "rhat_cv_allele", "rhat_cv_stutter", "traceplot_cv_allele", "traceplot_cv_stutter"),
+                        "lp_ae", "alpha", "rhat_lp_ae", "rhat_alpha", "traceplot_ae",
+                        "lp_gamma", "cv_allele", "cv_stutter", "rhat_lp_gamma", "rhat_cv_allele", "rhat_cv_stutter", "traceplot_cv_allele", "traceplot_cv_stutter"),
                file = paste0(path_pack, "/extdata/param/", fn_est_par, ".RData"))
 
           removeModal()

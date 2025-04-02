@@ -231,31 +231,42 @@ run_mcmc_sr_gen <- function(model_sr_gen, data_list_sr, warmup, sampling, chains
     parallel_chains = n_parallel_chains
   )
 
-  # Summary data
-  fit_sr_summary <- fit_sr$summary()
-  medians <- fit_sr_summary$median
-  variables <- fit_sr_summary$variable
-  rhats <- fit_sr_summary$rhat
-  median_lp <- medians[which(variables == "lp__")]
-  median_slope <- medians[which(variables == "slope")]
-  median_intercept <- medians[which(variables == "intercept")]
-  median_sigma <- medians[which(variables == "sigma")]
-  rhat_slope <- rhats[which(variables == "slope")]
-  rhat_intercept <- rhats[which(variables == "intercept")]
-  rhat_sigma <- rhats[which(variables == "sigma")]
-  rhat_lp <- rhats[which(variables == "lp__")]
-
   # Trace plot
   fit_sr$draws() %>% mcmc_trace(pars = c("slope", "intercept", "sigma")) -> traceplot
 
-  return(list("median_lp" = median_lp,
-              "median_slope" = median_slope,
-              "median_intercept" = median_intercept,
-              "median_sigma" = median_sigma,
+  # Extract parameters
+  tmp <- as_draws_df(fit_sr$draws())
+  lp_values <- tmp$lp__
+  density_lp <- density(lp_values)
+  lp_mode_estimated <- density_lp$x[which.max(density_lp$y)]
+  index_hpd <- which.min(abs(lp_values - lp_mode_estimated))
+  lp <- lp_values[index_hpd]
+
+  slope_values <- tmp$slope
+  slope <- slope_values[index_hpd]
+
+  intercept_values <- tmp$intercept
+  intercept <- intercept_values[index_hpd]
+
+  sigma_values <- tmp$sigma
+  sigma <- sigma_values[index_hpd]
+
+  fit_sr_summary <- fit_sr$summary()
+  variables <- fit_sr_summary$variable
+  rhats <- fit_sr_summary$rhat
+  rhat_lp <- rhats[which(variables == "lp__")]
+  rhat_slope <- rhats[which(variables == "slope")]
+  rhat_intercept <- rhats[which(variables == "intercept")]
+  rhat_sigma <- rhats[which(variables == "sigma")]
+
+  return(list("lp" = lp,
+              "slope" = slope,
+              "intercept" = intercept,
+              "sigma" = sigma,
+              "rhat_lp" = rhat_lp,
               "rhat_slope" = rhat_slope,
               "rhat_intercept" = rhat_intercept,
               "rhat_sigma" = rhat_sigma,
-              "rhat_lp" = rhat_lp,
               "traceplot" = traceplot))
 }
 
@@ -288,27 +299,37 @@ run_mcmc_sr_uni <- function(model_sr_uni, data_list_sr, warmup, sampling, chains
     parallel_chains = n_parallel_chains
   )
 
-  # Summary data
-  fit_sr_summary <- fit_sr$summary()
-  medians <- fit_sr_summary$median
-  variables <- fit_sr_summary$variable
-  rhats <- fit_sr_summary$rhat
-  median_lp <- medians[which(variables == "lp__")]
-  median_myu <- medians[which(variables == "myu")]
-  median_sigma <- medians[which(variables == "sigma")]
-  rhat_myu <- rhats[which(variables == "myu")]
-  rhat_sigma <- rhats[which(variables == "sigma")]
-  rhat_lp <- rhats[which(variables == "lp__")]
-
   # Trace plot
   fit_sr$draws() %>% mcmc_trace(pars = c("myu", "sigma")) -> traceplot
 
-  return(list("median_lp" = median_lp,
-              "median_myu" = median_myu,
-              "median_sigma" = median_sigma,
+  # Extract parameters
+  tmp <- as_draws_df(fit_sr$draws())
+  lp_values <- tmp$lp__
+  density_lp <- density(lp_values)
+  lp_mode_estimated <- density_lp$x[which.max(density_lp$y)]
+  index_hpd <- which.min(abs(lp_values - lp_mode_estimated))
+  lp <- lp_values[index_hpd]
+
+  myu_values <- tmp$myu
+  myu <- myu_values[index_hpd]
+
+  sigma_values <- tmp$sigma
+  sigma <- sigma_values[index_hpd]
+
+  # Summary data
+  fit_sr_summary <- fit_sr$summary()
+  variables <- fit_sr_summary$variable
+  rhats <- fit_sr_summary$rhat
+  rhat_lp <- rhats[which(variables == "lp__")]
+  rhat_myu <- rhats[which(variables == "myu")]
+  rhat_sigma <- rhats[which(variables == "sigma")]
+
+  return(list("lp" = lp,
+              "myu" = myu,
+              "sigma" = sigma,
+              "rhat_lp" = rhat_lp,
               "rhat_myu" = rhat_myu,
               "rhat_sigma" = rhat_sigma,
-              "rhat_lp" = rhat_lp,
               "traceplot" = traceplot))
 }
 
@@ -333,16 +354,16 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_aut
   n_mk <- length(markers_auto)
   setindex(dt_st_type, Marker, Allele)
   setindex(dt_kit, Marker)
-  median_myu_all_mk <- rep(NA, n_mk)
-  median_slope_all_mk <- rep(NA, n_mk)
-  median_intercept_all_mk <- rep(NA, n_mk)
-  median_sigma_all_mk <- rep(NA, n_mk)
-  median_lp_all_mk <- rep(NA, n_mk)
+  lp_all_mk <- rep(NA, n_mk)
+  myu_all_mk <- rep(NA, n_mk)
+  slope_all_mk <- rep(NA, n_mk)
+  intercept_all_mk <- rep(NA, n_mk)
+  sigma_all_mk <- rep(NA, n_mk)
+  rhat_lp_all_mk <- rep(NA, n_mk)
   rhat_myu_all_mk <- rep(NA, n_mk)
   rhat_slope_all_mk <- rep(NA, n_mk)
   rhat_intercept_all_mk <- rep(NA, n_mk)
   rhat_sigma_all_mk <- rep(NA, n_mk)
-  rhat_lp_all_mk <- rep(NA, n_mk)
   trace_all_mk <- vector(mode = "list", length = n_mk)
   names(trace_all_mk) <- markers_auto
   dt_average_sr_all_mk <- vector(mode = "list", length = n_mk)
@@ -398,15 +419,15 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_aut
         }else if(meth == "Uniform"){
           data_list_sr <- list(N = length(x_al), SR = y_sr, Height = tap)
           tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr, warmup, sampling, chains, n_parallel_chains)
-          median_myu_all_mk[i] <- tmp$median_myu
-          median_sigma_all_mk[i] <- tmp$median_sigma
-          median_lp_all_mk[i] <- tmp$median_lp
+          myu_all_mk[i] <- tmp$myu
+          sigma_all_mk[i] <- tmp$sigma
+          lp_all_mk[i] <- tmp$lp
           rhat_myu_all_mk[i] <- tmp$rhat_myu
           rhat_sigma_all_mk[i] <- tmp$rhat_sigma
           rhat_lp_all_mk[i] <- tmp$rhat_lp
           trace_all_mk[[i]] <- tmp$traceplot
 
-          average_sr <- rep(median_myu_all_mk[i], length(alcor))
+          average_sr <- rep(myu_all_mk[i], length(alcor))
           average_sr[average_sr < 0] <- 0
           dt_average_sr_all_mk[[i]] <- data.table(Allele = alname,
                                                   AlCor = alcor,
@@ -414,17 +435,17 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_aut
         }else{
           data_list_sr <- list(N = length(x_al), SR = y_sr, XVal = x_al, Height = tap)
           tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_sr, warmup, sampling, chains, n_parallel_chains)
-          median_slope_all_mk[i] <- tmp$median_slope
-          median_intercept_all_mk[i] <- tmp$median_intercept
-          median_sigma_all_mk[i] <- tmp$median_sigma
-          median_lp_all_mk[i] <- tmp$median_lp
+          slope_all_mk[i] <- tmp$slope
+          intercept_all_mk[i] <- tmp$intercept
+          sigma_all_mk[i] <- tmp$sigma
+          lp_all_mk[i] <- tmp$lp
           rhat_slope_all_mk[i] <- tmp$rhat_slope
           rhat_intercept_all_mk[i] <- tmp$rhat_intercept
           rhat_sigma_all_mk[i] <- tmp$rhat_sigma
           rhat_lp_all_mk[i] <- tmp$rhat_lp
           trace_all_mk[[i]] <- tmp$traceplot
 
-          average_sr <- calc_average_sr(alcor, median_slope_all_mk[i], median_intercept_all_mk[i])
+          average_sr <- calc_average_sr(alcor, slope_all_mk[i], intercept_all_mk[i])
           average_sr[average_sr < 0] <- 0
           dt_average_sr_all_mk[[i]] <- data.table(Allele = alname,
                                                   AlCor = alcor,
@@ -451,9 +472,9 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_aut
   if(length(y_sr_multi_mk) != 0){
     data_list_sr <- list(N = length(y_sr_multi_mk), SR = y_sr_multi_mk, Height = tap_multi_mk)
     tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr, warmup, sampling, chains, n_parallel_chains)
-    median_myu_all_mk[index_multi_mk] <- tmp$median_myu
-    median_sigma_all_mk[index_multi_mk] <- tmp$median_sigma
-    median_lp_all_mk[index_multi_mk] <- tmp$median_lp
+    myu_all_mk[index_multi_mk] <- tmp$myu
+    sigma_all_mk[index_multi_mk] <- tmp$sigma
+    lp_all_mk[index_multi_mk] <- tmp$lp
     rhat_myu_all_mk[index_multi_mk] <- tmp$rhat_myu
     rhat_sigma_all_mk[index_multi_mk] <- tmp$rhat_sigma
     rhat_lp_all_mk[index_multi_mk] <- tmp$rhat_lp
@@ -465,7 +486,7 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_aut
 
       alname <- tmp_alname_multi_mk[[index_mk]]
       alcor <- tmp_alcor_multi_mk[[index_mk]]
-      average_sr <- rep(median_myu_all_mk[index_mk], length(alcor))
+      average_sr <- rep(myu_all_mk[index_mk], length(alcor))
       average_sr[average_sr < 0] <- 0
       dt_average_sr_all_mk[[index_mk]] <- data.table(Allele = alname,
                                                      AlCor = alcor,
@@ -475,11 +496,11 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_aut
 
   dt_result_est_sr <- data.table(Marker = markers_auto,
                                  Model = meth_model_sr,
-                                 Myu = median_myu_all_mk,
-                                 Slope = median_slope_all_mk,
-                                 Intercept = median_intercept_all_mk,
-                                 Sigma = median_sigma_all_mk,
-                                 Lp = median_lp_all_mk,
+                                 Myu = myu_all_mk,
+                                 Slope = slope_all_mk,
+                                 Intercept = intercept_all_mk,
+                                 Sigma = sigma_all_mk,
+                                 Lp = lp_all_mk,
                                  Rhat_Myu = rhat_myu_all_mk,
                                  Rhat_Slope = rhat_slope_all_mk,
                                  Rhat_Intercept = rhat_intercept_all_mk,
