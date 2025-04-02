@@ -52,7 +52,6 @@ functions{
 
 data{
   int hnc;
-  //int n_rep;
   int n_mk;
   real tph_mean;
   real tph_sd;
@@ -61,27 +60,21 @@ data{
   vector[n_rph_base_sum] rph_base_use;
   real min_size;
 
-  //array[n_rep] int n_dedup1_sum_per_rep;
   int n_dedup1_sum;
 
-  //array[n_rep] int n_rph_sum_per_rep;
   int n_rph_sum;
   array[2 * hnc, n_rph_sum] int index_dedup1_rep1;
   matrix[n_rph_sum, 2 * hnc] cv_square_rep1;
   vector[n_rph_sum] size_rep1;
   vector[n_rph_sum] oph_rep1;
 
-  //array[n_rep] int n_general_sum_per_rep;
   int n_general_sum;
-  //array[n_rep] int n_dropout_sum_per_rep;
   int n_dropout_sum;
   vector[n_dropout_sum] at_dropout_rep1;
-  //array[n_rep] int n_dropin_sum_per_rep;
   int n_dropin_sum;
   vector[n_dropin_sum] loglike_di_rep1;
 
   int n_dedup2_sum;
-  //array[n_rep] int n_dedup2_sum_per_rep;
   array[n_mk] int n_dedup2_use;
   array[n_dedup2_sum] int index_dedup2_use_rep1;
 
