@@ -25,13 +25,14 @@ hd_true_ui_sub <- function(id){
                       textOutput(ns("fn_af"))
                     ),
                     wellPanel(
+                      uiOutput(ns("noc")),
+                      br(),
                       numericInput(ns("n_simu"), label = h4("Number of simulations"), value = 100),
                       br(),
                       checkboxInput(ns("sub_source"), label = "Sub-source LR", value = TRUE),
                       br(),
                       br(),
-                      actionButton(ns("act_analyze_hd_true"), label = "Analyze", class = "btn btn-primary btn-lg"),
-                      span(textOutput(ns("error_message")), style = "color:red; font-weight:bold;")
+                      actionButton(ns("act_analyze_hd_true"), label = "Analyze", class = "btn btn-primary btn-lg")
                     )
              ),
              column(9,
@@ -70,33 +71,40 @@ hd_true_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true){
     id,
     function(input, output, session){
       data_deconvo <- rv_deconvo$data_deconvo
+
       if(is.null(data_deconvo)){
         disable("act_analyze_hd_true")
-        output$error_message <- renderText({paste0("Perform deconvolution before starting Hd true test!")})
       }else{
+        hnc_all <- data_deconvo$hnc_all
+
         enable("act_analyze_hd_true")
-        output$error_message <- renderText({paste0("")})
 
         output$fn_csp <- renderText({paste0(data_deconvo$fn_csp)})
         output$fn_af <- renderText({paste0(data_deconvo$fn_af)})
 
+        output$noc <- renderUI({
+          selectInput(session$ns("noc"), label = "Number of contributors", choices = hnc_all, selected = hnc_all[1], selectize = FALSE)
+        })
+
         observeEvent(input$act_analyze_hd_true, {
           waiter_show(html = spin_3k(), color = "white")
 
+          hnc <- input$noc
           n_simu <- input$n_simu
           sub_source <- input$sub_source
 
           # Extract data from data_deconvo
-          hnc <- data_deconvo$hnc
           markers_use <- data_deconvo$markers_use
           peaks_list <- data_deconvo$peaks_list
           pop_al_list <- data_deconvo$pop_al_list
           pop_prob_list <- data_deconvo$pop_prob_list
           dt_anameth <- data_deconvo$dt_anameth
           theta <- dt_anameth$Value[dt_anameth$Subcategory == "Theta"]
-          gtc_use <- data_deconvo$gtc_use
-          lpd_gtc_use_1st <- data_deconvo$lpd_gtc_use_1st
-          lpd_gtc_use_2nd <- data_deconvo$lpd_gtc_use_2nd
+          data_hnc_list <- data_deconvo$data_hnc_list
+
+          data_h1 <- data_hnc_list[[which(hnc_all == hnc)]]
+          error_message_h1 <- data_h1$error_message
+          dt_pg_list_h1 <- data_h1$dt_pg_list
 
           dt_af <- data_deconvo$dt_af
           tmp <- set_al_prob_randgt(markers_use, dt_af)
@@ -114,8 +122,8 @@ hd_true_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true){
                                       Allele1 = ref1[, 1],
                                       Allele2 = ref1[, 2])
 
-            log10like_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref_rand, refs, refs, sub_source)
-            log10like_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, gtc_use, lpd_gtc_use_1st, lpd_gtc_use_2nd, dt_ref_rand, NULL, refs, sub_source)
+            log10like_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_h1, dt_ref_rand, refs, refs, sub_source)
+            log10like_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_h1, dt_ref_rand, NULL, refs, sub_source)
 
             lr_rand[i] <- 10^(log10like_hp["Total"] - log10like_hd["Total"])
           }
