@@ -89,7 +89,7 @@ hd_true_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true){
         observeEvent(input$act_analyze_hd_true, {
           waiter_show(html = spin_3k(), color = "white")
 
-          hnc <- input$noc
+          hnc <- as.numeric(input$noc)
           n_simu <- input$n_simu
           sub_source <- input$sub_source
 
@@ -125,7 +125,7 @@ hd_true_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true){
             log10like_hp <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_h1, dt_ref_rand, refs, refs, sub_source)
             log10like_hd <- assign_log10like(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_h1, dt_ref_rand, NULL, refs, sub_source)
 
-            lr_rand[i] <- 10^(log10like_hp["Total"] - log10like_hd["Total"])
+            lr_rand[i] <- 10^(sum(log10like_hp) - sum(log10like_hd))
           }
           rv_hd_true$lr_rand <- lr_rand
 
