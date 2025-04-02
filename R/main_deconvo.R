@@ -31,6 +31,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
   n_gtc_use <- rep(NA, n_mk)
   gtc_use <- vector(mode = "list", length = n_mk)
   names(gtc_use) <- markers_use
+  min_tph <- Inf
   max_tph <- 0
   rph_base_use <- vector(mode = "list", length = n_mk)
   gtc_logprob_use <- vector(mode = "list", length = n_mk)
@@ -152,6 +153,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         # Update the maximum of the total peak height per marker
         heights <- heights_all_rep[[j]]
         oph_sum <- sum(heights)
+        if(oph_sum < min_tph){
+          min_tph <- oph_sum
+        }
         if(oph_sum > max_tph){
           max_tph <- oph_sum
         }
@@ -324,9 +328,13 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     ##########################################################
     # Determine the prior distribution for the parameter tph #
     ##########################################################
-
-    tph_mean <- max_tph / 2
-    tph_sd <- max_tph / 2
+    if(min_tph == max_tph){
+      min_tph <- 0
+    }
+    ltph <- min_tph / 2
+    htph <- max_tph / 2
+    tph_mean <- (htph + ltph) / 2
+    tph_sd <- (htph - ltph) / 2
 
     ################
     # Perform MCMC #
