@@ -621,12 +621,22 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     data_hnc_list <- vector(mode = "list", length = n_hnc)
     for(i in 1:n_hnc){
       hnc <- hnc_all[i]
-      data_hnc_list[[i]] <- perform_deconvo(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
-                                            pop_al_list, pop_prob_list, theta,
-                                            bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
-                                            logprob_di, shape_di, rate_di,
-                                            warmup, sampling, chains,
-                                            ae_use, cv_allele, cv_stutter, list_dt_average_sr)
+      data_hnc <- try(perform_deconvo(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
+                                      pop_al_list, pop_prob_list, theta,
+                                      bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
+                                      logprob_di, shape_di, rate_di,
+                                      warmup, sampling, chains,
+                                      ae_use, cv_allele, cv_stutter, list_dt_average_sr))
+      if(class(data_hnc) == "try-error"){
+        data_hnc_list[[i]] <- list("dt_pg_list" = NULL,
+                                   "dt_log10like" = NULL,
+                                   "dt_diag" = NULL,
+                                   "traceplot" = NULL,
+                                   "comp_time" = NULL,
+                                   "error_message" = "Unexpected error")
+      }else{
+        data_hnc_list[[i]] <- data_hnc
+      }
     }
   }else{
     peaks_list <- NULL
