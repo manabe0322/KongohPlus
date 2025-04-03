@@ -31,8 +31,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
   n_gtc_use <- rep(NA, n_mk)
   gtc_use <- vector(mode = "list", length = n_mk)
   names(gtc_use) <- markers_use
-  min_tph <- Inf
-  max_tph <- 0
+  median_sizes_use <- rep(NA, n_mk)
+  tph_per_mk_use <- matrix(0, n_mk, n_rep)
   rph_base_use <- vector(mode = "list", length = n_mk)
   gtc_logprob_use <- vector(mode = "list", length = n_mk)
   index_rph_gtc_use <- vector(mode = "list", length = n_rep)
@@ -69,6 +69,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     sizes <- sizes_list[[mk]]
     heights_all_rep <- heights_list[[mk]]
     n_peak_use[i] <- n_peak <- length(peaks)
+    median_sizes_use[i] <- median(sizes)
+    tph_per_mk_use[i, ] <- sapply(heights_all_rep, sum) / 2
 
     # Extract parameters of one marker
     at <- ats_use[i]
@@ -150,17 +152,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         size_dedup1_tmp <- rep(sizes, n_gtc)
         size_dedup1_tmp <- size_dedup1_tmp[bool_duplicated_adopt]
 
-        # Update the maximum of the total peak height per marker
-        heights <- heights_all_rep[[j]]
-        oph_sum <- sum(heights)
-        if(oph_sum < min_tph){
-          min_tph <- oph_sum
-        }
-        if(oph_sum > max_tph){
-          max_tph <- oph_sum
-        }
-
         # Observe peak heights for de-duplicated objects (pattern 1)
+        heights <- heights_all_rep[[j]]
         oph_dedup1_tmp <- rep(heights, n_gtc)
         oph_dedup1_tmp <- oph_dedup1_tmp[bool_duplicated_adopt]
 
@@ -328,13 +321,18 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     ##########################################################
     # Determine the prior distribution for the parameter tph #
     ##########################################################
+
+    median_sizes_use <- rep(median_sizes_use, n_rep)
+    tph_per_mk_use <- as.vector(tph_per_mk_use)
+    fit_exp <- lm(log(tph_per_mk_use) ~ median_sizes_use)
+    tph_mean <- exp(coef(fit_exp)[1]) * exp(coef(fit_exp)[2] * min_size)
+
+    min_tph <- min(tph_per_mk_use)
+    max_tph <- max(tph_per_mk_use)
     if(min_tph == max_tph){
       min_tph <- 0
     }
-    ltph <- min_tph / 2
-    htph <- max_tph / 2
-    tph_mean <- (htph + ltph) / 2
-    tph_sd <- (htph - ltph) / 2
+    tph_sd <- (max_tph - min_tph) / 2
 
     ################
     # Perform MCMC #
