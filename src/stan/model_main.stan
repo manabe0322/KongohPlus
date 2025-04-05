@@ -1,10 +1,10 @@
 functions{
-  matrix calc_rph_dedup1(vector mp, vector deg, int hnc, int n_rph_sum_rep1, vector rph_base_use, array[,] int index_dedup1_rep1, vector size_rep1, real min_size){
+  matrix calc_rph_dedup1(vector mp, vector deg, int hnc, int n_rph_sum_rep1, vector rph_base_use, array[,] int index_dedup1_rep1, vector deg_size_rep1){
     matrix[n_rph_sum_rep1, 2 * hnc] rph_dedup1;
     for(i in 1:hnc){
       real mp_c1 = mp[i];
       real deg_c1 = deg[i];
-      vector[n_rph_sum_rep1] rph_param = mp_c1 * deg_c1^((size_rep1 - min_size) / min_size);
+      vector[n_rph_sum_rep1] rph_param = mp_c1 * deg_c1^deg_size_rep1;
       for(j in 1:2){
         rph_dedup1[, 2 * i - 2 + j] = rph_base_use[index_dedup1_rep1[2 * i - 2 + j, ]] .* rph_param;
       }
@@ -59,7 +59,6 @@ data{
 
   int n_rph_base_sum;
   vector[n_rph_base_sum] rph_base_use;
-  real min_size;
 
   array[n_rep] int n_dedup1_sum_per_rep;
 
@@ -67,7 +66,7 @@ data{
   int n_rph_sum;
   array[2 * hnc, n_rph_sum] int index_dedup1_mcmc;
   matrix[n_rph_sum, 2 * hnc] cv_square_mcmc;
-  vector[n_rph_sum] size_mcmc;
+  vector[n_rph_sum] deg_size_mcmc;
   vector[n_rph_sum] oph_mcmc;
 
   array[n_rep] int n_general_sum_per_rep;
@@ -114,11 +113,10 @@ model{
     int n_rph_sum_rep1 = n_rph_sum_per_rep[i];
     array[2 * hnc, n_rph_sum_rep1] int index_dedup1_rep1 = index_dedup1_mcmc[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
     matrix[n_rph_sum_rep1, 2 * hnc] cv_square_rep1 = cv_square_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1), ];
-    vector[n_rph_sum_rep1] size_rep1 = size_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
     vector[n_rph_sum_rep1] oph_rep1 = oph_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
 
     // Calculate relative peak heights
-    matrix[n_rph_sum_rep1, 2 * hnc] rph_dedup1 = calc_rph_dedup1(mp, deg, hnc, n_rph_sum_rep1, rph_base_use, index_dedup1_rep1, size_rep1, min_size);
+    matrix[n_rph_sum_rep1, 2 * hnc] rph_dedup1 = calc_rph_dedup1(mp, deg, hnc, n_rph_sum_rep1, rph_base_use, index_dedup1_rep1, deg_size_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]);
 
     // Calculate gamma parameters
     matrix[n_rph_sum_rep1, 2] gamma_param = calc_gamma_param(rph_dedup1, cv_square_rep1, 2 * hnc, n_rph_sum_rep1, tph[i]);
@@ -130,19 +128,19 @@ model{
     // For general peaks
     int n_general_sum_rep1 = n_general_sum_per_rep[i];
     if(n_general_sum_rep1 != 0){
-      vector[n_general_sum_rep1] oph_rep1_general = oph_rep1[1:n_general_sum_rep1];
-      vector[n_general_sum_rep1] gamma_alpha = gamma_param[1:n_general_sum_rep1, 1];
-      vector[n_general_sum_rep1] gamma_beta = gamma_param[1:n_general_sum_rep1, 2];
-      lpd_dedup1_use_rep1[1:n_general_sum_rep1] = calc_lpd_general(n_general_sum_rep1, oph_rep1_general, gamma_alpha, gamma_beta);
+      lpd_dedup1_use_rep1[1:n_general_sum_rep1] = calc_lpd_general(n_general_sum_rep1,
+                                                                   oph_rep1[1:n_general_sum_rep1],
+                                                                   gamma_param[1:n_general_sum_rep1, 1],
+                                                                   gamma_param[1:n_general_sum_rep1, 2]);
     }
 
     // For drop-out peaks
     int n_dropout_sum_rep1 = n_dropout_sum_per_rep[i];
     if(n_dropout_sum_rep1 != 0){
-      vector[n_dropout_sum_rep1] at_dropout_rep1 = at_dropout[index_dropout_start:(index_dropout_start + n_dropout_sum_rep1 - 1)];
-      vector[n_dropout_sum_rep1] gamma_alpha = gamma_param[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1), 1];
-      vector[n_dropout_sum_rep1] gamma_beta = gamma_param[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1), 2];
-      lpd_dedup1_use_rep1[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1)] = calc_lpd_dropout(n_dropout_sum_rep1, at_dropout_rep1, gamma_alpha, gamma_beta);
+      lpd_dedup1_use_rep1[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1)] = calc_lpd_dropout(n_dropout_sum_rep1,
+                                                                                                                 at_dropout[index_dropout_start:(index_dropout_start + n_dropout_sum_rep1 - 1)],
+                                                                                                                 gamma_param[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1), 1],
+                                                                                                                 gamma_param[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1), 2]);
     }
 
     // For drop-in peaks
@@ -162,9 +160,10 @@ model{
       int n_peak = n_peak_use[j];
       int n_gtc = n_gtc_use[j];
       int n_dedup2 = n_dedup2_use[j];
-      matrix[n_peak, n_gtc] lpd_dedup2 = to_matrix(lpd_dedup2_use_rep1[index_lpd_start:(index_lpd_start + n_dedup2 - 1)], n_peak, n_gtc);
-      row_vector[n_gtc] gtc_logprob_mk = gtc_logprob_use[index_gtc_start:(index_gtc_start + n_gtc - 1)];
-      row_vector[n_gtc] loglike_gtc = calc_loglike_gtc(n_peak, n_gtc, lpd_dedup2, gtc_logprob_mk);
+      row_vector[n_gtc] loglike_gtc = calc_loglike_gtc(n_peak,
+                                                       n_gtc,
+                                                       to_matrix(lpd_dedup2_use_rep1[index_lpd_start:(index_lpd_start + n_dedup2 - 1)], n_peak, n_gtc),
+                                                       gtc_logprob_use[index_gtc_start:(index_gtc_start + n_gtc - 1)]);
 
       target += log_sum_exp(loglike_gtc);
 

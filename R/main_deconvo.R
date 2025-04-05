@@ -237,61 +237,77 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     oph_mcmc <- rep(NA, n_rph_sum)
     at_dropout <- rep(NA, n_dropout_sum)
 
-    index_general_start <- 1
+    index_start_rph_general <- 1
+    index_start_dedup1_use_general <- 1
+    index_at_start <- 1
     for(i in 1:n_rep){
       n_general_rep1 <- n_general_use[(n_mk * (i - 1) + 1):(n_mk * i)]
       n_dropout_rep1 <- n_dropout_use[(n_mk * (i - 1) + 1):(n_mk * i)]
       n_dropin_rep1 <- n_dropin_use[(n_mk * (i - 1) + 1):(n_mk * i)]
       n_ignore_rep1 <- n_ignore_use[(n_mk * (i - 1) + 1):(n_mk * i)]
 
-      index_dropout_start <- index_general_start + n_general_sum_per_rep[i]
-      index_dropin_start <- index_dropout_start + n_dropout_sum_per_rep[i]
-      index_ignore_start <- index_dropin_start + n_dropin_sum_per_rep[i]
-      index_at_start <- 1
+      index_start_rph_dropout <- index_start_rph_general + n_general_sum_per_rep[i]
+
+      index_start_dedup1_use_dropout <- index_start_dedup1_use_general + n_general_sum_per_rep[i]
+      index_start_dedup1_use_dropin <- index_start_dedup1_use_dropout + n_dropout_sum_per_rep[i]
+      index_start_dedup1_use_ignore <- index_start_dedup1_use_dropin + n_dropin_sum_per_rep[i]
       sumup_index_dedup1 <- 0
 
       for(j in 1:n_mk){
         n_general <- n_general_rep1[j]
         if(n_general != 0){
-          index_tmp <- index_general_start:(index_general_start + n_general - 1)
-          index_dedup1_use[, index_tmp] <- index_dedup1_mcmc[, index_tmp] <- index_dedup1_general_use[[i]][[j]] + sumup_index_dedup1
+          index_tmp <- index_start_rph_general:(index_start_rph_general + n_general - 1)
+          index_dedup1_mcmc[, index_tmp] <- index_dedup1_general_use[[i]][[j]] + sumup_index_dedup1
           cv_square_mcmc[, index_tmp] <- cv_square_dedup1_general_use[[i]][[j]]
           size_mcmc[index_tmp] <- size_dedup1_general_use[[i]][[j]]
           oph_mcmc[index_tmp] <- oph_dedup1_general_use[[i]][[j]]
+
+          index_tmp <- index_start_dedup1_use_general:(index_start_dedup1_use_general + n_general - 1)
+          index_dedup1_use[, index_tmp] <- index_dedup1_general_use[[i]][[j]] + sumup_index_dedup1
         }
 
         n_dropout <- n_dropout_rep1[j]
         if(n_dropout != 0){
-          index_tmp <- index_dropout_start:(index_dropout_start + n_dropout - 1)
-          index_dedup1_use[, index_tmp] <- index_dedup1_mcmc[, index_tmp] <- index_dedup1_dropout_use[[i]][[j]] + sumup_index_dedup1
+          index_tmp <- index_start_rph_dropout:(index_start_rph_dropout + n_dropout - 1)
+          index_dedup1_mcmc[, index_tmp] <- index_dedup1_dropout_use[[i]][[j]] + sumup_index_dedup1
           cv_square_mcmc[, index_tmp] <- cv_square_dedup1_dropout_use[[i]][[j]]
           size_mcmc[index_tmp] <- size_dedup1_dropout_use[[i]][[j]]
           oph_mcmc[index_tmp] <- oph_dedup1_dropout_use[[i]][[j]]
+
           at_dropout[index_at_start:(index_at_start + n_dropout - 1)] <- ats_use[j]
+
+          index_tmp <- index_start_dedup1_use_dropout:(index_start_dedup1_use_dropout + n_dropout - 1)
+          index_dedup1_use[, index_tmp] <- index_dedup1_dropout_use[[i]][[j]] + sumup_index_dedup1
         }
 
         n_dropin <- n_dropin_rep1[j]
         if(n_dropin != 0){
-          index_tmp <- index_dropin_start:(index_dropin_start + n_dropin - 1)
+          index_tmp <- index_start_dedup1_use_dropin:(index_start_dedup1_use_dropin + n_dropin - 1)
           index_dedup1_use[, index_tmp] <- index_dedup1_dropin_use[[i]][[j]] + sumup_index_dedup1
         }
 
         n_ignore <- n_ignore_rep1[j]
         if(n_ignore != 0){
-          index_tmp <- index_ignore_start:(index_ignore_start + n_ignore - 1)
+          index_tmp <- index_start_dedup1_use_ignore:(index_start_dedup1_use_ignore + n_ignore - 1)
           index_dedup1_use[, index_tmp] <- index_dedup1_ignore_use[[i]][[j]] + sumup_index_dedup1
         }
 
-        index_general_start <- index_general_start + n_general
-        index_dropout_start <- index_dropout_start + n_dropout
-        index_dropin_start <- index_dropin_start + n_dropin
-        index_ignore_start <- index_ignore_start + n_ignore
+        index_start_rph_general <- index_start_rph_general + n_general
+        index_start_rph_dropout <- index_start_rph_dropout + n_dropout
+
+        index_start_dedup1_use_general <- index_start_dedup1_use_general + n_general
+        index_start_dedup1_use_dropout <- index_start_dedup1_use_dropout + n_dropout
+        index_start_dedup1_use_dropin <- index_start_dedup1_use_dropin + n_dropin
+        index_start_dedup1_use_ignore <- index_start_dedup1_use_ignore + n_ignore
         index_at_start <- index_at_start + n_dropout
         sumup_index_dedup1 <- sumup_index_dedup1 + n_rph_base_use[j]
       }
 
-      index_general_start <- 1 + sum(n_dedup1_sum_per_rep[1:i])
+      index_start_rph_general <- n_rph_sum_per_rep[i] + 1
+      index_start_dedup1_use_general <- n_dedup1_sum_per_rep[i] + 1
     }
+
+    deg_size_mcmc <- (size_mcmc - min_size) / min_size
 
     ##################################################
     # Prepare objects for de-duplication (pattern 2) #
@@ -346,12 +362,11 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                              tph_sd = tph_sd,
                              n_rph_base_sum = sum(n_rph_base_use),
                              rph_base_use = unlist(rph_base_use),
-                             min_size = min_size,
                              n_dedup1_sum = n_dedup1_sum,
                              n_rph_sum = n_rph_sum,
                              index_dedup1_rep1 = index_dedup1_mcmc,
                              cv_square_rep1 = t(cv_square_mcmc),
-                             size_rep1 = size_mcmc,
+                             deg_size_rep1 = deg_size_mcmc,
                              oph_rep1 = oph_mcmc,
                              n_general_sum = n_general_sum,
                              n_dropout_sum = n_dropout_sum,
@@ -385,13 +400,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                              tph_sd = tph_sd,
                              n_rph_base_sum = sum(n_rph_base_use),
                              rph_base_use = unlist(rph_base_use),
-                             min_size = min_size,
                              n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
                              n_rph_sum_per_rep = n_rph_sum_per_rep,
                              n_rph_sum = n_rph_sum,
                              index_dedup1_mcmc = index_dedup1_mcmc,
                              cv_square_mcmc = t(cv_square_mcmc),
-                             size_mcmc = size_mcmc,
+                             deg_size_mcmc = deg_size_mcmc,
                              oph_mcmc = oph_mcmc,
                              n_general_sum_per_rep = n_general_sum_per_rep,
                              n_dropout_sum_per_rep = n_dropout_sum_per_rep,
