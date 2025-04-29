@@ -192,7 +192,10 @@ est_dropin_setting_server <- function(id, path_pack, session_dropin_top){
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
+          # Load the MCMC model
+          model_dropin <- stan_package_model(name = "model_dropin", package = "KongohPlus")
 
+          rv_est_dropin$data_est_dropin <- estimate_dropin_params()
         }
       })
 
