@@ -10,5 +10,5 @@ create_init_dt_setting_est_par(dt_kit)
 \item{dt_kit}{The data.table of information on a kit}
 }
 \description{
-The function to create the initial data.table in the setting tab for estimating average stutter ratios
+The function to create the initial data.table in the setting tab for estimating parameters
 }

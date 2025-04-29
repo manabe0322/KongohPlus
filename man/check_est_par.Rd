@@ -11,7 +11,7 @@ check_est_par(dt_exp, dt_gt, dt_setting_est_par)
 
 \item{dt_gt}{The data.table of the genotype data}
 
-\item{dt_setting_est_sr}{The data.table in the setting tab for estimating parameters}
+\item{dt_setting_est_par}{The data.table in the setting tab for estimating parameters}
 }
 \description{
 The function to check files for estimating parameters

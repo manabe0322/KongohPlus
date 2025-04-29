@@ -4,8 +4,8 @@
 anameth_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("6. Set the analysis method",
-           titlePanel("6. Set the analysis method"),
+  tabPanel("7. Set the analysis method",
+           titlePanel("7. Set the analysis method"),
            br(),
            fluidRow(
              column(7,

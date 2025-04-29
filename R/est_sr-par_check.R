@@ -136,7 +136,7 @@ check_est_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr){
 #' @description The function to check files for estimating parameters
 #' @param dt_exp The data.table of the experimental data
 #' @param dt_gt The data.table of the genotype data
-#' @param dt_setting_est_sr The data.table in the setting tab for estimating parameters
+#' @param dt_setting_est_par The data.table in the setting tab for estimating parameters
 check_est_par <- function(dt_exp, dt_gt, dt_setting_est_par){
   error_message <- ""
 
@@ -175,6 +175,38 @@ check_est_par <- function(dt_exp, dt_gt, dt_setting_est_par){
     sn_without_gt <- setdiff(sn_exp, sn_gt)
     if(length(sn_without_gt) > 0){
       error_message <- paste0(error_message, "No genotype data of the following samples: ", paste0(sn_without_gt, collapse = ", "), ".<br>")
+    }
+  }
+
+  return(error_message)
+}
+
+#' check_est_dropin
+#'
+#' @description The function to check files for estimating dropin parameters
+#' @param dt_ntc The data.table of the non template control data
+#' @param dt_setting_est_dropin The data.table in the setting tab for estimating dropin parameters
+check_est_dropin <- function(dt_ntc, dt_setting_est_dropin){
+  error_message <- ""
+
+  # Whether all required data is loaded or not
+  if(is.null(dt_ntc)){
+    error_message <- paste0(error_message, "Load non template control data!<br>")
+  }
+
+  # Check the analytical thresholds
+  markers_est_dropin <- dt_setting_est_dropin$Marker
+  at_all_mk <- dt_setting_est_dropin$AT
+  bool_without_at <- is.na(at_all_mk)
+  if(any(bool_without_at)){
+    error_message <- paste0(error_message, "Set the analytical threshold(s) of the following marker(s): ", paste0(markers_est_dropin[bool_without_at], collapse = ", "), ".<br>")
+  }
+
+  if(!is.null(dt_ntc)){
+    # Check the marker set of the experimental data
+    sn_mk_problem_dropin <- check_dt_mk(dt_dropin, markers_est_dropin)
+    if(length(sn_mk_problem_dropin) > 0){
+      error_message <- paste0(error_message, "Inappropriate marker set of the following sample(s) in the non template control data: ", paste0(sn_mk_problem_dropin, collapse = ", "), ".<br>")
     }
   }
 

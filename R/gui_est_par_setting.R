@@ -41,7 +41,7 @@ est_par_setting_ui <- function(id){
 
 #' create_init_dt_setting_est_par
 #'
-#' @description The function to create the initial data.table in the setting tab for estimating average stutter ratios
+#' @description The function to create the initial data.table in the setting tab for estimating parameters
 #' @param dt_kit The data.table of information on a kit
 create_init_dt_setting_est_par <- function(dt_kit){
   dt_kit_auto <- extract_kit_auto(dt_kit)
