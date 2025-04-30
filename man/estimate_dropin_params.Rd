@@ -4,7 +4,16 @@
 \alias{estimate_dropin_params}
 \title{estimate_dropin_params}
 \usage{
-estimate_dropin_params()
+estimate_dropin_params(
+  dt_ntc,
+  dt_kit,
+  at_dropin,
+  model_dropin,
+  warmup,
+  sampling,
+  chains,
+  n_parallel_chains = detectCores()
+)
 }
 \description{
 The function to estimate drop-in parameters

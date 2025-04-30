@@ -48,7 +48,7 @@ create_init_dt_setting_est_par <- function(dt_kit){
   markers <- unique(dt_kit_auto$Marker)
 
   dt_setting_est_par <- data.table(Marker = markers,
-                                   AT = rep(45, 21))
+                                   AT = c(rep(35, 5), rep(40, 3), rep(25, 4), rep(25, 5), rep(45, 4)))
   col_int <- c("AT")
   dt_setting_est_par[, (col_int) := lapply(.SD, as.integer), .SDcols = col_int]
 

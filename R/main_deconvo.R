@@ -19,7 +19,7 @@ make_index_dedup2_mk <- function(index_rph_gtc, index_dedup1_all_mk){
 perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                             pop_al_list, pop_prob_list, theta,
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
-                            logprob_di, shape_di, rate_di,
+                            freq_di, shape_di, rate_di,
                             warmup, sampling, chains,
                             ae_use, cv_allele, cv_stutter, list_dt_average_sr){
   # Start computation
@@ -94,6 +94,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     # Extract allele probabilities
     pop_al <- pop_al_list[[mk]]
     pop_prob <- pop_prob_list[[mk]]
+
+    # Calculate the probability of drop-in in the current marker
+    auc_below_at <- pgamma(q = at, shape = shape_di, rate = rate_di)
+    logprob_di <- log(freq_di / (1 - auc_below_at))
 
     # The base of the relative peak heights
     rph_base_use[[i]] <- rph_base_mk <- make_rph_base(peaks, bsrs, fsrs, dsrs, m2srs, ae_use[mk])
@@ -617,7 +621,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     h_dropin_fltr <- dt_anameth$Value[dt_anameth$Subcategory == "Maximum height of drop-in"]
 
     # Extract drop-in parameters
-    logprob_di <- log(dt_anameth$Value[dt_anameth$Subcategory == "Probability of drop-in"])
+    freq_di <- dt_anameth$Value[dt_anameth$Subcategory == "Frequency of drop-in"]
     shape_di <- dt_anameth$Value[dt_anameth$Subcategory == "Shape parameter"]
     rate_di <- dt_anameth$Value[dt_anameth$Subcategory == "Rate parameter"]
 
@@ -636,7 +640,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
       data_hnc <- try(perform_deconvo(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                                       pop_al_list, pop_prob_list, theta,
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
-                                      logprob_di, shape_di, rate_di,
+                                      freq_di, shape_di, rate_di,
                                       warmup, sampling, chains,
                                       ae_use, cv_allele, cv_stutter, list_dt_average_sr))
       if(class(data_hnc) == "try-error"){

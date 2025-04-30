@@ -2,23 +2,23 @@ Category,Subcategory,Name,Value
 Parameter,,Param_GF_KMU30,
 Stutter file,,Stutter_GF_KMU30,
 Kit,,GlobalFiler,
-AT,D3S1358,,45
-AT,vWA,,45
-AT,D16S539,,45
-AT,CSF1PO,,45
-AT,TPOX,,45
-AT,D8S1179,,45
-AT,D21S11,,45
-AT,D18S51,,45
-AT,D2S441,,45
-AT,D19S433,,45
-AT,TH01,,45
-AT,FGA,,45
-AT,D22S1045,,45
-AT,D5S818,,45
-AT,D13S317,,45
-AT,D7S820,,45
-AT,SE33,,45
+AT,D3S1358,,35
+AT,vWA,,35
+AT,D16S539,,35
+AT,CSF1PO,,35
+AT,TPOX,,35
+AT,D8S1179,,40
+AT,D21S11,,40
+AT,D18S51,,40
+AT,D2S441,,25
+AT,D19S433,,25
+AT,TH01,,25
+AT,FGA,,25
+AT,D22S1045,,25
+AT,D5S818,,25
+AT,D13S317,,25
+AT,D7S820,,25
+AT,SE33,,25
 AT,D10S1248,,45
 AT,D1S1656,,45
 AT,D12S391,,45
@@ -29,10 +29,10 @@ Genotype filter,Maximum FSR,,0.2
 Genotype filter,Maximum DSR,,0.05
 Genotype filter,Maximum M2SR,,0.1
 Genotype filter,Maximum number of drop-in,,2
-Genotype filter,Maximum height of drop-in,,150
-Drop-in,Probability of drop-in,,0.0029876
-Drop-in,Shape parameter,,6.06315
-Drop-in,Rate parameter,,0.101305
+Genotype filter,Maximum height of drop-in,,240
+Drop-in,Frequency of drop-in,,0.004593477
+Drop-in,Shape parameter,,6.71442
+Drop-in,Rate parameter,,0.116538
 MCMC,Warmup,,1200
 MCMC,Sampling,,300
 MCMC,Chains,,4

@@ -22,7 +22,7 @@ perform_deconvo(
   m2sr_fltr,
   n_dropin_fltr,
   h_dropin_fltr,
-  logprob_di,
+  freq_di,
   shape_di,
   rate_di,
   warmup,
