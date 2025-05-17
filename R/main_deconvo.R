@@ -387,6 +387,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       # Perform MCMC
       model_main_rep1 <- stan_package_model(name = "model_main_rep1", package = "KongohPlus")
 
+      fit_main <- model_main_rep1$optimize(data_list_main) #, algorithm = "lbfgs", tol_rel_obj = 1e-10, tol_grad = 1e-12, init_alpha = 0.0001, history_size = 10)
+      as.data.frame(fit_main$draws())
+
       fit_main <- model_main_rep1$sample(
         data_list_main,
         iter_warmup = warmup,
