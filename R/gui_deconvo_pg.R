@@ -186,9 +186,9 @@ deconvo_pg_server <- function(id, rv_deconvo){
               gt_select_list[[i]] <- as.numeric(tmp)
             }
 
-            dt_diag <- data_hnc$dt_diag
-            param_names <- dt_diag[["Parameter"]]
-            est_vals <- dt_diag[["Estimated value"]]
+            dt_param <- data_hnc$dt_param
+            param_names <- dt_param[["Parameter"]]
+            est_vals <- dt_param[["Estimated value"]]
             tphs <- est_vals[param_names == "Template amount"]
             mp <- est_vals[param_names == "Mixture proportion"]
             deg <- est_vals[param_names == "Degradation"]
@@ -257,9 +257,9 @@ deconvo_pg_server <- function(id, rv_deconvo){
 
             index_contrib <- as.integer(gsub("U", "", contrib))
 
-            dt_diag <- data_hnc$dt_diag
-            param_names <- dt_diag[["Parameter"]]
-            est_vals <- dt_diag[["Estimated value"]]
+            dt_param <- data_hnc$dt_param
+            param_names <- dt_param[["Parameter"]]
+            est_vals <- dt_param[["Estimated value"]]
             tphs <- est_vals[param_names == "Template amount"]
             mp <- est_vals[param_names == "Mixture proportion"]
             mp_c1 <- mp[index_contrib]

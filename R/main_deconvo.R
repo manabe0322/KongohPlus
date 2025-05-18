@@ -9,6 +9,20 @@ make_index_dedup2_mk <- function(index_rph_gtc, index_dedup1_all_mk){
   return(match(paste_index_rph_gtc, paste_index_dedup1_all_mk))
 }
 
+#' generate_init
+#'
+#' @description The function to generate initial values
+#' @param n_rep The number of replicates
+#' @param hnc The hypothesized number of contributors
+#' @param tph_mean The mean of the total peak height
+#' @param tph_sd The SD of the total peak height
+generate_init <- function(n_rep, hnc, tph_mean, tph_sd){
+  tph <- rnorm(n_rep, tph_mean, tph_sd)
+  lambda <- rnorm(hnc, 0, 1)
+  deg <- rbeta(hnc, 1, 1)
+  return(list(list(tph = tph, lambda = lambda, deg = deg)))
+}
+
 #' perform_deconvo
 #'
 #' @description The function to perform mixture deconvolution
@@ -20,7 +34,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                             pop_al_list, pop_prob_list, theta,
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, rate_di,
-                            warmup, sampling, chains,
                             ae_use, cv_allele, cv_stutter, list_dt_average_sr){
   # Start computation
   start_time <- proc.time()
@@ -385,19 +398,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                              gtc_logprob_use = unlist(gtc_logprob_use))
 
       # Perform MCMC
-      model_main_rep1 <- stan_package_model(name = "model_main_rep1", package = "KongohPlus")
-
-      fit_main <- model_main_rep1$optimize(data_list_main) #, algorithm = "lbfgs", tol_rel_obj = 1e-10, tol_grad = 1e-12, init_alpha = 0.0001, history_size = 10)
-      as.data.frame(fit_main$draws())
-
-      fit_main <- model_main_rep1$sample(
-        data_list_main,
-        iter_warmup = warmup,
-        iter_sampling = sampling,
-        chains = chains,
-        parallel_chains = detectCores()#,
-        #show_messages = FALSE
-      )
+      model_main <- stan_package_model(name = "model_main_rep1", package = "KongohPlus")
     }else{
       # Prepare date list
       data_list_main <- list(hnc = hnc,
@@ -431,130 +432,128 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
       # Perform MCMC
       model_main <- stan_package_model(name = "model_main", package = "KongohPlus")
-
-      fit_main <- model_main$sample(
-        data_list_main,
-        iter_warmup = warmup,
-        iter_sampling = sampling,
-        chains = chains,
-        parallel_chains = detectCores()#,
-        #show_messages = FALSE
-      )
     }
 
-    # Trace plot
-    draws <- fit_main$draws()
-    draws %>% mcmc_trace(pars = c("lp__")) -> traceplot
+    accept_simu <- 10
+    max_simu <- 100
+    count_all <- 0
+    count_accept <- 0
+    max_lp <- -Inf
+    est_param <- rep(NA, n_rep + 3 * hnc)
+    repeat{
+      count_all <- count_all + 1
+      init_vals <- generate_init(n_rep, hnc, tph_mean, tph_sd)
+      fit_main <- model_main$optimize(data_list_main, init = init_vals)
+      if(fit_main$return_codes() == 0){
+        lp <- fit_main$lp()
+        if(abs(max_lp - lp) < 1e-6){
+          count_accept <- count_accept + 1
+          if(lp - max_lp > 0){
+            max_lp <- lp
+            est_param <- fit_main$mle()
+          }
+        }else if(lp - max_lp > 0){
+          count_accept <- 1
+          max_lp <- lp
+          est_param <- fit_main$mle()
+        }
 
-    # Extract parameters
-    tmp <- as_draws_df(fit_main$draws())
-    lp_values <- tmp$lp__
-    density_lp <- density(lp_values)
-    lp_mode_estimated <- density_lp$x[which.max(density_lp$y)]
-    index_hpd <- which.min(abs(lp_values - lp_mode_estimated))
-    lp <- lp_values[index_hpd]
+        if(count_accept == accept_simu){
+          break
+        }
 
-    tph <- rep(NA, n_rep)
-    if(n_rep == 1){
-      tph_values <- tmp[["tph"]]
-      tph[1] <- tph_values[index_hpd]
-    }else{
+        if(count_all == max_simu){
+          break
+        }
+      }
+    }
+
+    names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), paste0("lambda[", 1:hnc, "]"), paste0("deg[", 1:hnc, "]"), paste0("mp[", 1:hnc, "]"))
+
+    if(count_accept == accept_simu){
+      tph <- est_param[paste0("tph[", 1:n_rep, "]")]
+      mp <- est_param[paste0("mp[", 1:hnc, "]")]
+      deg <- est_param[paste0("deg[", 1:hnc, "]")]
+
+      ######################################################
+      # Calculate likelihood under the estimated parameter #
+      ######################################################
+
+      index_rph_start <- 1
+      index_dropout_start <- 1
+      index_dropin_start <- 1
+      index_dedup2_start <- 1
+      lpd_gtc_use <- vector(mode = "list", length = n_rep)
       for(i in 1:n_rep){
-        tph_values <- tmp[[paste0("tph[", i, "]")]]
-        tph[i] <- tph_values[index_hpd]
-      }
-    }
+        n_rph_sum_rep1 <- n_rph_sum_per_rep[i]
+        index_dedup1_rep1 <- index_dedup1_mcmc[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+        index_dedup1_rep1_cpp <- asplit(index_dedup1_rep1 - 1, 1) # C++ index
+        cv_square_rep1 <- cv_square_mcmc[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+        cv_square_rep1 <- asplit(cv_square_rep1, 1)
+        size_rep1 <- size_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+        oph_rep1 <- oph_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
 
-    mp <- rep(NA, hnc)
-    deg <- rep(NA, hnc)
-    for(i in 1:hnc){
-      mp_values <- tmp[[paste0("mp[", i, "]")]]
-      mp[i] <- mp_values[index_hpd]
-      deg_values <- tmp[[paste0("deg[", i, "]")]]
-      deg[i] <- deg_values[index_hpd]
-    }
+        n_dedup1_sum_rep1 <- n_dedup1_sum_per_rep[i]
+        n_general_sum_rep1 <- n_general_sum_per_rep[i]
 
-    fit_main_summary <- fit_main$summary()
-    variables <- fit_main_summary$variable
-    rhats <- fit_main_summary$rhat
-    rhat_lp <- rhats[which(variables == "lp__")]
-    rhat_tph <- rhats[grep("tph", variables)]
-    rhat_mp <- rhats[grep("mp", variables)]
-    rhat_deg <- rhats[grep("deg", variables)]
+        n_dropout_sum_rep1 <- n_dropout_sum_per_rep[i]
+        if(n_dropout_sum_rep1 != 0){
+          at_dropout_rep1 <- at_dropout[index_dropout_start:(index_dropout_start + n_dropout_sum_rep1 - 1)]
+        }else{
+          at_dropout_rep1 <- numeric(0)
+        }
 
-    ######################################################
-    # Calculate likelihood under the estimated parameter #
-    ######################################################
+        n_dropin_sum_rep1 <- n_dropin_sum_per_rep[i]
+        if(n_dropin_sum_rep1 != 0){
+          loglike_di_rep1 <- loglike_di[index_dropin_start:(index_dropin_start + n_dropin_sum_rep1 - 1)]
+        }else{
+          loglike_di_rep1 <- numeric(0)
+        }
 
-    index_rph_start <- 1
-    index_dropout_start <- 1
-    index_dropin_start <- 1
-    index_dedup2_start <- 1
-    lpd_gtc_use <- vector(mode = "list", length = n_rep)
-    for(i in 1:n_rep){
-      n_rph_sum_rep1 <- n_rph_sum_per_rep[i]
-      index_dedup1_rep1 <- index_dedup1_mcmc[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
-      index_dedup1_rep1_cpp <- asplit(index_dedup1_rep1 - 1, 1) # C++ index
-      cv_square_rep1 <- cv_square_mcmc[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
-      cv_square_rep1 <- asplit(cv_square_rep1, 1)
-      size_rep1 <- size_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
-      oph_rep1 <- oph_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+        n_dedup2_sum_rep1 <- n_dedup2_sum_per_rep[i]
+        index_dedup2_use_rep1 <- index_dedup2_use[index_dedup2_start:(index_dedup2_start + n_dedup2_sum_rep1 - 1)]
+        index_dedup2_use_rep1_cpp <- index_dedup2_use_rep1 - 1 # C++ index
 
-      n_dedup1_sum_rep1 <- n_dedup1_sum_per_rep[i]
-      n_general_sum_rep1 <- n_general_sum_per_rep[i]
+        lpd_gtc_use[[i]] <- calc_lpd_gtc_all_mk_cpp(mp, deg, hnc, n_rph_sum_rep1, unlist(rph_base_use), index_dedup1_rep1_cpp, size_rep1, min_size,
+                                                    cv_square_rep1, tph[i],
+                                                    n_dedup1_sum_rep1, n_general_sum_rep1, n_dropout_sum_rep1, n_dropin_sum_rep1, oph_rep1, at_dropout_rep1, loglike_di_rep1,
+                                                    n_mk, index_dedup2_use_rep1_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
 
-      n_dropout_sum_rep1 <- n_dropout_sum_per_rep[i]
-      if(n_dropout_sum_rep1 != 0){
-        at_dropout_rep1 <- at_dropout[index_dropout_start:(index_dropout_start + n_dropout_sum_rep1 - 1)]
-      }else{
-        at_dropout_rep1 <- numeric(0)
+        index_rph_start <- index_rph_start + n_rph_sum_rep1
+        index_dropout_start <- index_dropout_start + n_dropout_sum_rep1
+        index_dropin_start <- index_dropin_start + n_dropin_sum_rep1
+        index_dedup2_start <- index_dedup2_start + n_dedup2_sum_rep1
       }
 
-      n_dropin_sum_rep1 <- n_dropin_sum_per_rep[i]
-      if(n_dropin_sum_rep1 != 0){
-        loglike_di_rep1 <- loglike_di[index_dropin_start:(index_dropin_start + n_dropin_sum_rep1 - 1)]
-      }else{
-        loglike_di_rep1 <- numeric(0)
-      }
+      dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use)
 
-      n_dedup2_sum_rep1 <- n_dedup2_sum_per_rep[i]
-      index_dedup2_use_rep1 <- index_dedup2_use[index_dedup2_start:(index_dedup2_start + n_dedup2_sum_rep1 - 1)]
-      index_dedup2_use_rep1_cpp <- index_dedup2_use_rep1 - 1 # C++ index
+      log10like_use <- calc_log10like_use(dt_pg_list)
 
-      lpd_gtc_use[[i]] <- calc_lpd_gtc_all_mk_cpp(mp, deg, hnc, n_rph_sum_rep1, unlist(rph_base_use), index_dedup1_rep1_cpp, size_rep1, min_size,
-                                                  cv_square_rep1, tph[i],
-                                                  n_dedup1_sum_rep1, n_general_sum_rep1, n_dropout_sum_rep1, n_dropin_sum_rep1, oph_rep1, at_dropout_rep1, loglike_di_rep1,
-                                                  n_mk, index_dedup2_use_rep1_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
+      dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
+                                 Log10_Likelihood = c(log10like_use, sum(log10like_use)))
 
-      index_rph_start <- index_rph_start + n_rph_sum_rep1
-      index_dropout_start <- index_dropout_start + n_dropout_sum_rep1
-      index_dropin_start <- index_dropin_start + n_dropin_sum_rep1
-      index_dedup2_start <- index_dedup2_start + n_dedup2_sum_rep1
+      dt_param <- data.table("Parameter" = c(rep("Template amount", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc)),
+                             "Contributor" = c(rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc)),
+                             "Replicate" = c(1:n_rep, rep(NA, hnc), rep(NA, hnc)),
+                             "Estimated value" = c(tph, mp[hnc:1], deg[hnc:1]))
+
+      # End computation
+      end_time <- proc.time()
+      comp_time <- end_time[3] - start_time[3]
+
+      return(list("dt_pg_list" = dt_pg_list,
+                  "dt_log10like" = dt_log10like,
+                  "dt_param" = dt_param,
+                  "comp_time" = comp_time,
+                  "error_message" = NULL))
+    }else{
+      error_message <- "Convergence failure."
+      return(list("dt_pg_list" = NULL,
+                  "dt_log10like" = NULL,
+                  "dt_param" = NULL,
+                  "comp_time" = NULL,
+                  "error_message" = error_message))
     }
-
-    dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use)
-
-    log10like_use <- calc_log10like_use(dt_pg_list)
-
-    dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
-                               Log10_Likelihood = c(log10like_use, sum(log10like_use)))
-
-    dt_diag <- data.table("Parameter" = c("lp__", rep("Template amount", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc)),
-                          "Contributor" = c(NA, rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc)),
-                          "Replicate" = c(NA, 1:n_rep, rep(NA, hnc), rep(NA, hnc)),
-                          "Estimated value" = c(lp, tph, mp[hnc:1], deg[hnc:1]),
-                          "Rhat" = c(rhat_lp, rhat_tph, rhat_mp[hnc:1], rhat_deg[hnc:1]))
-
-    # End computation
-    end_time <- proc.time()
-    comp_time <- end_time[3] - start_time[3]
-
-    return(list("dt_pg_list" = dt_pg_list,
-                "dt_log10like" = dt_log10like,
-                "dt_diag" = dt_diag,
-                "traceplot" = traceplot,
-                "comp_time" = comp_time,
-                "error_message" = NULL))
   }else{
     markers_unexplainable <- markers_use[n_gtc_use == 0]
     if(hnc == 1){
@@ -568,8 +567,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     return(list("dt_pg_list" = NULL,
                 "dt_log10like" = NULL,
-                "dt_diag" = NULL,
-                "traceplot" = NULL,
+                "dt_param" = NULL,
                 "comp_time" = NULL,
                 "error_message" = error_message))
   }
@@ -628,11 +626,6 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     shape_di <- dt_anameth$Value[dt_anameth$Subcategory == "Shape parameter"]
     rate_di <- dt_anameth$Value[dt_anameth$Subcategory == "Rate parameter"]
 
-    # Extract MCMC parameters
-    warmup <- dt_anameth$Value[dt_anameth$Subcategory == "Warmup"]
-    sampling <- dt_anameth$Value[dt_anameth$Subcategory == "Sampling"]
-    chains <- dt_anameth$Value[dt_anameth$Subcategory == "Chains"]
-
     # Extract LSAE
     ae_use <- expect_ae[match(markers_use, names(expect_ae))]
 
@@ -644,7 +637,6 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       pop_al_list, pop_prob_list, theta,
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, rate_di,
-                                      warmup, sampling, chains,
                                       ae_use, cv_allele, cv_stutter, list_dt_average_sr))
       if(class(data_hnc) == "try-error"){
         data_hnc_list[[i]] <- list("dt_pg_list" = NULL,

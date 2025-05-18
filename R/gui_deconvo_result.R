@@ -24,16 +24,9 @@ deconvo_result_ui <- function(id){
              ),
              column(6,
                     wellPanel(
-                      h4(textOutput(ns("title_par_diag"))),
-                      fluidRow(
-                        column(6,
-                               uiOutput(ns("select_noc_diag"))
-                        ),
-                        column(6,
-                               uiOutput(ns("button_traceplot"))
-                        )
-                      ),
-                      uiOutput(ns("diag")),
+                      h4(textOutput(ns("title_param"))),
+                      uiOutput(ns("select_noc_param")),
+                      uiOutput(ns("param")),
                       br()
                     )
              )
@@ -56,14 +49,13 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         data_hnc_list <- data_deconvo$data_hnc_list
 
         rv_deconvo_result <- reactiveValues()
-        rv_deconvo_result$dt_diag <- NULL
+        rv_deconvo_result$dt_param <- NULL
         rv_deconvo_result$error_message <- NULL
-        rv_deconvo_result$traceplot <- NULL
 
         output$title_warnings <- renderText({"Warnings"})
         output$title_like <- renderText({"Likelihood"})
         output$title_pg <- renderText({"Probabilistic genotyping"})
-        output$title_par_diag <- renderText({"Parameters and diagnostics"})
+        output$title_param <- renderText({"Parameters"})
 
         output$warning_message <- renderUI({HTML(message_sr)})
 
@@ -107,75 +99,51 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
             formatStyle(names(dt_log10like_display), lineHeight = "80%")
         })
 
-        ## Parameters and diagnostics
+        ## Parameters
 
-        output$select_noc_diag <- renderUI({
-          selectInput(session$ns("select_noc_diag"), label = "Number of contributors", choices = hnc_all, selected = hnc_all[1], multiple = FALSE, selectize = FALSE)
+        output$select_noc_param <- renderUI({
+          selectInput(session$ns("select_noc_param"), label = "Number of contributors", choices = hnc_all, selected = hnc_all[1], multiple = FALSE, selectize = FALSE)
         })
 
-        observeEvent(input$select_noc_diag, {
-          index_hnc <- which(hnc_all == input$select_noc_diag)
+        observeEvent(input$select_noc_param, {
+          index_hnc <- which(hnc_all == input$select_noc_param)
           data_hnc <- data_hnc_list[[index_hnc]]
           error_message <- data_hnc$error_message
           if(is.null(data_hnc$error_message)){
-            rv_deconvo_result$dt_diag <- data_hnc$dt_diag
+            rv_deconvo_result$dt_param <- data_hnc$dt_param
             rv_deconvo_result$error_message <- NULL
-            rv_deconvo_result$traceplot <- data_hnc$traceplot
-            enable("act_traceplot_lp")
           }else{
-            rv_deconvo_result$dt_diag <- NULL
+            rv_deconvo_result$dt_param <- NULL
             rv_deconvo_result$error_message <- error_message
-            rv_deconvo_result$traceplot <- NULL
-            disable("act_traceplot_lp")
           }
         })
 
-        output$diag <- renderUI({
-          dt_diag <- rv_deconvo_result$dt_diag
-          if(is.null(dt_diag)){
+        output$param <- renderUI({
+          dt_param <- rv_deconvo_result$dt_param
+          if(is.null(dt_param)){
             HTML(rv_deconvo_result$error_message)
           }else{
-            dataTableOutput(session$ns("dt_diag"))
+            dataTableOutput(session$ns("dt_param"))
           }
         })
 
-        output$dt_diag <- renderDataTable({
-          dt_diag <- rv_deconvo_result$dt_diag
+        output$dt_param <- renderDataTable({
+          dt_param <- rv_deconvo_result$dt_param
 
-          if(!is.null(dt_diag)){
+          if(!is.null(dt_param)){
             datatable(
-              dt_diag,
+              dt_param,
               selection = "none",
-              options = list(dom = "t", iDisplayLength = nrow(dt_diag), ordering = FALSE, autowidth = TRUE,
+              options = list(dom = "t", iDisplayLength = nrow(dt_param), ordering = FALSE, autowidth = TRUE,
                              columnDefs = list(list(width = "150px", targets = 0),
                                                list(width = "70px", targets = 1),
                                                list(width = "50px", targets = 2),
-                                               list(width = "70px", targets = 3),
-                                               list(width = "50px", targets = 4))),
+                                               list(width = "70px", targets = 3))),
               rownames = FALSE
             ) %>%
-              formatSignif(columns = c("Estimated value", "Rhat"), digits = 4) %>%
-              formatStyle(names(dt_diag), lineHeight = "80%")
+              formatSignif(columns = c("Estimated value"), digits = 4) %>%
+              formatStyle(names(dt_param), lineHeight = "80%")
           }
-        })
-
-        output$button_traceplot <- renderUI({
-          actionButton(session$ns("act_traceplot_lp"), label = "Trace plot")
-        })
-
-        observeEvent(input$act_traceplot_lp, {
-          showModal(modalDialog(
-            title = "Trace plot",
-            plotOutput(session$ns("traceplot_lp")),
-            footer = tagList(
-              modalButton("Close")
-            ),
-            size = "l"
-          ))
-        })
-
-        output$traceplot_lp <- renderPlot({
-          rv_deconvo_result$traceplot
         })
       }
     }
