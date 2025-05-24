@@ -108,88 +108,73 @@ calc_ave_het_ph_all_data <- function(height_list){
   return(ave_het_ph_all_data)
 }
 
-#' run_mcmc_ae
+#' generate_init_ae
 #'
-#' @description The function to perform MCMC for the locus-specific amplification efficiency
-#' @param model_ae The stan model of the locus-specific amplification efficiency
-#' @param data_list_ae The data list of the locus-specific amplification efficiency
+#' @description The function to generate initial values for estimating AE parameters
 #' @param n_mk The number of markers
-#' @param warmup The number of warm-up iterations for each chain
-#' @param sampling The number of sampling iterations for each chain
-#' @param chains The number of chains
-#' @param n_parallel_chains The number of parallel chains
-run_mcmc_ae <- function(model_ae, data_list_ae, n_mk, warmup, sampling, chains, n_parallel_chains){
-  # Perform MCMC
-  fit_ae <- model_ae$sample(
-    data_list_ae,
-    iter_warmup = warmup,
-    iter_sampling = sampling,
-    chains = chains,
-    parallel_chains = n_parallel_chains
-  )
-
-  # Trace plot
-  fit_ae$draws() %>% mcmc_trace(pars = paste0("alpha[", 1:n_mk, "]")) -> traceplot_ae
-
-  # Extract parameters
-  tmp <- as_draws_df(fit_ae$draws())
-  lp_values <- tmp$lp__
-  density_lp <- density(lp_values)
-  lp_mode_estimated <- density_lp$x[which.max(density_lp$y)]
-  index_hpd <- which.min(abs(lp_values - lp_mode_estimated))
-  lp <- lp_values[index_hpd]
-
-  alpha <- rep(NA, n_mk)
-  for(i in 1:n_mk){
-    alpha_mk_values <- tmp[[paste0("alpha[", i, "]")]]
-    alpha[i] <- alpha_mk_values[index_hpd]
-  }
-
-  # Summary data
-  fit_ae_summary <- fit_ae$summary()
-  variables <- fit_ae_summary$variable
-  rhats <- fit_ae_summary$rhat
-  rhat_lp <- rhats[which(variables == "lp__")]
-  rhat_alpha <- rhats[which(is.element(variables, paste0("alpha[", 1:n_mk, "]")))]
-
-  return(list("lp" = lp,
-              "alpha" = alpha,
-              "rhat_lp" = rhat_lp,
-              "rhat_alpha" = rhat_alpha,
-              "traceplot_ae" = traceplot_ae))
+generate_init_ae <- function(n_mk){
+  alpha <- rgamma(n_mk, 1, 1)
+  return(list(list(alpha = alpha)))
 }
 
-#' perform_mcmc_ae_all_mk
+#' run_mle_ae
 #'
-#' @description The function to perform MCMC for amplification efficiencies of all loci
+#' @description The function to perform MLE for the locus-specific amplification efficiency
 #' @param prop_ae_data_use A matrix of the proportion of the amplification efficiencies (only data used for MCMC)
-#' @param markers_auto A vector of the autosomal markers
 #' @param model_ae The stan model of the locus-specific amplification efficiency
-#' @param warmup The number of warm-up iterations for each chain
-#' @param sampling The number of sampling iterations for each chain
-#' @param chains The number of chains
-#' @param n_parallel_chains The number of parallel chains
-perform_mcmc_ae_all_mk <- function(prop_ae_data_use, markers_auto,
-                                   model_ae,
-                                   warmup, sampling, chains, n_parallel_chains){
-  n_mk <- length(markers_auto)
-  data_list_ae <- list(N = ncol(prop_ae_data_use), N_Mk = nrow(prop_ae_data_use), PAE = prop_ae_data_use)
+#' @param n_conv The number of successful convergences
+#' @param n_max_init The maximum number of initializations
+run_mle_ae <- function(prop_ae_data_use, model_ae, n_conv, n_max_init){
+  # Prepare data list for the AE model
+  n_mk <- nrow(prop_ae_data_use)
+  data_list_ae <- list(N = ncol(prop_ae_data_use), N_Mk = n_mk, PAE = prop_ae_data_use)
 
-  tmp <- run_mcmc_ae(model_ae, data_list_ae, n_mk, warmup, sampling, chains, n_parallel_chains)
-  lp <- tmp$lp
-  alpha <- tmp$alpha
-  rhat_lp <- tmp$rhat_lp
-  rhat_alpha <- tmp$rhat_alpha
-  traceplot_ae <- tmp$traceplot_ae
+  count_all <- 0
+  count_conv <- 0
+  max_lp <- -Inf
+  est_param <- rep(NA, n_mk)
 
-  names(alpha) <- markers_auto
-  names(rhat_alpha) <- markers_auto
+  # Repeat random initialization and optimization until the condition is satisfied
+  repeat{
+    count_all <- count_all + 1
+    init_vals <- generate_init_ae(n_mk)
+    fit <- model_ae$optimize(data_list_ae, init = init_vals)
 
-  return(list("lp" = lp,
-              "alpha" = alpha,
-              "rhat_lp" = rhat_lp,
-              "rhat_alpha" = rhat_alpha,
-              "traceplot_ae" = traceplot_ae))
+    # If convergence is successful, perform the following steps
+    if(fit$return_codes() == 0){
+      lp <- fit$lp()
+
+      # If the difference between the current likelihood and the maximum likelihood is less than 1e-6, the current run is considered convergent.
+      if(abs(max_lp - lp) < 1e-6){
+        count_conv <- count_conv + 1
+        if(lp - max_lp > 0){
+          max_lp <- lp
+          est_param <- fit$mle()
+        }
+      }
+
+      # Reset convergence count to 1 if a new maximum likelihood is found.
+      else if(lp - max_lp > 0){
+        count_conv <- 1
+        max_lp <- lp
+        est_param <- fit$mle()
+      }
+
+      # Stop the simulation if convergence is successful for the required number of times.
+      if(count_conv == n_conv){
+        break
+      }
+
+      # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
+      if(count_all == n_max_init){
+        est_param <- rep(NA, n_mk)
+        break
+      }
+    }
+  }
+
+  names(est_param) <- paste0("alpha[", 1:n_mk, "]")
+  return(est_param)
 }
 
 #' calc_relative_ph
@@ -413,72 +398,81 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, al
               "ats_gamma" = ats_gamma))
 }
 
-#' perform_mcmc_gamma
+#' generate_init_gamma
 #'
-#' @description The function to perform MCMC for the gamma distribution
+#' @description The function to generate initial values for estimating gamma parameters
+generate_init_gamma <- function(){
+  cv_allele <- runif(1, min = 0, max = 100)
+  cv_stutter <- runif(1, min = 0, max = 100)
+  return(list(list(cv_allele = cv_allele, cv_stutter = cv_stutter)))
+}
+
+#' run_mle_gamma
+#'
+#' @description The function to perform MLE for the gamma model
 #' @param rphs_gamma The relative peak heights for the gamma distribution
 #' @param tphs_gamma The total peak heights in one heterozygote allele for the gamma distribution
 #' @param ophs_gamma The observed peak heights for the gamma distribution
 #' @param ats_gamma The analytical thresholds for the gamma distribution
-#' @param model_gamma The stan model of the gamma distribution
-#' @param warmup The number of warm-up iterations for each chain
-#' @param sampling The number of sampling iterations for each chain
-#' @param chains The number of chains
-#' @param n_parallel_chains The number of parallel chains
-perform_mcmc_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma,
-                               model_gamma,
-                               warmup, sampling, chains, n_parallel_chains){
+#' @param model_gamma The stan model of the gamma model
+#' @param n_conv The number of successful convergences
+#' @param n_max_init The maximum number of initializations
+run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_gamma, n_conv, n_max_init){
+  # Prepare data list for the gamma model
   data_list_gamma <- list(N = length(tphs_gamma), RPH = rphs_gamma, TPH = tphs_gamma, OPH = ophs_gamma, AT = ats_gamma)
 
-  fit_gamma <- model_gamma$sample(
-    data_list_gamma,
-    iter_warmup = warmup,
-    iter_sampling = sampling,
-    chains = chains,
-    parallel_chains = n_parallel_chains
-  )
+  count_all <- 0
+  count_conv <- 0
+  max_lp <- -Inf
+  est_param <- rep(NA, 2)
 
-  # Trace plot
-  fit_gamma$draws() %>% mcmc_trace(pars = c("cv_allele")) -> traceplot_cv_allele
-  fit_gamma$draws() %>% mcmc_trace(pars = c("cv_stutter")) -> traceplot_cv_stutter
+  # Repeat random initialization and optimization until the condition is satisfied
+  repeat{
+    count_all <- count_all + 1
+    init_vals <- generate_init_gamma()
+    fit <- model_gamma$optimize(data_list_gamma, init = init_vals)
 
-  # Extract parameters
-  tmp <- as_draws_df(fit_gamma$draws())
-  lp_values <- tmp$lp__
-  density_lp <- density(lp_values)
-  lp_mode_estimated <- density_lp$x[which.max(density_lp$y)]
-  index_hpd <- which.min(abs(lp_values - lp_mode_estimated))
-  lp <- lp_values[index_hpd]
+    # If convergence is successful, perform the following steps
+    if(fit$return_codes() == 0){
+      lp <- fit$lp()
 
-  cv_allele_values <- tmp$cv_allele
-  cv_allele <- cv_allele_values[index_hpd]
+      # If the difference between the current likelihood and the maximum likelihood is less than 1e-6, the current run is considered convergent.
+      if(abs(max_lp - lp) < 1e-6){
+        count_conv <- count_conv + 1
+        if(lp - max_lp > 0){
+          max_lp <- lp
+          est_param <- fit$mle()
+        }
+      }
 
-  cv_stutter_values <- tmp$cv_stutter
-  cv_stutter <- cv_stutter_values[index_hpd]
+      # Reset convergence count to 1 if a new maximum likelihood is found.
+      else if(lp - max_lp > 0){
+        count_conv <- 1
+        max_lp <- lp
+        est_param <- fit$mle()
+      }
 
-  fit_gamma_summary <- fit_gamma$summary()
-  variables <- fit_gamma_summary$variable
-  rhats <- fit_gamma_summary$rhat
-  rhat_lp <- rhats[which(variables == "lp__")]
-  rhat_cv_allele <- rhats[which(variables == "cv_allele")]
-  rhat_cv_stutter <- rhats[which(variables == "cv_stutter")]
+      # Stop the simulation if convergence is successful for the required number of times.
+      if(count_conv == n_conv){
+        break
+      }
 
-  return(list("lp" = lp,
-              "cv_allele" = cv_allele,
-              "cv_stutter" = cv_stutter,
-              "rhat_lp" = rhat_lp,
-              "rhat_cv_allele" = rhat_cv_allele,
-              "rhat_cv_stutter" = rhat_cv_stutter,
-              "traceplot_cv_allele" = traceplot_cv_allele,
-              "traceplot_cv_stutter" = traceplot_cv_stutter))
+      # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
+      if(count_all == n_max_init){
+        est_param <- rep(NA, 2)
+        break
+      }
+    }
+  }
+
+  names(est_param) <- c("cv_allele", "cv_stutter")
+  return(est_param)
 }
 
 #' estimate_parameters
 #'
 #' @description The function to estimate parameters of the locus-specific amplification efficiencies and the gamma distribution
-estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
-                                model_ae, model_gamma,
-                                warmup, sampling, chains, n_parallel_chains = detectCores()){
+estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par, model_ae, model_gamma, n_conv, n_max_init){
   # Extract information on setting
   markers_auto <- dt_setting_est_par$Marker
   n_mk_auto <- length(markers_auto)
@@ -511,14 +505,13 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   prop_ae_data_use <- prop_ae_data[, which(apply(prop_ae_data, 2, prod) > 0), drop = FALSE]
 
   # Perform MCMC for AE
-  tmp <- perform_mcmc_ae_all_mk(prop_ae_data_use, markers_auto,
-                                model_ae,
-                                warmup, sampling, chains, n_parallel_chains)
-  lp_ae <- tmp$lp
-  alpha <- tmp$alpha
-  rhat_lp_ae <- tmp$rhat_lp
-  rhat_alpha <- tmp$rhat_alpha
-  traceplot_ae <- tmp$traceplot_ae
+  alpha <- run_mle_ae(prop_ae_data_use, model_ae, n_conv, n_max_init)
+
+
+
+  ###### NA check ######
+
+
 
   # Prepare data for average heterozygote allele peak heights
   ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
@@ -531,29 +524,11 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   ats_gamma <- tmp$ats_gamma
 
   # Perform MCMC for gamma distribution
-  tmp <- perform_mcmc_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma,
-                            model_gamma,
-                            warmup, sampling, chains, n_parallel_chains)
-  lp_gamma <- tmp$lp
-  cv_allele <- tmp$cv_allele
-  cv_stutter <- tmp$cv_stutter
-  rhat_lp_gamma <- tmp$rhat_lp
-  rhat_cv_allele <- tmp$rhat_cv_allele
-  rhat_cv_stutter <- tmp$rhat_cv_stutter
-  traceplot_cv_allele <- tmp$traceplot_cv_allele
-  traceplot_cv_stutter <- tmp$traceplot_cv_stutter
+  tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_gamma, n_conv, n_max_init)
+  cv_allele <- tmp["cv_allele"]
+  cv_stutter <- tmp["cv_stutter"]
 
-  return(list("lp_ae" = lp_ae,
-              "alpha" = alpha,
-              "rhat_lp_ae" = rhat_lp_ae,
-              "rhat_alpha" = rhat_alpha,
-              "traceplot_ae" = traceplot_ae,
-              "lp_gamma" = lp_gamma,
+  return(list("alpha" = alpha,
               "cv_allele" = cv_allele,
-              "cv_stutter" = cv_stutter,
-              "rhat_lp_gamma" = rhat_lp_gamma,
-              "rhat_cv_allele" = rhat_cv_allele,
-              "rhat_cv_stutter" = rhat_cv_stutter,
-              "traceplot_cv_allele" = traceplot_cv_allele,
-              "traceplot_cv_stutter" = traceplot_cv_stutter))
+              "cv_stutter" = cv_stutter))
 }

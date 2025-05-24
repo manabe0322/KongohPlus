@@ -24,12 +24,7 @@ est_sr_result_ui <- function(id){
              ),
              column(5,
                     wellPanel(
-                      dataTableOutput(ns("dt_diag_sr")),
-                      br(),
-                      actionButton(ns("act_traceplot_sr"), label = "Trace plot")
-                    ),
-                    wellPanel(
-
+                      dataTableOutput(ns("dt_param_sr"))
                     )
              )
            )
@@ -90,21 +85,16 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         dt_setting_est_sr <- rv_est_sr$dt_setting_est_sr
         markers_auto <- dt_setting_est_sr$Marker
         name_kit <- rv_est_sr$name_kit
-        warmup <- rv_est_sr$warmup
-        sampling <- rv_est_sr$sampling
-        chains <- rv_est_sr$chains
+        n_conv <- rv_est_sr$n_conv
+        n_max_init <- rv_est_sr$n_max_init
 
         dt_result_est_bsr <- data_est_sr$dt_result_est_bsr
-        list_trace_bsr <- data_est_sr$list_trace_bsr
         list_dt_average_bsr <- data_est_sr$list_dt_average_bsr
         dt_result_est_fsr <- data_est_sr$dt_result_est_fsr
-        list_trace_fsr <- data_est_sr$list_trace_fsr
         list_dt_average_fsr <- data_est_sr$list_dt_average_fsr
         dt_result_est_dsr <- data_est_sr$dt_result_est_dsr
-        list_trace_dsr <- data_est_sr$list_trace_dsr
         list_dt_average_dsr <- data_est_sr$list_dt_average_dsr
         dt_result_est_m2sr <- data_est_sr$dt_result_est_m2sr
-        list_trace_m2sr <- data_est_sr$list_trace_m2sr
         list_dt_average_m2sr <- data_est_sr$list_dt_average_m2sr
 
         output$select_mk <- renderUI({
@@ -152,56 +142,26 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           if(meth_sr == "Not consider"){
             param <- character(0)
             val <- numeric(0)
-            rhat <- numeric(0)
           }else if(is.element(meth_sr, c("Uniform", "Uniform (Multiple loci)"))){
             param <- c("Myu", "Sigma")
             val <- c(dt_result_est_sr$Myu[index_mk], dt_result_est_sr$Sigma[index_mk])
-            rhat <- c(dt_result_est_sr$Rhat_Myu[index_mk], dt_result_est_sr$Rhat_Sigma[index_mk])
           }else{
             param <- c("Slope", "Intercept", "Sigma")
             val <- c(dt_result_est_sr$Slope[index_mk], dt_result_est_sr$Intercept[index_mk], dt_result_est_sr$Sigma[index_mk])
-            rhat <- c(dt_result_est_sr$Rhat_Slope[index_mk], dt_result_est_sr$Rhat_Intercept[index_mk], dt_result_est_sr$Rhat_Sigma[index_mk])
           }
-          dt_diag_sr <- data.table(Parameter = param,
-                                   EstVar = val,
-                                   Rhat = rhat)
-          names(dt_diag_sr) <- c("Parameter", "Estimated value", "Rhat")
+          dt_param_sr <- data.table(Parameter = param,
+                                   EstVar = val)
+          names(dt_param_sr) <- c("Parameter", "Estimated value")
 
-          output$dt_diag_sr <- renderDataTable(server = FALSE, {
+          output$dt_param_sr <- renderDataTable(server = FALSE, {
             datatable(
-              dt_diag_sr,
+              dt_param_sr,
               selection = "none",
-              options = list(dom = "t", iDisplayLength = nrow(dt_diag_sr), ordering = FALSE, autowidth = TRUE),
+              options = list(dom = "t", iDisplayLength = nrow(dt_param_sr), ordering = FALSE, autowidth = TRUE),
               rownames = FALSE
             ) %>%
-              formatSignif(columns = c("Estimated value", "Rhat"), digits = 3)
+              formatSignif(columns = c("Estimated value"), digits = 3)
           })
-        })
-
-        observeEvent(input$act_traceplot_sr, {
-          showModal(modalDialog(
-            title = "Trace plot",
-            plotOutput(session$ns("traceplot_sr")),
-            footer = tagList(
-              modalButton("Close")
-            ),
-            size = "l"
-          ))
-        })
-
-        output$traceplot_sr <- renderPlot({
-          select_mk <- input$select_mk
-          select_st_type <- input$select_st_type
-          if(select_st_type == "Back stutter"){
-            traceplot <- list_trace_bsr[[select_mk]]
-          }else if(select_st_type == "Forward stutter"){
-            traceplot <- list_trace_fsr[[select_mk]]
-          }else if(select_st_type == "Double-back stutter"){
-            traceplot <- list_trace_dsr[[select_mk]]
-          }else if(select_st_type == "Minus 2-nt stutter"){
-            traceplot <- list_trace_m2sr[[select_mk]]
-          }
-          traceplot
         })
 
         rv_sr_file_names <- reactiveVal(NULL)
@@ -238,11 +198,8 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           fn_est_sr <- input$fn_est_sr
           list_dt_average_sr <- full_join_average_sr(list_dt_average_bsr, list_dt_average_fsr, list_dt_average_dsr, list_dt_average_m2sr)
 
-          save(list = c("fn_exp", "fn_gt", "dt_setting_est_sr", "name_kit", "warmup", "sampling", "chains",
-                        "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr",
-                        "list_trace_bsr", "list_trace_fsr", "list_trace_dsr", "list_trace_m2sr",
-                        "list_dt_average_sr"
-                        ),
+          save(list = c("fn_exp", "fn_gt", "dt_setting_est_sr", "name_kit", "n_conv", "n_max_init",
+                        "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr", "list_dt_average_sr"),
                file = paste0(path_pack, "/extdata/stutter/", fn_est_sr, ".RData"))
 
           removeModal()

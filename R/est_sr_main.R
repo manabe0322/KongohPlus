@@ -345,62 +345,135 @@ create_dt_sr_data <- function(peak_list, height_list, gt_list, sr_consider_auto,
   return(dt_sr_data)
 }
 
-#' run_mcmc_sr_gen
+#' generate_init_sr_gen
 #'
-#' @description The function to perform MCMC for the stutter ratio (locus-specific with slope)
+#' @description The function to generate initial values for estimating SR parameters in general model
+generate_init_sr_gen <- function(){
+  slope <- runif(1)
+  intercept <- runif(1, min = -1, max = 1)
+  sigma <- runif(1, min = 1, max = 10000)
+  return(list(list(slope = slope, intercept = intercept, sigma = sigma)))
+}
+
+#' run_mle_sr_gen
+#'
+#' @description The function to perform MLE for the stutter ratio (locus-specific with slope)
 #' @param model_sr_gen The stan model of the stutter ratio
 #' @param data_list_sr The data list of the stutter ratio
-#' @param warmup The number of warm-up iterations for each chain
-#' @param sampling The number of sampling iterations for each chain
-#' @param chains The number of chains
-#' @param n_parallel_chains The number of parallel chains
-run_mcmc_sr_gen <- function(model_sr_gen, data_list_sr, warmup, sampling, chains, n_parallel_chains){
-  # Perform MCMC
-  fit_sr <- model_sr_gen$sample(
-    data_list_sr,
-    iter_warmup = warmup,
-    iter_sampling = sampling,
-    chains = chains,
-    parallel_chains = n_parallel_chains
-  )
+#' @param n_conv The number of successful convergences
+#' @param n_max_init The maximum number of initializations
+run_mle_sr_gen <- function(model_sr_gen, data_list_sr, n_conv, n_max_init){
+  count_all <- 0
+  count_conv <- 0
+  max_lp <- -Inf
+  est_param <- rep(NA, 3)
 
-  # Trace plot
-  fit_sr$draws() %>% mcmc_trace(pars = c("slope", "intercept", "sigma")) -> traceplot
+  # Repeat random initialization and optimization until the condition is satisfied
+  repeat{
+    count_all <- count_all + 1
+    init_vals <- generate_init_sr_gen()
+    fit <- model_sr_gen$optimize(data_list_sr, init = init_vals)
 
-  # Extract parameters
-  tmp <- as_draws_df(fit_sr$draws())
-  lp_values <- tmp$lp__
-  density_lp <- density(lp_values)
-  lp_mode_estimated <- density_lp$x[which.max(density_lp$y)]
-  index_hpd <- which.min(abs(lp_values - lp_mode_estimated))
-  lp <- lp_values[index_hpd]
+    # If convergence is successful, perform the following steps
+    if(fit$return_codes() == 0){
+      lp <- fit$lp()
 
-  slope_values <- tmp$slope
-  slope <- slope_values[index_hpd]
+      # If the difference between the current likelihood and the maximum likelihood is less than 1e-6, the current run is considered convergent.
+      if(abs(max_lp - lp) < 1e-6){
+        count_conv <- count_conv + 1
+        if(lp - max_lp > 0){
+          max_lp <- lp
+          est_param <- fit$mle()
+        }
+      }
 
-  intercept_values <- tmp$intercept
-  intercept <- intercept_values[index_hpd]
+      # Reset convergence count to 1 if a new maximum likelihood is found.
+      else if(lp - max_lp > 0){
+        count_conv <- 1
+        max_lp <- lp
+        est_param <- fit$mle()
+      }
 
-  sigma_values <- tmp$sigma
-  sigma <- sigma_values[index_hpd]
+      # Stop the simulation if convergence is successful for the required number of times.
+      if(count_conv == n_conv){
+        break
+      }
 
-  fit_sr_summary <- fit_sr$summary()
-  variables <- fit_sr_summary$variable
-  rhats <- fit_sr_summary$rhat
-  rhat_lp <- rhats[which(variables == "lp__")]
-  rhat_slope <- rhats[which(variables == "slope")]
-  rhat_intercept <- rhats[which(variables == "intercept")]
-  rhat_sigma <- rhats[which(variables == "sigma")]
+      # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
+      if(count_all == n_max_init){
+        est_param <- rep(NA, 3)
+        break
+      }
+    }
+  }
 
-  return(list("lp" = lp,
-              "slope" = slope,
-              "intercept" = intercept,
-              "sigma" = sigma,
-              "rhat_lp" = rhat_lp,
-              "rhat_slope" = rhat_slope,
-              "rhat_intercept" = rhat_intercept,
-              "rhat_sigma" = rhat_sigma,
-              "traceplot" = traceplot))
+  names(est_param) <- c("slope", "intercept", "sigma")
+  return(est_param)
+}
+
+#' generate_init_sr_uni
+#'
+#' @description The function to generate initial values for estimating SR parameters in uniform model
+generate_init_sr_uni <- function(){
+  myu <- runif(1)
+  sigma <- runif(1, min = 1, max = 10000)
+  return(list(list(myu = myu, sigma = sigma)))
+}
+
+#' run_mle_sr_uni
+#'
+#' @description The function to perform MLE for the stutter ratio (uniform)
+#' @param model_sr_uni The stan model of the stutter ratio
+#' @param data_list_sr The data list of the stutter ratio
+#' @param n_conv The number of successful convergences
+#' @param n_max_init The maximum number of initializations
+run_mle_sr_uni <- function(model_sr_uni, data_list_sr, n_conv, n_max_init){
+  count_all <- 0
+  count_conv <- 0
+  max_lp <- -Inf
+  est_param <- rep(NA, 2)
+
+  # Repeat random initialization and optimization until the condition is satisfied
+  repeat{
+    count_all <- count_all + 1
+    init_vals <- generate_init_sr_uni()
+    fit <- model_sr_uni$optimize(data_list_sr, init = init_vals)
+
+    # If convergence is successful, perform the following steps
+    if(fit$return_codes() == 0){
+      lp <- fit$lp()
+
+      # If the difference between the current likelihood and the maximum likelihood is less than 1e-6, the current run is considered convergent.
+      if(abs(max_lp - lp) < 1e-6){
+        count_conv <- count_conv + 1
+        if(lp - max_lp > 0){
+          max_lp <- lp
+          est_param <- fit$mle()
+        }
+      }
+
+      # Reset convergence count to 1 if a new maximum likelihood is found.
+      else if(lp - max_lp > 0){
+        count_conv <- 1
+        max_lp <- lp
+        est_param <- fit$mle()
+      }
+
+      # Stop the simulation if convergence is successful for the required number of times.
+      if(count_conv == n_conv){
+        break
+      }
+
+      # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
+      if(count_all == n_max_init){
+        est_param <- rep(NA, 2)
+        break
+      }
+    }
+  }
+
+  names(est_param) <- c("myu", "sigma")
+  return(est_param)
 }
 
 #' calc_average_sr
@@ -413,65 +486,13 @@ calc_average_sr <- function(allele, slope, intercept){
   return(allele * slope + intercept)
 }
 
-#' run_mcmc_sr_uni
+#' perform_mle_sr_all_mk
 #'
-#' @description The function to perform MCMC for the stutter ratio (uniform)
-#' @param model_sr_uni The stan model of the stutter ratio
-#' @param data_list_sr The data list of the stutter ratio
-#' @param warmup The number of warm-up iterations for each chain
-#' @param sampling The number of sampling iterations for each chain
-#' @param chains The number of chains
-#' @param n_parallel_chains The number of parallel chains
-run_mcmc_sr_uni <- function(model_sr_uni, data_list_sr, warmup, sampling, chains, n_parallel_chains){
-  # Perform MCMC
-  fit_sr <- model_sr_uni$sample(
-    data_list_sr,
-    iter_warmup = warmup,
-    iter_sampling = sampling,
-    chains = chains,
-    parallel_chains = n_parallel_chains
-  )
-
-  # Trace plot
-  fit_sr$draws() %>% mcmc_trace(pars = c("myu", "sigma")) -> traceplot
-
-  # Extract parameters
-  tmp <- as_draws_df(fit_sr$draws())
-  lp_values <- tmp$lp__
-  density_lp <- density(lp_values)
-  lp_mode_estimated <- density_lp$x[which.max(density_lp$y)]
-  index_hpd <- which.min(abs(lp_values - lp_mode_estimated))
-  lp <- lp_values[index_hpd]
-
-  myu_values <- tmp$myu
-  myu <- myu_values[index_hpd]
-
-  sigma_values <- tmp$sigma
-  sigma <- sigma_values[index_hpd]
-
-  # Summary data
-  fit_sr_summary <- fit_sr$summary()
-  variables <- fit_sr_summary$variable
-  rhats <- fit_sr_summary$rhat
-  rhat_lp <- rhats[which(variables == "lp__")]
-  rhat_myu <- rhats[which(variables == "myu")]
-  rhat_sigma <- rhats[which(variables == "sigma")]
-
-  return(list("lp" = lp,
-              "myu" = myu,
-              "sigma" = sigma,
-              "rhat_lp" = rhat_lp,
-              "rhat_myu" = rhat_myu,
-              "rhat_sigma" = rhat_sigma,
-              "traceplot" = traceplot))
-}
-
-#' perform_mcmc_sr_all_mk
-#'
-#' @description The function to perform MCMC for SR of all markers
-perform_mcmc_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto, meth_model_sr,
-                                   model_sr_gen, model_sr_uni,
-                                   warmup, sampling, chains, n_parallel_chains){
+#' @description The function to perform MLE for SR of all markers
+#' @param n_conv The number of successful convergences
+#' @param n_max_init The maximum number of initializations
+perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto, meth_model_sr, model_sr_gen, model_sr_uni, n_conv, n_max_init){
+  # Extract data of the targeted stutter type
   if(stutter_type == "BS"){
     dt_st_type <- dt_sr_data[dt_sr_data$Bool_BS]
   }else if(stutter_type == "FS"){
@@ -484,21 +505,14 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_aut
     dt_st_type <- dt_sr_data[rep(FALSE, nrow(dt_sr_data))]
   }
 
+  # Define objects
   n_mk <- length(markers_auto)
   setindex(dt_st_type, Marker, Allele)
   setindex(dt_kit, Marker)
-  lp_all_mk <- rep(NA, n_mk)
   myu_all_mk <- rep(NA, n_mk)
   slope_all_mk <- rep(NA, n_mk)
   intercept_all_mk <- rep(NA, n_mk)
   sigma_all_mk <- rep(NA, n_mk)
-  rhat_lp_all_mk <- rep(NA, n_mk)
-  rhat_myu_all_mk <- rep(NA, n_mk)
-  rhat_slope_all_mk <- rep(NA, n_mk)
-  rhat_intercept_all_mk <- rep(NA, n_mk)
-  rhat_sigma_all_mk <- rep(NA, n_mk)
-  trace_all_mk <- vector(mode = "list", length = n_mk)
-  names(trace_all_mk) <- markers_auto
   dt_average_sr_all_mk <- vector(mode = "list", length = n_mk)
   names(dt_average_sr_all_mk) <- markers_auto
 
@@ -508,16 +522,21 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_aut
   tmp_alname_multi_mk <- vector(mode = "list", length = n_mk)
   tmp_alcor_multi_mk <- vector(mode = "list", length = n_mk)
 
+  # Repeat for the number of markers
   for(i in 1:n_mk){
     mk <- markers_auto[i]
     meth <- meth_model_sr[i]
     if(meth != "Not consider"){
+
+      # Extract stutter data for the current marker
       dt_st_mk <- dt_st_type[Marker == mk]
       dt_st_mk <- dt_st_mk[Allele != "Multiple"]
       dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_SharedAllele]
       dt_kit_mk <- dt_kit[Marker == mk]
 
       if(nrow(dt_st_mk) != 0){
+
+        # Extract (corrected) allele repeat numbers, stutter ratios, and total allelic products
         if(meth == "Linear (Corrected Allele)"){
           dt_st_mk <- dt_st_mk[dt_st_mk$Bool_InfoAllele]
           st_alleles <- dt_st_mk$Allele
@@ -543,43 +562,47 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_aut
           alname <- as.character(alcor)
         }
 
+        # Merge the data of the current marker with data from other markers where Uniform (Multiple loci) is selected.
         if(meth == "Uniform (Multiple loci)"){
           index_multi_mk <- c(index_multi_mk, i)
           y_sr_multi_mk <- c(y_sr_multi_mk, y_sr)
           tap_multi_mk <- c(tap_multi_mk, tap)
           tmp_alname_multi_mk[[i]] <- alname
           tmp_alcor_multi_mk[[i]] <- alcor
-        }else if(meth == "Uniform"){
-          data_list_sr <- list(N = length(x_al), SR = y_sr, Height = tap)
-          tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr, warmup, sampling, chains, n_parallel_chains)
-          myu_all_mk[i] <- tmp$myu
-          sigma_all_mk[i] <- tmp$sigma
-          lp_all_mk[i] <- tmp$lp
-          rhat_myu_all_mk[i] <- tmp$rhat_myu
-          rhat_sigma_all_mk[i] <- tmp$rhat_sigma
-          rhat_lp_all_mk[i] <- tmp$rhat_lp
-          trace_all_mk[[i]] <- tmp$traceplot
+        }
 
-          average_sr <- rep(myu_all_mk[i], length(alcor))
-          average_sr[average_sr < 0] <- 0
+        # Perform MLE for uniform model
+        else if(meth == "Uniform"){
+          data_list_sr <- list(N = length(x_al), SR = y_sr, Height = tap)
+          est_param <- run_mle_sr_uni(model_sr_uni, data_list_sr, n_conv, n_max_init)
+          myu_all_mk[i] <- myu <- est_param["myu"]
+          sigma_all_mk[i] <- est_param["sigma"]
+
+          # Set the average stutter ratios for each allele
+          average_sr <- rep(myu, length(alcor))
+          if(!is.na(myu)){
+            average_sr[average_sr < 0] <- 0
+          }
           dt_average_sr_all_mk[[i]] <- data.table(Allele = alname,
                                                   AlCor = alcor,
                                                   AveSR = average_sr)
-        }else{
-          data_list_sr <- list(N = length(x_al), SR = y_sr, XVal = x_al, Height = tap)
-          tmp <- run_mcmc_sr_gen(model_sr_gen, data_list_sr, warmup, sampling, chains, n_parallel_chains)
-          slope_all_mk[i] <- tmp$slope
-          intercept_all_mk[i] <- tmp$intercept
-          sigma_all_mk[i] <- tmp$sigma
-          lp_all_mk[i] <- tmp$lp
-          rhat_slope_all_mk[i] <- tmp$rhat_slope
-          rhat_intercept_all_mk[i] <- tmp$rhat_intercept
-          rhat_sigma_all_mk[i] <- tmp$rhat_sigma
-          rhat_lp_all_mk[i] <- tmp$rhat_lp
-          trace_all_mk[[i]] <- tmp$traceplot
+        }
 
-          average_sr <- calc_average_sr(alcor, slope_all_mk[i], intercept_all_mk[i])
-          average_sr[average_sr < 0] <- 0
+        # Perform MLE for linear model
+        else{
+          data_list_sr <- list(N = length(x_al), SR = y_sr, XVal = x_al, Height = tap)
+          est_param <- run_mle_sr_gen(model_sr_gen, data_list_sr, n_conv, n_max_init)
+          slope_all_mk[i] <- slope <- est_param["slope"]
+          intercept_all_mk[i] <- intercept <- est_param["intercept"]
+          sigma_all_mk[i] <- est_param["sigma"]
+
+          # Set the average stutter ratios for each allele
+          if(any(is.na(slope), is.na(intercept))){
+            average_sr <- rep(NA, length(alcor))
+          }else{
+            average_sr <- calc_average_sr(alcor, slope, intercept)
+            average_sr[average_sr < 0] <- 0
+          }
           dt_average_sr_all_mk[[i]] <- data.table(Allele = alname,
                                                   AlCor = alcor,
                                                   AveSR = average_sr)
@@ -601,26 +624,24 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_aut
     }
   }
 
-  # Uniform (Multiple loci)
+  # Perform MLE for uniform model (multiple loci together)
   if(length(y_sr_multi_mk) != 0){
     data_list_sr <- list(N = length(y_sr_multi_mk), SR = y_sr_multi_mk, Height = tap_multi_mk)
-    tmp <- run_mcmc_sr_uni(model_sr_uni, data_list_sr, warmup, sampling, chains, n_parallel_chains)
-    myu_all_mk[index_multi_mk] <- tmp$myu
-    sigma_all_mk[index_multi_mk] <- tmp$sigma
-    lp_all_mk[index_multi_mk] <- tmp$lp
-    rhat_myu_all_mk[index_multi_mk] <- tmp$rhat_myu
-    rhat_sigma_all_mk[index_multi_mk] <- tmp$rhat_sigma
-    rhat_lp_all_mk[index_multi_mk] <- tmp$rhat_lp
+    est_param <- run_mle_sr_uni(model_sr_uni, data_list_sr, n_conv, n_max_init)
+    myu_all_mk[index_multi_mk] <- est_param["myu"]
+    sigma_all_mk[index_multi_mk] <- est_param["sigma"]
 
+    # Set the average stutter ratios for each allele
     for(i in 1:length(index_multi_mk)){
       index_mk <- index_multi_mk[i]
-
-      trace_all_mk[[index_mk]] <- tmp$traceplot
-
+      myu <- myu_all_mk[index_mk]
       alname <- tmp_alname_multi_mk[[index_mk]]
       alcor <- tmp_alcor_multi_mk[[index_mk]]
-      average_sr <- rep(myu_all_mk[index_mk], length(alcor))
-      average_sr[average_sr < 0] <- 0
+
+      average_sr <- rep(myu, length(alcor))
+      if(!is.na(myu)){
+        average_sr[average_sr < 0] <- 0
+      }
       dt_average_sr_all_mk[[index_mk]] <- data.table(Allele = alname,
                                                      AlCor = alcor,
                                                      AveSR = average_sr)
@@ -632,25 +653,16 @@ perform_mcmc_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_aut
                                  Myu = myu_all_mk,
                                  Slope = slope_all_mk,
                                  Intercept = intercept_all_mk,
-                                 Sigma = sigma_all_mk,
-                                 Lp = lp_all_mk,
-                                 Rhat_Myu = rhat_myu_all_mk,
-                                 Rhat_Slope = rhat_slope_all_mk,
-                                 Rhat_Intercept = rhat_intercept_all_mk,
-                                 Rhat_Sigma = rhat_sigma_all_mk,
-                                 Rhat_Lp = rhat_lp_all_mk)
+                                 Sigma = sigma_all_mk)
 
   return(list("dt_result_est_sr" = dt_result_est_sr,
-              "trace_all_mk" = trace_all_mk,
               "dt_average_sr_all_mk" = dt_average_sr_all_mk))
 }
 
 #' estimate_average_sr
 #'
 #' @description The function to estimate average stutter ratios
-estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
-                                model_sr_gen, model_sr_uni,
-                                warmup, sampling, chains, n_parallel_chains = detectCores()){
+estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr, model_sr_gen, model_sr_uni, n_conv, n_max_init){
   # Extract information on setting
   markers_auto <- dt_setting_est_sr$Marker
   n_mk_auto <- length(markers_auto)
@@ -680,48 +692,32 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   # Create a data.table for the stutter ratios
   dt_sr_data <- create_dt_sr_data(peak_list, height_list, gt_list, sr_consider_auto, dt_kit)
 
-  # Perform MCMC for BSR
-  tmp <- perform_mcmc_sr_all_mk(dt_sr_data, dt_kit, "BS", markers_auto, meth_model_bsr,
-                                model_sr_gen, model_sr_uni,
-                                warmup, sampling, chains, n_parallel_chains)
+  # Perform MLE for BSR
+  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "BS", markers_auto, meth_model_bsr, model_sr_gen, model_sr_uni, n_conv, n_max_init)
   dt_result_est_bsr <- tmp$dt_result_est_sr
-  list_trace_bsr <- tmp$trace_all_mk
   list_dt_average_bsr <- tmp$dt_average_sr_all_mk
 
-  # Perform MCMC for FSR
-  tmp <- perform_mcmc_sr_all_mk(dt_sr_data, dt_kit, "FS", markers_auto, meth_model_fsr,
-                                model_sr_gen, model_sr_uni,
-                                warmup, sampling, chains, n_parallel_chains)
+  # Perform MLE for FSR
+  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "FS", markers_auto, meth_model_fsr, model_sr_gen, model_sr_uni, n_conv, n_max_init)
   dt_result_est_fsr <- tmp$dt_result_est_sr
-  list_trace_fsr <- tmp$trace_all_mk
   list_dt_average_fsr <- tmp$dt_average_sr_all_mk
 
-  # Perform MCMC for DSR
-  tmp <- perform_mcmc_sr_all_mk(dt_sr_data, dt_kit, "DS", markers_auto, meth_model_dsr,
-                                model_sr_gen, model_sr_uni,
-                                warmup, sampling, chains, n_parallel_chains)
+  # Perform MLE for DSR
+  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "DS", markers_auto, meth_model_dsr, n_conv, n_max_init)
   dt_result_est_dsr <- tmp$dt_result_est_sr
-  list_trace_dsr <- tmp$trace_all_mk
   list_dt_average_dsr <- tmp$dt_average_sr_all_mk
 
-  # Perform MCMC for M2SR
-  tmp <- perform_mcmc_sr_all_mk(dt_sr_data, dt_kit, "M2S", markers_auto, meth_model_m2sr,
-                                model_sr_gen, model_sr_uni,
-                                warmup, sampling, chains, n_parallel_chains)
+  # Perform MLE for M2SR
+  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "M2S", markers_auto, meth_model_m2sr, n_conv, n_max_init)
   dt_result_est_m2sr <- tmp$dt_result_est_sr
-  list_trace_m2sr <- tmp$trace_all_mk
   list_dt_average_m2sr <- tmp$dt_average_sr_all_mk
 
   return(list("dt_result_est_bsr" = dt_result_est_bsr,
-              "list_trace_bsr" = list_trace_bsr,
               "list_dt_average_bsr" = list_dt_average_bsr,
               "dt_result_est_fsr" = dt_result_est_fsr,
-              "list_trace_fsr" = list_trace_fsr,
               "list_dt_average_fsr" = list_dt_average_fsr,
               "dt_result_est_dsr" = dt_result_est_dsr,
-              "list_trace_dsr" = list_trace_dsr,
               "list_dt_average_dsr" = list_dt_average_dsr,
               "dt_result_est_m2sr" = dt_result_est_m2sr,
-              "list_trace_m2sr" = list_trace_m2sr,
               "list_dt_average_m2sr" = list_dt_average_m2sr))
 }

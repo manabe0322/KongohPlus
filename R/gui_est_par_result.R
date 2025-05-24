@@ -45,23 +45,11 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         list_dt_average_sr <- rv_est_par$list_dt_average_sr
         name_kit <- rv_est_par$name_kit
         name_sr <- rv_est_par$name_sr
-        warmup <- rv_est_par$warmup
-        sampling <- rv_est_par$sampling
-        chains <- rv_est_par$chains
-
-        lp_ae <- data_est_par$lp_ae
+        n_conv <- rv_est_par$n_conv
+        n_max_init <- rv_est_par$n_max_init
         alpha <- data_est_par$alpha
-        rhat_lp_ae <- data_est_par$rhat_lp_ae
-        rhat_alpha <- data_est_par$rhat_alpha
-        traceplot_ae <- data_est_par$traceplot_ae
-        lp_gamma <- data_est_par$lp_gamma
         cv_allele <- data_est_par$cv_allele
         cv_stutter <- data_est_par$cv_stutter
-        rhat_lp_gamma <- data_est_par$rhat_lp_gamma
-        rhat_cv_allele <- data_est_par$rhat_cv_allele
-        rhat_cv_stutter <- data_est_par$rhat_cv_stutter
-        traceplot_cv_allele <- data_est_par$traceplot_cv_allele
-        traceplot_cv_stutter <- data_est_par$traceplot_cv_stutter
 
         rv_par_file_names <- reactiveVal(NULL)
 
@@ -96,9 +84,7 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         observeEvent(input$act_saveas_est_par_2, {
           fn_est_par <- input$fn_est_par
 
-          save(list = c("fn_exp", "fn_gt", "dt_setting_est_par", "list_dt_average_sr", "name_kit", "name_sr", "warmup", "sampling", "chains",
-                        "lp_ae", "alpha", "rhat_lp_ae", "rhat_alpha", "traceplot_ae",
-                        "lp_gamma", "cv_allele", "cv_stutter", "rhat_lp_gamma", "rhat_cv_allele", "rhat_cv_stutter", "traceplot_cv_allele", "traceplot_cv_stutter"),
+          save(list = c("fn_exp", "fn_gt", "dt_setting_est_par", "list_dt_average_sr", "name_kit", "name_sr", "n_conv", "n_max_init", "alpha", "cv_allele", "cv_stutter"),
                file = paste0(path_pack, "/extdata/param/", fn_est_par, ".RData"))
 
           removeModal()

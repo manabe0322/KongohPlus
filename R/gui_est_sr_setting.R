@@ -90,9 +90,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       rv_est_sr$dt_kit <- NULL
       rv_est_sr$dt_setting_est_sr <- NULL
       rv_est_sr$name_kit <- NULL
-      rv_est_sr$warmup <- 2000
-      rv_est_sr$sampling <- 2000
-      rv_est_sr$chains <- 4
+      rv_est_sr$n_conv <- 10
+      rv_est_sr$n_max_init <- 100
       rv_est_sr$data_est_sr <- NULL
 
       # Load experimental data
@@ -138,68 +137,53 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       observeEvent(input$act_advance_sr, {
         showModal(modalDialog(
           title = "Advanced setting",
-          h4("MCMC conditions"),
-          numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_est_sr$warmup),
-          numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_est_sr$sampling),
-          numericInput(session$ns("chains"), label = "Number of chains", value = rv_est_sr$chains),
+          h4("MLE conditions"),
+          numericInput(session$ns("n_conv"), label = "Number of successful convergences", value = rv_est_sr$n_conv),
+          numericInput(session$ns("n_max_init"), label = "Maximum number of initializations", value = rv_est_sr$n_max_init),
           footer = tagList(
-            actionButton(session$ns("act_advance_save"), "Save"),
+            actionButton(session$ns("act_advance_sr_save"), "Save"),
             modalButton("Cancel")
           ),
           size = "l"
         ))
       })
 
-      observeEvent(input$warmup, {
-        warmup <- input$warmup
-        if(!is.integer(warmup)){
-          showFeedbackDanger(inputId = "warmup", text = "A positive integer is required!")
-        }else if(warmup <= 0){
-          showFeedbackDanger(inputId = "warmup", text = "A positive integer is required!")
+      observeEvent(input$n_conv, {
+        n_conv <- input$n_conv
+        if(!is.integer(n_conv)){
+          showFeedbackDanger(inputId = "n_conv", text = "A positive integer is required!")
+          disable("act_advance_sr_save")
+        }else if(n_conv <= 0){
+          showFeedbackDanger(inputId = "n_conv", text = "A positive integer is required!")
+          disable("act_advance_sr_save")
         }else{
-          hideFeedback("warmup")
+          hideFeedback("n_conv")
+          enable("act_advance_sr_save")
         }
       })
 
-      observeEvent(input$sampling, {
-        sampling <- input$sampling
-        if(!is.integer(sampling)){
-          showFeedbackDanger(inputId = "sampling", text = "A positive integer is required!")
-        }else if(sampling <= 0){
-          showFeedbackDanger(inputId = "sampling", text = "A positive integer is required!")
+      observeEvent(input$n_max_init, {
+        isolate(n_conv <- input$n_conv)
+        n_max_init <- input$n_max_init
+        if(!is.integer(n_max_init)){
+          showFeedbackDanger(inputId = "n_max_init", text = "A positive integer is required!")
+          disable("act_advance_sr_save")
+        }else if(n_max_init <= 0){
+          showFeedbackDanger(inputId = "n_max_init", text = "A positive integer is required!")
+          disable("act_advance_sr_save")
+        }else if(n_max_init < n_conv){
+          showFeedbackDanger(inputId = "n_max_init", text = "The number must be greater than the number of successful convergences!")
+          disable("act_advance_sr_save")
         }else{
-          hideFeedback("sampling")
+          hideFeedback("n_max_init")
+          enable("act_advance_sr_save")
         }
       })
 
-      observeEvent(input$chains, {
-        chains <- input$chains
-        if(!is.integer(chains)){
-          showFeedbackDanger(inputId = "chains", text = "A positive integer is required!")
-        }else if(chains <= 0){
-          showFeedbackDanger(inputId = "chains", text = "A positive integer is required!")
-        }else{
-          hideFeedback("chains")
-        }
-      })
-
-      observeEvent(input$act_advance_save, {
-        req(input$warmup)
-        req(input$sampling)
-        req(input$chains)
-
-        isolate(warmup <- input$warmup)
-        isolate(sampling <- input$sampling)
-        isolate(chains <- input$chains)
-
-        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains))){
-          if(all(warmup > 0, sampling > 0, chains > 0)){
-            rv_est_sr$warmup <- warmup
-            rv_est_sr$sampling <- sampling
-            rv_est_sr$chains <- chains
-            removeModal()
-          }
-        }
+      observeEvent(input$act_advance_sr_save, {
+        rv_est_sr$n_conv <- input$n_conv
+        rv_est_sr$n_max_init <- input$n_max_init
+        removeModal()
       })
 
       output$act_analyze_est_sr <- renderUI({
@@ -220,21 +204,18 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         dt_kit <- rv_est_sr$dt_kit
         name_kit <- rv_est_sr$name_kit
         rv_est_sr$dt_setting_est_sr <- dt_setting_est_sr <- hot_to_r(input$dt_setting_est_sr)
-        warmup <- rv_est_sr$warmup
-        sampling <- rv_est_sr$sampling
-        chains <- rv_est_sr$chains
+        n_conv <- rv_est_sr$n_conv
+        n_max_init <- rv_est_sr$n_max_init
 
         error_message <- check_est_sr(dt_exp, dt_gt, dt_kit, dt_setting_est_sr)
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          # Load the MCMC models
+          # Load the stan models
           model_sr_gen <- stan_package_model(name = "model_sr_gen", package = "KongohPlus")
           model_sr_uni <- stan_package_model(name = "model_sr_uni", package = "KongohPlus")
 
-          rv_est_sr$data_est_sr <- estimate_average_sr(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
-                                                       model_sr_gen, model_sr_uni,
-                                                       warmup, sampling, chains)
+          rv_est_sr$data_est_sr <- estimate_average_sr(dt_exp, dt_gt, dt_kit, dt_setting_est_sr, model_sr_gen, model_sr_uni, n_conv, n_max_init)
 
           updateTabsetPanel(session = session_est_sr_top, inputId = "tabset_est_sr", selected = "Result")
         }
