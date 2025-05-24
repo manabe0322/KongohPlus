@@ -44,18 +44,18 @@ perform_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd
   repeat{
     count_all <- count_all + 1
     init_vals <- generate_init(n_rep, hnc, tph_mean, tph_sd)
-    fit_main <- model_main$optimize(data_list_main, init = init_vals)
+    fit <- model_main$optimize(data_list_main, init = init_vals)
 
     # If convergence is successful, perform the following steps
-    if(fit_main$return_codes() == 0){
-      lp <- fit_main$lp()
+    if(fit$return_codes() == 0){
+      lp <- fit$lp()
 
       # If the difference between the current likelihood and the maximum likelihood is less than 1e-6, the current run is considered convergent.
       if(abs(max_lp - lp) < 1e-6){
         count_conv <- count_conv + 1
         if(lp - max_lp > 0){
           max_lp <- lp
-          est_param <- fit_main$mle()
+          est_param <- fit$mle()
         }
       }
 
@@ -63,7 +63,7 @@ perform_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd
       else if(lp - max_lp > 0){
         count_conv <- 1
         max_lp <- lp
-        est_param <- fit_main$mle()
+        est_param <- fit$mle()
       }
 
       # Stop the simulation if convergence is successful for the required number of times.
