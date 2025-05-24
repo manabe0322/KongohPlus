@@ -24,6 +24,8 @@ deconvo_setting_ui <- function(id){
                       shinyFilesButton(ns("load_anameth_deconvo"), label = "Load", title = "Select a file", multiple = FALSE),
                       uiOutput(ns("anameth_deconvo")),
                       br(),
+                      actionButton(ns("act_advance_deconvo"), label = "Advanced setting"),
+                      br(),
                       br(),
                       actionButton(ns("act_analyze_deconvo"), label = "Analyze", class = "btn btn-primary btn-lg")
                     )
@@ -71,6 +73,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$hnc_to <- 1
       rv_deconvo_setting$fn_anameth <- ""
       rv_deconvo_setting$dt_anameth <- NULL
+      rv_deconvo_setting$n_conv <- 10
+      rv_deconvo_setting$n_max_init <- 100
       rv_deconvo_setting$bool_correct_noc <- TRUE
       rv_deconvo_setting$bool_before_deconvo <- TRUE
       rv_deconvo_setting$dt_ignore_mk <- NULL
@@ -97,11 +101,13 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           rv_deconvo_setting$bool_before_deconvo <- TRUE
           rv_deconvo_setting$bool_ignore_readonly <- FALSE
           enable("load_anameth_deconvo")
+          enable("act_advance_deconvo")
           enable("act_analyze_deconvo")
         }else{
           rv_deconvo_setting$bool_before_deconvo <- FALSE
           rv_deconvo_setting$bool_ignore_readonly <- TRUE
           disable("load_anameth_deconvo")
+          disable("act_advance_deconvo")
           disable("act_analyze_deconvo")
         }
       })
@@ -279,6 +285,58 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         }
       })
 
+      observeEvent(input$act_advance_deconvo, {
+        showModal(modalDialog(
+          title = "Advanced setting",
+          h4("MLE conditions"),
+          numericInput(session$ns("n_conv"), label = "Number of successful convergences", value = rv_deconvo_setting$n_conv),
+          numericInput(session$ns("n_max_init"), label = "Maximum number of initializations", value = rv_deconvo_setting$n_max_init),
+          footer = tagList(
+            actionButton(session$ns("act_advance_deconvo_save"), "Save"),
+            modalButton("Cancel")
+          ),
+          size = "l"
+        ))
+      })
+
+      observeEvent(input$n_conv, {
+        n_conv <- input$n_conv
+        if(!is.integer(n_conv)){
+          showFeedbackDanger(inputId = "n_conv", text = "A positive integer is required!")
+          disable("act_advance_deconvo_save")
+        }else if(n_conv <= 0){
+          showFeedbackDanger(inputId = "n_conv", text = "A positive integer is required!")
+          disable("act_advance_deconvo_save")
+        }else{
+          hideFeedback("n_conv")
+          enable("act_advance_deconvo_save")
+        }
+      })
+
+      observeEvent(input$n_max_init, {
+        isolate(n_conv <- input$n_conv)
+        n_max_init <- input$n_max_init
+        if(!is.integer(n_max_init)){
+          showFeedbackDanger(inputId = "n_max_init", text = "A positive integer is required!")
+          disable("act_advance_deconvo_save")
+        }else if(n_max_init <= 0){
+          showFeedbackDanger(inputId = "n_max_init", text = "A positive integer is required!")
+          disable("act_advance_deconvo_save")
+        }else if(n_max_init < n_conv){
+          showFeedbackDanger(inputId = "n_max_init", text = "The number must be greater than the number of successful convergences!")
+          disable("act_advance_deconvo_save")
+        }else{
+          hideFeedback("n_max_init")
+          enable("act_advance_deconvo_save")
+        }
+      })
+
+      observeEvent(input$act_advance_deconvo_save, {
+        rv_deconvo_setting$n_conv <- input$n_conv
+        rv_deconvo_setting$n_max_init <- input$n_max_init
+        removeModal()
+      })
+
       observeEvent(input$act_analyze_deconvo, {
         waiter_show(html = spin_3k(), color = "white")
 
@@ -291,6 +349,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         dt_af <- rv_deconvo_setting$dt_af
         fn_anameth <- rv_deconvo_setting$fn_anameth
         dt_anameth <- rv_deconvo_setting$dt_anameth
+        n_conv <- rv_deconvo_setting$n_conv
+        n_max_init <- rv_deconvo_setting$n_max_init
 
         # Extract information on the kit
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Name[dt_anameth$Category == "Kit"], ".csv"))
@@ -319,7 +379,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             hnc_all <- hnc_from:hnc_to
             n_mk <- length(alpha)
             expect_ae <- n_mk * (alpha + 1) / (sum(alpha) + n_mk)
-            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, cv_allele, cv_stutter, list_dt_average_sr, hnc_all)
+            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, cv_allele, cv_stutter, list_dt_average_sr, hnc_all, n_conv, n_max_init)
             data_deconvo$hnc_all <- hnc_all
             data_deconvo$dt_csp <- dt_csp
             data_deconvo$dt_af <- dt_af
@@ -333,6 +393,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             data_deconvo$cv_stutter <- cv_stutter
             data_deconvo$list_dt_average_sr <- list_dt_average_sr
             data_deconvo$message_sr <- message_sr
+            data_deconvo$n_conv <- n_conv
+            data_deconvo$n_max_init <- n_max_init
             rv_deconvo$data_deconvo <- data_deconvo
 
             waiter_hide()

@@ -23,6 +23,66 @@ generate_init <- function(n_rep, hnc, tph_mean, tph_sd){
   return(list(list(tph = tph, lambda = lambda, deg = deg)))
 }
 
+#' perform_mle
+#'
+#' @description The function to perform MLE
+#' @param mdoel_main The stan model for deconvolution
+#' @param data_list_main The input data for stan
+#' @param n_rep The number of replicates
+#' @param hnc The hypothesized number of contributors
+#' @param tph_mean The mean of the total peak height
+#' @param tph_sd The SD of the total peak height
+#' @param n_conv The number of successful convergences
+#' @param n_max_init The maximum number of initializations
+perform_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, n_conv, n_max_init){
+  count_all <- 0
+  count_conv <- 0
+  max_lp <- -Inf
+  est_param <- rep(NA, n_rep + 3 * hnc)
+
+  # Repeat random initialization and optimization until the condition is satisfied
+  repeat{
+    count_all <- count_all + 1
+    init_vals <- generate_init(n_rep, hnc, tph_mean, tph_sd)
+    fit_main <- model_main$optimize(data_list_main, init = init_vals)
+
+    # If convergence is successful, perform the following steps
+    if(fit_main$return_codes() == 0){
+      lp <- fit_main$lp()
+
+      # If the difference between the current likelihood and the maximum likelihood is less than 1e-6, the current run is considered convergent.
+      if(abs(max_lp - lp) < 1e-6){
+        count_conv <- count_conv + 1
+        if(lp - max_lp > 0){
+          max_lp <- lp
+          est_param <- fit_main$mle()
+        }
+      }
+
+      # Reset convergence count to 1 if a new maximum likelihood is found.
+      else if(lp - max_lp > 0){
+        count_conv <- 1
+        max_lp <- lp
+        est_param <- fit_main$mle()
+      }
+
+      # Stop the simulation if convergence is successful for the required number of times.
+      if(count_conv == n_conv){
+        break
+      }
+
+      # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
+      if(count_all == n_max_init){
+        est_param <- rep(NA, n_rep + 3 * hnc)
+        break
+      }
+    }
+  }
+
+  names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), paste0("lambda[", 1:hnc, "]"), paste0("deg[", 1:hnc, "]"), paste0("mp[", 1:hnc, "]"))
+  return(est_param)
+}
+
 #' perform_deconvo
 #'
 #' @description The function to perform mixture deconvolution
@@ -30,11 +90,14 @@ generate_init <- function(n_rep, hnc, tph_mean, tph_sd){
 #' @param cv_allele The coefficient of variation for allelels
 #' @param cv_stutter The coefficient of variation for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
+#' @param n_conv The number of successful convergences
+#' @param n_max_init The maximum number of initializations
 perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                             pop_al_list, pop_prob_list, theta,
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, rate_di,
-                            ae_use, cv_allele, cv_stutter, list_dt_average_sr){
+                            ae_use, cv_allele, cv_stutter, list_dt_average_sr,
+                            n_conv, n_max_init){
   # Start computation
   start_time <- proc.time()
 
@@ -397,7 +460,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                              n_gtc_use = n_gtc_use,
                              gtc_logprob_use = unlist(gtc_logprob_use))
 
-      # Perform MCMC
+      # Load stan model
       model_main <- stan_package_model(name = "model_main_rep1", package = "KongohPlus")
     }else{
       # Prepare date list
@@ -430,47 +493,14 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                              n_gtc_use = n_gtc_use,
                              gtc_logprob_use = unlist(gtc_logprob_use))
 
-      # Perform MCMC
+      # Load stan model
       model_main <- stan_package_model(name = "model_main", package = "KongohPlus")
     }
 
-    accept_simu <- 10
-    max_simu <- 100
-    count_all <- 0
-    count_accept <- 0
-    max_lp <- -Inf
-    est_param <- rep(NA, n_rep + 3 * hnc)
-    repeat{
-      count_all <- count_all + 1
-      init_vals <- generate_init(n_rep, hnc, tph_mean, tph_sd)
-      fit_main <- model_main$optimize(data_list_main, init = init_vals)
-      if(fit_main$return_codes() == 0){
-        lp <- fit_main$lp()
-        if(abs(max_lp - lp) < 1e-6){
-          count_accept <- count_accept + 1
-          if(lp - max_lp > 0){
-            max_lp <- lp
-            est_param <- fit_main$mle()
-          }
-        }else if(lp - max_lp > 0){
-          count_accept <- 1
-          max_lp <- lp
-          est_param <- fit_main$mle()
-        }
+    # Perform MLE
+    est_param <- perform_mle(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, n_conv, n_max_init)
 
-        if(count_accept == accept_simu){
-          break
-        }
-
-        if(count_all == max_simu){
-          break
-        }
-      }
-    }
-
-    names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), paste0("lambda[", 1:hnc, "]"), paste0("deg[", 1:hnc, "]"), paste0("mp[", 1:hnc, "]"))
-
-    if(count_accept == accept_simu){
+    if(!any(is.na(est_param))){
       tph <- est_param[paste0("tph[", 1:n_rep, "]")]
       mp <- est_param[paste0("mp[", 1:hnc, "]")]
       deg <- est_param[paste0("deg[", 1:hnc, "]")]
@@ -586,7 +616,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param cv_stutter The coefficient of variation for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc_all A vector of the assumed number of contributors
-perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, cv_allele, cv_stutter, list_dt_average_sr, hnc_all){
+#' @param n_conv The number of successful convergences
+#' @param n_max_init The maximum number of initializations
+perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, cv_allele, cv_stutter, list_dt_average_sr, hnc_all, n_conv, n_max_init){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
   if(n_mk != 0){
@@ -637,7 +669,8 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       pop_al_list, pop_prob_list, theta,
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, rate_di,
-                                      ae_use, cv_allele, cv_stutter, list_dt_average_sr))
+                                      ae_use, cv_allele, cv_stutter, list_dt_average_sr,
+                                      n_conv, n_max_init))
       if(class(data_hnc) == "try-error"){
         data_hnc_list[[i]] <- list("dt_pg_list" = NULL,
                                    "dt_log10like" = NULL,

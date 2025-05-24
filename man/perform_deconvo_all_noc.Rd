@@ -14,7 +14,9 @@ perform_deconvo_all_noc(
   cv_allele,
   cv_stutter,
   list_dt_average_sr,
-  hnc_all
+  hnc_all,
+  n_conv,
+  n_max_init
 )
 }
 \arguments{
@@ -37,6 +39,10 @@ perform_deconvo_all_noc(
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 
 \item{hnc_all}{A vector of the assumed number of contributors}
+
+\item{n_conv}{The number of successful convergences}
+
+\item{n_max_init}{The maximum number of initializations}
 }
 \description{
 The function to perform mixture deconvolution for all assumed number of contributors
