@@ -11,10 +11,8 @@ estimate_average_sr(
   dt_setting_est_sr,
   model_sr_gen,
   model_sr_uni,
-  warmup,
-  sampling,
-  chains,
-  n_parallel_chains = detectCores()
+  n_conv,
+  n_max_init
 )
 }
 \description{

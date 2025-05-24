@@ -11,10 +11,8 @@ estimate_parameters(
   dt_setting_est_par,
   model_ae,
   model_gamma,
-  warmup,
-  sampling,
-  chains,
-  n_parallel_chains = detectCores()
+  n_conv,
+  n_max_init
 )
 }
 \description{
