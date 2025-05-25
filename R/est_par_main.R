@@ -507,26 +507,25 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   # Perform MCMC for AE
   alpha <- run_mle_ae(prop_ae_data_use, model_ae, n_conv, n_max_init)
 
+  if(any(is.na(alpha))){
+    cv_allele <- cv_stutter <- NA
 
+  }else{
+    # Prepare data for average heterozygote allele peak heights
+    ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
 
-  ###### NA check ######
+    # Prepare peak height data for estimating gamma distribution
+    tmp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto)
+    rphs_gamma <- tmp$rphs_gamma
+    tphs_gamma <- tmp$tphs_gamma
+    ophs_gamma <- tmp$ophs_gamma
+    ats_gamma <- tmp$ats_gamma
 
-
-
-  # Prepare data for average heterozygote allele peak heights
-  ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
-
-  # Prepare peak height data for estimating gamma distribution
-  tmp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto)
-  rphs_gamma <- tmp$rphs_gamma
-  tphs_gamma <- tmp$tphs_gamma
-  ophs_gamma <- tmp$ophs_gamma
-  ats_gamma <- tmp$ats_gamma
-
-  # Perform MCMC for gamma distribution
-  tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_gamma, n_conv, n_max_init)
-  cv_allele <- tmp["cv_allele"]
-  cv_stutter <- tmp["cv_stutter"]
+    # Perform MCMC for gamma distribution
+    tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_gamma, n_conv, n_max_init)
+    cv_allele <- tmp["cv_allele"]
+    cv_stutter <- tmp["cv_stutter"]
+  }
 
   return(list("alpha" = alpha,
               "cv_allele" = cv_allele,
