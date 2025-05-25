@@ -649,7 +649,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                   "comp_time" = comp_time,
                   "error_message" = NULL))
     }else{
-      error_message <- "Convergence failure."
+      error_message <- paste0("Convergence failed under ", hnc, " contributor.<br>")
       return(list("dt_pg_list" = NULL,
                   "dt_log10like" = NULL,
                   "dt_param" = NULL,
