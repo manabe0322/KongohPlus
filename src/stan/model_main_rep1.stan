@@ -94,6 +94,7 @@ transformed parameters{
 }
 
 model{
+  // Prior distribution for each parameter
   tph ~ normal(tph_mean, tph_sd);
   lambda ~ normal(0, 1);
   deg ~ beta(1, 1);
@@ -107,7 +108,7 @@ model{
   // Calculate log-probability densities
   vector[n_dedup1_sum] lpd_dedup1_use_rep1 = rep_vector(0, n_dedup1_sum);
 
-  // For general peaks
+  // Log probability density for general peaks
   if(n_general_sum != 0){
     lpd_dedup1_use_rep1[1:n_general_sum] = calc_lpd_general(n_general_sum,
                                                             oph_rep1[1:n_general_sum],
@@ -115,7 +116,7 @@ model{
                                                             gamma_param[1:n_general_sum, 2]);
   }
 
-  // For drop-out peaks
+  // Log probability density for drop-out peaks
   if(n_dropout_sum != 0){
     lpd_dedup1_use_rep1[(n_general_sum + 1):(n_general_sum + n_dropout_sum)] = calc_lpd_dropout(n_dropout_sum,
                                                                                                 at_dropout_rep1,
@@ -123,13 +124,15 @@ model{
                                                                                                 gamma_param[(n_general_sum + 1):(n_general_sum + n_dropout_sum), 2]);
   }
 
-  // For drop-in peaks
+  // Log probability density for drop-in peaks
   if(n_dropin_sum != 0){
     lpd_dedup1_use_rep1[(n_general_sum + n_dropout_sum + 1):(n_general_sum + n_dropout_sum + n_dropin_sum)] = loglike_di_rep1;
   }
 
+  // Assign each log probability density to each peak for the genotype combination
   vector[n_dedup2_sum] lpd_dedup2_use_rep1 = lpd_dedup1_use_rep1[index_dedup2_use_rep1];
 
+  // Calculate overall likelihood
   int index_lpd_start = 1;
   int index_gtc_start = 1;
   for(j in 1:n_mk){

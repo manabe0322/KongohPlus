@@ -38,7 +38,12 @@ perform_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd
   count_all <- 0
   count_conv <- 0
   max_lp <- -Inf
-  est_param <- rep(NA, n_rep + 3 * hnc)
+
+  if(hnc == 1){
+    est_param <- rep(NA, n_rep + 1)
+  }else{
+    est_param <- rep(NA, n_rep + 3 * hnc)
+  }
 
   # Repeat random initialization and optimization until the condition is satisfied
   repeat{
@@ -73,13 +78,21 @@ perform_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd
 
       # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
       if(count_all == n_max_init){
-        est_param <- rep(NA, n_rep + 3 * hnc)
+        if(hnc == 1){
+          est_param <- rep(NA, n_rep + 1)
+        }else{
+          est_param <- rep(NA, n_rep + 3 * hnc)
+        }
         break
       }
     }
   }
 
-  names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), paste0("lambda[", 1:hnc, "]"), paste0("deg[", 1:hnc, "]"), paste0("mp[", 1:hnc, "]"))
+  if(hnc == 1){
+    names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), "deg[1]")
+  }else{
+    names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), paste0("lambda[", 1:hnc, "]"), paste0("deg[", 1:hnc, "]"), paste0("mp[", 1:hnc, "]"))
+  }
   return(est_param)
 }
 
@@ -430,71 +443,126 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     }
     tph_sd <- (max_tph - min_tph) / 2
 
-    ################
-    # Perform MCMC #
-    ################
+    ###############
+    # Perform MLE #
+    ###############
 
     if(n_rep == 1){
-      # Prepare date list
-      data_list_main <- list(hnc = hnc,
-                             n_mk = n_mk,
-                             tph_mean = tph_mean,
-                             tph_sd = tph_sd,
-                             n_rph_base_sum = sum(n_rph_base_use),
-                             rph_base_use = unlist(rph_base_use),
-                             n_dedup1_sum = n_dedup1_sum,
-                             n_rph_sum = n_rph_sum,
-                             index_dedup1_rep1 = index_dedup1_mcmc,
-                             cv_square_rep1 = t(cv_square_mcmc),
-                             deg_size_rep1 = deg_size_mcmc,
-                             oph_rep1 = oph_mcmc,
-                             n_general_sum = n_general_sum,
-                             n_dropout_sum = n_dropout_sum,
-                             at_dropout_rep1 = at_dropout,
-                             n_dropin_sum = n_dropin_sum,
-                             loglike_di_rep1 = loglike_di,
-                             n_dedup2_sum = n_dedup2_sum,
-                             n_dedup2_use = n_dedup2_use,
-                             index_dedup2_use_rep1 = index_dedup2_use,
-                             n_peak_use = n_peak_use,
-                             n_gtc_use = n_gtc_use,
-                             gtc_logprob_use = unlist(gtc_logprob_use))
+      if(hnc == 1){
+        model_main <- stan_package_model(name = "model_main_rep1_single", package = "KongohPlus")
 
-      # Load stan model
-      model_main <- stan_package_model(name = "model_main_rep1", package = "KongohPlus")
+        data_list_main <- list(n_mk = n_mk,
+                               tph_mean = tph_mean,
+                               tph_sd = tph_sd,
+                               n_rph_base_sum = sum(n_rph_base_use),
+                               rph_base_use = unlist(rph_base_use),
+                               n_dedup1_sum = n_dedup1_sum,
+                               n_rph_sum = n_rph_sum,
+                               index_dedup1_rep1 = index_dedup1_mcmc,
+                               cv_square_rep1 = t(cv_square_mcmc),
+                               deg_size_rep1 = deg_size_mcmc,
+                               oph_rep1 = oph_mcmc,
+                               n_general_sum = n_general_sum,
+                               n_dropout_sum = n_dropout_sum,
+                               at_dropout_rep1 = at_dropout,
+                               n_dropin_sum = n_dropin_sum,
+                               loglike_di_rep1 = loglike_di,
+                               n_dedup2_sum = n_dedup2_sum,
+                               n_dedup2_use = n_dedup2_use,
+                               index_dedup2_use_rep1 = index_dedup2_use,
+                               n_peak_use = n_peak_use,
+                               n_gtc_use = n_gtc_use,
+                               gtc_logprob_use = unlist(gtc_logprob_use))
+      }else{
+        model_main <- stan_package_model(name = "model_main_rep1", package = "KongohPlus")
+
+        data_list_main <- list(hnc = hnc,
+                               n_mk = n_mk,
+                               tph_mean = tph_mean,
+                               tph_sd = tph_sd,
+                               n_rph_base_sum = sum(n_rph_base_use),
+                               rph_base_use = unlist(rph_base_use),
+                               n_dedup1_sum = n_dedup1_sum,
+                               n_rph_sum = n_rph_sum,
+                               index_dedup1_rep1 = index_dedup1_mcmc,
+                               cv_square_rep1 = t(cv_square_mcmc),
+                               deg_size_rep1 = deg_size_mcmc,
+                               oph_rep1 = oph_mcmc,
+                               n_general_sum = n_general_sum,
+                               n_dropout_sum = n_dropout_sum,
+                               at_dropout_rep1 = at_dropout,
+                               n_dropin_sum = n_dropin_sum,
+                               loglike_di_rep1 = loglike_di,
+                               n_dedup2_sum = n_dedup2_sum,
+                               n_dedup2_use = n_dedup2_use,
+                               index_dedup2_use_rep1 = index_dedup2_use,
+                               n_peak_use = n_peak_use,
+                               n_gtc_use = n_gtc_use,
+                               gtc_logprob_use = unlist(gtc_logprob_use))
+      }
     }else{
-      # Prepare date list
-      data_list_main <- list(hnc = hnc,
-                             n_rep = n_rep,
-                             n_mk = n_mk,
-                             tph_mean = tph_mean,
-                             tph_sd = tph_sd,
-                             n_rph_base_sum = sum(n_rph_base_use),
-                             rph_base_use = unlist(rph_base_use),
-                             n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
-                             n_rph_sum_per_rep = n_rph_sum_per_rep,
-                             n_rph_sum = n_rph_sum,
-                             index_dedup1_mcmc = index_dedup1_mcmc,
-                             cv_square_mcmc = t(cv_square_mcmc),
-                             deg_size_mcmc = deg_size_mcmc,
-                             oph_mcmc = oph_mcmc,
-                             n_general_sum_per_rep = n_general_sum_per_rep,
-                             n_dropout_sum_per_rep = n_dropout_sum_per_rep,
-                             n_dropout_sum = n_dropout_sum,
-                             at_dropout = at_dropout,
-                             n_dropin_sum = n_dropin_sum,
-                             n_dropin_sum_per_rep = n_dropin_sum_per_rep,
-                             loglike_di = loglike_di,
-                             n_dedup2_sum = n_dedup2_sum,
-                             n_dedup2_sum_per_rep = n_dedup2_sum_per_rep,
-                             n_dedup2_use = n_dedup2_use,
-                             index_dedup2_use = index_dedup2_use,
-                             n_peak_use = n_peak_use,
-                             n_gtc_use = n_gtc_use,
-                             gtc_logprob_use = unlist(gtc_logprob_use))
+      if(hnc == 1){
+        model_main <- stan_package_model(name = "model_main_single", package = "KongohPlus")
 
-      # Load stan model
-      model_main <- stan_package_model(name = "model_main", package = "KongohPlus")
+        data_list_main <- list(n_rep = n_rep,
+                               n_mk = n_mk,
+                               tph_mean = tph_mean,
+                               tph_sd = tph_sd,
+                               n_rph_base_sum = sum(n_rph_base_use),
+                               rph_base_use = unlist(rph_base_use),
+                               n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
+                               n_rph_sum_per_rep = n_rph_sum_per_rep,
+                               n_rph_sum = n_rph_sum,
+                               index_dedup1_mcmc = index_dedup1_mcmc,
+                               cv_square_mcmc = t(cv_square_mcmc),
+                               deg_size_mcmc = deg_size_mcmc,
+                               oph_mcmc = oph_mcmc,
+                               n_general_sum_per_rep = n_general_sum_per_rep,
+                               n_dropout_sum_per_rep = n_dropout_sum_per_rep,
+                               n_dropout_sum = n_dropout_sum,
+                               at_dropout = at_dropout,
+                               n_dropin_sum = n_dropin_sum,
+                               n_dropin_sum_per_rep = n_dropin_sum_per_rep,
+                               loglike_di = loglike_di,
+                               n_dedup2_sum = n_dedup2_sum,
+                               n_dedup2_sum_per_rep = n_dedup2_sum_per_rep,
+                               n_dedup2_use = n_dedup2_use,
+                               index_dedup2_use = index_dedup2_use,
+                               n_peak_use = n_peak_use,
+                               n_gtc_use = n_gtc_use,
+                               gtc_logprob_use = unlist(gtc_logprob_use))
+      }else{
+        model_main <- stan_package_model(name = "model_main", package = "KongohPlus")
+
+        data_list_main <- list(hnc = hnc,
+                               n_rep = n_rep,
+                               n_mk = n_mk,
+                               tph_mean = tph_mean,
+                               tph_sd = tph_sd,
+                               n_rph_base_sum = sum(n_rph_base_use),
+                               rph_base_use = unlist(rph_base_use),
+                               n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
+                               n_rph_sum_per_rep = n_rph_sum_per_rep,
+                               n_rph_sum = n_rph_sum,
+                               index_dedup1_mcmc = index_dedup1_mcmc,
+                               cv_square_mcmc = t(cv_square_mcmc),
+                               deg_size_mcmc = deg_size_mcmc,
+                               oph_mcmc = oph_mcmc,
+                               n_general_sum_per_rep = n_general_sum_per_rep,
+                               n_dropout_sum_per_rep = n_dropout_sum_per_rep,
+                               n_dropout_sum = n_dropout_sum,
+                               at_dropout = at_dropout,
+                               n_dropin_sum = n_dropin_sum,
+                               n_dropin_sum_per_rep = n_dropin_sum_per_rep,
+                               loglike_di = loglike_di,
+                               n_dedup2_sum = n_dedup2_sum,
+                               n_dedup2_sum_per_rep = n_dedup2_sum_per_rep,
+                               n_dedup2_use = n_dedup2_use,
+                               index_dedup2_use = index_dedup2_use,
+                               n_peak_use = n_peak_use,
+                               n_gtc_use = n_gtc_use,
+                               gtc_logprob_use = unlist(gtc_logprob_use))
+      }
     }
 
     # Perform MLE
@@ -502,8 +570,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     if(!any(is.na(est_param))){
       tph <- est_param[paste0("tph[", 1:n_rep, "]")]
-      mp <- est_param[paste0("mp[", 1:hnc, "]")]
       deg <- est_param[paste0("deg[", 1:hnc, "]")]
+      if(hnc == 1){
+        mp <- 1
+      }else{
+        mp <- est_param[paste0("mp[", 1:hnc, "]")]
+      }
 
       ######################################################
       # Calculate likelihood under the estimated parameter #

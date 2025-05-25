@@ -99,10 +99,12 @@ transformed parameters{
 }
 
 model{
+  // Prior distribution for each parameter
   tph ~ normal(tph_mean, tph_sd);
   lambda ~ normal(0, 1);
   deg ~ beta(1, 1);
 
+  // Initial indices to access first replicate
   int index_rph_start = 1;
   int index_dropout_start = 1;
   int index_dropin_start = 1;
@@ -125,7 +127,7 @@ model{
     int n_dedup1_sum_rep1 = n_dedup1_sum_per_rep[i];
     vector[n_dedup1_sum_rep1] lpd_dedup1_use_rep1 = rep_vector(0, n_dedup1_sum_rep1);
 
-    // For general peaks
+    // Log probability density for general peaks
     int n_general_sum_rep1 = n_general_sum_per_rep[i];
     if(n_general_sum_rep1 != 0){
       lpd_dedup1_use_rep1[1:n_general_sum_rep1] = calc_lpd_general(n_general_sum_rep1,
@@ -134,7 +136,7 @@ model{
                                                                    gamma_param[1:n_general_sum_rep1, 2]);
     }
 
-    // For drop-out peaks
+    // Log probability density for drop-out peaks
     int n_dropout_sum_rep1 = n_dropout_sum_per_rep[i];
     if(n_dropout_sum_rep1 != 0){
       lpd_dedup1_use_rep1[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1)] = calc_lpd_dropout(n_dropout_sum_rep1,
@@ -143,17 +145,19 @@ model{
                                                                                                                  gamma_param[(n_general_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1), 2]);
     }
 
-    // For drop-in peaks
+    // Log probability density for drop-in peaks
     int n_dropin_sum_rep1 = n_dropin_sum_per_rep[i];
     if(n_dropin_sum_rep1 != 0){
       vector[n_dropin_sum_rep1] loglike_di_rep1 = loglike_di[index_dropin_start:(index_dropin_start + n_dropin_sum_rep1 - 1)];
       lpd_dedup1_use_rep1[(n_general_sum_rep1 + n_dropout_sum_rep1 + 1):(n_general_sum_rep1 + n_dropout_sum_rep1 + n_dropin_sum_rep1)] = loglike_di_rep1;
     }
 
+    // Assign each log probability density to each peak for the genotype combination
     int n_dedup2_sum_rep1 = n_dedup2_sum_per_rep[i];
     array[n_dedup2_sum_rep1] int index_dedup2_use_rep1 = index_dedup2_use[index_dedup2_start:(index_dedup2_start + n_dedup2_sum_rep1 - 1)];
     vector[n_dedup2_sum_rep1] lpd_dedup2_use_rep1 = lpd_dedup1_use_rep1[index_dedup2_use_rep1];
 
+    // Calculate overall likelihood
     int index_lpd_start = 1;
     int index_gtc_start = 1;
     for(j in 1:n_mk){
@@ -171,6 +175,7 @@ model{
       index_gtc_start += n_gtc;
     }
 
+    // Update indices for next replicate
     index_rph_start += n_rph_sum_rep1;
     index_dropout_start += n_dropout_sum_rep1;
     index_dropin_start += n_dropin_sum_rep1;
