@@ -99,8 +99,6 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
             formatStyle(names(dt_log10like_display), lineHeight = "80%")
         })
 
-        ## Parameters
-
         output$select_noc_param <- renderUI({
           selectInput(session$ns("select_noc_param"), label = "Number of contributors", choices = hnc_all, selected = hnc_all[1], multiple = FALSE, selectize = FALSE)
         })
