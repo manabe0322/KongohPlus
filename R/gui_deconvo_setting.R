@@ -48,9 +48,6 @@ deconvo_setting_ui <- function(id){
                     br(),
                     h4(textOutput(ns("title_dropin"))),
                     dataTableOutput(ns("anameth_dropin")),
-                    br(),
-                    h4(textOutput(ns("title_mcmc"))),
-                    dataTableOutput(ns("anameth_mcmc")),
                     br()
              )
            )
@@ -200,7 +197,6 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           output$title_al_gt_prob <- renderText({"Genotype probability"})
           output$title_gt_fltr <- renderText({"Genotype filter"})
           output$title_dropin <- renderText({"Drop-in"})
-          output$title_mcmc <- renderText({"MCMC"})
 
           output$anameth_at <- renderRHandsontable({
             dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
@@ -256,20 +252,6 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
               escape = FALSE
             ) %>%
               formatStyle(names(dt_dropin), lineHeight = "80%")
-          })
-
-          output$anameth_mcmc <- renderRHandsontable({
-            dt_mcmc <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "MCMC"],
-                                  Value = dt_anameth$Value[dt_anameth$Category == "MCMC"])
-
-            datatable(
-              dt_mcmc,
-              selection = "none",
-              options = list(dom = "t", iDisplayLength = nrow(dt_mcmc), ordering = FALSE, autowidth = TRUE),
-              rownames = FALSE,
-              escape = FALSE
-            ) %>%
-              formatStyle(names(dt_mcmc), lineHeight = "80%")
           })
         }
       })
