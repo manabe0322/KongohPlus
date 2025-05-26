@@ -71,7 +71,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$fn_anameth <- ""
       rv_deconvo_setting$dt_anameth <- NULL
       rv_deconvo_setting$n_conv <- 10
-      rv_deconvo_setting$n_max_init <- 100
+      rv_deconvo_setting$n_max_init <- 1000
       rv_deconvo_setting$bool_correct_noc <- TRUE
       rv_deconvo_setting$bool_before_deconvo <- TRUE
       rv_deconvo_setting$dt_ignore_mk <- NULL

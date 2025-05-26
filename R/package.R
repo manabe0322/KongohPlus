@@ -12,6 +12,7 @@
 #' @importFrom magrittr %>%
 #' @importFrom parallel detectCores
 #' @importFrom posterior as_draws_df
+#' @importFrom randtoolbox sobol
 #' @importFrom Rcpp sourceCpp
 #' @importFrom rhandsontable hot_cell hot_col hot_table hot_to_r renderRHandsontable rhandsontable rHandsontableOutput
 #' @importFrom rmarkdown render
