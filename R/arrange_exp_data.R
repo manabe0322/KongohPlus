@@ -6,8 +6,7 @@
 #' @param markers_auto Autosomal markers
 #' @param sr_consider_auto Information on consideration of back, forward, double-back, and minus 2-nt stutters in autosomal markers
 #' @param at_auto Analytical thresholds for autosomal markers
-arrange_exp_data <- function(dt_exp, dt_gt,
-                             markers_auto, sr_consider_auto, at_auto){
+arrange_exp_data <- function(dt_exp, dt_gt, markers_auto, sr_consider_auto, at_auto){
   peak_list <- height_list <- gt_list <- list()
 
   name_dt_exp <- names(dt_exp)

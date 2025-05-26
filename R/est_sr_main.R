@@ -683,8 +683,7 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr, model_
   sr_consider_auto[, 4] <- meth_model_m2sr != "Not consider"
 
   # Arrange experimental data
-  tmp <- arrange_exp_data(dt_exp, dt_gt,
-                          markers_auto, sr_consider_auto, at_auto)
+  tmp <- arrange_exp_data(dt_exp, dt_gt, markers_auto, sr_consider_auto, at_auto)
   peak_list <- tmp$peak_list
   height_list <- tmp$height_list
   gt_list <- tmp$gt_list
@@ -703,12 +702,12 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr, model_
   list_dt_average_fsr <- tmp$dt_average_sr_all_mk
 
   # Perform MLE for DSR
-  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "DS", markers_auto, meth_model_dsr, n_conv, n_max_init)
+  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "DS", markers_auto, meth_model_dsr, model_sr_gen, model_sr_uni, n_conv, n_max_init)
   dt_result_est_dsr <- tmp$dt_result_est_sr
   list_dt_average_dsr <- tmp$dt_average_sr_all_mk
 
   # Perform MLE for M2SR
-  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "M2S", markers_auto, meth_model_m2sr, n_conv, n_max_init)
+  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "M2S", markers_auto, meth_model_m2sr, model_sr_gen, model_sr_uni, n_conv, n_max_init)
   dt_result_est_m2sr <- tmp$dt_result_est_sr
   list_dt_average_m2sr <- tmp$dt_average_sr_all_mk
 

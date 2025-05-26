@@ -493,8 +493,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   }
 
   # Arrange experimental data
-  tmp <- arrange_exp_data(dt_exp, dt_gt,
-                          markers_auto, sr_consider_auto, at_auto)
+  tmp <- arrange_exp_data(dt_exp, dt_gt, markers_auto, sr_consider_auto, at_auto)
   peak_list <- tmp$peak_list
   height_list <- tmp$height_list
   gt_list <- tmp$gt_list
@@ -506,6 +505,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
 
   # Perform MCMC for AE
   alpha <- run_mle_ae(prop_ae_data_use, model_ae, n_conv, n_max_init)
+  names(alpha) <- markers_auto
 
   if(any(is.na(alpha))){
     cv_allele <- cv_stutter <- NA
