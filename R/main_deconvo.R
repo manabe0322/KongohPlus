@@ -793,10 +793,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                gtc_logprob_use = unlist(gtc_logprob_use))
       }
 
-      start_time <- proc.time()
       est_param <- run_mle(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, n_conv, n_max_init)
-      end_time <- proc.time()
-      comp_time <- end_time[3] - start_time[3]
     }
 
     if(!any(is.na(est_param))){
