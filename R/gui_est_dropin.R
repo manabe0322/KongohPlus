@@ -224,7 +224,7 @@ est_dropin_server <- function(id, path_pack){
           observeEvent(input$act_saveas_est_dropin_2, {
             fn_est_dropin <- input$fn_est_dropin
 
-            save(list = c("fn_ntc", "name_kit", "at_dropin", "n_conv", "n_max_init", "dt_dropin", "traceplot_shape_di", "traceplot_rate_di"),
+            save(list = c("fn_ntc", "name_kit", "at_dropin", "n_conv", "n_max_init", "dt_dropin"),
                  file = paste0(path_pack, "/extdata/dropin/", fn_est_dropin, ".RData"))
 
             removeModal()
