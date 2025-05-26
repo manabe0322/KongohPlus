@@ -9,10 +9,8 @@ estimate_dropin_params(
   dt_kit,
   at_dropin,
   model_dropin,
-  warmup,
-  sampling,
-  chains,
-  n_parallel_chains = detectCores()
+  n_conv,
+  n_max_init
 )
 }
 \description{
