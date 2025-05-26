@@ -53,7 +53,7 @@ est_dropin_server <- function(id, path_pack){
       rv_est_dropin$dt_kit <- NULL
       rv_est_dropin$name_kit <- NULL
       rv_est_dropin$n_conv <- 10
-      rv_est_dropin$n_max_init <- 100
+      rv_est_dropin$n_max_init <- 1000
       rv_est_dropin$data_est_dropin <- NULL
 
       # Load non template control data

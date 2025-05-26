@@ -52,14 +52,14 @@ run_mle_dropin <- function(n_dropin, heights, model_dropin, n_conv, n_max_init){
   repeat{
     count_all <- count_all + 1
     init_vals <- generate_init_dropin()
-    fit <- model_dropin$optimize(data_list_dropin, init = init_vals, algorithm = "lbfgs", tol_obj = 1e-6)
+    fit <- model_dropin$optimize(data_list_dropin, init = init_vals)
 
     # If convergence is successful, perform the following steps
     if(fit$return_codes() == 0){
       lp <- fit$lp()
 
-      # If the difference between the current likelihood and the maximum likelihood is less than 1e-6, the current run is considered convergent.
-      if(abs(max_lp - lp) < 1e-6){
+      # If the difference between the current likelihood and the maximum likelihood is less than 0.1, the current run is considered convergent.
+      if(abs(max_lp - lp) < 0.1){
         count_conv <- count_conv + 1
         if(lp - max_lp > 0){
           max_lp <- lp

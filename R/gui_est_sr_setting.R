@@ -91,7 +91,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       rv_est_sr$dt_setting_est_sr <- NULL
       rv_est_sr$name_kit <- NULL
       rv_est_sr$n_conv <- 10
-      rv_est_sr$n_max_init <- 100
+      rv_est_sr$n_max_init <- 1000
       rv_est_sr$data_est_sr <- NULL
 
       # Load experimental data

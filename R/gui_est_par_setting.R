@@ -72,7 +72,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       rv_est_par$name_kit <- NULL
       rv_est_par$name_sr <- NULL
       rv_est_par$n_conv <- 10
-      rv_est_par$n_max_init <- 100
+      rv_est_par$n_max_init <- 1000
       rv_est_par$data_est_par <- NULL
 
       # Load experimental data
