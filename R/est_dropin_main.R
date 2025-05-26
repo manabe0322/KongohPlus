@@ -22,10 +22,79 @@ check_est_dropin <- function(dt_ntc, dt_kit){
   return(error_message)
 }
 
+#' generate_init_dropin
+#'
+#' @description The function to generate initial values for estimating drop-in parameters
+generate_init_dropin <- function(){
+  shape_di <- runif(1, min = 0, max = 100)
+  rate_di <- runif(1, min = 0, max = 100)
+  return(list(list(shape_di = shape_di, rate_di = rate_di)))
+}
+
+#' run_mle_dropin
+#'
+#' @description The function to perform MLE for the drop-in model
+#' @param n_dropin The number of observed drop-in peaks
+#' @param heights A vector of drop-in peak heights
+#' @param model_dropin The stan model for the drop-in peak heights
+#' @param n_conv The number of successful convergences
+#' @param n_max_init The maximum number of initializations
+run_mle_dropin <- function(n_dropin, heights, model_dropin, n_conv, n_max_init){
+  # Prepare data list for the drop-in model
+  data_list_dropin <- list(N = n_dropin, Height = heights)
+
+  count_all <- 0
+  count_conv <- 0
+  max_lp <- -Inf
+  est_param <- rep(NA, 2)
+
+  # Repeat random initialization and optimization until the condition is satisfied
+  repeat{
+    count_all <- count_all + 1
+    init_vals <- generate_init_dropin()
+    fit <- model_dropin$optimize(data_list_dropin, init = init_vals)
+
+    # If convergence is successful, perform the following steps
+    if(fit$return_codes() == 0){
+      lp <- fit$lp()
+
+      # If the difference between the current likelihood and the maximum likelihood is less than 1e-6, the current run is considered convergent.
+      if(abs(max_lp - lp) < 1e-6){
+        count_conv <- count_conv + 1
+        if(lp - max_lp > 0){
+          max_lp <- lp
+          est_param <- fit$mle()
+        }
+      }
+
+      # Reset convergence count to 1 if a new maximum likelihood is found.
+      else if(lp - max_lp > 0){
+        count_conv <- 1
+        max_lp <- lp
+        est_param <- fit$mle()
+      }
+
+      # Stop the simulation if convergence is successful for the required number of times.
+      if(count_conv == n_conv){
+        break
+      }
+
+      # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
+      if(count_all == n_max_init){
+        est_param <- rep(NA, 2)
+        break
+      }
+    }
+  }
+
+  names(est_param) <- c("shape_di", "rate_di")
+  return(est_param)
+}
+
 #' estimate_dropin_params
 #'
 #' @description The function to estimate drop-in parameters
-estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, model_dropin, warmup, sampling, chains, n_parallel_chains = detectCores()){
+estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, model_dropin, n_conv, n_max_init){
   # Extract autosomal markers
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers_auto <- unique(dt_kit_auto[, Marker])
@@ -40,51 +109,16 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, model_dropin, warm
   n_dropin <- length(heights)
   n_sample <- length(unique(dt_ntc$SampleName))
 
-  # Perform MCMC
-  data_list_dropin <- list(N = n_dropin, Height = heights)
-  fit_dropin <- model_dropin$sample(
-    data_list_dropin,
-    iter_warmup = warmup,
-    iter_sampling = sampling,
-    chains = chains,
-    parallel_chains = n_parallel_chains
-  )
-
-  # Extract parameters
-  tmp <- as_draws_df(fit_dropin$draws())
-  lp_values <- tmp$lp__
-  density_lp <- density(lp_values)
-  lp_mode_estimated <- density_lp$x[which.max(density_lp$y)]
-  index_hpd <- which.min(abs(lp_values - lp_mode_estimated))
-  lp_dropin <- lp_values[index_hpd]
-
-  shape_di_values <- tmp$shape_di
-  shape_di <- shape_di_values[index_hpd]
-
-  rate_di_values <- tmp$rate_di
-  rate_di <- rate_di_values[index_hpd]
-
-  fit_dropin_summary <- fit_dropin$summary()
-  variables <- fit_dropin_summary$variable
-  rhats <- fit_dropin_summary$rhat
-  rhat_lp <- rhats[which(variables == "lp__")]
-  rhat_shape_di <- rhats[which(variables == "shape_di")]
-  rhat_rate_di <- rhats[which(variables == "rate_di")]
-
-  fit_dropin$draws() %>% mcmc_trace(pars = c("shape_di")) -> traceplot_shape_di
-  fit_dropin$draws() %>% mcmc_trace(pars = c("rate_di")) -> traceplot_rate_di
+  # Perform MLE
+  tmp <- run_mle_dropin(n_dropin, heights, model_dropin, n_conv, n_max_init)
+  shape_di <- tmp["shape_di"]
+  rate_di <- tmp["rate_di"]
 
   return(list("heights" = heights,
               "n_sample" = n_sample,
               "n_mk" = n_mk,
               "n_dropin" = n_dropin,
               "freq_dropin" = n_dropin / (n_sample * n_mk),
-              "lp_dropin" = lp_dropin,
               "shape_di" = shape_di,
-              "rate_di" = rate_di,
-              "rhat_lp" = rhat_lp,
-              "rhat_shape_di" = rhat_shape_di,
-              "rhat_rate_di" = rhat_rate_di,
-              "traceplot_shape_di" = traceplot_shape_di,
-              "traceplot_rate_di" = traceplot_rate_di))
+              "rate_di" = rate_di))
 }

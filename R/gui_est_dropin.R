@@ -18,7 +18,7 @@ est_dropin_ui <- function(id){
                         column(9, uiOutput(ns("name_kit")))
                       ),
                       br(),
-                      numericInput(ns("at_dropin"), label = h4("Analytical threshold"), value = 45),
+                      numericInput(ns("at_dropin"), label = h4("Analytical threshold"), value = 25),
                       br(),
                       actionButton(ns("act_advance_dropin"), "Advanced setting"),
                       br(),
@@ -52,9 +52,8 @@ est_dropin_server <- function(id, path_pack){
       rv_est_dropin$fn_ntc <- NULL
       rv_est_dropin$dt_kit <- NULL
       rv_est_dropin$name_kit <- NULL
-      rv_est_dropin$warmup <- 2000
-      rv_est_dropin$sampling <- 2000
-      rv_est_dropin$chains <- 4
+      rv_est_dropin$n_conv <- 10
+      rv_est_dropin$n_max_init <- 100
       rv_est_dropin$data_est_dropin <- NULL
 
       # Load non template control data
@@ -90,68 +89,53 @@ est_dropin_server <- function(id, path_pack){
       observeEvent(input$act_advance_dropin, {
         showModal(modalDialog(
           title = "Advanced setting",
-          h4("MCMC conditions"),
-          numericInput(session$ns("warmup"), label = "Warmup iterations", value = rv_est_dropin$warmup),
-          numericInput(session$ns("sampling"), label = "Sampling iterations", value = rv_est_dropin$sampling),
-          numericInput(session$ns("chains"), label = "Number of chains", value = rv_est_dropin$chains),
+          h4("MLE conditions"),
+          numericInput(session$ns("n_conv"), label = "Number of successful convergences", value = rv_est_dropin$n_conv),
+          numericInput(session$ns("n_max_init"), label = "Maximum number of initializations", value = rv_est_dropin$n_max_init),
           footer = tagList(
-            actionButton(session$ns("act_advance_save"), "Save"),
+            actionButton(session$ns("act_advance_dropin_save"), "Save"),
             modalButton("Cancel")
           ),
           size = "l"
         ))
       })
 
-      observeEvent(input$warmup, {
-        warmup <- input$warmup
-        if(!is.integer(warmup)){
-          showFeedbackDanger(inputId = "warmup", text = "A positive integer is required!")
-        }else if(warmup <= 0){
-          showFeedbackDanger(inputId = "warmup", text = "A positive integer is required!")
+      observeEvent(input$n_conv, {
+        n_conv <- input$n_conv
+        if(!is.integer(n_conv)){
+          showFeedbackDanger(inputId = "n_conv", text = "A positive integer is required!")
+          disable("act_advance_dropin_save")
+        }else if(n_conv <= 0){
+          showFeedbackDanger(inputId = "n_conv", text = "A positive integer is required!")
+          disable("act_advance_dropin_save")
         }else{
-          hideFeedback("warmup")
+          hideFeedback("n_conv")
+          enable("act_advance_dropin_save")
         }
       })
 
-      observeEvent(input$sampling, {
-        sampling <- input$sampling
-        if(!is.integer(sampling)){
-          showFeedbackDanger(inputId = "sampling", text = "A positive integer is required!")
-        }else if(sampling <= 0){
-          showFeedbackDanger(inputId = "sampling", text = "A positive integer is required!")
+      observeEvent(input$n_max_init, {
+        isolate(n_conv <- input$n_conv)
+        n_max_init <- input$n_max_init
+        if(!is.integer(n_max_init)){
+          showFeedbackDanger(inputId = "n_max_init", text = "A positive integer is required!")
+          disable("act_advance_dropin_save")
+        }else if(n_max_init <= 0){
+          showFeedbackDanger(inputId = "n_max_init", text = "A positive integer is required!")
+          disable("act_advance_dropin_save")
+        }else if(n_max_init < n_conv){
+          showFeedbackDanger(inputId = "n_max_init", text = "The number must be greater than the number of successful convergences!")
+          disable("act_advance_dropin_save")
         }else{
-          hideFeedback("sampling")
+          hideFeedback("n_max_init")
+          enable("act_advance_dropin_save")
         }
       })
 
-      observeEvent(input$chains, {
-        chains <- input$chains
-        if(!is.integer(chains)){
-          showFeedbackDanger(inputId = "chains", text = "A positive integer is required!")
-        }else if(chains <= 0){
-          showFeedbackDanger(inputId = "chains", text = "A positive integer is required!")
-        }else{
-          hideFeedback("chains")
-        }
-      })
-
-      observeEvent(input$act_advance_save, {
-        req(input$warmup)
-        req(input$sampling)
-        req(input$chains)
-
-        isolate(warmup <- input$warmup)
-        isolate(sampling <- input$sampling)
-        isolate(chains <- input$chains)
-
-        if(all(is.integer(warmup), is.integer(sampling), is.integer(chains))){
-          if(all(warmup > 0, sampling > 0, chains > 0)){
-            rv_est_dropin$warmup <- warmup
-            rv_est_dropin$sampling <- sampling
-            rv_est_dropin$chains <- chains
-            removeModal()
-          }
-        }
+      observeEvent(input$act_advance_dropin_save, {
+        rv_est_dropin$n_conv <- input$n_conv
+        rv_est_dropin$n_max_init <- input$n_max_init
+        removeModal()
       })
 
       # Start estimating dropin parameters
@@ -161,9 +145,8 @@ est_dropin_server <- function(id, path_pack){
         fn_ntc <- rv_est_dropin$fn_ntc
         name_kit <- rv_est_dropin$name_kit
         at_dropin <- input$at_dropin
-        warmup <- rv_est_dropin$warmup
-        sampling <- rv_est_dropin$sampling
-        chains <- rv_est_dropin$chains
+        n_conv <- rv_est_dropin$n_conv
+        n_max_init <- rv_est_dropin$n_max_init
         dt_kit <- rv_est_dropin$dt_kit
 
         # Check input files and setting
@@ -171,16 +154,15 @@ est_dropin_server <- function(id, path_pack){
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          # Load the MCMC model
+          # Load the stan model
           model_dropin <- stan_package_model(name = "model_dropin", package = "KongohPlus")
 
-          data_est_dropin <- estimate_dropin_params(dt_ntc, dt_kit, at_dropin, model_dropin, warmup, sampling, chains)
+          data_est_dropin <- estimate_dropin_params(dt_ntc, dt_kit, at_dropin, model_dropin, n_conv, n_max_init)
           data_est_dropin$fn_ntc <- fn_ntc
           data_est_dropin$name_kit <- name_kit
           data_est_dropin$at_dropin <- at_dropin
-          data_est_dropin$warmup <- warmup
-          data_est_dropin$sampling <- sampling
-          data_est_dropin$chains <- chains
+          data_est_dropin$n_conv <- n_conv
+          data_est_dropin$n_max_init <- n_max_init
           rv_est_dropin$data_est_dropin <- data_est_dropin
         }
       })
@@ -192,14 +174,12 @@ est_dropin_server <- function(id, path_pack){
           fn_ntc <- data_est_dropin$fn_ntc
           name_kit <- data_est_dropin$name_kit
           at_dropin <- data_est_dropin$at_dropin
-          warmup <- data_est_dropin$warmup
-          sampling <- data_est_dropin$sampling
-          chains <- data_est_dropin$chains
+          n_conv <- data_est_dropin$n_conv
+          n_max_init <- data_est_dropin$n_max_init
           enable("act_saveas_est_dropin_1")
 
           dt_dropin <- data.table(Parameter = c("Number of samples", "Number of markers", "Number of drop-in peaks", "Frequency of drop-in", "Shape parameter", "Rate parameter"),
-                                  Value = c(data_est_dropin$n_sample, data_est_dropin$n_mk, data_est_dropin$n_dropin, data_est_dropin$freq_dropin, data_est_dropin$shape_di, data_est_dropin$rate_di),
-                                  Rhat = c(NA, NA, NA, NA, data_est_dropin$rhat_shape_di, data_est_dropin$rhat_rate_di))
+                                  Value = c(data_est_dropin$n_sample, data_est_dropin$n_mk, data_est_dropin$n_dropin, data_est_dropin$freq_dropin, data_est_dropin$shape_di, data_est_dropin$rate_di))
           traceplot_shape_di <- data_est_dropin$traceplot_shape_di
           traceplot_rate_di <- data_est_dropin$traceplot_rate_di
 
@@ -245,7 +225,7 @@ est_dropin_server <- function(id, path_pack){
           observeEvent(input$act_saveas_est_dropin_2, {
             fn_est_dropin <- input$fn_est_dropin
 
-            save(list = c("fn_ntc", "name_kit", "at_dropin", "warmup", "sampling", "chains", "dt_dropin", "traceplot_shape_di", "traceplot_rate_di"),
+            save(list = c("fn_ntc", "name_kit", "at_dropin", "n_conv", "n_max_init", "dt_dropin", "traceplot_shape_di", "traceplot_rate_di"),
                  file = paste0(path_pack, "/extdata/dropin/", fn_est_dropin, ".RData"))
 
             removeModal()
