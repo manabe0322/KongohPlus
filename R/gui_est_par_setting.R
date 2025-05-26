@@ -141,7 +141,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       observeEvent(input$act_advance_par, {
         showModal(modalDialog(
           title = "Advanced setting",
-          h4("MCMC conditions"),
+          h4("MLE conditions"),
           numericInput(session$ns("n_conv"), label = "Number of successful convergences", value = rv_est_par$n_conv),
           numericInput(session$ns("n_max_init"), label = "Maximum number of initializations", value = rv_est_par$n_max_init),
           footer = tagList(
@@ -205,7 +205,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          # Load the MCMC models
+          # Load the stan models
           model_ae <- stan_package_model(name = "model_ae", package = "KongohPlus")
           model_gamma <- stan_package_model(name = "model_gamma", package = "KongohPlus")
 
