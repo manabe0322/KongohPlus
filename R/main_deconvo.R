@@ -49,7 +49,7 @@ perform_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd
   repeat{
     count_all <- count_all + 1
     init_vals <- generate_init(n_rep, hnc, tph_mean, tph_sd)
-    fit <- model_main$optimize(data_list_main, init = init_vals)
+    fit <- model_main$optimize(data_list_main, init = init_vals, algorithm = "lbfgs", tol_obj = 1e-6)
 
     # If convergence is successful, perform the following steps
     if(fit$return_codes() == 0){
@@ -75,17 +75,17 @@ perform_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd
       if(count_conv == n_conv){
         break
       }
-
-      # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
-      if(count_all == n_max_init){
-        if(hnc == 1){
-          est_param <- rep(NA, n_rep + 1)
-        }else{
-          est_param <- rep(NA, n_rep + 3 * hnc)
-        }
-        break
-      }
     }
+
+    # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
+    #if(count_all == n_max_init){
+    #  if(hnc == 1){
+    #    est_param <- rep(NA, n_rep + 1)
+    #  }else{
+    #    est_param <- rep(NA, n_rep + 3 * hnc)
+    #  }
+    #  break
+    #}
   }
 
   if(hnc == 1){

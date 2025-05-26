@@ -372,7 +372,7 @@ run_mle_sr_gen <- function(model_sr_gen, data_list_sr, n_conv, n_max_init){
   repeat{
     count_all <- count_all + 1
     init_vals <- generate_init_sr_gen()
-    fit <- model_sr_gen$optimize(data_list_sr, init = init_vals)
+    fit <- model_sr_gen$optimize(data_list_sr, init = init_vals, algorithm = "lbfgs", tol_obj = 1e-6)
 
     # If convergence is successful, perform the following steps
     if(fit$return_codes() == 0){
@@ -398,12 +398,12 @@ run_mle_sr_gen <- function(model_sr_gen, data_list_sr, n_conv, n_max_init){
       if(count_conv == n_conv){
         break
       }
+    }
 
-      # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
-      if(count_all == n_max_init){
-        est_param <- rep(NA, 3)
-        break
-      }
+    # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
+    if(count_all == n_max_init){
+      est_param <- rep(NA, 3)
+      break
     }
   }
 

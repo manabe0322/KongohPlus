@@ -430,7 +430,7 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_g
   repeat{
     count_all <- count_all + 1
     init_vals <- generate_init_gamma()
-    fit <- model_gamma$optimize(data_list_gamma, init = init_vals)
+    fit <- model_gamma$optimize(data_list_gamma, init = init_vals, algorithm = "lbfgs", tol_obj = 1e-6)
 
     # If convergence is successful, perform the following steps
     if(fit$return_codes() == 0){
@@ -456,12 +456,12 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_g
       if(count_conv == n_conv){
         break
       }
+    }
 
-      # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
-      if(count_all == n_max_init){
-        est_param <- rep(NA, 2)
-        break
-      }
+    # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
+    if(count_all == n_max_init){
+      est_param <- rep(NA, 2)
+      break
     }
   }
 
