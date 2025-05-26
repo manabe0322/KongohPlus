@@ -299,35 +299,34 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         ))
       })
 
-      observeEvent(input$n_conv, {
+      observeEvent(input$n_conv | input$n_max_init, {
         n_conv <- input$n_conv
-        if(!is.integer(n_conv)){
-          showFeedbackDanger(inputId = "n_conv", text = "A positive integer is required!")
-          disable("act_advance_deconvo_save")
-        }else if(n_conv <= 0){
-          showFeedbackDanger(inputId = "n_conv", text = "A positive integer is required!")
-          disable("act_advance_deconvo_save")
-        }else{
-          hideFeedback("n_conv")
-          enable("act_advance_deconvo_save")
-        }
-      })
-
-      observeEvent(input$n_max_init, {
-        isolate(n_conv <- input$n_conv)
         n_max_init <- input$n_max_init
-        if(!is.integer(n_max_init)){
+
+        hideFeedback("n_conv")
+        hideFeedback("n_max_init")
+        bool_correct_mle <- TRUE
+
+        if(!is.integer(n_conv) || n_conv <= 0){
+          showFeedbackDanger(inputId = "n_conv", text = "A positive integer is required!")
+          bool_correct_mle <- FALSE
+        }
+
+        if(!is.integer(n_max_init) || n_max_init <= 0){
           showFeedbackDanger(inputId = "n_max_init", text = "A positive integer is required!")
-          disable("act_advance_deconvo_save")
-        }else if(n_max_init <= 0){
-          showFeedbackDanger(inputId = "n_max_init", text = "A positive integer is required!")
-          disable("act_advance_deconvo_save")
-        }else if(n_max_init < n_conv){
-          showFeedbackDanger(inputId = "n_max_init", text = "The number must be greater than the number of successful convergences!")
-          disable("act_advance_deconvo_save")
-        }else{
-          hideFeedback("n_max_init")
+          bool_correct_mle <- FALSE
+        }
+
+        if(is.integer(n_conv) && is.integer(n_max_init) && n_conv > n_max_init){
+          showFeedbackDanger(inputId = "n_conv", text = "The number of successful convergences must not exceed the maximum number of initializations!")
+          showFeedbackDanger(inputId = "n_max_init", text = "The number of successful convergences must not exceed the maximum number of initializations!")
+          bool_correct_mle <- FALSE
+        }
+
+        if(bool_correct_mle){
           enable("act_advance_deconvo_save")
+        }else{
+          disable("act_advance_deconvo_save")
         }
       })
 
