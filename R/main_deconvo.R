@@ -42,10 +42,9 @@ generate_init_sobol_1p <- function(x, n_rep, tph_mean, tph_sd){
 #' @param n_rep The number of replicates
 #' @param tph_mean The mean of the total peak height
 #' @param tph_sd The SD of the total peak height
-#' @param n_conv The number of successful convergences
-#' @param n_max_init The maximum number of initializations
-run_mle_1p <- function(model_main, data_list_main, n_rep, tph_mean, tph_sd, n_conv, n_max_init){
-  n_sobol <- 5 * (n_rep + 1)
+#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
+run_mle_1p <- function(model_main, data_list_main, n_rep, tph_mean, tph_sd, initial_point_factor){
+  n_sobol <- initial_point_factor * (n_rep + 1)
   init_list <- lapply(1:n_sobol, function(x) generate_init_sobol_1p(x, n_rep, tph_mean, tph_sd))
 
   tmp_param <- matrix(NA, n_sobol, n_rep + 2)
@@ -105,10 +104,9 @@ generate_init_sobol <- function(x, n_rep, hnc, tph_mean, tph_sd){
 #' @param hnc The hypothesized number of contributors
 #' @param tph_mean The mean of the total peak height
 #' @param tph_sd The SD of the total peak height
-#' @param n_conv The number of successful convergences
-#' @param n_max_init The maximum number of initializations
-run_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, n_conv, n_max_init){
-  n_sobol <- 5 * (n_rep + 2 * hnc)
+#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
+run_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, initial_point_factor){
+  n_sobol <- initial_point_factor * (n_rep + 2 * hnc)
   init_list <- lapply(1:n_sobol, function(x) generate_init_sobol(x, n_rep, hnc, tph_mean, tph_sd))
 
   if(hnc == 2){
@@ -155,14 +153,13 @@ run_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, n_
 #' @param cv_allele The coefficient of variation for allelels
 #' @param cv_stutter The coefficient of variation for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
-#' @param n_conv The number of successful convergences
-#' @param n_max_init The maximum number of initializations
+#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
 perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                             pop_al_list, pop_prob_list, theta,
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, rate_di,
                             ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                            n_conv, n_max_init){
+                            initial_point_factor){
   # Start computation
   start_time <- proc.time()
 
@@ -557,7 +554,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                gtc_logprob_use = unlist(gtc_logprob_use))
       }
 
-      est_param <- run_mle_1p(model_main, data_list_main, n_rep, tph_mean, tph_sd, n_conv, n_max_init)
+      est_param <- run_mle_1p(model_main, data_list_main, n_rep, tph_mean, tph_sd, initial_point_factor)
 
     }else{
       if(n_rep == 1){
@@ -619,7 +616,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                gtc_logprob_use = unlist(gtc_logprob_use))
       }
 
-      est_param <- run_mle(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, n_conv, n_max_init)
+      est_param <- run_mle(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, initial_point_factor)
     }
 
     if(!any(is.na(est_param))){
@@ -742,9 +739,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param cv_stutter The coefficient of variation for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc_all A vector of the assumed number of contributors
-#' @param n_conv The number of successful convergences
-#' @param n_max_init The maximum number of initializations
-perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, cv_allele, cv_stutter, list_dt_average_sr, hnc_all, n_conv, n_max_init){
+#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
+perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, cv_allele, cv_stutter, list_dt_average_sr, hnc_all, initial_point_factor){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
   if(n_mk != 0){
@@ -796,7 +792,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, rate_di,
                                       ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                                      n_conv, n_max_init))
+                                      initial_point_factor))
       if(class(data_hnc) == "try-error"){
         data_hnc_list[[i]] <- list("dt_pg_list" = NULL,
                                    "dt_log10like" = NULL,

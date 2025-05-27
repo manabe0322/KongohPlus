@@ -70,8 +70,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$hnc_to <- 1
       rv_deconvo_setting$fn_anameth <- ""
       rv_deconvo_setting$dt_anameth <- NULL
-      rv_deconvo_setting$n_conv <- 10
-      rv_deconvo_setting$n_max_init <- 1000
+      rv_deconvo_setting$initial_point_factor <- 5
       rv_deconvo_setting$bool_correct_noc <- TRUE
       rv_deconvo_setting$bool_before_deconvo <- TRUE
       rv_deconvo_setting$dt_ignore_mk <- NULL
@@ -271,8 +270,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         showModal(modalDialog(
           title = "Advanced setting",
           h4("MLE conditions"),
-          numericInput(session$ns("n_conv"), label = "Number of successful convergences", value = rv_deconvo_setting$n_conv),
-          numericInput(session$ns("n_max_init"), label = "Maximum number of initializations", value = rv_deconvo_setting$n_max_init),
+          numericInput(session$ns("initial_point_factor"), label = "Initial point factor", value = rv_deconvo_setting$initial_point_factor),
           footer = tagList(
             actionButton(session$ns("act_advance_deconvo_save"), "Save"),
             modalButton("Cancel")
@@ -281,27 +279,14 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         ))
       })
 
-      observeEvent(input$n_conv | input$n_max_init, {
-        n_conv <- input$n_conv
-        n_max_init <- input$n_max_init
+      observeEvent(input$initial_point_factor, {
+        initial_point_factor <- input$initial_point_factor
 
-        hideFeedback("n_conv")
-        hideFeedback("n_max_init")
+        hideFeedback("initial_point_factor")
         bool_correct_mle <- TRUE
 
-        if(!is.integer(n_conv) || n_conv <= 0){
-          showFeedbackDanger(inputId = "n_conv", text = "A positive integer is required!")
-          bool_correct_mle <- FALSE
-        }
-
-        if(!is.integer(n_max_init) || n_max_init <= 0){
-          showFeedbackDanger(inputId = "n_max_init", text = "A positive integer is required!")
-          bool_correct_mle <- FALSE
-        }
-
-        if(is.integer(n_conv) && is.integer(n_max_init) && n_conv > n_max_init){
-          showFeedbackDanger(inputId = "n_conv", text = "The number of successful convergences must not exceed the maximum number of initializations!")
-          showFeedbackDanger(inputId = "n_max_init", text = "The number of successful convergences must not exceed the maximum number of initializations!")
+        if(!is.integer(initial_point_factor) || initial_point_factor <= 0){
+          showFeedbackDanger(inputId = "initial_point_factor", text = "Value must be an integer greater than zero.")
           bool_correct_mle <- FALSE
         }
 
@@ -313,8 +298,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       })
 
       observeEvent(input$act_advance_deconvo_save, {
-        rv_deconvo_setting$n_conv <- input$n_conv
-        rv_deconvo_setting$n_max_init <- input$n_max_init
+        rv_deconvo_setting$initial_point_factor <- input$initial_point_factor
         removeModal()
       })
 
@@ -330,8 +314,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         dt_af <- rv_deconvo_setting$dt_af
         fn_anameth <- rv_deconvo_setting$fn_anameth
         dt_anameth <- rv_deconvo_setting$dt_anameth
-        n_conv <- rv_deconvo_setting$n_conv
-        n_max_init <- rv_deconvo_setting$n_max_init
+        initial_point_factor <- rv_deconvo_setting$initial_point_factor
 
         # Extract information on the kit
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Name[dt_anameth$Category == "Kit"], ".csv"))
@@ -360,7 +343,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             hnc_all <- hnc_from:hnc_to
             n_mk <- length(alpha)
             expect_ae <- n_mk * (alpha + 1) / (sum(alpha) + n_mk)
-            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, cv_allele, cv_stutter, list_dt_average_sr, hnc_all, n_conv, n_max_init)
+            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, cv_allele, cv_stutter, list_dt_average_sr, hnc_all, initial_point_factor)
             data_deconvo$hnc_all <- hnc_all
             data_deconvo$dt_csp <- dt_csp
             data_deconvo$dt_af <- dt_af
@@ -374,8 +357,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             data_deconvo$cv_stutter <- cv_stutter
             data_deconvo$list_dt_average_sr <- list_dt_average_sr
             data_deconvo$message_sr <- message_sr
-            data_deconvo$n_conv <- n_conv
-            data_deconvo$n_max_init <- n_max_init
+            data_deconvo$initial_point_factor <- initial_point_factor
             rv_deconvo$data_deconvo <- data_deconvo
 
             waiter_hide()
