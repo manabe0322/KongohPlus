@@ -9,59 +9,6 @@ make_index_dedup2_mk <- function(index_rph_gtc, index_dedup1_all_mk){
   return(match(paste_index_rph_gtc, paste_index_dedup1_all_mk))
 }
 
-#' calc_mle_par_tph
-#'
-#' @description The function to calculate parameters for total peak heights to generate initial values after optimization using initial values based on Sobol sequence
-#' @param n_rep The number of replicates
-#' @param tmp_param A matrix of the temporal parameters estimated by optimization using initial values based on Sobol sequence
-calc_mle_par_tph <- function(n_rep, tmp_param){
-  tph_mean <- tph_sd <- rep(NA, n_rep)
-  for(i in 1:n_rep){
-    tmp <- tmp_param[, paste0("tph[", i, "]")]
-    tph_mean[i] <- mean(tmp)
-    if(length(tmp) == 1){
-      tph_sd[i] <- 0.01 * mean_tph
-    }else{
-      tph_sd[i] <- sd(tmp)
-    }
-  }
-  return(list(tph_mean = tph_mean, tph_sd = tph_sd))
-}
-
-#' calc_mle_par_lambda
-#'
-#' @description The function to calculate parameters for lambdas to generate initial values after optimization using initial values based on Sobol sequence
-#' @param hnc The hypothesized number of contributors
-#' @param tmp_param A matrix of the temporal parameters estimated by optimization using initial values based on Sobol sequence
-calc_mle_par_lambda <- function(hnc, tmp_param){
-  lambda_mean <- lambda_sd <- rep(NA, hnc)
-  for(i in 1:hnc){
-    tmp <- tmp_param[, paste0("lambda[", i, "]")]
-    lambda_mean[i] <- mean(tmp)
-    if(length(tmp) == 1){
-      lambda_sd[i] <- 0.01 * mean_lambda
-    }else{
-      lambda_sd[i] <- sd(tmp)
-    }
-  }
-  return(list(lambda_mean = lambda_mean, lambda_sd = lambda_sd))
-}
-
-#' calc_mle_par_deg
-#'
-#' @description The function to calculate parameters for degradation to generate initial values after optimization using initial values based on Sobol sequence
-#' @param hnc The hypothesized number of contributors
-#' @param tmp_param A matrix of the temporal parameters estimated by optimization using initial values based on Sobol sequence
-calc_mle_par_deg <- function(hnc, tmp_param){
-  alpha_deg <- beta_deg <- rep(NA, hnc)
-  for(i in 1:hnc){
-    tmp <- tmp_param[, paste0("deg[", i, "]")]
-    alpha_deg[i] <- 1 + sum(tmp)
-    beta_deg[i] <- 1 + sum(1 - tmp)
-  }
-  return(list(alpha_deg = alpha_deg, beta_deg = beta_deg))
-}
-
 #' generate_init_sobol_1p
 #'
 #' @description The function to generate initial values based on Sobol sequence for one contributor
@@ -74,7 +21,7 @@ generate_init_sobol_1p <- function(x, n_rep, tph_mean, tph_sd){
   dim_total <- n_rep + 1
 
   # Get only one Sobol point (x-th)
-  sobol_vec <- sobol(n = x, dim = dim_total, init = TRUE, scrambling = 0)[x, ]
+  sobol_vec <- sobol(n = x, d = dim_total, randomize = "digital.shift")[x, ]
 
   # Index partitioning
   tph_raw <- sobol_vec[1:n_rep]
@@ -84,19 +31,6 @@ generate_init_sobol_1p <- function(x, n_rep, tph_mean, tph_sd){
   tph <- qnorm(tph_raw, mean = tph_mean, sd = tph_sd)
   deg <- qbeta(deg_raw, shape1 = 1, shape2 = 1)
 
-  return(list(list(tph = tph, deg = deg)))
-}
-
-#' generate_init_emp_1p
-#'
-#' @description The function to generate initial values after optimization using initial values based on Sobol sequence for one contributor
-#' @param tph_mean Mean values for total peak heights in each replicate
-#' @param tph_sd SD values for total peak heights in each replicate
-#' @param alpha_deg Alpha parameters for degradation in each contributor
-#' @param beta_deg Beta parameters for degradation in each contributor
-generate_init_emp_1p <- function(tph_mean, tph_sd, alpha_deg, beta_deg){
-  tph <- rnorm(length(tph_mean), tph_mean, tph_sd)
-  deg <- rbeta(1, alpha_deg, beta_deg)
   return(list(list(tph = tph, deg = deg)))
 }
 
@@ -115,74 +49,22 @@ run_mle_1p <- function(model_main, data_list_main, n_rep, tph_mean, tph_sd, n_co
   init_list <- lapply(1:n_sobol, function(x) generate_init_sobol_1p(x, n_rep, tph_mean, tph_sd))
 
   tmp_param <- matrix(NA, n_sobol, n_rep + 2)
-  colnames(tmp_param) <- c("lp__", paste0("tph[", 1:n_rep, "]"), "deg[1]")
   for(i in 1:n_sobol){
-    fit_main <- model_main$optimize(data_list_main, init = init_list[[i]])
+    fit_main <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE)
     if(fit_main$return_codes() == 0){
       tmp <- fit_main$draws()
       tmp_param[i, ] <- tmp[1, ]
     }
   }
 
-  tmp_param <- tmp_param[!is.na(tmp_param[, "lp__"]), , drop = FALSE]
-  if(nrow(tmp_param) != 0){
-    tmp_param <- tmp_param[max(tmp_param[, "lp__"]) - tmp_param[, "lp__"] < 0.1, , drop = FALSE]
-
-    tmp <- calc_mle_par_tph(n_rep, tmp_param)
-    tph_mean <- tmp$tph_mean
-    tph_sd <- tmp$tph_sd
-
-    tmp <- calc_mle_par_deg(1, tmp_param)
-    alpha_deg <- tmp$alpha_deg
-    beta_deg <- tmp$beta_deg
-
-    # Repeat random initialization and optimization until the condition is satisfied
-    count_all <- 0
-    count_conv <- 0
-    max_lp <- -Inf
-    est_param <- rep(NA, n_rep + 1)
-    repeat{
-      count_all <- count_all + 1
-      init_vals <- generate_init_emp_1p(tph_mean, tph_sd, alpha_deg, beta_deg)
-      fit <- model_main$optimize(data_list_main, init = init_vals)
-
-      # If convergence is successful, perform the following steps
-      if(fit$return_codes() == 0){
-        lp <- fit$lp()
-
-        # If the difference between the current likelihood and the maximum likelihood is less than 0.1, the current run is considered convergent.
-        if(abs(max_lp - lp) < 0.1){
-          count_conv <- count_conv + 1
-          if(lp - max_lp > 0){
-            max_lp <- lp
-            est_param <- fit$mle()
-          }
-        }
-
-        # Reset convergence count to 1 if a new maximum likelihood is found.
-        else if(lp - max_lp > 0){
-          count_conv <- 1
-          max_lp <- lp
-          est_param <- fit$mle()
-        }
-
-        # Stop the simulation if convergence is successful for the required number of times.
-        if(count_conv == n_conv){
-          break
-        }
-      }
-
-      # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
-      if(count_all == n_max_init){
-        est_param <- rep(NA, n_rep + 1)
-        break
-      }
-    }
+  index_max_lp <- which.max(tmp_param[, 1])
+  if(length(index_max_lp) == 1){
+    est_param <- tmp_param[index_max_lp, -1]
   }else{
     est_param <- rep(NA, n_rep + 1)
   }
-
   names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), "deg[1]")
+
   return(est_param)
 }
 
@@ -199,7 +81,7 @@ generate_init_sobol <- function(x, n_rep, hnc, tph_mean, tph_sd){
   dim_total <- n_rep + hnc + hnc
 
   # Get only one Sobol point (x-th)
-  sobol_vec <- sobol(n = x, dim = dim_total, init = TRUE, scrambling = 0)[x, ]
+  sobol_vec <- sobol(n = x, d = dim_total, randomize = "digital.shift")[x, ]
 
   # Index partitioning
   tph_raw <- sobol_vec[1:n_rep]
@@ -211,23 +93,6 @@ generate_init_sobol <- function(x, n_rep, hnc, tph_mean, tph_sd){
   lambda <- sort(qnorm(lambda_raw, mean = 0, sd = 1))
   deg <- qbeta(deg_raw, shape1 = 1, shape2 = 1)
 
-  return(list(list(tph = tph, lambda = lambda, deg = deg)))
-}
-
-#' generate_init_emp
-#'
-#' @description The function to generate initial values after optimization using initial values based on Sobol sequence
-#' @param tph_mean Mean values for total peak heights in each replicate
-#' @param tph_sd SD values for total peak heights in each replicate
-#' @param lambda_mean Mean values for lambdas in each contributor
-#' @param lambda_sd SD values for lambdas in each contributor
-#' @param alpha_deg Alpha parameters for degradation in each contributor
-#' @param beta_deg Beta parameters for degradation in each contributor
-generate_init_emp <- function(tph_mean, tph_sd, lambda_mean, lambda_sd, alpha_deg, beta_deg){
-  tph <- rnorm(length(tph_mean), tph_mean, tph_sd)
-  hnc <- length(lambda_mean)
-  lambda <- sort(rnorm(hnc, lambda_mean, lambda_sd))
-  deg <- rbeta(hnc, alpha_deg, beta_deg)
   return(list(list(tph = tph, lambda = lambda, deg = deg)))
 }
 
@@ -246,79 +111,40 @@ run_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, n_
   n_sobol <- 5 * (n_rep + 2 * hnc)
   init_list <- lapply(1:n_sobol, function(x) generate_init_sobol(x, n_rep, hnc, tph_mean, tph_sd))
 
-  tmp_param <- matrix(NA, n_sobol, 1 + n_rep + 3 * hnc)
-  colnames(tmp_param) <- c("lp__", paste0("tph[", 1:n_rep, "]"), paste0("lambda[", 1:hnc, "]"), paste0("deg[", 1:hnc, "]"), paste0("mp[", 1:hnc, "]"))
-  for(i in 1:n_sobol){
-    fit_main <- model_main$optimize(data_list_main, init = init_list[[i]])
-    if(fit_main$return_codes() == 0){
-      tmp <- fit_main$draws()
-      tmp_param[i, ] <- tmp[1, ]
-    }
-  }
-
-  tmp_param <- tmp_param[!is.na(tmp_param[, "lp__"]), , drop = FALSE]
-  if(nrow(tmp_param) != 0){
-    tmp_param <- tmp_param[max(tmp_param[, "lp__"]) - tmp_param[, "lp__"] < 0.1, , drop = FALSE]
-
-    tmp <- calc_mle_par_tph(n_rep, tmp_param)
-    tph_mean <- tmp$tph_mean
-    tph_sd <- tmp$tph_sd
-
-    tmp <- calc_mle_par_lambda(hnc, tmp_param)
-    lambda_mean <- tmp$lambda_mean
-    lambda_sd <- tmp$lambda_sd
-
-    tmp <- calc_mle_par_deg(hnc, tmp_param)
-    alpha_deg <- tmp$alpha_deg
-    beta_deg <- tmp$beta_deg
-
-    # Repeat random initialization and optimization until the condition is satisfied
-    count_all <- 0
-    count_conv <- 0
-    max_lp <- -Inf
-    est_param <- rep(NA, n_rep + 3 * hnc)
-    repeat{
-      count_all <- count_all + 1
-      init_vals <- generate_init_emp(tph_mean, tph_sd, lambda_mean, lambda_sd, alpha_deg, beta_deg)
-      fit <- model_main$optimize(data_list_main, init = init_vals)
-
-      # If convergence is successful, perform the following steps
-      if(fit$return_codes() == 0){
-        lp <- fit$lp()
-
-        # If the difference between the current likelihood and the maximum likelihood is less than 0.1, the current run is considered convergent.
-        if(abs(max_lp - lp) < 0.1){
-          count_conv <- count_conv + 1
-          if(lp - max_lp > 0){
-            max_lp <- lp
-            est_param <- fit$mle()
-          }
-        }
-
-        # Reset convergence count to 1 if a new maximum likelihood is found.
-        else if(lp - max_lp > 0){
-          count_conv <- 1
-          max_lp <- lp
-          est_param <- fit$mle()
-        }
-
-        # Stop the simulation if convergence is successful for the required number of times.
-        if(count_conv == n_conv){
-          break
-        }
-      }
-
-      # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
-      if(count_all == n_max_init){
-        est_param <- rep(NA, n_rep + 3 * hnc)
-        break
+  if(hnc == 2){
+    tmp_param <- matrix(NA, n_sobol, 1 + n_rep + 3 * hnc)
+    for(i in 1:n_sobol){
+      fit_main <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE)
+      if(fit_main$return_codes() == 0){
+        tmp <- fit_main$draws()
+        tmp_param[i, ] <- tmp[1, ]
       }
     }
   }else{
-    est_param <- rep(NA, n_rep + 3 * hnc)
+    cl <- makeCluster(detectCores() - 1)
+    clusterExport(cl, varlist = c("model_main", "data_list_main", "init_list", "n_rep", "hnc"))
+    clusterEvalQ(cl, library(cmdstanr))
+
+    tmp_param <- parLapply(cl, 1:n_sobol, function(i){
+      fit_main <- model_main$optimize(data_list_main, init = init_list[[i]])
+      if(fit_main$return_codes() == 0){
+        tmp <- fit_main$draws()
+        return(as.vector(tmp[1, ]))
+      }else{
+        return(rep(NA, 1 + n_rep + 3 * hnc))
+      }
+    })
+    tmp_param <- matrix(unlist(tmp_param), ncol = 1 + n_rep + 3 * hnc, byrow = TRUE)
   }
 
+  index_max_lp <- which.max(tmp_param[, 1])
+  if(length(index_max_lp) == 1){
+    est_param <- tmp_param[index_max_lp, -1]
+  }else{
+    est_param <- rep(NA, n_rep + 3 * hnc)
+  }
   names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), paste0("lambda[", 1:hnc, "]"), paste0("deg[", 1:hnc, "]"), paste0("mp[", 1:hnc, "]"))
+
   return(est_param)
 }
 

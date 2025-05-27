@@ -24,7 +24,7 @@ Imports:
     magrittr, 
     parallel, 
     posterior,
-    randtoolbox, 
+    qrng, 
     Rcpp, 
     rhandsontable, 
     rmarkdown, 
