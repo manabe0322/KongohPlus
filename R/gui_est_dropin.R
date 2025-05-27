@@ -52,8 +52,11 @@ est_dropin_server <- function(id, path_pack){
       rv_est_dropin$fn_ntc <- NULL
       rv_est_dropin$dt_kit <- NULL
       rv_est_dropin$name_kit <- NULL
-      rv_est_dropin$n_conv <- 10
-      rv_est_dropin$n_max_init <- 1000
+      rv_est_dropin$min_shape_di <- 0.01
+      rv_est_dropin$max_shape_di <- 20
+      rv_est_dropin$min_rate_di <- 0.01
+      rv_est_dropin$max_rate_di <- 20
+      rv_est_dropin$initial_point_factor <- 5
       rv_est_dropin$data_est_dropin <- NULL
 
       # Load non template control data
@@ -90,8 +93,17 @@ est_dropin_server <- function(id, path_pack){
         showModal(modalDialog(
           title = "Advanced setting",
           h4("MLE conditions"),
-          numericInput(session$ns("n_conv"), label = "Number of successful convergences", value = rv_est_dropin$n_conv),
-          numericInput(session$ns("n_max_init"), label = "Maximum number of initializations", value = rv_est_dropin$n_max_init),
+          fluidRow(
+            column(6,
+                   numericInput(session$ns("min_shape_di"), label = "Minimum shape parameter", value = rv_est_dropin$min_shape_di),
+                   numericInput(session$ns("min_rate_di"), label = "Minimum rate parameter", value = rv_est_dropin$min_rate_di),
+                   numericInput(session$ns("initial_point_factor"), label = "Initial point factor", value = rv_est_dropin$initial_point_factor)
+            ),
+            column(6,
+                   numericInput(session$ns("max_shape_di"), label = "Maximum shape parameter", value = rv_est_dropin$max_shape_di),
+                   numericInput(session$ns("max_rate_di"), label = "Maximum rate parameter", value = rv_est_dropin$max_rate_di)
+            )
+          ),
           footer = tagList(
             actionButton(session$ns("act_advance_dropin_save"), "Save"),
             modalButton("Cancel")
@@ -100,31 +112,74 @@ est_dropin_server <- function(id, path_pack){
         ))
       })
 
-      observeEvent(input$n_conv | input$n_max_init, {
-        n_conv <- input$n_conv
-        n_max_init <- input$n_max_init
+      observeEvent(input$min_shape_di | input$max_shape_di, {
+        min_shape_di <- input$min_shape_di
+        max_shape_di <- input$max_shape_di
 
-        hideFeedback("n_conv")
-        hideFeedback("n_max_init")
-        bool_correct_mle <- TRUE
+        hideFeedback("min_shape_di")
+        hideFeedback("max_shape_di")
+        rv_est_dropin$bool_correct_mle_shape_di <- TRUE
 
-        if(!is.integer(n_conv) || n_conv <= 0){
-          showFeedbackDanger(inputId = "n_conv", text = "A positive integer is required!")
-          bool_correct_mle <- FALSE
+        if(!is.numeric(min_shape_di) || min_shape_di <= 0){
+          showFeedbackDanger(inputId = "min_shape_di", text = "Value must be positive.")
+          rv_est_dropin$bool_correct_mle_shape_di <- FALSE
         }
 
-        if(!is.integer(n_max_init) || n_max_init <= 0){
-          showFeedbackDanger(inputId = "n_max_init", text = "A positive integer is required!")
-          bool_correct_mle <- FALSE
+        if(!is.numeric(max_shape_di) || max_shape_di <= 0){
+          showFeedbackDanger(inputId = "max_shape_di", text = "Value must be positive.")
+          rv_est_dropin$bool_correct_mle_shape_di <- FALSE
         }
 
-        if(is.integer(n_conv) && is.integer(n_max_init) && n_conv > n_max_init){
-          showFeedbackDanger(inputId = "n_conv", text = "The number of successful convergences must not exceed the maximum number of initializations!")
-          showFeedbackDanger(inputId = "n_max_init", text = "The number of successful convergences must not exceed the maximum number of initializations!")
-          bool_correct_mle <- FALSE
+        if(is.numeric(min_shape_di) && is.numeric(max_shape_di) && max_shape_di < min_shape_di){
+          showFeedbackDanger(inputId = "min_shape_di", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_shape_di", text = "Minimum value cannot be greater than maximum value.")
+          rv_est_dropin$bool_correct_mle_shape_di <- FALSE
+        }
+      })
+
+      observeEvent(input$min_rate_di | input$max_rate_di, {
+        min_rate_di <- input$min_rate_di
+        max_rate_di <- input$max_rate_di
+
+        hideFeedback("min_rate_di")
+        hideFeedback("max_rate_di")
+        rv_est_dropin$bool_correct_mle_rate_di <- TRUE
+
+        if(!is.numeric(min_rate_di) || min_rate_di <= 0){
+          showFeedbackDanger(inputId = "min_rate_di", text = "Value must be positive.")
+          rv_est_dropin$bool_correct_mle_rate_di <- FALSE
         }
 
-        if(bool_correct_mle){
+        if(!is.numeric(max_rate_di) || max_rate_di <= 0){
+          showFeedbackDanger(inputId = "max_rate_di", text = "Value must be positive.")
+          rv_est_dropin$bool_correct_mle_rate_di <- FALSE
+        }
+
+        if(is.numeric(min_rate_di) && is.numeric(max_rate_di) && max_rate_di < min_rate_di){
+          showFeedbackDanger(inputId = "min_rate_di", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_rate_di", text = "Minimum value cannot be greater than maximum value.")
+          rv_est_dropin$bool_correct_mle_rate_di <- FALSE
+        }
+      })
+
+      observeEvent(input$initial_point_factor, {
+        initial_point_factor <- input$initial_point_factor
+
+        hideFeedback("initial_point_factor")
+        rv_est_dropin$bool_correct_mle_initial_point_factor <- TRUE
+
+        if(!is.integer(initial_point_factor) || initial_point_factor <= 0){
+          showFeedbackDanger(inputId = "initial_point_factor", text = "Value must be an integer greater than zero.")
+          rv_est_dropin$bool_correct_mle_initial_point_factor <- FALSE
+        }
+      })
+
+      observe({
+        req(rv_est_dropin)
+
+        if(all(rv_est_dropin$bool_correct_mle_shape_di,
+               rv_est_dropin$bool_correct_mle_rate_di,
+               rv_est_dropin$bool_correct_mle_initial_point_factor)){
           enable("act_advance_dropin_save")
         }else{
           disable("act_advance_dropin_save")
@@ -132,8 +187,11 @@ est_dropin_server <- function(id, path_pack){
       })
 
       observeEvent(input$act_advance_dropin_save, {
-        rv_est_dropin$n_conv <- input$n_conv
-        rv_est_dropin$n_max_init <- input$n_max_init
+        rv_est_dropin$min_shape_di <- input$min_shape_di
+        rv_est_dropin$max_shape_di <- input$max_shape_di
+        rv_est_dropin$min_rate_di <- input$min_rate_di
+        rv_est_dropin$max_rate_di <- input$max_rate_di
+        rv_est_dropin$initial_point_factor <- input$initial_point_factor
         removeModal()
       })
 
@@ -144,8 +202,11 @@ est_dropin_server <- function(id, path_pack){
         fn_ntc <- rv_est_dropin$fn_ntc
         name_kit <- rv_est_dropin$name_kit
         at_dropin <- input$at_dropin
-        n_conv <- rv_est_dropin$n_conv
-        n_max_init <- rv_est_dropin$n_max_init
+        min_shape_di <- rv_est_dropin$min_shape_di
+        max_shape_di <- rv_est_dropin$max_shape_di
+        min_rate_di <- rv_est_dropin$min_rate_di
+        max_rate_di <- rv_est_dropin$max_rate_di
+        initial_point_factor <- rv_est_dropin$initial_point_factor
         dt_kit <- rv_est_dropin$dt_kit
 
         # Check input files and setting
@@ -156,12 +217,15 @@ est_dropin_server <- function(id, path_pack){
           # Load the stan model
           model_dropin <- stan_package_model(name = "model_dropin", package = "KongohPlus")
 
-          data_est_dropin <- estimate_dropin_params(dt_ntc, dt_kit, at_dropin, model_dropin, n_conv, n_max_init)
+          data_est_dropin <- estimate_dropin_params(dt_ntc, dt_kit, at_dropin, model_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, initial_point_factor)
           data_est_dropin$fn_ntc <- fn_ntc
           data_est_dropin$name_kit <- name_kit
           data_est_dropin$at_dropin <- at_dropin
-          data_est_dropin$n_conv <- n_conv
-          data_est_dropin$n_max_init <- n_max_init
+          data_est_dropin$min_shape_di <- min_shape_di
+          data_est_dropin$max_shape_di <- max_shape_di
+          data_est_dropin$min_rate_di <- min_rate_di
+          data_est_dropin$max_rate_di <- max_rate_di
+          data_est_dropin$initial_point_factor <- initial_point_factor
           rv_est_dropin$data_est_dropin <- data_est_dropin
         }
       })
@@ -173,14 +237,15 @@ est_dropin_server <- function(id, path_pack){
           fn_ntc <- data_est_dropin$fn_ntc
           name_kit <- data_est_dropin$name_kit
           at_dropin <- data_est_dropin$at_dropin
-          n_conv <- data_est_dropin$n_conv
-          n_max_init <- data_est_dropin$n_max_init
+          min_shape_di <- data_est_dropin$min_shape_di
+          max_shape_di <- data_est_dropin$max_shape_di
+          min_rate_di <- data_est_dropin$min_rate_di
+          max_rate_di <- data_est_dropin$max_rate_di
+          initial_point_factor <- data_est_dropin$initial_point_factor
           enable("act_saveas_est_dropin_1")
 
           dt_dropin <- data.table(Parameter = c("Number of samples", "Number of markers", "Number of drop-in peaks", "Frequency of drop-in", "Shape parameter", "Rate parameter"),
                                   Value = c(data_est_dropin$n_sample, data_est_dropin$n_mk, data_est_dropin$n_dropin, data_est_dropin$freq_dropin, data_est_dropin$shape_di, data_est_dropin$rate_di))
-          traceplot_shape_di <- data_est_dropin$traceplot_shape_di
-          traceplot_rate_di <- data_est_dropin$traceplot_rate_di
 
           output$dt_dropin <- renderDataTable({
             datatable(
@@ -224,7 +289,7 @@ est_dropin_server <- function(id, path_pack){
           observeEvent(input$act_saveas_est_dropin_2, {
             fn_est_dropin <- input$fn_est_dropin
 
-            save(list = c("fn_ntc", "name_kit", "at_dropin", "n_conv", "n_max_init", "dt_dropin"),
+            save(list = c("fn_ntc", "name_kit", "at_dropin", "min_shape_di", "max_shape_di", "min_rate_di", "max_rate_di", "initial_point_factor", "dt_dropin"),
                  file = paste0(path_pack, "/extdata/dropin/", fn_est_dropin, ".RData"))
 
             removeModal()

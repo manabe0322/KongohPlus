@@ -12,14 +12,49 @@ perform_mle_sr_all_mk(
   meth_model_sr,
   model_sr_gen,
   model_sr_uni,
-  n_conv,
-  n_max_init
+  min_slope,
+  max_slope,
+  min_intercept,
+  max_intercept,
+  min_myu,
+  max_myu,
+  min_sigma,
+  max_sigma,
+  initial_point_factor
 )
 }
 \arguments{
-\item{n_conv}{The number of successful convergences}
+\item{dt_sr_data}{The data.table of the experimental SR data}
 
-\item{n_max_init}{The maximum number of initializations}
+\item{dt_kit}{The data.table of information on the kit}
+
+\item{stutter_type}{"BS": back stutter, "FS": forward stutter, "DS": double-back stutter, "M2S": minus 2-nt stutter}
+
+\item{markers_auto}{A vector of the autosomal markers}
+
+\item{meth_model_sr}{A vector of the methods for estimating parameters of the SR in each marker}
+
+\item{model_sr_gen}{The stan model of the stutter ratio (linear model)}
+
+\item{model_sr_uni}{The stan model of the stutter ratio (uniform model)}
+
+\item{min_slope}{The minimum slope}
+
+\item{max_slope}{The maximum slope}
+
+\item{min_intercept}{The minimum intercept}
+
+\item{max_intercept}{The maximum intercept}
+
+\item{min_myu}{The minimum myu}
+
+\item{max_myu}{The maximum myu}
+
+\item{min_sigma}{The minimum sigma}
+
+\item{max_sigma}{The maximum sigma}
+
+\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
 }
 \description{
 The function to perform MLE for SR of all markers

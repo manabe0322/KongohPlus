@@ -4,7 +4,16 @@
 \alias{run_mle_dropin}
 \title{run_mle_dropin}
 \usage{
-run_mle_dropin(n_dropin, heights, model_dropin, n_conv, n_max_init)
+run_mle_dropin(
+  n_dropin,
+  heights,
+  model_dropin,
+  min_shape_di,
+  max_shape_di,
+  min_rate_di,
+  max_rate_di,
+  initial_point_factor
+)
 }
 \arguments{
 \item{n_dropin}{The number of observed drop-in peaks}
@@ -13,9 +22,15 @@ run_mle_dropin(n_dropin, heights, model_dropin, n_conv, n_max_init)
 
 \item{model_dropin}{The stan model for the drop-in peak heights}
 
-\item{n_conv}{The number of successful convergences}
+\item{min_shape_di}{The minimum shape}
 
-\item{n_max_init}{The maximum number of initializations}
+\item{max_shape_di}{The maximum shape}
+
+\item{min_rate_di}{The minimum rate}
+
+\item{max_rate_di}{The maximum rate}
+
+\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
 }
 \description{
 The function to perform MLE for the drop-in model

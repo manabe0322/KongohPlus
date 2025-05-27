@@ -11,8 +11,15 @@ estimate_average_sr(
   dt_setting_est_sr,
   model_sr_gen,
   model_sr_uni,
-  n_conv,
-  n_max_init
+  min_slope,
+  max_slope,
+  min_intercept,
+  max_intercept,
+  min_myu,
+  max_myu,
+  min_sigma,
+  max_sigma,
+  initial_point_factor
 )
 }
 \description{

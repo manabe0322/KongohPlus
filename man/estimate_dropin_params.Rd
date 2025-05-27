@@ -9,8 +9,11 @@ estimate_dropin_params(
   dt_kit,
   at_dropin,
   model_dropin,
-  n_conv,
-  n_max_init
+  min_shape_di,
+  max_shape_di,
+  min_rate_di,
+  max_rate_di,
+  initial_point_factor
 )
 }
 \description{

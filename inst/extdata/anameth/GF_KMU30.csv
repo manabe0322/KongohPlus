@@ -31,5 +31,5 @@ Genotype filter,Maximum M2SR,,0.1
 Genotype filter,Maximum number of drop-in,,2
 Genotype filter,Maximum height of drop-in,,150
 Drop-in,Frequency of drop-in,,0.004593477
-Drop-in,Shape parameter,,5.26082
-Drop-in,Rate parameter,,0.0886659
+Drop-in,Shape parameter,,5.26074
+Drop-in,Rate parameter,,0.0886642

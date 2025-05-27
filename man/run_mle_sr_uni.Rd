@@ -4,16 +4,30 @@
 \alias{run_mle_sr_uni}
 \title{run_mle_sr_uni}
 \usage{
-run_mle_sr_uni(model_sr_uni, data_list_sr, n_conv, n_max_init)
+run_mle_sr_uni(
+  model_sr_uni,
+  data_list_sr,
+  min_myu,
+  max_myu,
+  min_sigma,
+  max_sigma,
+  initial_point_factor
+)
 }
 \arguments{
-\item{model_sr_uni}{The stan model of the stutter ratio}
+\item{model_sr_uni}{The stan model of the stutter ratio (uniform model)}
 
 \item{data_list_sr}{The data list of the stutter ratio}
 
-\item{n_conv}{The number of successful convergences}
+\item{min_myu}{The minimum myu}
 
-\item{n_max_init}{The maximum number of initializations}
+\item{max_myu}{The maximum myu}
+
+\item{min_sigma}{The minimum sigma}
+
+\item{max_sigma}{The maximum sigma}
+
+\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
 }
 \description{
 The function to perform MLE for the stutter ratio (uniform)

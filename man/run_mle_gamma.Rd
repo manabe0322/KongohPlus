@@ -10,8 +10,11 @@ run_mle_gamma(
   ophs_gamma,
   ats_gamma,
   model_gamma,
-  n_conv,
-  n_max_init
+  min_cv_allele,
+  max_cv_allele,
+  min_cv_stutter,
+  max_cv_stutter,
+  initial_point_factor
 )
 }
 \arguments{
@@ -25,9 +28,15 @@ run_mle_gamma(
 
 \item{model_gamma}{The stan model of the gamma model}
 
-\item{n_conv}{The number of successful convergences}
+\item{min_cv_allele}{The minimum CV for alleles}
 
-\item{n_max_init}{The maximum number of initializations}
+\item{max_cv_allele}{The maximum CV for alleles}
+
+\item{min_cv_stutter}{The minimum CV for stutters}
+
+\item{max_cv_stutter}{The maximum CV for stutters}
+
+\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
 }
 \description{
 The function to perform MLE for the gamma model

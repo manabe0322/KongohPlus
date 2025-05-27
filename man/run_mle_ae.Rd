@@ -4,16 +4,24 @@
 \alias{run_mle_ae}
 \title{run_mle_ae}
 \usage{
-run_mle_ae(prop_ae_data_use, model_ae, n_conv, n_max_init)
+run_mle_ae(
+  prop_ae_data_use,
+  model_ae,
+  min_alpha,
+  max_alpha,
+  initial_point_factor
+)
 }
 \arguments{
 \item{prop_ae_data_use}{A matrix of the proportion of the amplification efficiencies (only data used for MCMC)}
 
 \item{model_ae}{The stan model of the locus-specific amplification efficiency}
 
-\item{n_conv}{The number of successful convergences}
+\item{min_alpha}{The minimum alpha}
 
-\item{n_max_init}{The maximum number of initializations}
+\item{max_alpha}{The maximum alpha}
+
+\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
 }
 \description{
 The function to perform MLE for the locus-specific amplification efficiency

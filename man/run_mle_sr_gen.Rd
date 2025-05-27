@@ -4,16 +4,36 @@
 \alias{run_mle_sr_gen}
 \title{run_mle_sr_gen}
 \usage{
-run_mle_sr_gen(model_sr_gen, data_list_sr, n_conv, n_max_init)
+run_mle_sr_gen(
+  model_sr_gen,
+  data_list_sr,
+  min_slope,
+  max_slope,
+  min_intercept,
+  max_intercept,
+  min_sigma,
+  max_sigma,
+  initial_point_factor
+)
 }
 \arguments{
-\item{model_sr_gen}{The stan model of the stutter ratio}
+\item{model_sr_gen}{The stan model of the stutter ratio (linear model)}
 
 \item{data_list_sr}{The data list of the stutter ratio}
 
-\item{n_conv}{The number of successful convergences}
+\item{min_slope}{The minimum slope}
 
-\item{n_max_init}{The maximum number of initializations}
+\item{max_slope}{The maximum slope}
+
+\item{min_intercept}{The minimum intercept}
+
+\item{max_intercept}{The maximum intercept}
+
+\item{min_sigma}{The minimum sigma}
+
+\item{max_sigma}{The maximum sigma}
+
+\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
 }
 \description{
 The function to perform MLE for the stutter ratio (locus-specific with slope)

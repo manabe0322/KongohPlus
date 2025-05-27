@@ -108,12 +108,20 @@ calc_ave_het_ph_all_data <- function(height_list){
   return(ave_het_ph_all_data)
 }
 
-#' generate_init_ae
+#' generate_init_sobol_ae
 #'
-#' @description The function to generate initial values for estimating AE parameters
+#' @description The function to generate initial values based on Sobol sequence for the LSAE model
+#' @param x Sobol point
 #' @param n_mk The number of markers
-generate_init_ae <- function(n_mk){
-  alpha <- rgamma(n_mk, 1, 1)
+#' @param min_alpha The minimum alpha
+#' @param max_alpha The maximum alpha
+generate_init_sobol_ae <- function(x, n_mk, min_alpha, max_alpha){
+  # Get only one Sobol point (x-th)
+  sobol_vec <- sobol(n = x, d = n_mk, randomize = "digital.shift")[x, ]
+
+  # Scaling
+  alpha <- sobol_vec * (max_alpha - min_alpha) + min_alpha
+
   return(list(list(alpha = alpha)))
 }
 
@@ -122,58 +130,34 @@ generate_init_ae <- function(n_mk){
 #' @description The function to perform MLE for the locus-specific amplification efficiency
 #' @param prop_ae_data_use A matrix of the proportion of the amplification efficiencies (only data used for MCMC)
 #' @param model_ae The stan model of the locus-specific amplification efficiency
-#' @param n_conv The number of successful convergences
-#' @param n_max_init The maximum number of initializations
-run_mle_ae <- function(prop_ae_data_use, model_ae, n_conv, n_max_init){
+#' @param min_alpha The minimum alpha
+#' @param max_alpha The maximum alpha
+#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
+run_mle_ae <- function(prop_ae_data_use, model_ae, min_alpha, max_alpha, initial_point_factor){
   # Prepare data list for the AE model
   n_mk <- nrow(prop_ae_data_use)
   data_list_ae <- list(N = ncol(prop_ae_data_use), N_Mk = n_mk, PAE = prop_ae_data_use)
 
-  count_all <- 0
-  count_conv <- 0
-  max_lp <- -Inf
-  est_param <- rep(NA, n_mk)
+  n_sobol <- initial_point_factor * n_mk
+  init_list <- lapply(1:n_sobol, function(x) generate_init_sobol_ae(x, n_mk, min_alpha, max_alpha))
 
-  # Repeat random initialization and optimization until the condition is satisfied
-  repeat{
-    count_all <- count_all + 1
-    init_vals <- generate_init_ae(n_mk)
-    fit <- model_ae$optimize(data_list_ae, init = init_vals)
-
-    # If convergence is successful, perform the following steps
+  tmp_param <- matrix(NA, n_sobol, 1 + n_mk)
+  for(i in 1:n_sobol){
+    fit <- model_ae$optimize(data_list_ae, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
     if(fit$return_codes() == 0){
-      lp <- fit$lp()
-
-      # If the difference between the current likelihood and the maximum likelihood is less than 1e-6, the current run is considered convergent.
-      if(abs(max_lp - lp) < 1e-6){
-        count_conv <- count_conv + 1
-        if(lp - max_lp > 0){
-          max_lp <- lp
-          est_param <- fit$mle()
-        }
-      }
-
-      # Reset convergence count to 1 if a new maximum likelihood is found.
-      else if(lp - max_lp > 0){
-        count_conv <- 1
-        max_lp <- lp
-        est_param <- fit$mle()
-      }
-
-      # Stop the simulation if convergence is successful for the required number of times.
-      if(count_conv == n_conv){
-        break
-      }
-
-      # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
-      if(count_all == n_max_init){
-        est_param <- rep(NA, n_mk)
-        break
-      }
+      tmp <- fit$draws()
+      tmp_param[i, ] <- tmp[1, ]
     }
   }
 
+  index_max_lp <- which.max(tmp_param[, 1])
+  if(length(index_max_lp) == 1){
+    est_param <- tmp_param[index_max_lp, -1]
+  }else{
+    est_param <- rep(NA, n_mk)
+  }
   names(est_param) <- paste0("alpha[", 1:n_mk, "]")
+
   return(est_param)
 }
 
@@ -398,12 +382,22 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, al
               "ats_gamma" = ats_gamma))
 }
 
-#' generate_init_gamma
+#' generate_init_sobol_gamma
 #'
-#' @description The function to generate initial values for estimating gamma parameters
-generate_init_gamma <- function(){
-  cv_allele <- runif(1, min = 0, max = 100)
-  cv_stutter <- runif(1, min = 0, max = 100)
+#' @description The function to generate initial values based on Sobol sequence for the gamma model
+#' @param x Sobol point
+#' @param min_cv_allele The minimum CV for alleles
+#' @param max_cv_allele The maximum CV for alleles
+#' @param min_cv_stutter The minimum CV for stutters
+#' @param max_cv_stutter The maximum CV for stutters
+generate_init_sobol_gamma <- function(x, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter){
+  # Get only one Sobol point (x-th)
+  sobol_vec <- sobol(n = x, d = 2, randomize = "digital.shift")[x, ]
+
+  # Index partitioning and scaling
+  cv_allele <- sobol_vec[1] * (max_cv_allele - min_cv_allele) + min_cv_allele
+  cv_stutter <- sobol_vec[2] * (max_cv_stutter - min_cv_stutter) + min_cv_stutter
+
   return(list(list(cv_allele = cv_allele, cv_stutter = cv_stutter)))
 }
 
@@ -415,64 +409,45 @@ generate_init_gamma <- function(){
 #' @param ophs_gamma The observed peak heights for the gamma distribution
 #' @param ats_gamma The analytical thresholds for the gamma distribution
 #' @param model_gamma The stan model of the gamma model
-#' @param n_conv The number of successful convergences
-#' @param n_max_init The maximum number of initializations
-run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_gamma, n_conv, n_max_init){
+#' @param min_cv_allele The minimum CV for alleles
+#' @param max_cv_allele The maximum CV for alleles
+#' @param min_cv_stutter The minimum CV for stutters
+#' @param max_cv_stutter The maximum CV for stutters
+#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
+run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, initial_point_factor){
   # Prepare data list for the gamma model
   data_list_gamma <- list(N = length(tphs_gamma), RPH = rphs_gamma, TPH = tphs_gamma, OPH = ophs_gamma, AT = ats_gamma)
 
-  count_all <- 0
-  count_conv <- 0
-  max_lp <- -Inf
-  est_param <- rep(NA, 2)
+  n_sobol <- initial_point_factor * 2
+  init_list <- lapply(1:n_sobol, function(x) generate_init_sobol_gamma(x, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter))
 
-  # Repeat random initialization and optimization until the condition is satisfied
-  repeat{
-    count_all <- count_all + 1
-    init_vals <- generate_init_gamma()
-    fit <- model_gamma$optimize(data_list_gamma, init = init_vals)
-
-    # If convergence is successful, perform the following steps
+  tmp_param <- matrix(NA, n_sobol, 3)
+  for(i in 1:n_sobol){
+    fit <- model_gamma$optimize(data_list_gamma, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
     if(fit$return_codes() == 0){
-      lp <- fit$lp()
-
-      # If the difference between the current likelihood and the maximum likelihood is less than 0.1, the current run is considered convergent.
-      if(abs(max_lp - lp) < 0.1){
-        count_conv <- count_conv + 1
-        if(lp - max_lp > 0){
-          max_lp <- lp
-          est_param <- fit$mle()
-        }
-      }
-
-      # Reset convergence count to 1 if a new maximum likelihood is found.
-      else if(lp - max_lp > 0){
-        count_conv <- 1
-        max_lp <- lp
-        est_param <- fit$mle()
-      }
-
-      # Stop the simulation if convergence is successful for the required number of times.
-      if(count_conv == n_conv){
-        break
-      }
-    }
-
-    # Stop the simulation if the maximum number of simulations is reached, treating it as a convergence failure.
-    if(count_all == n_max_init){
-      est_param <- rep(NA, 2)
-      break
+      tmp <- fit$draws()
+      tmp_param[i, ] <- tmp[1, ]
     }
   }
 
+  index_max_lp <- which.max(tmp_param[, 1])
+  if(length(index_max_lp) == 1){
+    est_param <- tmp_param[index_max_lp, -1]
+  }else{
+    est_param <- rep(NA, 2)
+  }
   names(est_param) <- c("cv_allele", "cv_stutter")
+
   return(est_param)
 }
 
 #' estimate_parameters
 #'
 #' @description The function to estimate parameters of the locus-specific amplification efficiencies and the gamma distribution
-estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par, model_ae, model_gamma, n_conv, n_max_init){
+estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
+                                model_ae, min_alpha, max_alpha,
+                                model_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter,
+                                initial_point_factor){
   # Extract information on setting
   markers_auto <- dt_setting_est_par$Marker
   n_mk_auto <- length(markers_auto)
@@ -504,7 +479,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   prop_ae_data_use <- prop_ae_data[, which(apply(prop_ae_data, 2, prod) > 0), drop = FALSE]
 
   # Perform MCMC for AE
-  alpha <- run_mle_ae(prop_ae_data_use, model_ae, n_conv, n_max_init)
+  alpha <- run_mle_ae(prop_ae_data_use, model_ae, min_alpha, max_alpha, initial_point_factor)
   names(alpha) <- markers_auto
 
   if(any(is.na(alpha))){
@@ -522,7 +497,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     ats_gamma <- tmp$ats_gamma
 
     # Perform MCMC for gamma distribution
-    tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_gamma, n_conv, n_max_init)
+    tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, initial_point_factor)
     cv_allele <- tmp["cv_allele"]
     cv_stutter <- tmp["cv_stutter"]
   }

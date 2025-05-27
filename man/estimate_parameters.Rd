@@ -10,9 +10,14 @@ estimate_parameters(
   list_dt_average_sr,
   dt_setting_est_par,
   model_ae,
+  min_alpha,
+  max_alpha,
   model_gamma,
-  n_conv,
-  n_max_init
+  min_cv_allele,
+  max_cv_allele,
+  min_cv_stutter,
+  max_cv_stutter,
+  initial_point_factor
 )
 }
 \description{
