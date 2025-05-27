@@ -50,9 +50,9 @@ run_mle_1p <- function(model_main, data_list_main, n_rep, tph_mean, tph_sd, n_co
 
   tmp_param <- matrix(NA, n_sobol, n_rep + 2)
   for(i in 1:n_sobol){
-    fit_main <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE)
-    if(fit_main$return_codes() == 0){
-      tmp <- fit_main$draws()
+    fit <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
+    if(fit$return_codes() == 0){
+      tmp <- fit$draws()
       tmp_param[i, ] <- tmp[1, ]
     }
   }
@@ -114,9 +114,9 @@ run_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, n_
   if(hnc == 2){
     tmp_param <- matrix(NA, n_sobol, 1 + n_rep + 3 * hnc)
     for(i in 1:n_sobol){
-      fit_main <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE)
-      if(fit_main$return_codes() == 0){
-        tmp <- fit_main$draws()
+      fit <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
+      if(fit$return_codes() == 0){
+        tmp <- fit$draws()
         tmp_param[i, ] <- tmp[1, ]
       }
     }
@@ -126,9 +126,9 @@ run_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, n_
     clusterEvalQ(cl, library(cmdstanr))
 
     tmp_param <- parLapply(cl, 1:n_sobol, function(i){
-      fit_main <- model_main$optimize(data_list_main, init = init_list[[i]])
-      if(fit_main$return_codes() == 0){
-        tmp <- fit_main$draws()
+      fit <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
+      if(fit$return_codes() == 0){
+        tmp <- fit$draws()
         return(as.vector(tmp[1, ]))
       }else{
         return(rep(NA, 1 + n_rep + 3 * hnc))
