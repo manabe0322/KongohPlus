@@ -186,7 +186,7 @@ calc_log10like_use <- function(dt_pg_list, gtc_logprob_list = NULL){
 
       # Without reference genotype(s)
       else{
-        log10like_use[i] <- -Inf
+        log10like_use[i] <- NA
       }
     }
   }

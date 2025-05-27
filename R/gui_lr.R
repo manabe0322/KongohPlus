@@ -198,17 +198,6 @@ lr_server <- function(id, rv_input, rv_deconvo){
             }
           })
 
-          rowCallback <- c(
-            "function(row, data){",
-            "  for(var i=0; i<data.length; i++){",
-            "    if(data[i] === null){",
-            "      $('td:eq('+i+')', row).html('NA')",
-            "        .css({'color': 'rgb(151,151,151)', 'font-style': 'italic'});",
-            "    }",
-            "  }",
-            "}"
-          )
-
           output$title_lr <- renderText({
             dt_lr_calc_record <- rv_lr$dt_lr_calc_record
             if(is.null(dt_lr_calc_record)){
@@ -224,7 +213,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
               datatable(
                 dt_lr,
                 selection = "none",
-                options = list(dom = "t", iDisplayLength = nrow(dt_lr), ordering = FALSE, autowidth = TRUE, rowCallback = JS(rowCallback),
+                options = list(dom = "t", iDisplayLength = nrow(dt_lr), ordering = FALSE, autowidth = TRUE,
                                columnDefs = list(list(targets = c(1, 2), visible = FALSE))),
                 rownames = FALSE
               ) %>%
@@ -248,7 +237,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
               datatable(
                 dt_lr_calc_record,
                 selection = list(mode = "single", target = "row"),
-                options = list(dom = "t", iDisplayLength = nrow(dt_lr_calc_record), ordering = FALSE, autowidth = TRUE, rowCallback = JS(rowCallback)),
+                options = list(dom = "t", iDisplayLength = nrow(dt_lr_calc_record), ordering = FALSE, autowidth = TRUE),
                 rownames = FALSE
               ) %>%
                 formatSignif(columns = c("LR"), digits = 3) %>%
