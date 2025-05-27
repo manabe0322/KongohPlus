@@ -5,17 +5,18 @@
 \title{run_mle}
 \usage{
 run_mle(
-  model_main,
+  model_name,
   data_list_main,
   n_rep,
   hnc,
   tph_mean,
   tph_sd,
-  n_conv,
-  n_max_init
+  initial_point_factor
 )
 }
 \arguments{
+\item{model_name}{The name of the stan model for deconvolution}
+
 \item{data_list_main}{The input data for stan}
 
 \item{n_rep}{The number of replicates}
@@ -26,11 +27,7 @@ run_mle(
 
 \item{tph_sd}{The SD of the total peak height}
 
-\item{n_conv}{The number of successful convergences}
-
-\item{n_max_init}{The maximum number of initializations}
-
-\item{mdoel_main}{The stan model for deconvolution}
+\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
 }
 \description{
 The function to perform MLE

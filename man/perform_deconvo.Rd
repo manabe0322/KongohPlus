@@ -29,8 +29,7 @@ perform_deconvo(
   cv_allele,
   cv_stutter,
   list_dt_average_sr,
-  n_conv,
-  n_max_init
+  initial_point_factor
 )
 }
 \arguments{
@@ -42,9 +41,7 @@ perform_deconvo(
 
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 
-\item{n_conv}{The number of successful convergences}
-
-\item{n_max_init}{The maximum number of initializations}
+\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
 }
 \description{
 The function to perform mixture deconvolution

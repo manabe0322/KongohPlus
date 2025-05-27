@@ -15,8 +15,7 @@ perform_deconvo_all_noc(
   cv_stutter,
   list_dt_average_sr,
   hnc_all,
-  n_conv,
-  n_max_init
+  initial_point_factor
 )
 }
 \arguments{
@@ -40,9 +39,7 @@ perform_deconvo_all_noc(
 
 \item{hnc_all}{A vector of the assumed number of contributors}
 
-\item{n_conv}{The number of successful convergences}
-
-\item{n_max_init}{The maximum number of initializations}
+\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
 }
 \description{
 The function to perform mixture deconvolution for all assumed number of contributors

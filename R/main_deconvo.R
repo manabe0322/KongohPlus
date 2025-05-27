@@ -37,17 +37,18 @@ generate_init_sobol_1p <- function(x, n_rep, tph_mean, tph_sd){
 #' run_mle_1p
 #'
 #' @description The function to perform MLE for one contributor
-#' @param mdoel_main The stan model for deconvolution
+#' @param model_name The name of the stan model for deconvolution
 #' @param data_list_main The input data for stan
 #' @param n_rep The number of replicates
 #' @param tph_mean The mean of the total peak height
 #' @param tph_sd The SD of the total peak height
 #' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
-run_mle_1p <- function(model_main, data_list_main, n_rep, tph_mean, tph_sd, initial_point_factor){
+run_mle_1p <- function(model_name, data_list_main, n_rep, tph_mean, tph_sd, initial_point_factor){
   n_sobol <- initial_point_factor * (n_rep + 1)
   init_list <- lapply(1:n_sobol, function(x) generate_init_sobol_1p(x, n_rep, tph_mean, tph_sd))
 
   tmp_param <- matrix(NA, n_sobol, n_rep + 2)
+  model_main <- stan_package_model(name = model_name, package = "KongohPlus")
   for(i in 1:n_sobol){
     fit <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
     if(fit$return_codes() == 0){
@@ -98,19 +99,20 @@ generate_init_sobol <- function(x, n_rep, hnc, tph_mean, tph_sd){
 #' run_mle
 #'
 #' @description The function to perform MLE
-#' @param mdoel_main The stan model for deconvolution
+#' @param model_name The name of the stan model for deconvolution
 #' @param data_list_main The input data for stan
 #' @param n_rep The number of replicates
 #' @param hnc The hypothesized number of contributors
 #' @param tph_mean The mean of the total peak height
 #' @param tph_sd The SD of the total peak height
 #' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
-run_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, initial_point_factor){
+run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, initial_point_factor){
   n_sobol <- initial_point_factor * (n_rep + 2 * hnc)
   init_list <- lapply(1:n_sobol, function(x) generate_init_sobol(x, n_rep, hnc, tph_mean, tph_sd))
 
   if(hnc == 2){
     tmp_param <- matrix(NA, n_sobol, 1 + n_rep + 3 * hnc)
+    model_main <- stan_package_model(name = model_name, package = "KongohPlus")
     for(i in 1:n_sobol){
       fit <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
       if(fit$return_codes() == 0){
@@ -120,10 +122,12 @@ run_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, in
     }
   }else{
     cl <- makeCluster(detectCores() - 1)
-    clusterExport(cl, varlist = c("model_main", "data_list_main", "init_list", "n_rep", "hnc"))
+    clusterExport(cl, varlist = c("model_name", "data_list_main", "init_list", "n_rep", "hnc"), envir = environment())
     clusterEvalQ(cl, library(cmdstanr))
+    clusterEvalQ(cl, library(instantiate))
 
     tmp_param <- parLapply(cl, 1:n_sobol, function(i){
+      model_main <- stan_package_model(name = model_name, package = "KongohPlus")
       fit <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
       if(fit$return_codes() == 0){
         tmp <- fit$draws()
@@ -132,6 +136,7 @@ run_mle <- function(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, in
         return(rep(NA, 1 + n_rep + 3 * hnc))
       }
     })
+    stopCluster(cl)
     tmp_param <- matrix(unlist(tmp_param), ncol = 1 + n_rep + 3 * hnc, byrow = TRUE)
   }
 
@@ -498,7 +503,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     if(hnc == 1){
       if(n_rep == 1){
-        model_main <- stan_package_model(name = "model_main_rep1_single", package = "KongohPlus")
+        model_name <- "model_main_rep1_single"
 
         data_list_main <- list(n_mk = n_mk,
                                tph_mean = tph_mean,
@@ -523,7 +528,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                n_gtc_use = n_gtc_use,
                                gtc_logprob_use = unlist(gtc_logprob_use))
       }else{
-        model_main <- stan_package_model(name = "model_main_single", package = "KongohPlus")
+        model_name <- "model_main_single"
 
         data_list_main <- list(n_rep = n_rep,
                                n_mk = n_mk,
@@ -554,11 +559,11 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                gtc_logprob_use = unlist(gtc_logprob_use))
       }
 
-      est_param <- run_mle_1p(model_main, data_list_main, n_rep, tph_mean, tph_sd, initial_point_factor)
+      est_param <- run_mle_1p(model_name, data_list_main, n_rep, tph_mean, tph_sd, initial_point_factor)
 
     }else{
       if(n_rep == 1){
-        model_main <- stan_package_model(name = "model_main_rep1", package = "KongohPlus")
+        model_name <- "model_main_rep1"
 
         data_list_main <- list(hnc = hnc,
                                n_mk = n_mk,
@@ -584,7 +589,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                n_gtc_use = n_gtc_use,
                                gtc_logprob_use = unlist(gtc_logprob_use))
       }else{
-        model_main <- stan_package_model(name = "model_main", package = "KongohPlus")
+        model_name <- "model_main"
 
         data_list_main <- list(hnc = hnc,
                                n_rep = n_rep,
@@ -616,7 +621,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                gtc_logprob_use = unlist(gtc_logprob_use))
       }
 
-      est_param <- run_mle(model_main, data_list_main, n_rep, hnc, tph_mean, tph_sd, initial_point_factor)
+      est_param <- run_mle(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, initial_point_factor)
     }
 
     if(!any(is.na(est_param))){

@@ -10,7 +10,7 @@
 #' @importFrom gtools combinations permutations
 #' @importFrom instantiate stan_package_model
 #' @importFrom magrittr %>%
-#' @importFrom parallel clusterEvalQ clusterExport detectCores makeCluster parLapply
+#' @importFrom parallel clusterEvalQ clusterExport detectCores makeCluster parLapply stopCluster
 #' @importFrom posterior as_draws_df
 #' @importFrom qrng sobol
 #' @importFrom Rcpp sourceCpp
