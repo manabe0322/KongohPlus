@@ -121,7 +121,8 @@ run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, in
       }
     }
   }else{
-    cl <- makeCluster(detectCores() - 1)
+    cores <- min(4, detectCores() - 1)
+    cl <- makeCluster(cores)
     clusterExport(cl, varlist = c("model_name", "data_list_main", "init_list", "n_rep", "hnc"), envir = environment())
     clusterEvalQ(cl, library(cmdstanr))
     clusterEvalQ(cl, library(instantiate))
