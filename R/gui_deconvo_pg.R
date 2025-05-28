@@ -136,7 +136,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
           }
         })
 
-        output$dt_pg_per_comb <- renderDataTable(server = FALSE, {
+        output$dt_pg_per_comb <- renderDataTable(server = TRUE, {
           dt_pg_per_comb <- rv_deconvo_pg$dt_pg_per_comb
           label_dt_pg <- names(dt_pg_per_comb)
           hnc <- as.numeric(input$select_noc_pg)
@@ -154,7 +154,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
           }
         })
 
-        output$dt_pg_per_contrib <- renderDataTable(server = FALSE, {
+        output$dt_pg_per_contrib <- renderDataTable(server = TRUE, {
           dt_pg_per_contrib <- rv_deconvo_pg$dt_pg_per_contrib
           if(!is.null(dt_pg_per_contrib)){
             datatable(
