@@ -146,7 +146,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
               dt_pg_per_comb,
               selection = list(mode = "single", target = "row"),
               options = list(iDisplayLength = 10, ordering = FALSE, autowidth = TRUE, searching = FALSE,
-                             columnDefs = list(list(targets = c(which(is.element(label_dt_pg, "Logprob_gtc")), grep("Loglike", label_dt_pg)) - 1, visible = FALSE))),
+                             columnDefs = list(list(targets = c(grep("Allele", label_dt_pg), which(is.element(label_dt_pg, "Logprob_gtc")), grep("Loglike", label_dt_pg)) - 1, visible = FALSE))),
               rownames = FALSE
             ) %>%
               formatSignif(columns = c("Probability"), digits = 3) %>%
