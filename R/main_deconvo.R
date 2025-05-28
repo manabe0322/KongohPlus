@@ -152,6 +152,69 @@ run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, in
   return(est_param)
 }
 
+#' make_dt_pg_list
+#'
+#' @description The function to make a list of data.tables for the result of probabilistic genotyping
+#' @param markers_use A character vector of the used markers
+#' @param label_contrib A character vector of the contributor names
+#' @param gtc_use Genotype combinations in the used markers
+#' @param gtc_logprob_use A list of the genotype probabilities in each used marker
+#' @param lpd_gtc_use A list of the log likelihood of each genotype in all markers and replicates
+make_dt_pg_list <- function(markers_use, label_contrib, gtc_use, gtc_logprob_use, lpd_gtc_use){
+  hnc <- length(label_contrib)
+  n_mk <- length(gtc_use)
+  n_rep <- length(lpd_gtc_use)
+  dt_pg_list <- vector(mode = "list", length = n_mk)
+
+  for(i in 1:n_mk){
+
+    # Reverse order of the contributor (minor to major -> major to minor)
+    gtc_mk <- matrix(unlist(gtc_use[[i]]), ncol = 2 * hnc, byrow = TRUE)
+    gtc_mk_reorder <- gtc_mk * 0
+    for(j in 1:hnc){
+      gtc_mk_reorder[, c(2 * j - 1, 2 * j)] <- gtc_mk[, c(2 * (hnc - j) + 1, 2 * (hnc - j) + 2)]
+    }
+
+    # Paste two alleles of each contributor
+    tmp_gtc_mk <- gtc_mk_reorder
+    tmp_gtc_mk[which(tmp_gtc_mk == 99, arr.ind = TRUE)] <- "Q"
+    gtc_mk_bind <- matrix("", nrow(gtc_mk), hnc)
+    for(j in 1:hnc){
+      gtc_mk_bind[, j] <- apply(tmp_gtc_mk[, c(2 * j - 1, 2 * j)], 1, paste, collapse = ", ")
+    }
+
+    # Calculate posterior probabilities of each genotype combination
+    gtc_logprob_mk <- gtc_logprob_use[[i]]
+    loglike_gtc <- gtc_logprob_mk
+    for(j in 1:n_rep){
+      loglike_gtc <- loglike_gtc + lpd_gtc_use[[j]][[i]]
+    }
+    tmp <- exp(loglike_gtc)
+    post_prob_gtc <- tmp / sum(tmp)
+
+    # Make a data.table
+    mat_pg <- cbind(gtc_mk_reorder, gtc_mk_bind, gtc_logprob_mk)
+    for(j in 1:n_rep){
+      mat_pg <- cbind(mat_pg, lpd_gtc_use[[j]][[i]])
+    }
+    mat_pg <- cbind(mat_pg, loglike_gtc, post_prob_gtc)
+    mat_pg <- mat_pg[post_prob_gtc != 0, , drop = FALSE]
+    dt_pg <- as.data.table(mat_pg)
+    names(dt_pg) <- c(paste0("Allele", 1:(2 * hnc)), label_contrib, "Logprob_gtc", paste0("Loglike_ph_rep", 1:n_rep), "Loglike", "Probability")
+
+    # Change data type
+    col_numeric <- c(paste0("Allele", 1:(2 * hnc)), "Logprob_gtc", paste0("Loglike_ph_rep", 1:n_rep), "Loglike", "Probability")
+    dt_pg[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
+
+    # Descending order for posterior probabilities
+    dt_pg <- dt_pg[order(dt_pg[, Probability], decreasing = TRUE)]
+
+    dt_pg_list[[i]] <- dt_pg
+  }
+  names(dt_pg_list) <- markers_use
+  return(dt_pg_list)
+}
+
 #' perform_deconvo
 #'
 #' @description The function to perform mixture deconvolution
