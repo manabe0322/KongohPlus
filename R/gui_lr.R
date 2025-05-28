@@ -150,7 +150,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
               # Extract data for Hd
               data_hd <- data_hnc_list[[which(hnc_all == noc_hd)]]
               error_message_hd <- data_hd$error_message
-              dt_pg_list_hd <- data_hp$dt_pg_list
+              dt_pg_list_hd <- data_hd$dt_pg_list
 
               n_row <- length(markers_use) + 1
               n_ref_hp <- length(hp)
