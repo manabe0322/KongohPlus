@@ -6,6 +6,11 @@
 \usage{
 make_n_obs(pop_al, prof_ref)
 }
+\arguments{
+\item{pop_al}{A vector of the alleles in the population database}
+
+\item{prof_ref}{A vector of the reference alleles in one marker}
+}
 \description{
 The function to make an object for the number of observed alleles in reference profiles
 }
