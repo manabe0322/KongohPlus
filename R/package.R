@@ -11,7 +11,6 @@
 #' @importFrom instantiate stan_package_model
 #' @importFrom magrittr %>%
 #' @importFrom parallel clusterEvalQ clusterExport detectCores makeCluster parLapply stopCluster
-#' @importFrom posterior as_draws_df
 #' @importFrom qrng sobol
 #' @importFrom Rcpp sourceCpp
 #' @importFrom rhandsontable hot_cell hot_col hot_table hot_to_r renderRHandsontable rhandsontable rHandsontableOutput
