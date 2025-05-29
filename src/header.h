@@ -1,4 +1,5 @@
 #include <Rcpp.h>
+#include <omp.h>      // OpenMP
 #include <cmath>      // round, pow
 #include <iostream>   // push_back
 #include <numeric>    // accumulate

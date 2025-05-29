@@ -64,6 +64,7 @@ std::vector<double> calc_gtc_prob_mk(std::vector<std::vector<double>> gtc_mk,
   int n_gtc_mk = gtc_mk.size();
   std::vector<double> gtc_prob_mk(n_gtc_mk);
 
+  #pragma omp parallel for
   for(int i = 0; i < n_gtc_mk; ++i){
     std::vector<double> gtc = gtc_mk.at(i);
     gtc_prob_mk[i] = calc_gtc_prob(gtc, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al);

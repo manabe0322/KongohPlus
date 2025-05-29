@@ -1,59 +1,3 @@
-#' make_dt_pg_list
-#'
-#' @description The function to make a list of data.tables for the result of probabilistic genotyping
-#' @param markers_use A character vector of the used markers
-#' @param label_contrib A character vector of the contributor names
-#' @param gtc_use Genotype combinations in the used markers
-#' @param gtc_logprob_use A list of the genotype probabilities in each used marker
-#' @param lpd_gtc_use A list of the log likelihood of each genotype in all markers and replicates
-make_dt_pg_list <- function(markers_use, label_contrib, gtc_use, gtc_logprob_use, lpd_gtc_use){
-  hnc <- length(label_contrib)
-  n_mk <- length(gtc_use)
-  n_rep <- length(lpd_gtc_use)
-  dt_pg_list <- vector(mode = "list", length = n_mk)
-
-  for(i in 1:n_mk){
-
-    # Paste two alleles of each contributor and reverse the contributor order (minor to major -> major to minor)
-    gtc_mk <- matrix(unlist(gtc_use[[i]]), ncol = 2 * hnc, byrow = TRUE)
-    gtc_mk[which(gtc_mk == 99, arr.ind = TRUE)] <- "Q"
-    gtc_mk_new <- matrix("", nrow(gtc_mk), hnc)
-    for(j in 1:hnc){
-      gtc_mk_new[, j] <- apply(gtc_mk[, c(2 * (hnc - j) + 1, 2 * (hnc - j) + 2)], 1, paste, collapse = ", ")
-    }
-
-    # Calculate posterior probabilities of each genotype combination
-    gtc_logprob_mk <- gtc_logprob_use[[i]]
-    loglike_gtc <- gtc_logprob_mk
-    for(j in 1:n_rep){
-      loglike_gtc <- loglike_gtc + lpd_gtc_use[[j]][[i]]
-    }
-    tmp <- exp(loglike_gtc)
-    post_prob_gtc <- tmp / sum(tmp)
-
-    # Make a data.table
-    mat_pg <- cbind(gtc_mk_new, gtc_logprob_mk)
-    for(j in 1:n_rep){
-      mat_pg <- cbind(mat_pg, lpd_gtc_use[[j]][[i]])
-    }
-    mat_pg <- cbind(mat_pg, loglike_gtc, post_prob_gtc)
-    mat_pg <- mat_pg[post_prob_gtc != 0, , drop = FALSE]
-    dt_pg <- as.data.table(mat_pg)
-    names(dt_pg) <- c(label_contrib, "Logprob_gtc", paste0("Loglike_ph_rep", 1:n_rep), "Loglike", "Probability")
-
-    # Change data type
-    col_numeric <- c("Logprob_gtc", paste0("Loglike_ph_rep", 1:n_rep), "Loglike", "Probability")
-    dt_pg[, (col_numeric) := lapply(.SD, as.numeric), .SDcols = col_numeric]
-
-    # Descending order for posterior probabilities
-    dt_pg <- dt_pg[order(dt_pg[, Probability], decreasing = TRUE)]
-
-    dt_pg_list[[i]] <- dt_pg
-  }
-  names(dt_pg_list) <- markers_use
-  return(dt_pg_list)
-}
-
 #' extract_prof_ref
 #'
 #' @description The function to extract reference profiles of one marker
@@ -140,6 +84,8 @@ make_hyp_id_all <- function(hnc, hyp, refs){
 #' make_n_obs
 #'
 #' @description The function to make an object for the number of observed alleles in reference profiles
+#' @param pop_al A vector of the alleles in the population database
+#' @param prof_ref A vector of the reference alleles in one marker
 make_n_obs <- function(pop_al, prof_ref){
   prob_al <- sort(unique(c(pop_al, prof_ref)))
   n_obs <- rep(0, length(prob_al))
@@ -157,14 +103,15 @@ make_n_obs <- function(pop_al, prof_ref){
 #'
 #' @description The function to calculate the log10 likelihood of all markers
 #' @param dt_pg_list A list of the PG data.table for all markers
-#' @param gtc_logprob_list A list of the lob probabilities of each genotype combination for all markers when assuming POI or known contributors
-calc_log10like_use <- function(dt_pg_list, gtc_logprob_list = NULL){
+#' @param gtc_logprob_all_mk A list of the lob probabilities of each genotype combination for all markers when assuming POI or known contributors
+#' @param index_hyp The index of the targeted hypothesis
+calc_log10like_use <- function(dt_pg_list, gtc_logprob_all_mk = NULL, index_hyp = NULL){
   n_mk <- length(dt_pg_list)
   log10like_use <- rep(0, n_mk)
   names(log10like_use) <- names(dt_pg_list)
 
   # log10 likelihood in each marker
-  if(is.null(gtc_logprob_list)){
+  if(is.null(gtc_logprob_all_mk)){
     for(i in 1:n_mk){
       dt_pg <- dt_pg_list[[i]]
       loglike_gtc <- dt_pg$Loglike
@@ -174,7 +121,7 @@ calc_log10like_use <- function(dt_pg_list, gtc_logprob_list = NULL){
     n_rep <- length(grep("Loglike_ph_rep", names(dt_pg_list[[1]])))
     for(i in 1:n_mk){
       dt_pg <- dt_pg_list[[i]]
-      loglike_gtc <- gtc_logprob_list[[i]]
+      loglike_gtc <- gtc_logprob_all_mk[[i]][[index_hyp]]
 
       # With reference genotype(s)
       if(!is.null(loglike_gtc)){
@@ -216,6 +163,50 @@ calc_subsub_source_like <- function(log10like_all_hyp){
   return(log10like_adopt)
 }
 
+#' calc_gtc_logprob_all_hyp
+#'
+#' @description The function to calculate log-probability of each genotype combination for all hypotheses
+#' @param mk The marker name
+#' @param hyp_id_all IDs of all possible hypotheses
+#' @param prof_ref_all The object is created by the function 'create_prof_ref_all'
+#' @param prof_ref_99_all The object is created by the function 'create_prof_ref_all'
+#' @param pop_al_list A list of the alleles in population database
+#' @param pop_prob_list A list of the allele probabilities in population database
+#' @param dt_pg_list A list of the PG data.table for all markers
+#' @param theta The theta value to consider sub-population effect
+calc_gtc_logprob_all_hyp <- function(mk, hyp_id_all, prof_ref_all, prof_ref_99_all, pop_al_list, pop_prob_list, dt_pg_list, theta){
+  n_hyp <- nrow(hyp_id_all)
+  gtc_logprob_all_hyp <- vector(mode = "list", length = n_hyp)
+
+  # Check reference profiles of assumed contributors are obtained or not
+  prof_ref <- prof_ref_all[mk, ]
+  tmp <- setdiff(as.vector(hyp_id_all), 0)
+  index_ref_contrib <- sort(c(2 * tmp - 1, 2 * tmp))
+  if(all(prof_ref[index_ref_contrib] != -1)){
+    # Extract data of one marker
+    prof_ref_99 <- prof_ref_99_all[mk, ]
+    pop_al <- pop_al_list[[mk]]
+    pop_prob <- pop_prob_list[[mk]]
+    dt_pg <- dt_pg_list[[mk]]
+
+    # Calculate genotype probabilities
+    n_obs <- make_n_obs(pop_al, prof_ref[prof_ref != -1])
+    obs_al <- as.numeric(names(n_obs))
+
+    # Make a list of genotype combinations for C++ format
+    gtc_mk <- as.matrix(dt_pg[, grep("Allele", names(dt_pg), value = TRUE), with = FALSE])
+    gtc_mk <- split(gtc_mk, row(gtc_mk))
+
+    # Calculate genotype probabilities
+    for(i in 1:n_hyp){
+      gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id_all[i, ], n_obs, obs_al)
+      gtc_logprob_all_hyp[[i]] <- log(gtc_prob_mk)
+    }
+  }
+
+  return(gtc_logprob_all_hyp)
+}
+
 #' assign_log10like
 #'
 #' @description The function to assign the log10 likelihood
@@ -247,50 +238,14 @@ assign_log10like <- function(hnc, markers_use, peaks_list, pop_al_list, pop_prob
     prof_ref_all <- tmp$prof_ref_all
     prof_ref_99_all <- tmp$prof_ref_99_all
 
-    gtc_logprob_all_hyp <- vector(mode = "list", length = n_hyp)
-    for(i in 1:n_hyp){
-      gtc_logprob_all_hyp[[i]] <- vector(mode = "list", length = n_mk)
-    }
-
+    gtc_logprob_all_mk <- vector(mode = "list", length = n_mk)
     for(i in 1:n_mk){
-
-      # Check reference profiles of assumed contributors are obtained or not
-      mk <- markers_use[i]
-      prof_ref <- prof_ref_all[mk, ]
-      tmp <- setdiff(as.vector(hyp_id_all), 0)
-      index_ref_contrib <- sort(c(2 * tmp - 1, 2 * tmp))
-      if(all(prof_ref[index_ref_contrib] != -1)){
-
-        # Extract data of one marker
-        prof_ref_99 <- prof_ref_99_all[mk, ]
-        pop_al <- pop_al_list[[mk]]
-        pop_prob <- pop_prob_list[[mk]]
-        dt_pg <- dt_pg_list[[mk]]
-
-        # Calculate genotype probabilities
-        n_obs <- make_n_obs(pop_al, prof_ref[prof_ref != -1])
-        obs_al <- as.numeric(names(n_obs))
-
-        # Make a list of genotype combinations for C++ format
-        gtc_mk <- matrix("", nrow(dt_pg), 2 * hnc)
-        for(j in 1:hnc){
-          gtc_mk[, c(2 * j - 1, 2 * j)] <- matrix(unlist(strsplit(dt_pg[[paste0("U", j)]], ", ")), ncol = 2, byrow = TRUE)
-        }
-        gtc_mk[which(gtc_mk == "Q", arr.ind = TRUE)] <- "99"
-        gtc_mk <- split(gtc_mk, row(gtc_mk))
-        gtc_mk <- lapply(gtc_mk, as.numeric)
-
-        # Calculate genotype probabilities
-        for(j in 1:n_hyp){
-          gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id_all[j, ], n_obs, obs_al)
-          gtc_logprob_all_hyp[[j]][[i]] <- log(gtc_prob_mk)
-        }
-      }
+      gtc_logprob_all_mk[[i]] <- calc_gtc_logprob_all_hyp(markers_use[i], hyp_id_all, prof_ref_all, prof_ref_99_all, pop_al_list, pop_prob_list, dt_pg_list, theta)
     }
 
     log10like_all_hyp <- matrix(0, n_mk, n_hyp)
     for(i in 1:n_hyp){
-      log10like_all_hyp[, i] <- calc_log10like_use(dt_pg_list, gtc_logprob_all_hyp[[i]])
+      log10like_all_hyp[, i] <- calc_log10like_use(dt_pg_list, gtc_logprob_all_mk, i)
     }
   }
 
