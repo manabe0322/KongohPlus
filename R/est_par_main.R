@@ -242,16 +242,14 @@ calc_relative_ph <- function(cand_peaks, gt, ae, allele_sr, bsr_average, fsr_ave
 #' @param peak_list A list of the peaks
 #' @param height_list A list of the heights
 #' @param gt_list A list of the genotypes
-#' @param alpha A vector of the estimated alpha of the Dirichlet distribution for the locus-specific amplification efficiencies
+#' @param expect_ae A vector of the expected locus-specific amplification efficiencies
 #' @param ave_het_ph_all_data A vector of the average heterozygote allele peak heights
 #' @param list_dt_average_sr A list of the average stutter ratios
 #' @param sr_consider_auto Information on consideration of back, forward, double-back, and minus 2-nt stutters in autosomal markers
 #' @param at_auto A vector of ATs in each autosomal marker
-prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto){
+prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, expect_ae, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto){
   n_sample <- length(gt_list)
   n_mk <- length(markers_auto)
-
-  expect_ae_all_mk <- n_mk * (alpha + 1) / (sum(alpha) + n_mk)
 
   sum_peaks_all <- length(unlist(peak_list))
   rphs_gamma_list <- vector(mode = "list", length = n_sample)
@@ -287,7 +285,7 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, al
         gt <- round(as.numeric(gt), 1)
 
         heights <- height_s1[[j]]
-        ae <- expect_ae_all_mk[j]
+        ae <- expect_ae[j]
         mk <- markers_auto[j]
         dt_average_sr <- list_dt_average_sr[[mk]]
         allele_sr <- round(as.numeric(dt_average_sr$Allele), 1)
@@ -480,17 +478,20 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
 
   # Perform MCMC for AE
   alpha <- run_mle_ae(prop_ae_data_use, model_ae, min_alpha, max_alpha, initial_point_factor)
-  names(alpha) <- markers_auto
 
   if(any(is.na(alpha))){
     cv_allele <- cv_stutter <- NA
 
   }else{
+    # Calculate expected LSAE
+    expect_ae <- n_mk_auto * (alpha + 1) / (sum(alpha) + n_mk_auto)
+    names(expect_ae) <- markers_auto
+
     # Prepare data for average heterozygote allele peak heights
     ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
 
     # Prepare peak height data for estimating gamma distribution
-    tmp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, alpha, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto)
+    tmp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, expect_ae, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto)
     rphs_gamma <- tmp$rphs_gamma
     tphs_gamma <- tmp$tphs_gamma
     ophs_gamma <- tmp$ophs_gamma
@@ -503,6 +504,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   }
 
   return(list("alpha" = alpha,
+              "expect_ae" = expect_ae,
               "cv_allele" = cv_allele,
               "cv_stutter" = cv_stutter))
 }
