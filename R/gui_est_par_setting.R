@@ -17,7 +17,7 @@ est_par_setting_ui <- function(id){
                           ),
                           br(),
                           h4("Kit"),
-                          uiOutput(ns("name_kit")),
+                          uiOutput(ns("name_kit_param")),
                           br(),
                           actionButton(ns("act_advance_par"), "Advanced setting"),
                           br(),
@@ -63,13 +63,13 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
     id,
     function(input, output, session){
       rv_est_par <- reactiveValues()
-      rv_est_par$dt_exp <- NULL
-      rv_est_par$fn_exp <- NULL
-      rv_est_par$dt_gt <- NULL
-      rv_est_par$fn_gt <- NULL
+      rv_est_par$dt_exp_param <- NULL
+      rv_est_par$fn_exp_param <- NULL
+      rv_est_par$dt_gt_param <- NULL
+      rv_est_par$fn_gt_param <- NULL
       rv_est_par$dt_setting_est_par <- NULL
       rv_est_par$list_dt_average_sr <- NULL
-      rv_est_par$name_kit <- NULL
+      rv_est_par$name_kit_param <- NULL
       rv_est_par$name_sr <- NULL
       rv_est_par$min_alpha <- 0.01
       rv_est_par$max_alpha <- 100
@@ -88,10 +88,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       observeEvent(input$exp_data, {
         file_input <- input$exp_data
         if(!is.null(file_input)){
-          dt_exp <- fread(file_input$datapath)
-          dt_exp <- change_data_type_exp(dt_exp)
-          rv_est_par$dt_exp <- dt_exp
-          rv_est_par$fn_exp <- file_input$name
+          dt_exp_param <- fread(file_input$datapath)
+          dt_exp_param <- change_data_type_exp(dt_exp_param)
+          rv_est_par$dt_exp_param <- dt_exp_param
+          rv_est_par$fn_exp_param <- file_input$name
         }
       })
 
@@ -99,10 +99,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       observeEvent(input$gt_data, {
         file_input <- input$gt_data
         if(!is.null(file_input)){
-          dt_gt <- fread(file_input$datapath)
-          dt_gt <- change_data_type_gt(dt_gt)
-          rv_est_par$dt_gt <- dt_gt
-          rv_est_par$fn_gt <- file_input$name
+          dt_gt_param <- fread(file_input$datapath)
+          dt_gt_param <- change_data_type_gt(dt_gt_param)
+          rv_est_par$dt_gt_param <- dt_gt_param
+          rv_est_par$fn_gt_param <- file_input$name
         }
       })
 
@@ -115,7 +115,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         if(length(path_sr) > 0){
           load(path_sr)
           rv_est_par$list_dt_average_sr <- list_dt_average_sr
-          rv_est_par$name_kit <- name_kit
+          rv_est_par$name_kit_param <- name_kit_stutter
           rv_est_par$name_sr <- str_replace(basename(path_sr), ".{6}$", "")
         }
       })
@@ -125,14 +125,14 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       })
 
       # Kit
-      output$name_kit <- renderUI({
-        disabled(textInput(session$ns("name_kit"), label = "", value = rv_est_par$name_kit))
+      output$name_kit_param <- renderUI({
+        disabled(textInput(session$ns("name_kit_param"), label = "", value = rv_est_par$name_kit_param))
       })
 
-      observeEvent(input$name_kit, ignoreInit = TRUE, {
-        name_kit <- rv_est_par$name_kit
-        if(!is.null(name_kit)){
-          dt_kit <- fread(paste0(path_pack, "/extdata/kit/", name_kit, ".csv"))
+      observeEvent(input$name_kit_param, ignoreInit = TRUE, {
+        name_kit_param <- rv_est_par$name_kit_param
+        if(!is.null(name_kit_param)){
+          dt_kit <- fread(paste0(path_pack, "/extdata/kit/", name_kit_param, ".csv"))
           dt_kit <- change_data_type_kit(dt_kit)
           rv_est_par$dt_setting_est_par <- dt_setting_est_par <- create_init_dt_setting_est_par(dt_kit)
 
@@ -286,8 +286,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       # Start estimating parameters
       observeEvent(input$act_analyze_est_par, {
         # Fix data
-        dt_exp <- rv_est_par$dt_exp
-        dt_gt <- rv_est_par$dt_gt
+        dt_exp_param <- rv_est_par$dt_exp_param
+        dt_gt_param <- rv_est_par$dt_gt_param
         rv_est_par$dt_setting_est_par <- dt_setting_est_par <- hot_to_r(input$dt_setting_est_par)
         list_dt_average_sr <- rv_est_par$list_dt_average_sr
         min_alpha <- rv_est_par$min_alpha
@@ -299,7 +299,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         initial_point_factor <- rv_est_par$initial_point_factor
 
         # Check input files and setting
-        error_message <- check_est_par(dt_exp, dt_gt, dt_setting_est_par)
+        error_message <- check_est_par(dt_exp_param, dt_gt_param, dt_setting_est_par)
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
@@ -307,7 +307,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           model_ae <- stan_package_model(name = "model_ae", package = "KongohPlus")
           model_gamma <- stan_package_model(name = "model_gamma", package = "KongohPlus")
 
-          rv_est_par$data_est_par <- estimate_parameters(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
+          rv_est_par$data_est_par <- estimate_parameters(dt_exp_param, dt_gt_param, list_dt_average_sr, dt_setting_est_par,
                                                          model_ae, min_alpha, max_alpha,
                                                          model_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter,
                                                          initial_point_factor)

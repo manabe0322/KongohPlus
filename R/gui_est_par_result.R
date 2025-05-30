@@ -39,11 +39,11 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
       data_est_par <- rv_est_par$data_est_par
 
       if(!is.null(data_est_par)){
-        fn_exp <- rv_est_par$fn_exp
-        fn_gt <- rv_est_par$fn_gt
+        fn_exp_param <- rv_est_par$fn_exp_param
+        fn_gt_param <- rv_est_par$fn_gt_param
         dt_setting_est_par <- rv_est_par$dt_setting_est_par
         list_dt_average_sr <- rv_est_par$list_dt_average_sr
-        name_kit <- rv_est_par$name_kit
+        name_kit_param <- rv_est_par$name_kit_param
         name_sr <- rv_est_par$name_sr
         min_alpha <- rv_est_par$min_alpha
         max_alpha <- rv_est_par$max_alpha
@@ -53,6 +53,7 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         max_cv_stutter <- rv_est_par$max_cv_stutter
         initial_point_factor <- rv_est_par$initial_point_factor
         alpha <- data_est_par$alpha
+        expect_ae <- data_est_par$expect_ae
         cv_allele <- data_est_par$cv_allele
         cv_stutter <- data_est_par$cv_stutter
 
@@ -89,7 +90,7 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         observeEvent(input$act_saveas_est_par_2, {
           fn_est_par <- input$fn_est_par
 
-          save(list = c("fn_exp", "fn_gt", "dt_setting_est_par", "list_dt_average_sr", "name_kit", "name_sr", "alpha", "cv_allele", "cv_stutter",
+          save(list = c("fn_exp_param", "fn_gt_param", "dt_setting_est_par", "list_dt_average_sr", "name_kit_param", "name_sr", "alpha", "expect_ae", "cv_allele", "cv_stutter",
                         "min_alpha", "max_alpha", "min_cv_allele", "max_cv_allele", "min_cv_stutter", "max_cv_stutter", "initial_point_factor"),
                file = paste0(path_pack, "/extdata/param/", fn_est_par, ".RData"))
 

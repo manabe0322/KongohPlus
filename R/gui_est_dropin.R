@@ -15,7 +15,7 @@ est_dropin_ui <- function(id){
                       h4("Kit"),
                       fluidRow(
                         column(3, br(), shinyFilesButton(ns("load_kit"), label = "Load", title = "Kit", multiple = FALSE)),
-                        column(9, uiOutput(ns("name_kit")))
+                        column(9, uiOutput(ns("name_kit_dropin")))
                       ),
                       br(),
                       numericInput(ns("at_dropin"), label = h4("Analytical threshold"), value = 25),
@@ -51,7 +51,7 @@ est_dropin_server <- function(id, path_pack){
       rv_est_dropin$dt_ntc <- NULL
       rv_est_dropin$fn_ntc <- NULL
       rv_est_dropin$dt_kit <- NULL
-      rv_est_dropin$name_kit <- NULL
+      rv_est_dropin$name_kit_dropin <- NULL
       rv_est_dropin$min_shape_di <- 0.01
       rv_est_dropin$max_shape_di <- 20
       rv_est_dropin$min_rate_di <- 0.01
@@ -79,12 +79,12 @@ est_dropin_server <- function(id, path_pack){
         if(length(path_kit) > 0){
           dt_kit <- fread(path_kit)
           rv_est_dropin$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
-          rv_est_dropin$name_kit <- str_replace(basename(path_kit), ".{4}$", "")
+          rv_est_dropin$name_kit_dropin <- str_replace(basename(path_kit), ".{4}$", "")
         }
       })
 
-      output$name_kit <- renderUI({
-        disabled(textInput(session$ns("name_kit"), label = "", value = rv_est_dropin$name_kit))
+      output$name_kit_dropin <- renderUI({
+        disabled(textInput(session$ns("name_kit_dropin"), label = "", value = rv_est_dropin$name_kit_dropin))
       })
 
       #### Advanced setting ####
@@ -200,7 +200,7 @@ est_dropin_server <- function(id, path_pack){
         # Fix data
         dt_ntc <- rv_est_dropin$dt_ntc
         fn_ntc <- rv_est_dropin$fn_ntc
-        name_kit <- rv_est_dropin$name_kit
+        name_kit_dropin <- rv_est_dropin$name_kit_dropin
         at_dropin <- input$at_dropin
         min_shape_di <- rv_est_dropin$min_shape_di
         max_shape_di <- rv_est_dropin$max_shape_di
@@ -219,7 +219,7 @@ est_dropin_server <- function(id, path_pack){
 
           data_est_dropin <- estimate_dropin_params(dt_ntc, dt_kit, at_dropin, model_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, initial_point_factor)
           data_est_dropin$fn_ntc <- fn_ntc
-          data_est_dropin$name_kit <- name_kit
+          data_est_dropin$name_kit_dropin <- name_kit_dropin
           data_est_dropin$at_dropin <- at_dropin
           data_est_dropin$min_shape_di <- min_shape_di
           data_est_dropin$max_shape_di <- max_shape_di
@@ -235,17 +235,23 @@ est_dropin_server <- function(id, path_pack){
         data_est_dropin <- rv_est_dropin$data_est_dropin
         if(!is.null(data_est_dropin)){
           fn_ntc <- data_est_dropin$fn_ntc
-          name_kit <- data_est_dropin$name_kit
+          name_kit_dropin <- data_est_dropin$name_kit_dropin
           at_dropin <- data_est_dropin$at_dropin
           min_shape_di <- data_est_dropin$min_shape_di
           max_shape_di <- data_est_dropin$max_shape_di
           min_rate_di <- data_est_dropin$min_rate_di
           max_rate_di <- data_est_dropin$max_rate_di
           initial_point_factor <- data_est_dropin$initial_point_factor
+          n_sample_di <- data_est_dropin$n_sample
+          n_mk_di <- data_est_dropin$n_mk
+          n_dropin <- data_est_dropin$n_dropin
+          freq_dropin <- data_est_dropin$freq_dropin
+          shape_di <- data_est_dropin$shape_di
+          rate_di <- data_est_dropin$rate_di
           enable("act_saveas_est_dropin_1")
 
           dt_dropin <- data.table(Parameter = c("Number of samples", "Number of markers", "Number of drop-in peaks", "Frequency of drop-in", "Shape parameter", "Rate parameter"),
-                                  Value = c(data_est_dropin$n_sample, data_est_dropin$n_mk, data_est_dropin$n_dropin, data_est_dropin$freq_dropin, data_est_dropin$shape_di, data_est_dropin$rate_di))
+                                  Value = c(n_sample_di, n_mk_di, n_dropin, freq_dropin, shape_di, rate_di))
 
           output$dt_dropin <- renderDataTable({
             datatable(
@@ -289,7 +295,7 @@ est_dropin_server <- function(id, path_pack){
           observeEvent(input$act_saveas_est_dropin_2, {
             fn_est_dropin <- input$fn_est_dropin
 
-            save(list = c("fn_ntc", "name_kit", "at_dropin", "min_shape_di", "max_shape_di", "min_rate_di", "max_rate_di", "initial_point_factor", "dt_dropin"),
+            save(list = c("fn_ntc", "name_kit_dropin", "at_dropin", "min_shape_di", "max_shape_di", "min_rate_di", "max_rate_di", "initial_point_factor", "n_sample_di", "n_mk_di", "n_dropin", "freq_dropin", "shape_di", "rate_di"),
                  file = paste0(path_pack, "/extdata/dropin/", fn_est_dropin, ".RData"))
 
             removeModal()

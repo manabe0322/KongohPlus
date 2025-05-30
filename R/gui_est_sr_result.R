@@ -80,11 +80,11 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
     function(input, output, session){
       data_est_sr <- rv_est_sr$data_est_sr
       if(!is.null(data_est_sr)){
-        fn_exp <- rv_est_sr$fn_exp
-        fn_gt <- rv_est_sr$fn_gt
+        fn_exp_sr <- rv_est_sr$fn_exp_sr
+        fn_gt_sr <- rv_est_sr$fn_gt_sr
         dt_setting_est_sr <- rv_est_sr$dt_setting_est_sr
         markers_auto <- dt_setting_est_sr$Marker
-        name_kit <- rv_est_sr$name_kit
+        name_kit_stutter <- rv_est_sr$name_kit_stutter
         min_slope <- rv_est_sr$min_slope
         max_slope <- rv_est_sr$max_slope
         min_intercept <- rv_est_sr$min_intercept
@@ -205,7 +205,7 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           fn_est_sr <- input$fn_est_sr
           list_dt_average_sr <- full_join_average_sr(list_dt_average_bsr, list_dt_average_fsr, list_dt_average_dsr, list_dt_average_m2sr)
 
-          save(list = c("fn_exp", "fn_gt", "dt_setting_est_sr", "name_kit",
+          save(list = c("fn_exp_sr", "fn_gt_sr", "dt_setting_est_sr", "name_kit_stutter",
                         "min_slope", "max_slope", "min_intercept", "max_intercept", "min_myu", "max_myu", "min_sigma", "max_sigma", "initial_point_factor",
                         "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr", "list_dt_average_sr"),
                file = paste0(path_pack, "/extdata/stutter/", fn_est_sr, ".RData"))

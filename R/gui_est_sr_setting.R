@@ -13,7 +13,7 @@ est_sr_setting_ui <- function(id){
                           h4("Kit"),
                           fluidRow(
                             column(3, br(), shinyFilesButton(ns("load_kit"), label = "Load", title = "Kit", multiple = FALSE)),
-                            column(9, uiOutput(ns("name_kit")))
+                            column(9, uiOutput(ns("name_kit_stutter")))
                           ),
                           br(),
                           actionButton(ns("act_advance_sr"), "Advanced setting"),
@@ -83,13 +83,13 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
     id,
     function(input, output, session){
       rv_est_sr <- reactiveValues()
-      rv_est_sr$dt_exp <- NULL
-      rv_est_sr$fn_exp <- NULL
-      rv_est_sr$dt_gt <- NULL
-      rv_est_sr$fn_gt <- NULL
+      rv_est_sr$dt_exp_sr <- NULL
+      rv_est_sr$fn_exp_sr <- NULL
+      rv_est_sr$dt_gt_sr <- NULL
+      rv_est_sr$fn_gt_sr <- NULL
       rv_est_sr$dt_kit <- NULL
       rv_est_sr$dt_setting_est_sr <- NULL
-      rv_est_sr$name_kit <- NULL
+      rv_est_sr$name_kit_stutter <- NULL
       rv_est_sr$min_slope <- 0
       rv_est_sr$max_slope <- 1
       rv_est_sr$min_intercept <- -1
@@ -110,10 +110,10 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       observeEvent(input$exp_data, {
         file_input <- input$exp_data
         if(!is.null(file_input)){
-          dt_exp <- fread(file_input$datapath)
-          dt_exp <- change_data_type_exp(dt_exp)
-          rv_est_sr$dt_exp <- dt_exp
-          rv_est_sr$fn_exp <- file_input$name
+          dt_exp_sr <- fread(file_input$datapath)
+          dt_exp_sr <- change_data_type_exp(dt_exp_sr)
+          rv_est_sr$dt_exp_sr <- dt_exp_sr
+          rv_est_sr$fn_exp_sr <- file_input$name
         }
       })
 
@@ -121,10 +121,10 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       observeEvent(input$gt_data, {
         file_input <- input$gt_data
         if(!is.null(file_input)){
-          dt_gt <- fread(file_input$datapath)
-          dt_gt <- change_data_type_gt(dt_gt)
-          rv_est_sr$dt_gt <- dt_gt
-          rv_est_sr$fn_gt <- file_input$name
+          dt_gt_sr <- fread(file_input$datapath)
+          dt_gt_sr <- change_data_type_gt(dt_gt_sr)
+          rv_est_sr$dt_gt_sr <- dt_gt_sr
+          rv_est_sr$fn_gt_sr <- file_input$name
         }
       })
 
@@ -138,12 +138,12 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           dt_kit <- fread(path_kit)
           rv_est_sr$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
           rv_est_sr$dt_setting_est_sr <- create_init_dt_setting_est_sr(dt_kit)
-          rv_est_sr$name_kit <- str_replace(basename(path_kit), ".{4}$", "")
+          rv_est_sr$name_kit_stutter <- str_replace(basename(path_kit), ".{4}$", "")
         }
       })
 
-      output$name_kit <- renderUI({
-        disabled(textInput(session$ns("name_kit"), label = "", value = rv_est_sr$name_kit))
+      output$name_kit_stutter <- renderUI({
+        disabled(textInput(session$ns("name_kit_stutter"), label = "", value = rv_est_sr$name_kit_stutter))
       })
 
       observeEvent(input$act_advance_sr, {
@@ -313,10 +313,10 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       })
 
       output$act_analyze_est_sr <- renderUI({
-        dt_exp <- rv_est_sr$dt_exp
-        dt_gt <- rv_est_sr$dt_gt
+        dt_exp_sr <- rv_est_sr$dt_exp_sr
+        dt_gt_sr <- rv_est_sr$dt_gt_sr
         dt_kit <- rv_est_sr$dt_kit
-        if(any(is.null(dt_exp), is.null(dt_gt), is.null(dt_kit))){
+        if(any(is.null(dt_exp_sr), is.null(dt_gt_sr), is.null(dt_kit))){
           disabled(actionButton(session$ns("act_analyze_est_sr"), label = "Analyze", class = "btn btn-primary btn-lg"))
         }else{
           actionButton(session$ns("act_analyze_est_sr"), label = "Analyze", class = "btn btn-primary btn-lg")
@@ -325,10 +325,10 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
 
       # Start estimating average stutter ratios
       observeEvent(input$act_analyze_est_sr, {
-        dt_exp <- rv_est_sr$dt_exp
-        dt_gt <- rv_est_sr$dt_gt
+        dt_exp_sr <- rv_est_sr$dt_exp_sr
+        dt_gt_sr <- rv_est_sr$dt_gt_sr
         dt_kit <- rv_est_sr$dt_kit
-        name_kit <- rv_est_sr$name_kit
+        name_kit_stutter <- rv_est_sr$name_kit_stutter
         rv_est_sr$dt_setting_est_sr <- dt_setting_est_sr <- hot_to_r(input$dt_setting_est_sr)
         min_slope <- rv_est_sr$min_slope
         max_slope <- rv_est_sr$max_slope
@@ -340,7 +340,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         max_sigma <- rv_est_sr$max_sigma
         initial_point_factor <- rv_est_sr$initial_point_factor
 
-        error_message <- check_est_sr(dt_exp, dt_gt, dt_kit, dt_setting_est_sr)
+        error_message <- check_est_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr)
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
@@ -348,7 +348,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           model_sr_gen <- stan_package_model(name = "model_sr_gen", package = "KongohPlus")
           model_sr_uni <- stan_package_model(name = "model_sr_uni", package = "KongohPlus")
 
-          rv_est_sr$data_est_sr <- estimate_average_sr(dt_exp, dt_gt, dt_kit, dt_setting_est_sr, model_sr_gen, model_sr_uni,
+          rv_est_sr$data_est_sr <- estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr, model_sr_gen, model_sr_uni,
                                                        min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, initial_point_factor)
 
           updateTabsetPanel(session = session_est_sr_top, inputId = "tabset_est_sr", selected = "Result")
