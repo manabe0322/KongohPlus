@@ -145,8 +145,10 @@ run_mle_ae <- function(prop_ae_data_use, model_ae, min_alpha, max_alpha, initial
   for(i in 1:n_sobol){
     fit <- model_ae$optimize(data_list_ae, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
     if(fit$return_codes() == 0){
-      tmp <- fit$draws()
-      tmp_param[i, ] <- tmp[1, ]
+      tmp <- try(fit$draws())
+      if(class(tmp) != "try-error"){
+        tmp_param[i, ] <- tmp[1, ]
+      }
     }
   }
 
@@ -423,8 +425,10 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_g
   for(i in 1:n_sobol){
     fit <- model_gamma$optimize(data_list_gamma, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
     if(fit$return_codes() == 0){
-      tmp <- fit$draws()
-      tmp_param[i, ] <- tmp[1, ]
+      tmp <- try(fit$draws())
+      if(class(tmp) != "try-error"){
+        tmp_param[i, ] <- tmp[1, ]
+      }
     }
   }
 

@@ -63,8 +63,10 @@ run_mle_dropin <- function(n_dropin, heights, model_dropin, min_shape_di, max_sh
   for(i in 1:n_sobol){
     fit <- model_dropin$optimize(data_list_dropin, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
     if(fit$return_codes() == 0){
-      tmp <- fit$draws()
-      tmp_param[i, ] <- tmp[1, ]
+      tmp <- try(fit$draws())
+      if(class(tmp) != "try-error"){
+        tmp_param[i, ] <- tmp[1, ]
+      }
     }
   }
 

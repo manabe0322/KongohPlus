@@ -52,8 +52,10 @@ run_mle_1p <- function(model_name, data_list_main, n_rep, tph_mean, tph_sd, init
   for(i in 1:n_sobol){
     fit <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
     if(fit$return_codes() == 0){
-      tmp <- fit$draws()
-      tmp_param[i, ] <- tmp[1, ]
+      tmp <- try(fit$draws())
+      if(class(tmp) != "try-error"){
+        tmp_param[i, ] <- tmp[1, ]
+      }
     }
   }
 
@@ -116,8 +118,10 @@ run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, in
     for(i in 1:n_sobol){
       fit <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
       if(fit$return_codes() == 0){
-        tmp <- fit$draws()
-        tmp_param[i, ] <- tmp[1, ]
+        tmp <- try(fit$draws())
+        if(class(tmp) != "try-error"){
+          tmp_param[i, ] <- tmp[1, ]
+        }
       }
     }
   }else{
@@ -131,8 +135,12 @@ run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, in
       model_main <- stan_package_model(name = model_name, package = "KongohPlus")
       fit <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
       if(fit$return_codes() == 0){
-        tmp <- fit$draws()
-        return(as.vector(tmp[1, ]))
+        tmp <- try(fit$draws())
+        if(class(tmp) == "try-error"){
+          return(rep(NA, 1 + n_rep + 3 * hnc))
+        }else{
+          return(as.vector(tmp[1, ]))
+        }
       }else{
         return(rep(NA, 1 + n_rep + 3 * hnc))
       }
