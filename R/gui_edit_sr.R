@@ -8,37 +8,34 @@ edit_sr_ui <- function(id){
            titlePanel("4. Edit stutter ratios"),
            br(),
            fluidRow(
-             column(1,
-                    shinyFilesButton(ns("load_stutter_file"), label = "Load stutter file", title = "Select a file", multiple = FALSE, class = "btn btn-primary"),
-                    br(),
-                    br(),
-                    actionButton(ns("act_save_as_edit_sr"), label = "Save as", class = "btn btn-primary"),
-                    br(),
-                    br(),
-                    actionButton(ns("act_save_edit_sr"), label = "Save", class = "btn btn-primary")
-             ),
-             column(2,
+             column(3,
                     wellPanel(
+                      h4("Stutter data"),
+                      fluidRow(
+                        column(3, br(), shinyFilesButton(ns("load_stutter_data"), label = "Load", title = "Select a file", multiple = FALSE)),
+                        column(9, uiOutput(ns("fn_stutter_data")))
+                      ),
+                      h4("Marker"),
+                      uiOutput(ns("select_mk")),
                       h4("Add an allele"),
-                      numericInput(ns("add_al"), label = "Allele", value = NULL),
-                      checkboxInput(ns("ck_auto_calc_sr"), label = "Calculate stutter ratios", value = FALSE, width = NULL),
-                      disabled(numericInput(ns("alcor_bsr"), label = "Corrected allele (BSR)", value = NULL)),
-                      disabled(numericInput(ns("alcor_fsr"), label = "Corrected allele (FSR)", value = NULL)),
-                      disabled(numericInput(ns("alcor_dsr"), label = "Corrected allele (DSR)", value = NULL)),
-                      disabled(numericInput(ns("alcor_m2sr"), label = "Corrected allele (M2SR)", value = NULL)),
-                      actionButton(ns("act_add_al"), label = "Add")
-                    ),
-                    wellPanel(
+                      fluidRow(
+                        column(9, disabled(numericInput(ns("add_al"), label = NULL, value = NULL))),
+                        column(3, disabled(actionButton(ns("act_add_al"), label = "Add")))
+                      ),
                       h4("Delete an allele"),
-                      uiOutput(ns("select_del_al")),
-                      actionButton(ns("act_del_al"), label = "Delete")
+                      fluidRow(
+                        column(9, uiOutput(ns("select_del_al"))),
+                        column(3, disabled(actionButton(ns("act_del_al"), label = "Delete")))
+                      ),
+                      br(),
+                      br(),
+                      disabled(actionButton(ns("act_save_as_edit_sr"), label = "Save as", class = "btn btn-primary btn-lg")),
+                      br(),
+                      br(),
+                      disabled(actionButton(ns("act_save_edit_sr"), label = "Save", class = "btn btn-primary btn-lg"))
                     )
              ),
              column(9,
-                    textOutput(ns("fn_stutter_file")),
-                    br(),
-                    uiOutput(ns("select_mk")),
-                    br(),
                     tags$style(HTML("
                          .handsontable .htCore td {
                            vertical-align: middle !important;
@@ -49,34 +46,6 @@ edit_sr_ui <- function(id){
              )
            )
   )
-}
-
-#' extrapolate_sr
-#'
-#' @description The function to extrapolate the stutter ratio of an allele
-extrapolate_sr <- function(alcor, dt_result_est_sr, mk){
-  if(!is.na(alcor)){
-    index_mk <- which(dt_result_est_sr$Marker == mk)
-    meth <- dt_result_est_sr$Model[index_mk]
-    if(is.element(meth, c("Allele", "LUS", "Multi-seq"))){
-      slope <- dt_result_est_sr$Slope[index_mk]
-      intercept <- dt_result_est_sr$Intercept[index_mk]
-      sr <- slope * alcor + intercept
-      if(sr < 0){
-        sr <- 0
-      }
-    }else if(is.element(meth, c("Uniform", "Uniform (Multiple loci)"))){
-      sr <- dt_result_est_sr$Myu[index_mk]
-      if(sr < 0){
-        sr <- 0
-      }
-    }else{
-      sr <- NA
-    }
-  }else{
-    sr <- NA
-  }
-  return(sr)
 }
 
 replace_ave_sr <- function(list_dt_average_sr){
@@ -108,29 +77,24 @@ edit_sr_server <- function(id, path_pack){
     id,
     function(input, output, session){
       rv_edit_sr <- reactiveValues()
-      rv_edit_sr$fn_stutter_file <- NULL
+      rv_edit_sr$fn_stutter_data <- NULL
       rv_edit_sr$dt_setting_est_sr <- NULL
       rv_edit_sr$dt_result_est_bsr <- NULL
       rv_edit_sr$dt_result_est_fsr <- NULL
       rv_edit_sr$dt_result_est_dsr <- NULL
       rv_edit_sr$dt_result_est_m2sr <- NULL
       rv_edit_sr$list_dt_average_sr <- NULL
-      rv_edit_sr$list_trace_bsr <- NULL
-      rv_edit_sr$list_trace_fsr <- NULL
-      rv_edit_sr$list_trace_dsr <- NULL
-      rv_edit_sr$list_trace_m2sr <- NULL
       rv_edit_sr$markers_auto <- character(0)
       rv_edit_sr$current_mk <- NULL
 
-      shinyFileChoose(input, "load_stutter_file", roots = c(documents = paste0(path_pack, "/extdata/stutter")), session = session, filetypes = c("RData"))
+      shinyFileChoose(input, "load_stutter_data", roots = c(documents = paste0(path_pack, "/extdata/stutter")), session = session, filetypes = c("RData"))
 
-      observeEvent(input$load_stutter_file, {
-        req(input$load_stutter_file)
-        path_stutter_file <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/stutter")), input$load_stutter_file)$datapath
+      observeEvent(input$load_stutter_data, {
+        req(input$load_stutter_data)
+        path_stutter_data <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/stutter")), input$load_stutter_data)$datapath
 
-        if(length(path_stutter_file) > 0){
-          rv_edit_sr$fn_stutter_file <- fn_stutter_file <- basename(path_stutter_file)
-          output$fn_stutter_file <- renderText({paste0("File name: ", fn_stutter_file)})
+        if(length(path_stutter_data) > 0){
+          rv_edit_sr$fn_stutter_data <- fn_stutter_data <- basename(path_stutter_data)
 
           rv_edit_sr$dt_setting_est_sr <- NULL
           rv_edit_sr$dt_result_est_bsr <- NULL
@@ -138,24 +102,16 @@ edit_sr_server <- function(id, path_pack){
           rv_edit_sr$dt_result_est_dsr <- NULL
           rv_edit_sr$dt_result_est_m2sr <- NULL
           rv_edit_sr$list_dt_average_sr <- NULL
-          rv_edit_sr$list_trace_bsr <- NULL
-          rv_edit_sr$list_trace_fsr <- NULL
-          rv_edit_sr$list_trace_dsr <- NULL
-          rv_edit_sr$list_trace_m2sr <- NULL
           rv_edit_sr$markers_auto <- character(0)
           rv_edit_sr$current_mk <- NULL
 
-          load(path_stutter_file)
+          load(path_stutter_data)
           rv_edit_sr$dt_setting_est_sr <- dt_setting_est_sr
           rv_edit_sr$dt_result_est_bsr <- dt_result_est_bsr
           rv_edit_sr$dt_result_est_fsr <- dt_result_est_fsr
           rv_edit_sr$dt_result_est_dsr <- dt_result_est_dsr
           rv_edit_sr$dt_result_est_m2sr <- dt_result_est_m2sr
           rv_edit_sr$list_dt_average_sr <- list_dt_average_sr
-          rv_edit_sr$list_trace_bsr <- list_trace_bsr
-          rv_edit_sr$list_trace_fsr <- list_trace_fsr
-          rv_edit_sr$list_trace_dsr <- list_trace_dsr
-          rv_edit_sr$list_trace_m2sr <- list_trace_m2sr
           rv_edit_sr$markers_auto <- names(list_dt_average_sr)
 
           select_mk <- rv_edit_sr$markers_auto[1]
@@ -179,15 +135,31 @@ edit_sr_server <- function(id, path_pack){
           })
 
           rv_edit_sr$current_mk <- select_mk
+
+          enable("add_al")
+          enable("act_add_al")
+          enable("act_del_al")
+          enable("act_save_as_edit_sr")
+          enable("act_save_edit_sr")
+        }else{
+          disable("add_al")
+          disable("act_add_al")
+          disable("act_del_al")
+          disable("act_save_as_edit_sr")
+          disable("act_save_edit_sr")
         }
+      })
+
+      output$fn_stutter_data <- renderUI({
+        disabled(textInput(session$ns("fn_stutter_data"), label = "", value = rv_edit_sr$fn_stutter_data))
       })
 
       output$select_mk <- renderUI({
         markers_auto <- rv_edit_sr$markers_auto
         if(length(markers_auto) != 0){
-          selectInput(session$ns("select_mk"), label = "Marker", choices = markers_auto, selected = markers_auto[1], selectize = FALSE)
+          selectInput(session$ns("select_mk"), label = NULL, choices = markers_auto, selected = markers_auto[1], selectize = FALSE)
         }else{
-          NULL
+          disabled(selectInput(session$ns("select_mk"), label = NULL, choices = markers_auto, selectize = FALSE))
         }
       })
 
@@ -224,48 +196,12 @@ edit_sr_server <- function(id, path_pack){
 
       ## Add an allele ##
 
-      observeEvent(input$ck_auto_calc_sr, {
-        ck_auto_calc_sr <- input$ck_auto_calc_sr
-        if(ck_auto_calc_sr){
-          enable("alcor_bsr")
-          enable("alcor_fsr")
-          enable("alcor_dsr")
-          enable("alcor_m2sr")
-        }else{
-          #updateNumericInput(session, "alcor_bsr", value = NULL)
-          #updateNumericInput(session, "alcor_fsr", value = NULL)
-          #updateNumericInput(session, "alcor_dsr", value = NULL)
-          #updateNumericInput(session, "alcor_m2sr", value = NULL)
-          disable("alcor_bsr")
-          disable("alcor_fsr")
-          disable("alcor_dsr")
-          disable("alcor_m2sr")
-        }
-      })
-
       observeEvent(input$act_add_al, {
         add_al <- input$add_al
         if(!is.na(add_al)){
           current_mk <- rv_edit_sr$current_mk
           dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[current_mk]]
-
-          alcor_bsr <- input$alcor_bsr
-          alcor_fsr <- input$alcor_fsr
-          alcor_dsr <- input$alcor_dsr
-          alcor_m2sr <- input$alcor_m2sr
-          if(input$ck_auto_calc_sr){
-            bsr <- extrapolate_sr(alcor_bsr, rv_edit_sr$dt_result_est_bsr, current_mk)
-            fsr <- extrapolate_sr(alcor_fsr, rv_edit_sr$dt_result_est_fsr, current_mk)
-            dsr <- extrapolate_sr(alcor_dsr, rv_edit_sr$dt_result_est_dsr, current_mk)
-            m2sr <- extrapolate_sr(alcor_m2sr, rv_edit_sr$dt_result_est_m2sr, current_mk)
-          }else{
-            bsr <- NA
-            fsr <- NA
-            dsr <- NA
-            m2sr <- NA
-          }
-
-          dt_ave_sr <- rbind(dt_ave_sr, list(as.character(add_al), alcor_bsr, bsr, alcor_fsr, fsr, alcor_dsr, dsr, alcor_m2sr, m2sr))
+          dt_ave_sr <- rbind(dt_ave_sr, list(as.character(add_al), NA, 0, NA, 0, NA, 0, NA, 0))
           tmp_al <- as.numeric(dt_ave_sr$Allele)
           tmp_al_sort <- sort(tmp_al)
           dt_ave_sr <- dt_ave_sr[match(tmp_al_sort, tmp_al)]
@@ -288,7 +224,9 @@ edit_sr_server <- function(id, path_pack){
         if(!is.null(current_mk)){
           dt_ave_sr <- rv_edit_sr$list_dt_average_sr[[current_mk]]
           current_alleles <- dt_ave_sr$Allele
-          selectInput(session$ns("del_al"), label = "Allele", choices = current_alleles, selected = current_alleles[1], selectize = FALSE)
+          selectInput(session$ns("del_al"), label = NULL, choices = current_alleles, selected = current_alleles[1], selectize = FALSE)
+        }else{
+          disabled(selectInput(session$ns("del_al"), label = NULL, choices = numeric(0), selectize = FALSE))
         }
       })
 
@@ -309,17 +247,31 @@ edit_sr_server <- function(id, path_pack){
         })
       })
 
-      ## Save edited data ##
+      ## Save as ##
 
       observeEvent(input$act_save_as_edit_sr, {
         showModal(modalDialog(
-          title = "Save stutter data",
+          title = "Save as",
           textInput(session$ns("fn_edit_sr"), label = "Enter the file name"),
+          br(),
+          "Note: Blank or negative values in SR cells will be automatically replaced with zero.",
           footer = tagList(
             actionButton(session$ns("act_save_as_edit_sr_2"), "Save"),
             modalButton("Close")
           )
         ))
+      })
+
+      observeEvent(input$fn_edit_sr, {
+        fn_edit_sr <- input$fn_edit_sr
+        fn_stutter_all <- list.files(paste0(path_pack, "/extdata/stutter"))
+        if(is.element(paste0(fn_edit_sr, ".RData"), fn_stutter_all)){
+          showFeedbackDanger(inputId = "fn_edit_sr", text = "A file with the same name already exists.")
+          disable("act_save_as_edit_sr_2")
+        }else{
+          hideFeedback("fn_edit_sr")
+          enable("act_save_as_edit_sr_2")
+        }
       })
 
       observeEvent(input$act_save_as_edit_sr_2, {
@@ -335,23 +287,36 @@ edit_sr_server <- function(id, path_pack){
         dt_result_est_dsr <- rv_edit_sr$dt_result_est_dsr
         dt_result_est_m2sr <- rv_edit_sr$dt_result_est_m2sr
         list_dt_average_sr <- rv_edit_sr$list_dt_average_sr
-        list_trace_bsr <- rv_edit_sr$list_trace_bsr
-        list_trace_fsr <- rv_edit_sr$list_trace_fsr
-        list_trace_dsr <- rv_edit_sr$list_trace_dsr
-        list_trace_m2sr <- rv_edit_sr$list_trace_m2sr
 
         list_dt_average_sr <- replace_ave_sr(list_dt_average_sr)
 
         save(list = c("dt_setting_est_sr",
                       "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr",
-                      "list_trace_bsr", "list_trace_fsr", "list_trace_dsr", "list_trace_m2sr",
                       "list_dt_average_sr"),
              file = paste0(path_pack, "/extdata/stutter/", input$fn_edit_sr, ".RData"))
 
         removeModal()
       })
 
+      ## Save ##
+
       observeEvent(input$act_save_edit_sr, {
+        showModal(modalDialog(
+          title = "Save",
+          paste0("The existing file '", rv_edit_sr$fn_stutter_data, "' will be overwritten."),
+          br(),
+          "Press OK to continue.",
+          br(),
+          br(),
+          "Note: Blank or negative values in SR cells will be automatically replaced with zero.",
+          footer = tagList(
+            actionButton(session$ns("act_save_edit_sr_2"), "OK"),
+            modalButton("Close")
+          )
+        ))
+      })
+
+      observeEvent(input$act_save_edit_sr_2, {
         # Update edited information
         if(!is.null(rv_edit_sr$current_mk)){
           dt_edit_sr <- hot_to_r(input$dt_edit_sr)
@@ -364,18 +329,13 @@ edit_sr_server <- function(id, path_pack){
         dt_result_est_dsr <- rv_edit_sr$dt_result_est_dsr
         dt_result_est_m2sr <- rv_edit_sr$dt_result_est_m2sr
         list_dt_average_sr <- rv_edit_sr$list_dt_average_sr
-        list_trace_bsr <- rv_edit_sr$list_trace_bsr
-        list_trace_fsr <- rv_edit_sr$list_trace_fsr
-        list_trace_dsr <- rv_edit_sr$list_trace_dsr
-        list_trace_m2sr <- rv_edit_sr$list_trace_m2sr
 
         list_dt_average_sr <- replace_ave_sr(list_dt_average_sr)
 
         save(list = c("dt_setting_est_sr",
                       "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr",
-                      "list_trace_bsr", "list_trace_fsr", "list_trace_dsr", "list_trace_m2sr",
                       "list_dt_average_sr"),
-             file = paste0(path_pack, "/extdata/stutter/", rv_edit_sr$fn_stutter_file))
+             file = paste0(path_pack, "/extdata/stutter/", rv_edit_sr$fn_stutter_data))
       })
     }
   )
