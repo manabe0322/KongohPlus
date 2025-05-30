@@ -17,8 +17,11 @@ deconvo_setting_ui <- function(id){
              column(3,
                     wellPanel(
                       h4("Number of contributors"),
-                      uiOutput(ns("noc_from")),
-                      uiOutput(ns("noc_to")),
+                      uiOutput(ns("ui_noc_from")),
+                      uiOutput(ns("ui_noc_to")),
+                      br(),
+                      h4("Theta"),
+                      uiOutput(ns("ui_theta")),
                       br(),
                       h4("Analysis method"),
                       shinyFilesButton(ns("load_anameth_deconvo"), label = "Load", title = "Select a file", multiple = FALSE),
@@ -68,10 +71,12 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$fn_af <- NULL
       rv_deconvo_setting$hnc_from <- 1
       rv_deconvo_setting$hnc_to <- 1
+      rv_deconvo_setting$theta <- 0
       rv_deconvo_setting$fn_anameth <- ""
       rv_deconvo_setting$dt_anameth <- NULL
       rv_deconvo_setting$initial_point_factor <- 5
       rv_deconvo_setting$bool_correct_noc <- TRUE
+      rv_deconvo_setting$bool_correct_theta <- TRUE
       rv_deconvo_setting$bool_before_deconvo <- TRUE
       rv_deconvo_setting$dt_ignore_mk <- NULL
       rv_deconvo_setting$bool_ignore_readonly <- FALSE
@@ -108,7 +113,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         }
       })
 
-      output$noc_from <- renderUI({
+      output$ui_noc_from <- renderUI({
         if(rv_deconvo_setting$bool_before_deconvo){
           numericInput(session$ns("noc_from"), label = "From", value = rv_deconvo_setting$hnc_from)
         }else{
@@ -116,7 +121,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         }
       })
 
-      output$noc_to <- renderUI({
+      output$ui_noc_to <- renderUI({
         if(rv_deconvo_setting$bool_before_deconvo){
           numericInput(session$ns("noc_to"), label = "To", value = rv_deconvo_setting$hnc_to)
         }else{
@@ -150,15 +155,39 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
 
         rv_deconvo_setting$bool_correct_noc <- bool_correct_noc
 
-        if(bool_correct_noc && rv_deconvo_setting$bool_before_deconvo){
-          if(rv_deconvo_setting$fn_anameth == ""){
-            disable("act_analyze_deconvo")
-          }else{
-            enable("act_analyze_deconvo")
-          }
+        if(all(bool_correct_noc, rv_deconvo_setting$bool_correct_theta, rv_deconvo_setting$bool_before_deconvo, rv_deconvo_setting$fn_anameth != "")){
+          enable("act_analyze_deconvo")
         }else{
           disable("act_analyze_deconvo")
         }
+      })
+
+      output$ui_theta <- renderUI({
+        if(rv_deconvo_setting$bool_before_deconvo){
+          numericInput(session$ns("theta"), label = "", value = rv_deconvo_setting$theta)
+        }else{
+          disabled(numericInput(session$ns("theta"), label = "", value = rv_deconvo_setting$theta))
+        }
+      })
+
+      observeEvent(input$theta, {
+        theta <- input$theta
+
+        if(!is.numeric(theta) || theta < 0 || theta > 1){
+          showFeedbackDanger(inputId = "theta", text = "The value must be between 0 and 1.")
+          bool_correct_theta <- FALSE
+        }else{
+          hideFeedback("theta")
+          bool_correct_theta <- TRUE
+        }
+
+        if(all(bool_correct_theta, rv_deconvo_setting$bool_correct_noc, rv_deconvo_setting$bool_before_deconvo, rv_deconvo_setting$fn_anameth != "")){
+          enable("act_analyze_deconvo")
+        }else{
+          disable("act_analyze_deconvo")
+        }
+
+        rv_deconvo_setting$bool_correct_theta <- bool_correct_theta
       })
 
       shinyFileChoose(input, "load_anameth_deconvo", roots = c(documents = paste0(path_pack, "/extdata/anameth")), session = session, filetypes = c("csv"))
@@ -168,13 +197,11 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         path_anameth <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/anameth")), input$load_anameth_deconvo)$datapath
         if(length(path_anameth) > 0){
           rv_deconvo_setting$fn_anameth <- basename(path_anameth)
-          if(rv_deconvo_setting$bool_correct_noc && rv_deconvo_setting$bool_before_deconvo){
+          if(all(rv_deconvo_setting$bool_correct_noc, rv_deconvo_setting$bool_correct_theta, rv_deconvo_setting$bool_before_deconvo, rv_deconvo_setting$fn_anameth != "")){
             enable("act_analyze_deconvo")
           }else{
             disable("act_analyze_deconvo")
           }
-        }else{
-          disable("act_analyze_deconvo")
         }
       })
 
@@ -209,20 +236,6 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
               escape = FALSE
             ) %>%
               formatStyle(names(dt_at), lineHeight = "80%")
-          })
-
-          output$anameth_algt_prob <- renderRHandsontable({
-            dt_algt_prob <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype probability"],
-                                       Value = dt_anameth$Value[dt_anameth$Category == "Genotype probability"])
-
-            datatable(
-              dt_algt_prob,
-              selection = "none",
-              options = list(dom = "t", iDisplayLength = nrow(dt_algt_prob), ordering = FALSE, autowidth = TRUE),
-              rownames = FALSE,
-              escape = FALSE
-            ) %>%
-              formatStyle(names(dt_algt_prob), lineHeight = "80%")
           })
 
           output$anameth_gt_fltr <- renderRHandsontable({
@@ -308,6 +321,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         # Fix setting
         rv_deconvo_setting$hnc_from <- hnc_from <- input$noc_from
         rv_deconvo_setting$hnc_to <- hnc_to <- input$noc_to
+        rv_deconvo_setting$theta <- theta <- input$theta
         fn_csp <- rv_deconvo_setting$fn_csp
         dt_csp <- rv_deconvo_setting$dt_csp
         fn_af <- rv_deconvo_setting$fn_af
@@ -322,9 +336,6 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         dt_kit_auto <- extract_kit_auto(dt_kit)
         markers_auto <- unique(dt_kit_auto[, Marker])
 
-        load(paste0(path_pack, "/extdata/param/", dt_anameth$Name[dt_anameth$Category == "Parameter"], ".RData"))
-        load(paste0(path_pack, "/extdata/stutter/", dt_anameth$Name[dt_anameth$Category == "Stutter file"], ".RData"))
-
         rv_deconvo_setting$dt_ignore_mk <- dt_ignore_mk <- hot_to_r(input$dt_ignore_mk)
 
         # Check input files
@@ -334,6 +345,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           # Check registration of the stutter ratio
+          load(paste0(path_pack, "/extdata/stutter/", dt_anameth$Name[dt_anameth$Category == "Stutter data"], ".RData"))
           message_sr <- check_csp_sr(dt_csp, dt_ignore_mk, dt_anameth, list_dt_average_sr)
 
           if(message_sr == "error"){
@@ -341,9 +353,9 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
           }else{
             hnc_all <- hnc_from:hnc_to
-            n_mk <- length(expect_ae)
-            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, cv_allele, cv_stutter, list_dt_average_sr, hnc_all, initial_point_factor)
+            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta, initial_point_factor)
             data_deconvo$hnc_all <- hnc_all
+            data_deconvo$theta <- theta
             data_deconvo$dt_csp <- dt_csp
             data_deconvo$dt_af <- dt_af
             data_deconvo$fn_csp <- fn_csp
@@ -352,8 +364,6 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             data_deconvo$dt_anameth <- dt_anameth
             data_deconvo$dt_kit <- dt_kit
             data_deconvo$dt_ignore_mk <- dt_ignore_mk
-            data_deconvo$cv_allele <- cv_allele
-            data_deconvo$cv_stutter <- cv_stutter
             data_deconvo$list_dt_average_sr <- list_dt_average_sr
             data_deconvo$message_sr <- message_sr
             data_deconvo$initial_point_factor <- initial_point_factor

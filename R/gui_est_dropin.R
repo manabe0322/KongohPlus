@@ -250,7 +250,7 @@ est_dropin_server <- function(id, path_pack){
           rate_di <- data_est_dropin$rate_di
           enable("act_saveas_est_dropin_1")
 
-          dt_dropin <- data.table(Parameter = c("Number of samples", "Number of markers", "Number of drop-in peaks", "Frequency of drop-in", "Shape parameter", "Rate parameter"),
+          dt_dropin <- data.table(Parameter = c("Number of samples", "Number of markers", "Number of drop-in peaks", "Frequency", "Shape parameter", "Rate parameter"),
                                   Value = c(n_sample_di, n_mk_di, n_dropin, freq_dropin, shape_di, rate_di))
 
           output$dt_dropin <- renderDataTable({

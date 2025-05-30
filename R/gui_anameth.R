@@ -71,7 +71,7 @@ create_default_dt_anameth <- function(path_pack, kit_name, stutter_name, param_n
                                    Subcategory = c(rep("", 4),
                                                    markers_auto,
                                                    "Maximum BSR", "Maximum FSR", "Maximum DSR", "Maximum M2SR", "Maximum number of drop-in", "Maximum height of drop-in",
-                                                   markers_auto,
+                                                   names(expect_ae),
                                                    "CV for allele", "CV for stutter",
                                                    "Frequency", "Shape parameter", "Rate parameter"),
                                    Name = c(kit_name, stutter_name, param_name, dropin_name, rep("", 2 * n_mk + 11)),

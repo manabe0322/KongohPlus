@@ -811,13 +811,11 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param dt_kit_auto The data.table of the information on the autosomal markers in a kit
 #' @param dt_ignore_mk The data.table of the information on the ignored markers
 #' @param dt_anameth The data.table of the analysis method
-#' @param expect_ae A vector of the expected locus-specific amplification efficiencies
-#' @param cv_allele The coefficient of variation for allelels
-#' @param cv_stutter The coefficient of variation for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc_all A vector of the assumed number of contributors
+#' @param theta The theta value for sub-population effect
 #' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
-perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, expect_ae, cv_allele, cv_stutter, list_dt_average_sr, hnc_all, initial_point_factor){
+perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta, initial_point_factor){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
   if(n_mk != 0){
@@ -841,9 +839,6 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     pop_al_list <- tmp$pop_al_list
     pop_prob_list <- tmp$pop_prob_list
 
-    # Extract the theta value
-    theta <- as.numeric(dt_anameth$Value[dt_anameth$Subcategory == "Theta"])
-
     # Extract filters to remove unrealistic genotype combinations
     bsr_fltr <- dt_anameth$Value[dt_anameth$Subcategory == "Maximum BSR"]
     fsr_fltr <- dt_anameth$Value[dt_anameth$Subcategory == "Maximum FSR"]
@@ -852,13 +847,19 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     n_dropin_fltr <- dt_anameth$Value[dt_anameth$Subcategory == "Maximum number of drop-in"]
     h_dropin_fltr <- dt_anameth$Value[dt_anameth$Subcategory == "Maximum height of drop-in"]
 
+    # Extract expected LSAE
+    expect_ae <- dt_anameth$Value[dt_anameth$Category == "LSAE"]
+    names(expect_ae) <- dt_anameth$Subcategory[dt_anameth$Category == "LSAE"]
+    ae_use <- expect_ae[match(markers_use, names(expect_ae))]
+
+    # Extract peak height parameters
+    cv_allele <- dt_anameth$Value[dt_anameth$Subcategory == "CV for allele"]
+    cv_stutter <- dt_anameth$Value[dt_anameth$Subcategory == "CV for stutter"]
+
     # Extract drop-in parameters
-    freq_di <- dt_anameth$Value[dt_anameth$Subcategory == "Frequency of drop-in"]
+    freq_di <- dt_anameth$Value[dt_anameth$Subcategory == "Frequency"]
     shape_di <- dt_anameth$Value[dt_anameth$Subcategory == "Shape parameter"]
     rate_di <- dt_anameth$Value[dt_anameth$Subcategory == "Rate parameter"]
-
-    # Extract LSAE
-    ae_use <- expect_ae[match(markers_use, names(expect_ae))]
 
     n_hnc <- length(hnc_all)
     data_hnc_list <- vector(mode = "list", length = n_hnc)

@@ -138,8 +138,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
               peaks_list <- data_deconvo$peaks_list
               pop_al_list <- data_deconvo$pop_al_list
               pop_prob_list <- data_deconvo$pop_prob_list
-              dt_anameth <- data_deconvo$dt_anameth
-              theta <- as.numeric(dt_anameth$Value[dt_anameth$Subcategory == "Theta"])
+              theta <- data_deconvo$theta
               data_hnc_list <- data_deconvo$data_hnc_list
 
               # Extract data for Hp
