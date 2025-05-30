@@ -385,10 +385,10 @@ run_mle_sr_gen <- function(model_sr_gen, data_list_sr, min_slope, max_slope, min
 
   tmp_param <- matrix(NA, n_sobol, 4)
   for(i in 1:n_sobol){
-    fit <- model_sr_gen$optimize(data_list_sr, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
+    fit <- suppressWarnings(model_sr_gen$optimize(data_list_sr, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
     if(fit$return_codes() == 0){
       tmp <- try(fit$draws())
-      if(class(tmp) != "try-error"){
+      if(!inherits(tmp, "try-error")){
         tmp_param[i, ] <- tmp[1, ]
       }
     }
@@ -440,10 +440,10 @@ run_mle_sr_uni <- function(model_sr_uni, data_list_sr, min_myu, max_myu, min_sig
 
   tmp_param <- matrix(NA, n_sobol, 3)
   for(i in 1:n_sobol){
-    fit <- model_sr_uni$optimize(data_list_sr, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
+    fit <- suppressWarnings(model_sr_uni$optimize(data_list_sr, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
     if(fit$return_codes() == 0){
       tmp <- try(fit$draws())
-      if(class(tmp) != "try-error"){
+      if(!inherits(tmp, "try-error")){
         tmp_param[i, ] <- tmp[1, ]
       }
     }

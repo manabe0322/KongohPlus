@@ -143,10 +143,10 @@ run_mle_ae <- function(prop_ae_data_use, model_ae, min_alpha, max_alpha, initial
 
   tmp_param <- matrix(NA, n_sobol, 1 + n_mk)
   for(i in 1:n_sobol){
-    fit <- model_ae$optimize(data_list_ae, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
+    fit <- suppressWarnings(model_ae$optimize(data_list_ae, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
     if(fit$return_codes() == 0){
       tmp <- try(fit$draws())
-      if(class(tmp) != "try-error"){
+      if(!inherits(tmp, "try-error")){
         tmp_param[i, ] <- tmp[1, ]
       }
     }
@@ -423,10 +423,10 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_g
 
   tmp_param <- matrix(NA, n_sobol, 3)
   for(i in 1:n_sobol){
-    fit <- model_gamma$optimize(data_list_gamma, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
+    fit <- suppressWarnings(model_gamma$optimize(data_list_gamma, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
     if(fit$return_codes() == 0){
       tmp <- try(fit$draws())
-      if(class(tmp) != "try-error"){
+      if(!inherits(tmp, "try-error")){
         tmp_param[i, ] <- tmp[1, ]
       }
     }

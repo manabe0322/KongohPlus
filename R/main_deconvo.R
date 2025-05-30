@@ -50,10 +50,10 @@ run_mle_1p <- function(model_name, data_list_main, n_rep, tph_mean, tph_sd, init
   tmp_param <- matrix(NA, n_sobol, n_rep + 2)
   model_main <- stan_package_model(name = model_name, package = "KongohPlus")
   for(i in 1:n_sobol){
-    fit <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
+    fit <- suppressWarnings(model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
     if(fit$return_codes() == 0){
       tmp <- try(fit$draws())
-      if(class(tmp) != "try-error"){
+      if(!inherits(tmp, "try-error")){
         tmp_param[i, ] <- tmp[1, ]
       }
     }
@@ -116,10 +116,10 @@ run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, in
     tmp_param <- matrix(NA, n_sobol, 1 + n_rep + 3 * hnc)
     model_main <- stan_package_model(name = model_name, package = "KongohPlus")
     for(i in 1:n_sobol){
-      fit <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
+      fit <- suppressWarnings(model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
       if(fit$return_codes() == 0){
         tmp <- try(fit$draws())
-        if(class(tmp) != "try-error"){
+        if(!inherits(tmp, "try-error")){
           tmp_param[i, ] <- tmp[1, ]
         }
       }
@@ -133,13 +133,13 @@ run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, in
 
     tmp_param <- parLapply(cl, 1:n_sobol, function(i){
       model_main <- stan_package_model(name = model_name, package = "KongohPlus")
-      fit <- model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE)
+      fit <- suppressWarnings(model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
       if(fit$return_codes() == 0){
         tmp <- try(fit$draws())
-        if(class(tmp) == "try-error"){
-          return(rep(NA, 1 + n_rep + 3 * hnc))
-        }else{
+        if(!inherits(tmp, "try-error")){
           return(as.vector(tmp[1, ]))
+        }else{
+          return(rep(NA, 1 + n_rep + 3 * hnc))
         }
       }else{
         return(rep(NA, 1 + n_rep + 3 * hnc))
@@ -870,15 +870,15 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       freq_di, shape_di, rate_di,
                                       ae_use, cv_allele, cv_stutter, list_dt_average_sr,
                                       initial_point_factor))
-      if(class(data_hnc) == "try-error"){
+      if(!inherits(data_hnc, "try-error")){
+        data_hnc_list[[i]] <- data_hnc
+      }else{
         data_hnc_list[[i]] <- list("dt_pg_list" = NULL,
                                    "dt_log10like" = NULL,
                                    "dt_diag" = NULL,
                                    "traceplot" = NULL,
                                    "comp_time" = NULL,
                                    "error_message" = "Unexpected error")
-      }else{
-        data_hnc_list[[i]] <- data_hnc
       }
     }
   }else{
