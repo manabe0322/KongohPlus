@@ -57,12 +57,7 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         cv_allele <- data_est_par$cv_allele
         cv_stutter <- data_est_par$cv_stutter
 
-        rv_par_file_names <- reactiveVal(NULL)
-
         observeEvent(input$act_saveas_est_par_1, {
-          par_file_names <- list.files(paste0(path_pack, "/extdata/param"))
-          rv_par_file_names(gsub(".{6}$", "", par_file_names))
-
           showModal(modalDialog(
             title = "Save parameter data",
             textInput(session$ns("fn_est_par"), label = "Enter the file name"),
@@ -75,11 +70,12 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
 
         observeEvent(input$fn_est_par, {
           fn_est_par <- input$fn_est_par
-          if(nchar(fn_est_par) == 0){
-            showFeedbackDanger(inputId = "fn_est_par", text = "Required")
+          par_file_names <- list.files(paste0(path_pack, "/extdata/param"))
+          if(is.element(paste0(fn_est_par, ".RData"), par_file_names)){
+            showFeedbackDanger(inputId = "fn_est_par", text = "A file with the same name already exists.")
             disable("act_saveas_est_par_2")
-          }else if(is.element(fn_est_par, rv_par_file_names())){
-            showFeedbackDanger(inputId = "fn_est_par", text = "This name is already registered.")
+          }else if(nchar(fn_est_par) == 0){
+            hideFeedback("fn_est_par")
             disable("act_saveas_est_par_2")
           }else{
             hideFeedback("fn_est_par")

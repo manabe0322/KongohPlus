@@ -171,12 +171,7 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           })
         })
 
-        rv_sr_file_names <- reactiveVal(NULL)
-
         observeEvent(input$act_saveas_est_sr_1, {
-          sr_file_names <- list.files(paste0(path_pack, "/extdata/stutter_file"))
-          rv_sr_file_names(gsub(".{6}$", "", sr_file_names))
-
           showModal(modalDialog(
             title = "Save stutter data",
             textInput(session$ns("fn_est_sr"), label = "Enter the file name"),
@@ -189,11 +184,12 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
 
         observeEvent(input$fn_est_sr, {
           fn_est_sr <- input$fn_est_sr
-          if(nchar(fn_est_sr) == 0){
-            showFeedbackDanger(inputId = "fn_est_sr", text = "Required")
+          sr_file_names <- list.files(paste0(path_pack, "/extdata/stutter_file"))
+          if(is.element(paste0(fn_est_sr, ".RData"), sr_file_names)){
+            showFeedbackDanger(inputId = "fn_est_sr", text = "A file with the same name already exists.")
             disable("act_saveas_est_sr_2")
-          }else if(is.element(fn_est_sr, rv_sr_file_names())){
-            showFeedbackDanger(inputId = "fn_est_sr", text = "This name is already registered.")
+          }else if(nchar(fn_est_sr) == 0){
+            hideFeedback("fn_est_sr")
             disable("act_saveas_est_sr_2")
           }else{
             hideFeedback("fn_est_sr")

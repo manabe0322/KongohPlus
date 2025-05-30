@@ -268,7 +268,7 @@ edit_sr_server <- function(id, path_pack){
         if(is.element(paste0(fn_edit_sr, ".RData"), fn_stutter_all)){
           showFeedbackDanger(inputId = "fn_edit_sr", text = "A file with the same name already exists.")
           disable("act_save_as_edit_sr_2")
-        }else if(fn_edit_sr == ""){
+        }else if(nchar(fn_edit_sr) == 0){
           hideFeedback("fn_edit_sr")
           disable("act_save_as_edit_sr_2")
         }else{

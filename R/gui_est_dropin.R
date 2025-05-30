@@ -262,12 +262,7 @@ est_dropin_server <- function(id, path_pack){
             )
           })
 
-          rv_dropin_file_names <- reactiveVal(NULL)
-
           observeEvent(input$act_saveas_est_dropin_1, {
-            dropin_file_names <- list.files(paste0(path_pack, "/extdata/dropin"))
-            rv_dropin_file_names(gsub(".{6}$", "", dropin_file_names))
-
             showModal(modalDialog(
               title = "Save drop-in data",
               textInput(session$ns("fn_est_dropin"), label = "Enter the file name"),
@@ -280,11 +275,12 @@ est_dropin_server <- function(id, path_pack){
 
           observeEvent(input$fn_est_dropin, {
             fn_est_dropin <- input$fn_est_dropin
-            if(nchar(fn_est_dropin) == 0){
-              showFeedbackDanger(inputId = "fn_est_dropin", text = "Required")
+            dropin_file_names <- list.files(paste0(path_pack, "/extdata/dropin"))
+            if(is.element(paste0(fn_est_dropin, ".RData"), dropin_file_names)){
+              showFeedbackDanger(inputId = "fn_est_dropin", text = "A file with the same name already exists.")
               disable("act_saveas_est_dropin_2")
-            }else if(is.element(fn_est_dropin, rv_dropin_file_names())){
-              showFeedbackDanger(inputId = "fn_est_dropin", text = "This name is already registered.")
+            }else if(nchar(fn_est_dropin) == 0){
+              hideFeedback("fn_est_dropin")
               disable("act_saveas_est_dropin_2")
             }else{
               hideFeedback("fn_est_dropin")
