@@ -1,7 +1,8 @@
 Category,Subcategory,Name,Value
-Parameter,,MLE_Param_GF_KMU30,
-Stutter file,,MLE_Stutter_GF_KMU30,
 Kit,,GlobalFiler,
+Stutter data,,MLE_Stutter_GF_KMU30,
+Parameter data,,MLE_Param_GF_KMU30,
+Drop-in data,,MLE_Drop-in_GF_KMU30,
 AT,D3S1358,,35
 AT,vWA,,35
 AT,D16S539,,35
@@ -23,13 +24,35 @@ AT,D10S1248,,45
 AT,D1S1656,,45
 AT,D12S391,,45
 AT,D2S1338,,45
-Genotype probability,Theta,,0
 Genotype filter,Maximum BSR,,0.3
 Genotype filter,Maximum FSR,,0.2
 Genotype filter,Maximum DSR,,0.05
 Genotype filter,Maximum M2SR,,0.1
 Genotype filter,Maximum number of drop-in,,2
 Genotype filter,Maximum height of drop-in,,150
-Drop-in,Frequency of drop-in,,0.004593477
-Drop-in,Shape parameter,,5.26074
-Drop-in,Rate parameter,,0.0886642
+LSAE,D3S1358,,1.422324226
+LSAE,vWA,,1.102321709
+LSAE,D16S539,,0.918706193
+LSAE,CSF1PO,,0.906542626
+LSAE,TPOX,,0.753043209
+LSAE,D8S1179,,1.351247198
+LSAE,D21S11,,0.831890259
+LSAE,D18S51,,0.925657164
+LSAE,D2S441,,1.137367277
+LSAE,D19S433,,0.847130319
+LSAE,TH01,,0.795098733
+LSAE,FGA,,0.873531201
+LSAE,D22S1045,,0.916437795
+LSAE,D5S818,,0.931054299
+LSAE,D13S317,,1.185684488
+LSAE,D7S820,,0.903046495
+LSAE,SE33,,1.026155111
+LSAE,D10S1248,,1.247104815
+LSAE,D1S1656,,1.043058551
+LSAE,D12S391,,0.823967719
+LSAE,D2S1338,,1.058630613
+Peak height,CV for allele,,9.69913
+Peak height,CV for stutter,,3.19149
+Drop-in,Frequency,,0.004593477
+Drop-in,Shape parameter,,5.26077
+Drop-in,Rate parameter,,0.0886637
