@@ -56,7 +56,7 @@ create_dt_info_anameth <- function(path_pack){
 #' @param dropin_name The name of the drop-in data
 create_default_dt_anameth <- function(path_pack, kit_name, stutter_name, param_name, dropin_name){
   dt_kit <- fread(paste0(path_pack, "/extdata/kit/", kit_name, ".csv"))
-  markers_auto <- unique(dt_kit[["Marker"]][dt_kit[["Chr"]] == "Auto"])
+  markers_auto <- unique(dt_kit[["Marker"]][dt_kit[["Chromosome"]] == "Autosomal"])
   n_mk <- length(markers_auto)
 
   load(paste0(path_pack, "/extdata/param/", param_name, ".RData"))
@@ -98,7 +98,7 @@ anameth_server <- function(id, path_pack){
 
       # Define a new analysis method
       observeEvent(input$act_anameth_new, {
-        kit_all <- list.files(paste0(path_pack, "/extdata/stutter"))
+        kit_all <- list.files(paste0(path_pack, "/extdata/kit"))
         kit_all <- gsub(".{4}$", "", kit_all)
 
         stutter_all <- list.files(paste0(path_pack, "/extdata/stutter"))
@@ -170,6 +170,8 @@ anameth_server <- function(id, path_pack){
 
           }
         }
+
+        removeModal()
       })
 
       # Copy an analysis method
