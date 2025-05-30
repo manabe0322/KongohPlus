@@ -184,7 +184,7 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
 
         observeEvent(input$fn_est_sr, {
           fn_est_sr <- input$fn_est_sr
-          sr_file_names <- list.files(paste0(path_pack, "/extdata/stutter_file"))
+          sr_file_names <- list.files(paste0(path_pack, "/extdata/stutter"))
           if(is.element(paste0(fn_est_sr, ".RData"), sr_file_names)){
             showFeedbackDanger(inputId = "fn_est_sr", text = "A file with the same name already exists.")
             disable("act_saveas_est_sr_2")
