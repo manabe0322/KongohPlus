@@ -6,19 +6,22 @@
 \usage{
 create_default_dt_anameth(
   path_pack,
-  parameter_name,
-  stutter_file_name,
-  kit_name
+  kit_name,
+  stutter_name,
+  param_name,
+  dropin_name
 )
 }
 \arguments{
 \item{path_pack}{The package path of KongohPlus}
 
-\item{parameter_name}{A parameter name}
-
-\item{stutter_file_name}{A stutter file name}
-
 \item{kit_name}{A kit name}
+
+\item{stutter_name}{The name of the stutter data}
+
+\item{param_name}{The name of the parameter data}
+
+\item{dropin_name}{The name of the drop-in data}
 }
 \description{
 The function to create the default data.table for a new analysis method
