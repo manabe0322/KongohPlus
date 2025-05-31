@@ -64,6 +64,10 @@ std::vector<std::vector<int>> connect_rph_gtc(std::vector<double> gtc,
   }
 
   //Ascending order of index for one contributor
+    //When gtc1 is (12, 15), indices for peak 15 are (5 * n_peak, ind_al).
+    //When gtc2 is (15, 18), indices for peak 15 are (ind_al, 5 * n_peak).
+    //(5 * n_peak, ind_al) and (ind_al, 5 * n_peak) are substantially the same.
+    //In that case, put (5 * n_peak, ind_al) in ascending order
   for(int i = 0; i < n_peak; ++i){
     for(int j = 0; j < hnc; ++j){
       int index_1 = index_rph_gtc_cpp[i][2 * j];

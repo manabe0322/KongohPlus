@@ -111,7 +111,7 @@ test_that("make_detectable_peak pattern 5", {
   expect_equal(detectable_peak[11], 17)
 })
 
-test_that("make_detectable_peak pattern 6", {
+test_that("make_detectable_peak pattern 6 (If the assumed alleles are not detected, then the stutters are also not assumed to be detected.)", {
   # Condition
   gtc <- c(13, 14, 15, 16)
   peaks <- c(12, 17)

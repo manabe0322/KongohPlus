@@ -64,10 +64,10 @@ data{
 
   array[n_rep] int n_rph_sum_per_rep;
   int n_rph_sum;
-  array[2 * hnc, n_rph_sum] int index_dedup1_mcmc;
-  matrix[n_rph_sum, 2 * hnc] cv_square_mcmc;
-  vector[n_rph_sum] deg_size_mcmc;
-  vector[n_rph_sum] oph_mcmc;
+  array[2 * hnc, n_rph_sum] int index_dedup1_mle;
+  matrix[n_rph_sum, 2 * hnc] cv_square_mle;
+  vector[n_rph_sum] deg_size_mle;
+  vector[n_rph_sum] oph_mle;
 
   array[n_rep] int n_general_sum_per_rep;
   array[n_rep] int n_dropout_sum_per_rep;
@@ -113,12 +113,12 @@ model{
   for(i in 1:n_rep){
     // Extract data for one replicate
     int n_rph_sum_rep1 = n_rph_sum_per_rep[i];
-    array[2 * hnc, n_rph_sum_rep1] int index_dedup1_rep1 = index_dedup1_mcmc[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
-    matrix[n_rph_sum_rep1, 2 * hnc] cv_square_rep1 = cv_square_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1), ];
-    vector[n_rph_sum_rep1] oph_rep1 = oph_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
+    array[2 * hnc, n_rph_sum_rep1] int index_dedup1_rep1 = index_dedup1_mle[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
+    matrix[n_rph_sum_rep1, 2 * hnc] cv_square_rep1 = cv_square_mle[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1), ];
+    vector[n_rph_sum_rep1] oph_rep1 = oph_mle[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)];
 
     // Calculate relative peak heights
-    matrix[n_rph_sum_rep1, 2 * hnc] rph_dedup1 = calc_rph_dedup1(mp, deg, hnc, n_rph_sum_rep1, rph_base_use, index_dedup1_rep1, deg_size_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]);
+    matrix[n_rph_sum_rep1, 2 * hnc] rph_dedup1 = calc_rph_dedup1(mp, deg, hnc, n_rph_sum_rep1, rph_base_use, index_dedup1_rep1, deg_size_mle[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]);
 
     // Calculate gamma parameters
     matrix[n_rph_sum_rep1, 2] gamma_param = calc_gamma_param(rph_dedup1, cv_square_rep1, 2 * hnc, n_rph_sum_rep1, tph[i]);

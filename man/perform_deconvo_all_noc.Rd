@@ -10,11 +10,9 @@ perform_deconvo_all_noc(
   dt_kit_auto,
   dt_ignore_mk,
   dt_anameth,
-  expect_ae,
-  cv_allele,
-  cv_stutter,
   list_dt_average_sr,
   hnc_all,
+  theta,
   initial_point_factor
 )
 }
@@ -29,15 +27,11 @@ perform_deconvo_all_noc(
 
 \item{dt_anameth}{The data.table of the analysis method}
 
-\item{expect_ae}{A vector of the expected locus-specific amplification efficiencies}
-
-\item{cv_allele}{The coefficient of variation for allelels}
-
-\item{cv_stutter}{The coefficient of variation for stutters}
-
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 
 \item{hnc_all}{A vector of the assumed number of contributors}
+
+\item{theta}{The theta value for sub-population effect}
 
 \item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
 }

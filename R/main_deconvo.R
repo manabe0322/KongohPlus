@@ -408,9 +408,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
   if(all(n_gtc_use != 0)){
 
-    ###########################
-    # Define objects for MCMC #
-    ###########################
+    ##########################
+    # Define objects for MLE #
+    ##########################
 
     n_rph_base_use <- sapply(rph_base_use, length)
 
@@ -450,10 +450,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     ##################################################
 
     index_dedup1_use <- matrix(NA, nrow = 2 * hnc, ncol = n_dedup1_sum)
-    index_dedup1_mcmc <- matrix(NA, nrow = 2 * hnc, ncol = n_rph_sum)
-    cv_square_mcmc <- matrix(NA, nrow = 2 * hnc, ncol = n_rph_sum)
-    size_mcmc <- rep(NA, n_rph_sum)
-    oph_mcmc <- rep(NA, n_rph_sum)
+    index_dedup1_mle <- matrix(NA, nrow = 2 * hnc, ncol = n_rph_sum)
+    cv_square_mle <- matrix(NA, nrow = 2 * hnc, ncol = n_rph_sum)
+    size_mle <- rep(NA, n_rph_sum)
+    oph_mle <- rep(NA, n_rph_sum)
     at_dropout <- rep(NA, n_dropout_sum)
 
     index_start_rph_general <- 1
@@ -476,10 +476,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         n_general <- n_general_rep1[j]
         if(n_general != 0){
           index_tmp <- index_start_rph_general:(index_start_rph_general + n_general - 1)
-          index_dedup1_mcmc[, index_tmp] <- index_dedup1_general_use[[i]][[j]] + sumup_index_dedup1
-          cv_square_mcmc[, index_tmp] <- cv_square_dedup1_general_use[[i]][[j]]
-          size_mcmc[index_tmp] <- size_dedup1_general_use[[i]][[j]]
-          oph_mcmc[index_tmp] <- oph_dedup1_general_use[[i]][[j]]
+          index_dedup1_mle[, index_tmp] <- index_dedup1_general_use[[i]][[j]] + sumup_index_dedup1
+          cv_square_mle[, index_tmp] <- cv_square_dedup1_general_use[[i]][[j]]
+          size_mle[index_tmp] <- size_dedup1_general_use[[i]][[j]]
+          oph_mle[index_tmp] <- oph_dedup1_general_use[[i]][[j]]
 
           index_tmp <- index_start_dedup1_use_general:(index_start_dedup1_use_general + n_general - 1)
           index_dedup1_use[, index_tmp] <- index_dedup1_general_use[[i]][[j]] + sumup_index_dedup1
@@ -488,10 +488,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         n_dropout <- n_dropout_rep1[j]
         if(n_dropout != 0){
           index_tmp <- index_start_rph_dropout:(index_start_rph_dropout + n_dropout - 1)
-          index_dedup1_mcmc[, index_tmp] <- index_dedup1_dropout_use[[i]][[j]] + sumup_index_dedup1
-          cv_square_mcmc[, index_tmp] <- cv_square_dedup1_dropout_use[[i]][[j]]
-          size_mcmc[index_tmp] <- size_dedup1_dropout_use[[i]][[j]]
-          oph_mcmc[index_tmp] <- oph_dedup1_dropout_use[[i]][[j]]
+          index_dedup1_mle[, index_tmp] <- index_dedup1_dropout_use[[i]][[j]] + sumup_index_dedup1
+          cv_square_mle[, index_tmp] <- cv_square_dedup1_dropout_use[[i]][[j]]
+          size_mle[index_tmp] <- size_dedup1_dropout_use[[i]][[j]]
+          oph_mle[index_tmp] <- oph_dedup1_dropout_use[[i]][[j]]
 
           at_dropout[index_at_start:(index_at_start + n_dropout - 1)] <- ats_use[j]
 
@@ -526,7 +526,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       index_start_dedup1_use_general <- n_dedup1_sum_per_rep[i] + 1
     }
 
-    deg_size_mcmc <- (size_mcmc - min_size) / min_size
+    deg_size_mle <- (size_mle - min_size) / min_size
 
     ##################################################
     # Prepare objects for de-duplication (pattern 2) #
@@ -553,9 +553,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       index_dedup1_start <- index_dedup1_start + n_dedup1_sum_per_rep[i]
     }
 
-    ##########################################################
-    # Determine the prior distribution for the parameter tph #
-    ##########################################################
+    ################################################################
+    # Determine the probability distribution for the parameter tph #
+    ################################################################
 
     median_sizes_use <- rep(median_sizes_use, n_rep)
     tph_per_mk_use <- as.vector(tph_per_mk_use)
@@ -584,10 +584,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                rph_base_use = unlist(rph_base_use),
                                n_dedup1_sum = n_dedup1_sum,
                                n_rph_sum = n_rph_sum,
-                               index_dedup1_rep1 = index_dedup1_mcmc,
-                               cv_square_rep1 = t(cv_square_mcmc),
-                               deg_size_rep1 = deg_size_mcmc,
-                               oph_rep1 = oph_mcmc,
+                               index_dedup1_rep1 = index_dedup1_mle,
+                               cv_square_rep1 = t(cv_square_mle),
+                               deg_size_rep1 = deg_size_mle,
+                               oph_rep1 = oph_mle,
                                n_general_sum = n_general_sum,
                                n_dropout_sum = n_dropout_sum,
                                at_dropout_rep1 = at_dropout,
@@ -611,10 +611,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
                                n_rph_sum_per_rep = n_rph_sum_per_rep,
                                n_rph_sum = n_rph_sum,
-                               index_dedup1_mcmc = index_dedup1_mcmc,
-                               cv_square_mcmc = t(cv_square_mcmc),
-                               deg_size_mcmc = deg_size_mcmc,
-                               oph_mcmc = oph_mcmc,
+                               index_dedup1_mle = index_dedup1_mle,
+                               cv_square_mle = t(cv_square_mle),
+                               deg_size_mle = deg_size_mle,
+                               oph_mle = oph_mle,
                                n_general_sum_per_rep = n_general_sum_per_rep,
                                n_dropout_sum_per_rep = n_dropout_sum_per_rep,
                                n_dropout_sum = n_dropout_sum,
@@ -645,10 +645,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                rph_base_use = unlist(rph_base_use),
                                n_dedup1_sum = n_dedup1_sum,
                                n_rph_sum = n_rph_sum,
-                               index_dedup1_rep1 = index_dedup1_mcmc,
-                               cv_square_rep1 = t(cv_square_mcmc),
-                               deg_size_rep1 = deg_size_mcmc,
-                               oph_rep1 = oph_mcmc,
+                               index_dedup1_rep1 = index_dedup1_mle,
+                               cv_square_rep1 = t(cv_square_mle),
+                               deg_size_rep1 = deg_size_mle,
+                               oph_rep1 = oph_mle,
                                n_general_sum = n_general_sum,
                                n_dropout_sum = n_dropout_sum,
                                at_dropout_rep1 = at_dropout,
@@ -673,10 +673,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
                                n_rph_sum_per_rep = n_rph_sum_per_rep,
                                n_rph_sum = n_rph_sum,
-                               index_dedup1_mcmc = index_dedup1_mcmc,
-                               cv_square_mcmc = t(cv_square_mcmc),
-                               deg_size_mcmc = deg_size_mcmc,
-                               oph_mcmc = oph_mcmc,
+                               index_dedup1_mle = index_dedup1_mle,
+                               cv_square_mle = t(cv_square_mle),
+                               deg_size_mle = deg_size_mle,
+                               oph_mle = oph_mle,
                                n_general_sum_per_rep = n_general_sum_per_rep,
                                n_dropout_sum_per_rep = n_dropout_sum_per_rep,
                                n_dropout_sum = n_dropout_sum,
@@ -716,12 +716,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       lpd_gtc_use <- vector(mode = "list", length = n_rep)
       for(i in 1:n_rep){
         n_rph_sum_rep1 <- n_rph_sum_per_rep[i]
-        index_dedup1_rep1 <- index_dedup1_mcmc[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+        index_dedup1_rep1 <- index_dedup1_mle[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
         index_dedup1_rep1_cpp <- asplit(index_dedup1_rep1 - 1, 1) # C++ index
-        cv_square_rep1 <- cv_square_mcmc[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+        cv_square_rep1 <- cv_square_mle[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
         cv_square_rep1 <- asplit(cv_square_rep1, 1)
-        size_rep1 <- size_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
-        oph_rep1 <- oph_mcmc[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+        size_rep1 <- size_mle[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+        oph_rep1 <- oph_mle[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
 
         n_dedup1_sum_rep1 <- n_dedup1_sum_per_rep[i]
         n_general_sum_rep1 <- n_general_sum_per_rep[i]
