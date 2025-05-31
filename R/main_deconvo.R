@@ -188,7 +188,7 @@ make_dt_pg_list <- function(markers_use, label_contrib, gtc_use, gtc_logprob_use
     tmp_gtc_mk[which(tmp_gtc_mk == 99, arr.ind = TRUE)] <- "Q"
     gtc_mk_bind <- matrix("", nrow(gtc_mk), hnc)
     for(j in 1:hnc){
-      gtc_mk_bind[, j] <- apply(tmp_gtc_mk[, c(2 * j - 1, 2 * j)], 1, paste, collapse = ", ")
+      gtc_mk_bind[, j] <- apply(tmp_gtc_mk[, c(2 * j - 1, 2 * j), drop = FALSE], 1, paste, collapse = ", ")
     }
 
     # Calculate posterior probabilities of each genotype combination
