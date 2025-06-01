@@ -88,9 +88,9 @@ parameters{
 }
 
 model{
-  // Prior distribution for each parameter
-  tph ~ normal(tph_mean, tph_sd);
-  deg ~ beta(1, 1);
+  // Prior distribution for each parameter (for MCMC)
+  // tph ~ normal(tph_mean, tph_sd);
+  // deg ~ beta(1, 1);
 
   // Initial indices to access first replicate
   int index_rph_start = 1;

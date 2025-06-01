@@ -83,9 +83,9 @@ parameters{
 }
 
 model{
-  // Prior distribution for each parameter
-  tph ~ normal(tph_mean, tph_sd);
-  deg ~ beta(1, 1);
+  // Prior distribution for each parameter (for MCMC)
+  // tph ~ normal(tph_mean, tph_sd);
+  // deg ~ beta(1, 1);
 
   // Calculate relative peak heights
   matrix[n_rph_sum, 2] rph_dedup1 = calc_rph_dedup1(deg, n_rph_sum, rph_base_use, index_dedup1_rep1, deg_size_rep1);
