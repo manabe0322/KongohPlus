@@ -42,20 +42,19 @@ generate_init_sobol_1p <- function(x, n_rep, tph_mean, tph_sd){
 #' @param n_rep The number of replicates
 #' @param tph_mean The mean of the total peak height
 #' @param tph_sd The SD of the total peak height
-#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
-run_mle_1p <- function(model_name, data_list_main, n_rep, tph_mean, tph_sd, initial_point_factor){
-  n_sobol <- initial_point_factor * (n_rep + 1)
-  init_list <- lapply(1:n_sobol, function(x) generate_init_sobol_1p(x, n_rep, tph_mean, tph_sd))
+#' @param num_init The number of initial points for Pathfinder
+run_mle_1p <- function(model_name, data_list_main, n_rep, tph_mean, tph_sd, num_init){
+  warn_optim <- FALSE
 
-  tmp_param <- matrix(NA, n_sobol, n_rep + 2)
+  init_list <- lapply(1:num_init, function(x) generate_init_sobol_1p(x, n_rep, tph_mean, tph_sd))
+
+  tmp_param <- matrix(NA, num_init, n_rep + 2)
   model_main <- stan_package_model(name = model_name, package = "KongohPlus")
-  for(i in 1:n_sobol){
+  for(i in 1:num_init){
     fit <- suppressWarnings(model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
-    if(fit$return_codes() == 0){
-      tmp <- try(fit$draws())
-      if(!inherits(tmp, "try-error")){
-        tmp_param[i, ] <- tmp[1, ]
-      }
+    tmp <- try(fit$draws())
+    if(!inherits(tmp, "try-error")){
+      tmp_param[i, ] <- tmp[1, ]
     }
   }
 
@@ -63,11 +62,27 @@ run_mle_1p <- function(model_name, data_list_main, n_rep, tph_mean, tph_sd, init
   if(length(index_max_lp) == 1){
     est_param <- tmp_param[index_max_lp, -1]
   }else{
-    est_param <- rep(NA, n_rep + 1)
-  }
-  names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), "deg[1]")
+    warn_optim <- TRUE
 
-  return(est_param)
+    tmp_param <- matrix(NA, num_init, n_rep + 3)
+    for(i in 1:num_init){
+      fit <- model_main$pathfinder(data_list_main, init = init_list[[i]])
+      tmp <- try(fit$draws())
+      if(!inherits(tmp, "try-error")){
+        tmp_param[i, ] <- tmp[which.max(tmp[, 2]), ]
+      }
+    }
+
+    index_max_lp <- which.max(tmp_param[, 2])
+    if(length(index_max_lp) == 1){
+      est_param <- tmp_param[index_max_lp, c(-1, -2)]
+    }else{
+      est_param <- rep(NA, n_rep + 1)
+    }
+  }
+
+  names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), "deg[1]")
+  return(list(est_param = est_param, warn_optim = warn_optim))
 }
 
 #' generate_init_sobol
@@ -107,23 +122,55 @@ generate_init_sobol <- function(x, n_rep, hnc, tph_mean, tph_sd){
 #' @param hnc The hypothesized number of contributors
 #' @param tph_mean The mean of the total peak height
 #' @param tph_sd The SD of the total peak height
-#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
-run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, initial_point_factor){
-  n_sobol <- initial_point_factor * (n_rep + 2 * hnc)
-  init_list <- lapply(1:n_sobol, function(x) generate_init_sobol(x, n_rep, hnc, tph_mean, tph_sd))
+#' @param num_init The number of initial points for Pathfinder
+run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, num_init){
+  warn_optim <- FALSE
+
+  init_list <- lapply(1:num_init, function(x) generate_init_sobol(x, n_rep, hnc, tph_mean, tph_sd))
 
   if(hnc == 2){
-    tmp_param <- matrix(NA, n_sobol, 1 + n_rep + 3 * hnc)
+    tmp_param <- matrix(NA, num_init, 1 + n_rep + 3 * hnc)
     model_main <- stan_package_model(name = model_name, package = "KongohPlus")
-    for(i in 1:n_sobol){
-      fit <- suppressWarnings(model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
-      if(fit$return_codes() == 0){
-        tmp <- try(fit$draws())
-        if(!inherits(tmp, "try-error")){
-          tmp_param[i, ] <- tmp[1, ]
-        }
+
+    for(i in 1:num_init){
+      # Create output_dir
+      outdir <- file.path(tempdir(), paste0("run_", i))
+      dir.create(outdir, showWarnings = FALSE)
+
+      fit <- suppressWarnings(model_main$optimize(data_list_main, init = init_list[[i]], output_dir = outdir, refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
+      tmp <- try(fit$draws())
+      if(!inherits(tmp, "try-error")){
+        tmp_param[i, ] <- tmp[1, ]
       }
     }
+
+    index_max_lp <- which.max(tmp_param[, 1])
+    if(length(index_max_lp) == 1){
+      est_param <- tmp_param[index_max_lp, -1]
+    }else{
+      warn_optim <- TRUE
+
+      tmp_param <- matrix(NA, num_init, 2 + n_rep + 3 * hnc)
+      for(i in 1:num_init){
+        # Create output_dir
+        outdir <- file.path(tempdir(), paste0("run_", i))
+        dir.create(outdir, showWarnings = FALSE)
+
+        fit <- model_main$pathfinder(data_list_main, init = init_list[[i]], output_dir = outdir)
+        tmp <- try(fit$draws())
+        if(!inherits(tmp, "try-error")){
+          tmp_param[i, ] <- tmp[which.max(tmp[, 2]), ]
+        }
+      }
+
+      index_max_lp <- which.max(tmp_param[, 2])
+      if(length(index_max_lp) == 1){
+        est_param <- tmp_param[index_max_lp, c(-1, -2)]
+      }else{
+        est_param <- rep(NA, n_rep + 3 * hnc)
+      }
+    }
+
   }else{
     cores <- min(4, detectCores() - 1)
     cl <- makeCluster(cores)
@@ -131,33 +178,65 @@ run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, in
     clusterEvalQ(cl, library(cmdstanr))
     clusterEvalQ(cl, library(instantiate))
 
-    tmp_param <- parLapply(cl, 1:n_sobol, function(i){
+    tmp_param <- parLapply(cl, 1:num_init, function(i){
       model_main <- stan_package_model(name = model_name, package = "KongohPlus")
-      fit <- suppressWarnings(model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
-      if(fit$return_codes() == 0){
-        tmp <- try(fit$draws())
-        if(!inherits(tmp, "try-error")){
-          return(as.vector(tmp[1, ]))
-        }else{
-          return(rep(NA, 1 + n_rep + 3 * hnc))
-        }
+
+      # Create output_dir
+      outdir <- file.path(tempdir(), paste0("run_", i))
+      dir.create(outdir, showWarnings = FALSE)
+
+      fit <- suppressWarnings(model_main$optimize(data_list_main, init = init_list[[i]], output_dir = outdir, refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
+      tmp <- try(fit$draws())
+      if(!inherits(tmp, "try-error")){
+        return(as.vector(tmp[1, ]))
       }else{
         return(rep(NA, 1 + n_rep + 3 * hnc))
       }
     })
     stopCluster(cl)
     tmp_param <- matrix(unlist(tmp_param), ncol = 1 + n_rep + 3 * hnc, byrow = TRUE)
+
+    index_max_lp <- which.max(tmp_param[, 1])
+    if(length(index_max_lp) == 1){
+      est_param <- tmp_param[index_max_lp, -1]
+    }else{
+      warn_optim <- TRUE
+
+      cores <- min(4, detectCores() - 1)
+      cl <- makeCluster(cores)
+      clusterExport(cl, varlist = c("model_name", "data_list_main", "init_list", "n_rep", "hnc"), envir = environment())
+      clusterEvalQ(cl, library(cmdstanr))
+      clusterEvalQ(cl, library(instantiate))
+
+      tmp_param <- parLapply(cl, 1:num_init, function(i){
+        model_main <- stan_package_model(name = model_name, package = "KongohPlus")
+
+        # Create output_dir
+        outdir <- file.path(tempdir(), paste0("run_", i))
+        dir.create(outdir, showWarnings = FALSE)
+
+        fit <- model_main$pathfinder(data_list_main, init = init_list[[i]], output_dir = outdir)
+        tmp <- try(fit$draws())
+        if(!inherits(tmp, "try-error")){
+          return(as.vector(tmp[which.max(tmp[, 2]), ]))
+        }else{
+          return(rep(NA, 2 + n_rep + 3 * hnc))
+        }
+      })
+      stopCluster(cl)
+      tmp_param <- matrix(unlist(tmp_param), ncol = 2 + n_rep + 3 * hnc, byrow = TRUE)
+
+      index_max_lp <- which.max(tmp_param[, 2])
+      if(length(index_max_lp) == 1){
+        est_param <- tmp_param[index_max_lp, c(-1, -2)]
+      }else{
+        est_param <- rep(NA, n_rep + 3 * hnc)
+      }
+    }
   }
 
-  index_max_lp <- which.max(tmp_param[, 1])
-  if(length(index_max_lp) == 1){
-    est_param <- tmp_param[index_max_lp, -1]
-  }else{
-    est_param <- rep(NA, n_rep + 3 * hnc)
-  }
   names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), paste0("lambda[", 1:hnc, "]"), paste0("deg[", 1:hnc, "]"), paste0("mp[", 1:hnc, "]"))
-
-  return(est_param)
+  return(list(est_param = est_param, warn_optim = warn_optim))
 }
 
 #' make_dt_pg_list
@@ -230,13 +309,13 @@ make_dt_pg_list <- function(markers_use, label_contrib, gtc_use, gtc_logprob_use
 #' @param cv_allele The coefficient of variation for allelels
 #' @param cv_stutter The coefficient of variation for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
-#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
+#' @param num_init The number of initial points for Pathfinder
 perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                             pop_al_list, pop_prob_list, theta,
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, rate_di,
                             ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                            initial_point_factor){
+                            num_init){
   # Start computation
   start_time <- proc.time()
 
@@ -575,11 +654,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     if(hnc == 1){
       if(n_rep == 1){
-        model_name <- "model_main_rep1_single"
+        model_name <- "model_deconvo_single"
 
         data_list_main <- list(n_mk = n_mk,
-                               tph_mean = tph_mean,
-                               tph_sd = tph_sd,
                                n_rph_base_sum = sum(n_rph_base_use),
                                rph_base_use = unlist(rph_base_use),
                                n_dedup1_sum = n_dedup1_sum,
@@ -600,12 +677,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                n_gtc_use = n_gtc_use,
                                gtc_logprob_use = unlist(gtc_logprob_use))
       }else{
-        model_name <- "model_main_single"
+        model_name <- "model_deconvo_single_multi-rep"
 
         data_list_main <- list(n_rep = n_rep,
                                n_mk = n_mk,
-                               tph_mean = tph_mean,
-                               tph_sd = tph_sd,
                                n_rph_base_sum = sum(n_rph_base_use),
                                rph_base_use = unlist(rph_base_use),
                                n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
@@ -631,16 +706,16 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                gtc_logprob_use = unlist(gtc_logprob_use))
       }
 
-      est_param <- run_mle_1p(model_name, data_list_main, n_rep, tph_mean, tph_sd, initial_point_factor)
+      tmp <- run_mle_1p(model_name, data_list_main, n_rep, tph_mean, tph_sd, num_init)
+      est_param <- tmp$est_param
+      warn_optim <- tmp$warn_optim
 
     }else{
       if(n_rep == 1){
-        model_name <- "model_main_rep1"
+        model_name <- "model_deconvo_mix"
 
         data_list_main <- list(hnc = hnc,
                                n_mk = n_mk,
-                               tph_mean = tph_mean,
-                               tph_sd = tph_sd,
                                n_rph_base_sum = sum(n_rph_base_use),
                                rph_base_use = unlist(rph_base_use),
                                n_dedup1_sum = n_dedup1_sum,
@@ -661,13 +736,11 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                n_gtc_use = n_gtc_use,
                                gtc_logprob_use = unlist(gtc_logprob_use))
       }else{
-        model_name <- "model_main"
+        model_name <- "model_deconvo_mix_multi-rep"
 
         data_list_main <- list(hnc = hnc,
                                n_rep = n_rep,
                                n_mk = n_mk,
-                               tph_mean = tph_mean,
-                               tph_sd = tph_sd,
                                n_rph_base_sum = sum(n_rph_base_use),
                                rph_base_use = unlist(rph_base_use),
                                n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
@@ -693,10 +766,22 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                                gtc_logprob_use = unlist(gtc_logprob_use))
       }
 
-      est_param <- run_mle(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, initial_point_factor)
+      tmp <- run_mle(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, num_init)
+      est_param <- tmp$est_param
+      warn_optim <- tmp$warn_optim
     }
 
     if(!any(is.na(est_param))){
+      if(warn_optim){
+        if(hnc == 1){
+          warning_message <- "- Assuming NoC = 1, the most plausible parameters were selected from a diverse set of initializations based on their likelihood values."
+        }else{
+          warning_message <- paste0("- Assuming NoC = ", hnc, ", the most plausible parameters were selected from a diverse set of initializations based on their likelihood values.")
+        }
+      }else{
+        warning_message <- NULL
+      }
+
       tph <- est_param[paste0("tph[", 1:n_rep, "]")]
       deg <- est_param[paste0("deg[", 1:hnc, "]")]
       if(hnc == 1){
@@ -775,6 +860,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                   "dt_log10like" = dt_log10like,
                   "dt_param" = dt_param,
                   "comp_time" = comp_time,
+                  "warning_message" = warning_message,
                   "error_message" = NULL))
     }else{
       error_message <- paste0("Convergence failed under ", hnc, " contributor.<br>")
@@ -782,6 +868,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                   "dt_log10like" = NULL,
                   "dt_param" = NULL,
                   "comp_time" = NULL,
+                  "warning_message" = NULL,
                   "error_message" = error_message))
     }
   }else{
@@ -799,6 +886,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                 "dt_log10like" = NULL,
                 "dt_param" = NULL,
                 "comp_time" = NULL,
+                "warning_message" = NULL,
                 "error_message" = error_message))
   }
 }
@@ -814,8 +902,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc_all A vector of the assumed number of contributors
 #' @param theta The theta value for sub-population effect
-#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
-perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta, initial_point_factor){
+#' @param num_init The number of initial points for Pathfinder
+perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta, num_init){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
   if(n_mk != 0){
@@ -870,15 +958,15 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, rate_di,
                                       ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                                      initial_point_factor))
+                                      num_init))
       if(!inherits(data_hnc, "try-error")){
         data_hnc_list[[i]] <- data_hnc
       }else{
         data_hnc_list[[i]] <- list("dt_pg_list" = NULL,
                                    "dt_log10like" = NULL,
-                                   "dt_diag" = NULL,
-                                   "traceplot" = NULL,
+                                   "dt_param" = NULL,
                                    "comp_time" = NULL,
+                                   "warning_message" = NULL,
                                    "error_message" = "Unexpected error")
       }
     }

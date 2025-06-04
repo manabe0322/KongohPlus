@@ -1,13 +1,9 @@
 functions{
-  matrix calc_rph_dedup1(vector mp, vector deg, int hnc, int n_rph_sum_rep1, vector rph_base_use, array[,] int index_dedup1_rep1, vector deg_size_rep1){
-    matrix[n_rph_sum_rep1, 2 * hnc] rph_dedup1;
-    for(i in 1:hnc){
-      real mp_c1 = mp[i];
-      real deg_c1 = deg[i];
-      vector[n_rph_sum_rep1] rph_param = mp_c1 * deg_c1^deg_size_rep1;
-      for(j in 1:2){
-        rph_dedup1[, 2 * i - 2 + j] = rph_base_use[index_dedup1_rep1[2 * i - 2 + j, ]] .* rph_param;
-      }
+  matrix calc_rph_dedup1(real deg, int n_rph_sum_rep1, vector rph_base_use, array[,] int index_dedup1_rep1, vector deg_size_rep1){
+    matrix[n_rph_sum_rep1, 2] rph_dedup1;
+    vector[n_rph_sum_rep1] rph_param = deg^deg_size_rep1;
+    for(j in 1:2){
+      rph_dedup1[, j] = rph_base_use[index_dedup1_rep1[j, ]] .* rph_param;
     }
     return rph_dedup1;
   }
@@ -51,10 +47,9 @@ functions{
 }
 
 data{
-  int hnc;
   int n_mk;
-  real tph_mean;
-  real tph_sd;
+  //real tph_mean; (for MCMC)
+  //real tph_sd; (for MCMC)
 
   int n_rph_base_sum;
   vector[n_rph_base_sum] rph_base_use;
@@ -62,8 +57,8 @@ data{
   int n_dedup1_sum;
 
   int n_rph_sum;
-  array[2 * hnc, n_rph_sum] int index_dedup1_rep1;
-  matrix[n_rph_sum, 2 * hnc] cv_square_rep1;
+  array[2, n_rph_sum] int index_dedup1_rep1;
+  matrix[n_rph_sum, 2] cv_square_rep1;
   vector[n_rph_sum] deg_size_rep1;
   vector[n_rph_sum] oph_rep1;
 
@@ -84,26 +79,19 @@ data{
 
 parameters{
   real<lower = 0> tph;
-  ordered[hnc] lambda;
-  vector<lower = 0, upper = 1>[hnc] deg;
-}
-
-transformed parameters{
-  simplex[hnc] mp;
-  mp = softmax(lambda);
+  real<lower = 0, upper = 1> deg;
 }
 
 model{
   // Prior distribution for each parameter (for MCMC)
   // tph ~ normal(tph_mean, tph_sd);
-  // lambda ~ normal(0, 1);
   // deg ~ beta(1, 1);
 
   // Calculate relative peak heights
-  matrix[n_rph_sum, 2 * hnc] rph_dedup1 = calc_rph_dedup1(mp, deg, hnc, n_rph_sum, rph_base_use, index_dedup1_rep1, deg_size_rep1);
+  matrix[n_rph_sum, 2] rph_dedup1 = calc_rph_dedup1(deg, n_rph_sum, rph_base_use, index_dedup1_rep1, deg_size_rep1);
 
   // Calculate gamma parameters
-  matrix[n_rph_sum, 2] gamma_param = calc_gamma_param(rph_dedup1, cv_square_rep1, 2 * hnc, n_rph_sum, tph);
+  matrix[n_rph_sum, 2] gamma_param = calc_gamma_param(rph_dedup1, cv_square_rep1, 2, n_rph_sum, tph);
 
   // Calculate log-probability densities
   vector[n_dedup1_sum] lpd_dedup1_use_rep1 = rep_vector(0, n_dedup1_sum);
@@ -145,6 +133,7 @@ model{
                                                      gtc_logprob_use[index_gtc_start:(index_gtc_start + n_gtc - 1)]);
 
     target += log_sum_exp(loglike_gtc);
+
     index_lpd_start += n_dedup2;
     index_gtc_start += n_gtc;
   }

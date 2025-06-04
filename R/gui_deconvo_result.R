@@ -8,11 +8,6 @@ deconvo_result_ui <- function(id){
            br(),
            fluidRow(
              column(2,
-                    wellPanel(
-                      h4(textOutput(ns("title_warnings"))),
-                      htmlOutput(ns("warning_message"))
-                    ),
-                    br(),
                     uiOutput(ns("act_lr"))
              ),
              column(4,
@@ -27,6 +22,11 @@ deconvo_result_ui <- function(id){
                       h4(textOutput(ns("title_param"))),
                       uiOutput(ns("select_noc_param")),
                       uiOutput(ns("param")),
+                      br()
+                    ),
+                    wellPanel(
+                      h4(textOutput(ns("title_warnings"))),
+                      htmlOutput(ns("warning_message")),
                       br()
                     )
              )
@@ -57,7 +57,18 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         output$title_pg <- renderText({"Probabilistic genotyping"})
         output$title_param <- renderText({"Parameters"})
 
-        output$warning_message <- renderUI({HTML(message_sr)})
+        output$warning_message <- renderUI({
+          warning_message <- ""
+          for(i in 1:length(data_hnc_list)){
+            data_hnc <- data_hnc_list[[i]]
+            tmp <- data_hnc$warning_message
+            if(!is.null(tmp)){
+              warning_message <- paste0(warning_message, tmp, "<br>")
+            }
+          }
+          warning_message <- paste0(warning_message, message_sr, "<br>")
+          HTML(warning_message)
+        })
 
         output$act_lr <- renderUI({actionButton(session$ns("act_lr"), label = "Likelihood ratio", class = "btn btn-primary btn-lg")})
 

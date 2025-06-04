@@ -13,7 +13,7 @@ perform_deconvo_all_noc(
   list_dt_average_sr,
   hnc_all,
   theta,
-  initial_point_factor
+  num_init
 )
 }
 \arguments{
@@ -33,7 +33,7 @@ perform_deconvo_all_noc(
 
 \item{theta}{The theta value for sub-population effect}
 
-\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
+\item{num_init}{The number of initial points for Pathfinder}
 }
 \description{
 The function to perform mixture deconvolution for all assumed number of contributors

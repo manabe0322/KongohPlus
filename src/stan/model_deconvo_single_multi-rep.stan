@@ -49,8 +49,8 @@ functions{
 data{
   int n_rep;
   int n_mk;
-  real tph_mean;
-  real tph_sd;
+  //real tph_mean; (for MCMC)
+  //real tph_sd; (for MCMC)
 
   int n_rph_base_sum;
   vector[n_rph_base_sum] rph_base_use;

@@ -4,14 +4,7 @@
 \alias{run_mle_1p}
 \title{run_mle_1p}
 \usage{
-run_mle_1p(
-  model_name,
-  data_list_main,
-  n_rep,
-  tph_mean,
-  tph_sd,
-  initial_point_factor
-)
+run_mle_1p(model_name, data_list_main, n_rep, tph_mean, tph_sd, num_init)
 }
 \arguments{
 \item{model_name}{The name of the stan model for deconvolution}
@@ -24,7 +17,7 @@ run_mle_1p(
 
 \item{tph_sd}{The SD of the total peak height}
 
-\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
+\item{num_init}{The number of initial points for Pathfinder}
 }
 \description{
 The function to perform MLE for one contributor

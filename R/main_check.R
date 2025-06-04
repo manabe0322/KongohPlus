@@ -77,38 +77,45 @@ check_csp_sr <- function(dt_csp, dt_ignore_mk, dt_anameth, list_dt_average_sr){
     index_allele <- grep("Allele", names_csp)
     index_height <- grep("Height", names_csp)
 
-    setindex(dt_csp, SampleName)
+    setindex(dt_csp, Marker)
     sn_all_csp <- unique(dt_csp[, SampleName])
+    n_sn <- length(sn_all_csp)
 
     markers_at <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
     ats_auto <- dt_anameth$Value[dt_anameth$Category == "AT"]
 
-    for(i in 1:length(sn_all_csp)){
-      n_warning_mk <- 0
-      sn1_csp <- sn_all_csp[i]
-      dt_csp_sn1 <- dt_csp[SampleName == sn1_csp]
-      setindex(dt_csp_sn1, Marker)
-      for(j in 1:n_mk){
-        mk <- markers_use[j]
-        dt_csp_sn1_mk1 <- dt_csp_sn1[Marker == mk]
-        peaks <- as.character(dt_csp_sn1_mk1[, index_allele, with = FALSE])
-        heights <- as.numeric(dt_csp_sn1_mk1[, index_height, with = FALSE])
+    n_warning_mk <- 0
+    for(i in 1:n_mk){
+      mk <- markers_use[i]
+      dt_csp_mk1 <- dt_csp[Marker == mk]
+      setindex(dt_csp_mk1, SampleName)
+
+      at <- ats_auto[markers_at == mk]
+
+      dt_ave_sr <- list_dt_average_sr[[mk]]
+      alleles_registerd <- dt_ave_sr$Allele
+
+      peaks_not_registered <- character(0)
+      for(j in 1:n_sn){
+        sn1_csp <- sn_all_csp[j]
+        dt_csp_mk1_sn1 <- dt_csp_mk1[SampleName == sn1_csp]
+
+        peaks <- as.character(dt_csp_mk1_sn1[, index_allele, with = FALSE])
+        heights <- as.numeric(dt_csp_mk1_sn1[, index_height, with = FALSE])
         peaks <- peaks[!is.na(heights)]
         heights <- heights[!is.na(heights)]
 
-        at <- ats_auto[markers_at == mk]
         peaks <- peaks[heights >= at]
+        peaks_not_registered <- c(peaks_not_registered, peaks[!is.element(peaks, alleles_registerd)])
+      }
 
-        dt_ave_sr <- list_dt_average_sr[[mk]]
-        alleles_registerd <- dt_ave_sr$Allele
-
-        if(!all(is.element(peaks, alleles_registerd))){
-          n_warning_mk <- n_warning_mk + 1
-          if(n_warning_mk == 1){
-            message_sr <- paste0(message_sr, sn1_csp, "<br> &nbsp; - Stutter ratios of the following alleles are regarded as zero.<br>")
-          }
-          message_sr <- paste0(message_sr, "&nbsp; &nbsp; - ", mk, ": ", paste(peaks[!is.element(peaks, alleles_registerd)], collapse = ", "), "<br>")
+      peaks_not_registered <- as.character(sort(unique(as.numeric(peaks_not_registered))))
+      if(length(peaks_not_registered) != 0){
+        n_warning_mk <- n_warning_mk + 1
+        if(n_warning_mk == 1){
+          message_sr <- "- Stutter ratios of the following alleles are regarded as zero.<br>"
         }
+        message_sr <- paste0(message_sr, "&nbsp; &nbsp; - ", mk, ": ", paste(peaks_not_registered, collapse = ", "), "<br>")
       }
     }
   }

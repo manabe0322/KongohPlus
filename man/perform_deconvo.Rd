@@ -29,7 +29,7 @@ perform_deconvo(
   cv_allele,
   cv_stutter,
   list_dt_average_sr,
-  initial_point_factor
+  num_init
 )
 }
 \arguments{
@@ -41,7 +41,7 @@ perform_deconvo(
 
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 
-\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
+\item{num_init}{The number of initial points for Pathfinder}
 }
 \description{
 The function to perform mixture deconvolution

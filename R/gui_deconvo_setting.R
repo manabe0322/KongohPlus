@@ -74,7 +74,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$theta <- 0
       rv_deconvo_setting$fn_anameth <- ""
       rv_deconvo_setting$dt_anameth <- NULL
-      rv_deconvo_setting$initial_point_factor <- 5
+      rv_deconvo_setting$num_init <- 4
       rv_deconvo_setting$bool_correct_noc <- TRUE
       rv_deconvo_setting$bool_correct_theta <- TRUE
       rv_deconvo_setting$bool_before_deconvo <- TRUE
@@ -283,7 +283,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         showModal(modalDialog(
           title = "Advanced setting",
           h4("MLE conditions"),
-          numericInput(session$ns("initial_point_factor"), label = "Initial point factor", value = rv_deconvo_setting$initial_point_factor),
+          numericInput(session$ns("num_init"), label = "Number of initial points", value = rv_deconvo_setting$num_init),
           footer = tagList(
             actionButton(session$ns("act_advance_deconvo_save"), "Save"),
             modalButton("Cancel")
@@ -292,14 +292,14 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         ))
       })
 
-      observeEvent(input$initial_point_factor, {
-        initial_point_factor <- input$initial_point_factor
+      observeEvent(input$num_init, {
+        num_init <- input$num_init
 
-        hideFeedback("initial_point_factor")
+        hideFeedback("num_init")
         bool_correct_mle <- TRUE
 
-        if(!is.integer(initial_point_factor) || initial_point_factor <= 0){
-          showFeedbackDanger(inputId = "initial_point_factor", text = "Value must be an integer greater than zero.")
+        if(!is.integer(num_init) || num_init <= 0){
+          showFeedbackDanger(inputId = "num_init", text = "Value must be an integer greater than zero.")
           bool_correct_mle <- FALSE
         }
 
@@ -311,7 +311,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       })
 
       observeEvent(input$act_advance_deconvo_save, {
-        rv_deconvo_setting$initial_point_factor <- input$initial_point_factor
+        rv_deconvo_setting$num_init <- input$num_init
         removeModal()
       })
 
@@ -328,7 +328,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         dt_af <- rv_deconvo_setting$dt_af
         fn_anameth <- rv_deconvo_setting$fn_anameth
         dt_anameth <- rv_deconvo_setting$dt_anameth
-        initial_point_factor <- rv_deconvo_setting$initial_point_factor
+        num_init <- rv_deconvo_setting$num_init
 
         # Extract information on the kit
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Name[dt_anameth$Category == "Kit"], ".csv"))
@@ -353,7 +353,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
           }else{
             hnc_all <- hnc_from:hnc_to
-            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta, initial_point_factor)
+            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta, num_init)
             data_deconvo$hnc_all <- hnc_all
             data_deconvo$theta <- theta
             data_deconvo$dt_csp <- dt_csp
@@ -366,7 +366,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             data_deconvo$dt_ignore_mk <- dt_ignore_mk
             data_deconvo$list_dt_average_sr <- list_dt_average_sr
             data_deconvo$message_sr <- message_sr
-            data_deconvo$initial_point_factor <- initial_point_factor
+            data_deconvo$num_init <- num_init
             rv_deconvo$data_deconvo <- data_deconvo
 
             waiter_hide()
