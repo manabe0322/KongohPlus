@@ -82,7 +82,7 @@ run_mle_1p <- function(model_name, data_list_main, n_rep, tph_mean, tph_sd, num_
   }
 
   names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), "deg[1]")
-  return(list(est_param = est_param, warn_optim = warn_optim))
+  return(list(est_param = est_param, warn_optim = warn_optim, init_list = init_list))
 }
 
 #' generate_init_sobol
@@ -236,7 +236,7 @@ run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, nu
   }
 
   names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), paste0("lambda[", 1:hnc, "]"), paste0("deg[", 1:hnc, "]"), paste0("mp[", 1:hnc, "]"))
-  return(list(est_param = est_param, warn_optim = warn_optim))
+  return(list(est_param = est_param, warn_optim = warn_optim, init_list = init_list))
 }
 
 #' make_dt_pg_list
@@ -709,6 +709,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       tmp <- run_mle_1p(model_name, data_list_main, n_rep, tph_mean, tph_sd, num_init)
       est_param <- tmp$est_param
       warn_optim <- tmp$warn_optim
+      init_list <- tmp$init_list
 
     }else{
       if(n_rep == 1){
@@ -769,6 +770,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       tmp <- run_mle(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, num_init)
       est_param <- tmp$est_param
       warn_optim <- tmp$warn_optim
+      init_list <- tmp$init_list
     }
 
     if(!any(is.na(est_param))){
@@ -860,6 +862,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                   "dt_log10like" = dt_log10like,
                   "dt_param" = dt_param,
                   "comp_time" = comp_time,
+                  "init_list" = init_list,
                   "warning_message" = warning_message,
                   "error_message" = NULL))
     }else{
@@ -868,6 +871,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                   "dt_log10like" = NULL,
                   "dt_param" = NULL,
                   "comp_time" = NULL,
+                  "init_list" = NULL,
                   "warning_message" = NULL,
                   "error_message" = error_message))
     }
@@ -886,6 +890,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                 "dt_log10like" = NULL,
                 "dt_param" = NULL,
                 "comp_time" = NULL,
+                "init_list" = NULL,
                 "warning_message" = NULL,
                 "error_message" = error_message))
   }
@@ -966,6 +971,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                    "dt_log10like" = NULL,
                                    "dt_param" = NULL,
                                    "comp_time" = NULL,
+                                   "init_list" = NULL,
                                    "warning_message" = NULL,
                                    "error_message" = "Unexpected error")
       }
