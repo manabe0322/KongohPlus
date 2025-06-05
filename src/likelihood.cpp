@@ -101,7 +101,7 @@ std::vector<double> calc_lpd_dedup1_all_mk(int n_dedup1_sum_rep1,
   return(lpd_dedup1_all_mk);
 }
 
-
+// [[Rcpp::export]]
 std::vector<double> calc_lpd_gtc_cpp(int n_peak,
                                      int n_gtc,
                                      std::vector<double> lpd_dedup1_all_mk,
