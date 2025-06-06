@@ -96,6 +96,8 @@ std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::v
   int n_peak = peaks.size();
 
   std::vector<std::vector<std::vector<int>>> index_rph_gtc_mk(n_gt_comb, std::vector<std::vector<int>>(n_peak, std::vector<int>(2 * hnc)));
+
+  #pragma omp parallel for
   for(int i = 0; i < n_gt_comb; ++i){
     std::vector<int> ind_gtc = index_gt_comb_adopt.at(i);
     std::vector<double> gtc = extract_gtc(cand_gts, ind_gtc, hnc);
@@ -106,8 +108,10 @@ std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::v
     std::vector<double> ds_gtc = calc_ds(gtc);
     std::vector<double> m2s_gtc = calc_m2s(gtc);
 
-    index_rph_gtc_mk.at(i) = connect_rph_gtc(gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc,
-                                             peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di);
+    auto result = connect_rph_gtc(gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc,
+                                  peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di);
+    index_rph_gtc_mk.at(i) = std::move(result);
   }
+
   return(index_rph_gtc_mk);
 }

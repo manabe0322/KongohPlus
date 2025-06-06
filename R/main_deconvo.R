@@ -1,12 +1,47 @@
-#' make_index_dedup2_mk
+#' create_index_dedup2_mk
 #'
-#' @description The function to make 'index_dedup2_mk'
-#' @param index_rph_gtc Information on the connection between rph_base and genotype combinations
-#' @param index_dedup1_all_mk Index for deduplication (pattern 1)
-make_index_dedup2_mk <- function(index_rph_gtc, index_dedup1_all_mk){
-  paste_index_rph_gtc <- apply(index_rph_gtc, 2, paste, collapse = "-")
-  paste_index_dedup1_all_mk <- apply(index_dedup1_all_mk, 2, paste, collapse = "-")
-  return(match(paste_index_rph_gtc, paste_index_dedup1_all_mk))
+#' @description The function to create 'index_dedup2_mk'
+#' @param index_rph_gtc_cpp C++ indices of the relative peak heights for each genotype combinations
+#' @param index_dedup1_rep1_mk1 C++ indices of the relative peak heights for de-duplicated objects (pattern 1)
+create_index_dedup2_mk <- function(index_rph_gtc_cpp, index_dedup1_rep1_mk1){
+  paste_index_rph_gtc_cpp <- sapply(index_rph_gtc_cpp, paste, collapse = "-")
+  paste_index_dedup1_rep1_mk1 <- sapply(index_dedup1_rep1_mk1, paste, collapse = "-")
+  return(match(paste_index_rph_gtc_cpp, paste_index_dedup1_rep1_mk1))
+}
+
+#' softmax
+#'
+#' @description The softmax function
+#' @param x A numeric vector
+softmax <- function(x){
+  exp_x <- exp(x - max(x))
+  return(exp_x / sum(exp_x))
+}
+
+make_bounds_list <- function(n_rep, hnc, max_tph){
+  bounds <- list()
+
+  # tph1, tph2, ...
+  for(i in 1:n_rep){
+    bounds[[paste0("tph", i)]] <- c(1, max_tph)
+  }
+
+  # lambda1
+  bounds[["lambda1"]] <- c(-10, 10)
+
+  # delta2, delta3, ...
+  if(hnc > 1){
+    for(i in 2:hnc){
+      bounds[[paste0("delta", i)]] <- c(-5, 5)
+    }
+  }
+
+  # deg1, deg2, ...
+  for(i in 1:hnc){
+    bounds[[paste0("deg", i)]] <- c(0, 1)
+  }
+
+  return(bounds)
 }
 
 #' generate_init_sobol_1p
@@ -316,58 +351,74 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                             freq_di, shape_di, rate_di,
                             ae_use, cv_allele, cv_stutter, list_dt_average_sr,
                             num_init){
-  # Start computation
+
+  # --- Start computation --- #
+
   start_time <- proc.time()
 
-  # Define objects
+  # --- Define objects --- #
+
+  # Peak
   n_mk <- length(markers_use)
   n_peak_use <- rep(NA, n_mk)
+  names(n_peak_use) <- markers_use
+  tph_per_mk_use <- matrix(0, n_mk, n_rep)
+
+  # Drop-in
+  logprob_di_use <- rep(NA, n_mk)
+  names(logprob_di_use) <- markers_use
+
+  # Relative peak heights
+  rph_base_use <- vector(mode = "list", length = n_mk)
+  names(rph_base_use) <- markers_use
+
+  # Genotype combinations
   n_gtc_use <- rep(NA, n_mk)
   gtc_use <- vector(mode = "list", length = n_mk)
   names(gtc_use) <- markers_use
-  median_sizes_use <- rep(NA, n_mk)
-  tph_per_mk_use <- matrix(0, n_mk, n_rep)
-  rph_base_use <- vector(mode = "list", length = n_mk)
+
+  # Genotype probabilities
   gtc_logprob_use <- vector(mode = "list", length = n_mk)
-  index_rph_gtc_use <- vector(mode = "list", length = n_rep)
-  index_dedup1_general_use <- vector(mode = "list", length = n_rep)
-  index_dedup1_dropout_use <- vector(mode = "list", length = n_rep)
-  index_dedup1_dropin_use <- vector(mode = "list", length = n_rep)
-  index_dedup1_ignore_use <- vector(mode = "list", length = n_rep)
-  cv_square_dedup1_general_use <- vector(mode = "list", length = n_rep)
-  cv_square_dedup1_dropout_use <- vector(mode = "list", length = n_rep)
-  size_dedup1_general_use <- vector(mode = "list", length = n_rep)
-  size_dedup1_dropout_use <- vector(mode = "list", length = n_rep)
-  oph_dedup1_general_use <- vector(mode = "list", length = n_rep)
-  oph_dedup1_dropout_use <- vector(mode = "list", length = n_rep)
-  loglike_di_use <- vector(mode = "list", length = n_rep)
+  names(gtc_logprob_use) <- markers_use
+
+  # De-duplicated objects
+  n_general_list <- vector(mode = "list", length = n_rep)
+  n_dropout_list <- vector(mode = "list", length = n_rep)
+  n_dropin_list <- vector(mode = "list", length = n_rep)
+  n_ignore_list <- vector(mode = "list", length = n_rep)
+  index_dedup1_list_cpp <- vector(mode = "list", length = n_rep)
+  cv_squared_dedup1_list <- vector(mode = "list", length = n_rep)
+  deg_size_dedup1_list <- vector(mode = "list", length = n_rep)
+  oph_dedup1_list <- vector(mode = "list", length = n_rep)
+  loglike_di_list <- vector(mode = "list", length = n_rep)
+  index_dedup2_list_cpp <- vector(mode = "list", length = n_rep)
   for(i in 1:n_rep){
-    index_rph_gtc_use[[i]] <- vector(mode = "list", length = n_mk)
-    index_dedup1_general_use[[i]] <- vector(mode = "list", length = n_mk)
-    index_dedup1_dropout_use[[i]] <- vector(mode = "list", length = n_mk)
-    index_dedup1_dropin_use[[i]] <- vector(mode = "list", length = n_mk)
-    index_dedup1_ignore_use[[i]] <- vector(mode = "list", length = n_mk)
-    cv_square_dedup1_general_use[[i]] <- vector(mode = "list", length = n_mk)
-    cv_square_dedup1_dropout_use[[i]] <- vector(mode = "list", length = n_mk)
-    size_dedup1_general_use[[i]] <- vector(mode = "list", length = n_mk)
-    size_dedup1_dropout_use[[i]] <- vector(mode = "list", length = n_mk)
-    oph_dedup1_general_use[[i]] <- vector(mode = "list", length = n_mk)
-    oph_dedup1_dropout_use[[i]] <- vector(mode = "list", length = n_mk)
-    loglike_di_use[[i]] <- vector(mode = "list", length = n_mk)
+    n_general_list[[i]] <- rep(NA, n_mk)
+    n_dropout_list[[i]] <- rep(NA, n_mk)
+    n_dropin_list[[i]] <- rep(NA, n_mk)
+    n_ignore_list[[i]] <- rep(NA, n_mk)
+    index_dedup1_list_cpp[[i]] <- vector(mode = "list", length = n_mk)
+    cv_squared_dedup1_list[[i]] <- vector(mode = "list", length = n_mk)
+    deg_size_dedup1_list[[i]] <- vector(mode = "list", length = n_mk)
+    oph_dedup1_list[[i]] <- vector(mode = "list", length = n_mk)
+    loglike_di_list[[i]] <- vector(mode = "list", length = n_mk)
+    index_dedup2_list_cpp[[i]] <- vector(mode = "list", length = n_mk)
   }
 
   for(i in 1:n_mk){
-    # Extract peak data of one marker
+
+    # --- Extract data for one marker --- #
+
+    # Extract peak data
     mk <- markers_use[i]
     peaks <- peaks_list[[mk]]
     sizes <- sizes_list[[mk]]
     heights_all_rep <- heights_list[[mk]]
     n_peak_use[i] <- n_peak <- length(peaks)
-    median_sizes_use[i] <- median(sizes)
-    tph_per_mk_use[i, ] <- sapply(heights_all_rep, sum) / 2
 
-    # Extract parameters of one marker
-    at <- ats_use[i]
+    # Extract parameters
+    at <- ats_use[mk]
+    ae <- ae_use[mk]
     dt_ave_sr <- list_dt_average_sr[[mk]]
     sr_alleles_mk <- as.numeric(dt_ave_sr$Allele)
     bsrs_mk <- dt_ave_sr[["Average BSR"]]
@@ -389,18 +440,24 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     pop_al <- pop_al_list[[mk]]
     pop_prob <- pop_prob_list[[mk]]
 
-    # Calculate the probability of drop-in in the current marker
-    auc_below_at <- pgamma(q = at, shape = shape_di, rate = rate_di)
-    logprob_di <- log(freq_di / (1 - auc_below_at))
+    # --- Calculate total peak heights in each replicate --- #
 
-    # The base of the relative peak heights
-    rph_base_use[[i]] <- rph_base_mk <- make_rph_base(peaks, bsrs, fsrs, dsrs, m2srs, ae_use[mk])
+    tph_per_mk_use[i, ] <- sapply(heights_all_rep, sum) / 2
+
+    # --- Calculate the probability of drop-in in the current marker --- #
+
+    auc_below_at <- pgamma(q = at, shape = shape_di, rate = rate_di)
+    logprob_di_use[i] <- log(freq_di / (1 - auc_below_at))
+
+    # --- Prepare the base of the relative peak heights --- #
+
+    rph_base_use[[i]] <- rph_base_mk <- make_rph_base(peaks, bsrs, fsrs, dsrs, m2srs, ae)
+
+    # --- Prepare the CV squared values for each peak --- #
 
     cv_square_base_mk <- c(rep(cv_allele^2, n_peak), rep(cv_stutter^2, 4 * n_peak), 0, -1)
 
-    ###########################################
-    # List all possible genotype combinations #
-    ###########################################
+    # --- List all possible genotype combinations --- #
 
     # All candidate genotypes of one contributor
     cand_gt <- combinations(n = n_peak, r = 2, v = peaks, repeats.allowed = TRUE)
@@ -418,13 +475,13 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     index_gtc_adopt_cpp <- tmp[[1]]
     bool_gtc_di_mk_rep <- tmp[[2]]
 
+    # The number of adopted genotype combinations
     n_gtc_use[i] <- n_gtc <- length(index_gtc_adopt_cpp)
 
-    ##################################################
-    # Prepare objects for de-duplication (pattern 1) #
-    ##################################################
+    # --- Prepare objects for de-duplication (pattern 1) --- #
 
     if(!any(is.element(n_gtc_use, 0))){
+
       # Extract genotype combinations
       gtc_use[[i]] <- gtc_mk <- extract_gtc_adopt(cand_gt, index_gtc_adopt_cpp)
 
@@ -435,446 +492,162 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       gtc_logprob_use[[i]] <- log(gtc_prob_mk)
 
       for(j in 1:n_rep){
-        # Connect rph_base and genotype combinations
-        index_rph_gtc_cpp <- connect_rph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di_mk_rep[[j]])
-        index_rph_gtc_use[[j]][[i]] <- index_rph_gtc <- matrix(unlist(index_rph_gtc_cpp) + 1, nrow = 2 * hnc) # R and stan index
 
-        # Delete duplicated indices -> index for deduplication (pattern 1: Before summation of the rph_base)
+        # Search the indices of the relative peak heights for each genotype combinations
+        index_rph_gtc_cpp <- connect_rph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di_mk_rep[[j]])
+        index_rph_gtc_cpp <- unlist(index_rph_gtc_cpp, recursive = FALSE)
+        index_rph_gtc <- matrix(unlist(index_rph_gtc_cpp) + 1, nrow = 2 * hnc) # R and stan index
+
+        # Delete duplicated indices
         bool_duplicated_adopt <- !duplicated(t(index_rph_gtc))
         index_dedup1_tmp <- index_rph_gtc[, bool_duplicated_adopt, drop = FALSE]
 
-        # CV for de-duplicated objects (pattern 1)
+        # CV squared for de-duplicated objects (pattern 1)
         cv_square_dedup1_tmp <- matrix(cv_square_base_mk[index_dedup1_tmp], nrow = 2 * hnc)
 
-        # Sizes for de-duplicated objects (pattern 1)
-        size_dedup1_tmp <- rep(sizes, n_gtc)
-        size_dedup1_tmp <- size_dedup1_tmp[bool_duplicated_adopt]
+        # Scale of degradation  corrected by sizes for de-duplicated objects (pattern 1)
+        deg_size_dedup1_tmp <- rep((sizes - min_size) / min_size, n_gtc)
+        deg_size_dedup1_tmp <- deg_size_dedup1_tmp[bool_duplicated_adopt]
 
         # Observe peak heights for de-duplicated objects (pattern 1)
         heights <- heights_all_rep[[j]]
         oph_dedup1_tmp <- rep(heights, n_gtc)
         oph_dedup1_tmp <- oph_dedup1_tmp[bool_duplicated_adopt]
 
-        # Indices of each peak type
+        # Calculate relative peak heights in each peak for de-duplicated objects
         rph_dedup1_tmp <- matrix(rph_base_mk[index_dedup1_tmp], nrow = 2 * hnc)
         rph_dedup1_tmp <- apply(rph_dedup1_tmp, 2, sum)
+
+        # Indices of each peak type
         index_oph0 <- which(oph_dedup1_tmp == 0)
-        index_ignore <- c(which(rph_dedup1_tmp == 0), intersect(which(rph_dedup1_tmp < 0), index_oph0)) # intersect(which(rph_dedup1_tmp < 0), index_oph0): for duplicate
+        index_ignore <- c(which(rph_dedup1_tmp == 0), intersect(which(rph_dedup1_tmp < 0), index_oph0)) # {rph = 0: allele 99 without assuming drop-out alleles} or {rph < 0 and oph = 0: drop-in peaks in other replicates}
         index_dropin <- setdiff(which(rph_dedup1_tmp < 0), index_ignore)
         index_dropout <- setdiff(index_oph0, c(index_ignore, index_dropin))
         index_general <- setdiff(1:length(rph_dedup1_tmp), c(index_ignore, index_dropin, index_dropout))
 
-        index_dedup1_general_use[[j]][[i]] <- index_dedup1_tmp[, index_general, drop = FALSE]
-        index_dedup1_dropout_use[[j]][[i]] <- index_dedup1_tmp[, index_dropout, drop = FALSE]
-        index_dedup1_dropin_use[[j]][[i]] <- index_dedup1_tmp[, index_dropin, drop = FALSE]
-        index_dedup1_ignore_use[[j]][[i]] <- index_dedup1_tmp[, index_ignore, drop = FALSE]
+        # The number of indices for each peak type
+        n_general_list[[j]][i] <- length(index_general)
+        n_dropout_list[[j]][i] <- length(index_dropout)
+        n_dropin_list[[j]][i] <- length(index_dropin)
+        n_ignore_list[[j]][i] <- length(index_ignore)
 
-        cv_square_dedup1_general_use[[j]][[i]] <- cv_square_dedup1_tmp[, index_general, drop = FALSE]
-        cv_square_dedup1_dropout_use[[j]][[i]] <- cv_square_dedup1_tmp[, index_dropout, drop = FALSE]
+        # Assign C++ indices of the relative peak heights for de-duplicated objects (pattern 1)
+        index_dedup1_list_cpp[[j]][[i]] <- c(asplit(index_dedup1_tmp[, index_general, drop = FALSE] - 1, 2),
+                                             asplit(index_dedup1_tmp[, index_dropout, drop = FALSE] - 1, 2),
+                                             asplit(index_dedup1_tmp[, index_dropin, drop = FALSE] - 1, 2),
+                                             asplit(index_dedup1_tmp[, index_ignore, drop = FALSE] - 1, 2))
 
-        size_dedup1_general_use[[j]][[i]] <- size_dedup1_tmp[index_general]
-        size_dedup1_dropout_use[[j]][[i]] <- size_dedup1_tmp[index_dropout]
+        # Assign cv squared for de-duplicated objects (pattern 1)
+        cv_squared_dedup1_list[[j]][[i]] <- c(asplit(cv_square_dedup1_tmp[, index_general, drop = FALSE], 2),
+                                              asplit(cv_square_dedup1_tmp[, index_dropout, drop = FALSE], 2))
 
-        oph_dedup1_general_use[[j]][[i]] <- oph_dedup1_tmp[index_general]
-        oph_dedup1_dropout_use[[j]][[i]] <- oph_dedup1_tmp[index_dropout]
+        # Assign scale of degradation corrected by sizes for de-duplicated objects (pattern 1)
+        deg_size_dedup1_list[[j]][[i]] <- c(deg_size_dedup1_tmp[index_general], deg_size_dedup1_tmp[index_dropout])
 
+        # Assign observe peak heights for de-duplicated objects (pattern 1)
+        oph_dedup1_list[[j]][[i]] <- c(oph_dedup1_tmp[index_general], oph_dedup1_tmp[index_dropout])
+
+        # Assign log-likelihood of the drop-in for de-duplicated objects (pattern 1)
         if(length(index_dropin) != 0){
-          loglike_di_use[[j]][[i]] <- log(dgamma(oph_dedup1_tmp[index_dropin], shape_di, rate_di)) + logprob_di
+          loglike_di_list[[j]][[i]] <- log(dgamma(oph_dedup1_tmp[index_dropin], shape_di, rate_di)) + logprob_di_use[i]
+        }else{
+          loglike_di_list[[j]][[i]] <- numeric(0)
         }
+
+        # --- Prepare objects for de-duplication (pattern 2) --- #
+        index_dedup2_list_cpp[[j]][[i]] <- create_index_dedup2_mk(index_rph_gtc_cpp, index_dedup1_list_cpp[[j]][[i]])
       }
     }
   }
 
-  if(all(n_gtc_use != 0)){
+  if(!any(is.element(n_gtc_use, 0))){
 
-    ##########################
-    # Define objects for MLE #
-    ##########################
-
-    n_rph_base_use <- sapply(rph_base_use, length)
-
-    n_general_use <- rep(NA, n_rep * n_mk)
-    n_dropout_use <- rep(NA, n_rep * n_mk)
-    n_dropin_use <- rep(NA, n_rep * n_mk)
-    n_ignore_use <- rep(NA, n_rep * n_mk)
-    n_general_sum_per_rep <- rep(NA, n_rep)
-    n_dropout_sum_per_rep <- rep(NA, n_rep)
-    n_dropin_sum_per_rep <- rep(NA, n_rep)
-    n_dedup1_sum_per_rep <- rep(NA, n_rep)
-    for(i in 1:n_rep){
-      n_general_use[(n_mk * (i - 1) + 1):(n_mk * i)] <- n_general_rep1 <- sapply(index_dedup1_general_use[[i]], ncol)
-      n_dropout_use[(n_mk * (i - 1) + 1):(n_mk * i)] <- n_dropout_rep1 <- sapply(index_dedup1_dropout_use[[i]], ncol)
-      n_dropin_use[(n_mk * (i - 1) + 1):(n_mk * i)] <- n_dropin_rep1 <- sapply(index_dedup1_dropin_use[[i]], ncol)
-      n_ignore_use[(n_mk * (i - 1) + 1):(n_mk * i)] <- n_ignore_rep1 <- sapply(index_dedup1_ignore_use[[i]], ncol)
-      n_general_sum_per_rep[i] <- sum(n_general_rep1)
-      n_dropout_sum_per_rep[i] <- sum(n_dropout_rep1)
-      n_dropin_sum_per_rep[i] <- sum(n_dropin_rep1)
-      n_dedup1_sum_per_rep[i] <- n_general_sum_per_rep[i] + n_dropout_sum_per_rep[i] + n_dropin_sum_per_rep[i] + sum(n_ignore_rep1)
-    }
-
-    n_general_sum <- sum(n_general_sum_per_rep)
-    n_dropout_sum <- sum(n_dropout_sum_per_rep)
-    n_dropin_sum <- sum(n_dropin_sum_per_rep)
-    n_dedup1_sum <- sum(n_dedup1_sum_per_rep)
-    n_rph_sum_per_rep <- n_general_sum_per_rep + n_dropout_sum_per_rep
-    n_rph_sum <- n_general_sum + n_dropout_sum
-
-    loglike_di <- unlist(loglike_di_use)
-    if(is.null(loglike_di)){
-      loglike_di <- numeric(0)
-    }
-
-    ##################################################
-    # Arrange objects for de-duplication (pattern 1) #
-    ##################################################
-
-    index_dedup1_use <- matrix(NA, nrow = 2 * hnc, ncol = n_dedup1_sum)
-    index_dedup1_mle <- matrix(NA, nrow = 2 * hnc, ncol = n_rph_sum)
-    cv_square_mle <- matrix(NA, nrow = 2 * hnc, ncol = n_rph_sum)
-    size_mle <- rep(NA, n_rph_sum)
-    oph_mle <- rep(NA, n_rph_sum)
-    at_dropout <- rep(NA, n_dropout_sum)
-
-    index_start_rph_general <- 1
-    index_start_dedup1_use_general <- 1
-    index_at_start <- 1
-    for(i in 1:n_rep){
-      n_general_rep1 <- n_general_use[(n_mk * (i - 1) + 1):(n_mk * i)]
-      n_dropout_rep1 <- n_dropout_use[(n_mk * (i - 1) + 1):(n_mk * i)]
-      n_dropin_rep1 <- n_dropin_use[(n_mk * (i - 1) + 1):(n_mk * i)]
-      n_ignore_rep1 <- n_ignore_use[(n_mk * (i - 1) + 1):(n_mk * i)]
-
-      index_start_rph_dropout <- index_start_rph_general + n_general_sum_per_rep[i]
-
-      index_start_dedup1_use_dropout <- index_start_dedup1_use_general + n_general_sum_per_rep[i]
-      index_start_dedup1_use_dropin <- index_start_dedup1_use_dropout + n_dropout_sum_per_rep[i]
-      index_start_dedup1_use_ignore <- index_start_dedup1_use_dropin + n_dropin_sum_per_rep[i]
-      sumup_index_dedup1 <- 0
-
-      for(j in 1:n_mk){
-        n_general <- n_general_rep1[j]
-        if(n_general != 0){
-          index_tmp <- index_start_rph_general:(index_start_rph_general + n_general - 1)
-          index_dedup1_mle[, index_tmp] <- index_dedup1_general_use[[i]][[j]] + sumup_index_dedup1
-          cv_square_mle[, index_tmp] <- cv_square_dedup1_general_use[[i]][[j]]
-          size_mle[index_tmp] <- size_dedup1_general_use[[i]][[j]]
-          oph_mle[index_tmp] <- oph_dedup1_general_use[[i]][[j]]
-
-          index_tmp <- index_start_dedup1_use_general:(index_start_dedup1_use_general + n_general - 1)
-          index_dedup1_use[, index_tmp] <- index_dedup1_general_use[[i]][[j]] + sumup_index_dedup1
-        }
-
-        n_dropout <- n_dropout_rep1[j]
-        if(n_dropout != 0){
-          index_tmp <- index_start_rph_dropout:(index_start_rph_dropout + n_dropout - 1)
-          index_dedup1_mle[, index_tmp] <- index_dedup1_dropout_use[[i]][[j]] + sumup_index_dedup1
-          cv_square_mle[, index_tmp] <- cv_square_dedup1_dropout_use[[i]][[j]]
-          size_mle[index_tmp] <- size_dedup1_dropout_use[[i]][[j]]
-          oph_mle[index_tmp] <- oph_dedup1_dropout_use[[i]][[j]]
-
-          at_dropout[index_at_start:(index_at_start + n_dropout - 1)] <- ats_use[j]
-
-          index_tmp <- index_start_dedup1_use_dropout:(index_start_dedup1_use_dropout + n_dropout - 1)
-          index_dedup1_use[, index_tmp] <- index_dedup1_dropout_use[[i]][[j]] + sumup_index_dedup1
-        }
-
-        n_dropin <- n_dropin_rep1[j]
-        if(n_dropin != 0){
-          index_tmp <- index_start_dedup1_use_dropin:(index_start_dedup1_use_dropin + n_dropin - 1)
-          index_dedup1_use[, index_tmp] <- index_dedup1_dropin_use[[i]][[j]] + sumup_index_dedup1
-        }
-
-        n_ignore <- n_ignore_rep1[j]
-        if(n_ignore != 0){
-          index_tmp <- index_start_dedup1_use_ignore:(index_start_dedup1_use_ignore + n_ignore - 1)
-          index_dedup1_use[, index_tmp] <- index_dedup1_ignore_use[[i]][[j]] + sumup_index_dedup1
-        }
-
-        index_start_rph_general <- index_start_rph_general + n_general
-        index_start_rph_dropout <- index_start_rph_dropout + n_dropout
-
-        index_start_dedup1_use_general <- index_start_dedup1_use_general + n_general
-        index_start_dedup1_use_dropout <- index_start_dedup1_use_dropout + n_dropout
-        index_start_dedup1_use_dropin <- index_start_dedup1_use_dropin + n_dropin
-        index_start_dedup1_use_ignore <- index_start_dedup1_use_ignore + n_ignore
-        index_at_start <- index_at_start + n_dropout
-        sumup_index_dedup1 <- sumup_index_dedup1 + n_rph_base_use[j]
-      }
-
-      index_start_rph_general <- n_rph_sum_per_rep[i] + 1
-      index_start_dedup1_use_general <- n_dedup1_sum_per_rep[i] + 1
-    }
-
-    deg_size_mle <- (size_mle - min_size) / min_size
-
-    ##################################################
-    # Prepare objects for de-duplication (pattern 2) #
-    ##################################################
-
-    n_dedup2_use <- n_peak_use * n_gtc_use
-    n_dedup2_sum_per_rep <- rep(sum(n_dedup2_use), n_rep)
-    n_dedup2_sum <- sum(n_dedup2_sum_per_rep)
-    index_dedup2_use <- rep(NA, n_dedup2_sum)
-    index_dedup1_start <- 1
-    index_dedup2_start <- 1
-
-    for(i in 1:n_rep){
-      index_dedup1_use_rep1 <- index_dedup1_use[, index_dedup1_start:(index_dedup1_start + n_dedup1_sum_per_rep[i] - 1)]
-      sumup_index_dedup2 <- 0
-      for(j in 1:n_mk){
-        index_rph_gtc <- index_rph_gtc_use[[i]][[j]] + sumup_index_dedup2
-        n_dedup2 <- n_dedup2_use[j]
-        index_dedup2_use[index_dedup2_start:(index_dedup2_start + n_dedup2 - 1)] <- make_index_dedup2_mk(index_rph_gtc, index_dedup1_use_rep1)
-
-        index_dedup2_start <- index_dedup2_start + n_dedup2
-        sumup_index_dedup2 <- sumup_index_dedup2 + n_rph_base_use[j]
-      }
-      index_dedup1_start <- index_dedup1_start + n_dedup1_sum_per_rep[i]
-    }
-
-    ################################################################
-    # Determine the probability distribution for the parameter tph #
-    ################################################################
-
-    median_sizes_use <- rep(median_sizes_use, n_rep)
-    tph_per_mk_use <- as.vector(tph_per_mk_use)
-    fit_exp <- lm(log(tph_per_mk_use) ~ median_sizes_use)
-    tph_mean <- exp(coef(fit_exp)[1]) * exp(coef(fit_exp)[2] * min_size)
-
-    min_tph <- min(tph_per_mk_use)
-    max_tph <- max(tph_per_mk_use)
-    if(min_tph == max_tph){
-      min_tph <- 0
-    }
-    tph_sd <- (max_tph - min_tph) / 2
-
-    ###############
-    # Perform MLE #
-    ###############
+    # --- Bayesian optimization --- #
 
     if(hnc == 1){
-      if(n_rep == 1){
-        model_name <- "model_deconvo_single"
 
-        data_list_main <- list(n_mk = n_mk,
-                               n_rph_base_sum = sum(n_rph_base_use),
-                               rph_base_use = unlist(rph_base_use),
-                               n_dedup1_sum = n_dedup1_sum,
-                               n_rph_sum = n_rph_sum,
-                               index_dedup1_rep1 = index_dedup1_mle,
-                               cv_square_rep1 = t(cv_square_mle),
-                               deg_size_rep1 = deg_size_mle,
-                               oph_rep1 = oph_mle,
-                               n_general_sum = n_general_sum,
-                               n_dropout_sum = n_dropout_sum,
-                               at_dropout_rep1 = at_dropout,
-                               n_dropin_sum = n_dropin_sum,
-                               loglike_di_rep1 = loglike_di,
-                               n_dedup2_sum = n_dedup2_sum,
-                               n_dedup2_use = n_dedup2_use,
-                               index_dedup2_use_rep1 = index_dedup2_use,
-                               n_peak_use = n_peak_use,
-                               n_gtc_use = n_gtc_use,
-                               gtc_logprob_use = unlist(gtc_logprob_use))
-      }else{
-        model_name <- "model_deconvo_single_multi-rep"
+      # likelihood function
+      like_func_single <- function(){
 
-        data_list_main <- list(n_rep = n_rep,
-                               n_mk = n_mk,
-                               n_rph_base_sum = sum(n_rph_base_use),
-                               rph_base_use = unlist(rph_base_use),
-                               n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
-                               n_rph_sum_per_rep = n_rph_sum_per_rep,
-                               n_rph_sum = n_rph_sum,
-                               index_dedup1_mle = index_dedup1_mle,
-                               cv_square_mle = t(cv_square_mle),
-                               deg_size_mle = deg_size_mle,
-                               oph_mle = oph_mle,
-                               n_general_sum_per_rep = n_general_sum_per_rep,
-                               n_dropout_sum_per_rep = n_dropout_sum_per_rep,
-                               n_dropout_sum = n_dropout_sum,
-                               at_dropout = at_dropout,
-                               n_dropin_sum = n_dropin_sum,
-                               n_dropin_sum_per_rep = n_dropin_sum_per_rep,
-                               loglike_di = loglike_di,
-                               n_dedup2_sum = n_dedup2_sum,
-                               n_dedup2_sum_per_rep = n_dedup2_sum_per_rep,
-                               n_dedup2_use = n_dedup2_use,
-                               index_dedup2_use = index_dedup2_use,
-                               n_peak_use = n_peak_use,
-                               n_gtc_use = n_gtc_use,
-                               gtc_logprob_use = unlist(gtc_logprob_use))
       }
 
-      tmp <- run_mle_1p(model_name, data_list_main, n_rep, tph_mean, tph_sd, num_init)
-      est_param <- tmp$est_param
-      warn_optim <- tmp$warn_optim
-      init_list <- tmp$init_list
 
     }else{
-      if(n_rep == 1){
-        model_name <- "model_deconvo_mix"
 
-        data_list_main <- list(hnc = hnc,
-                               n_mk = n_mk,
-                               n_rph_base_sum = sum(n_rph_base_use),
-                               rph_base_use = unlist(rph_base_use),
-                               n_dedup1_sum = n_dedup1_sum,
-                               n_rph_sum = n_rph_sum,
-                               index_dedup1_rep1 = index_dedup1_mle,
-                               cv_square_rep1 = t(cv_square_mle),
-                               deg_size_rep1 = deg_size_mle,
-                               oph_rep1 = oph_mle,
-                               n_general_sum = n_general_sum,
-                               n_dropout_sum = n_dropout_sum,
-                               at_dropout_rep1 = at_dropout,
-                               n_dropin_sum = n_dropin_sum,
-                               loglike_di_rep1 = loglike_di,
-                               n_dedup2_sum = n_dedup2_sum,
-                               n_dedup2_use = n_dedup2_use,
-                               index_dedup2_use_rep1 = index_dedup2_use,
-                               n_peak_use = n_peak_use,
-                               n_gtc_use = n_gtc_use,
-                               gtc_logprob_use = unlist(gtc_logprob_use))
-      }else{
-        model_name <- "model_deconvo_mix_multi-rep"
+      # likelihood function
+      like_func_mix <- function(...){
+        # Prepare parameters
+        args <- list(...)
+        tph <- unlist(args[grepl("^tph", names(args))])[1:n_rep]
+        lambda1 <- args$lambda1
+        delta <- unlist(args[grepl("^delta", names(args))])[1:(hnc - 1)]
+        deg <- unlist(args[grepl("^deg", names(args))])[1:hnc]
 
-        data_list_main <- list(hnc = hnc,
-                               n_rep = n_rep,
-                               n_mk = n_mk,
-                               n_rph_base_sum = sum(n_rph_base_use),
-                               rph_base_use = unlist(rph_base_use),
-                               n_dedup1_sum_per_rep = n_dedup1_sum_per_rep,
-                               n_rph_sum_per_rep = n_rph_sum_per_rep,
-                               n_rph_sum = n_rph_sum,
-                               index_dedup1_mle = index_dedup1_mle,
-                               cv_square_mle = t(cv_square_mle),
-                               deg_size_mle = deg_size_mle,
-                               oph_mle = oph_mle,
-                               n_general_sum_per_rep = n_general_sum_per_rep,
-                               n_dropout_sum_per_rep = n_dropout_sum_per_rep,
-                               n_dropout_sum = n_dropout_sum,
-                               at_dropout = at_dropout,
-                               n_dropin_sum = n_dropin_sum,
-                               n_dropin_sum_per_rep = n_dropin_sum_per_rep,
-                               loglike_di = loglike_di,
-                               n_dedup2_sum = n_dedup2_sum,
-                               n_dedup2_sum_per_rep = n_dedup2_sum_per_rep,
-                               n_dedup2_use = n_dedup2_use,
-                               index_dedup2_use = index_dedup2_use,
-                               n_peak_use = n_peak_use,
-                               n_gtc_use = n_gtc_use,
-                               gtc_logprob_use = unlist(gtc_logprob_use))
+        # Prepare lambda
+        lambda <- rep(NA, hnc)
+        lambda[1] <- lambda1
+        for(i in 1:(hnc - 1)){
+          lambda[i + 1] <- lambda[i] + delta[i]
+        }
+
+        # Prepare mp
+        mp <- softmax(lambda)
+
+        # Calculate log probability densities of all genotype combinations
+        lpd_gtc_all_rep <- vector(mode = "list", length = n_rep)
+        for(i in 1:n_rep){
+          lpd_gtc_all_rep[[i]] <- calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[[i]], n_dropout_list[[i]], n_dropin_list[[i]], n_ignore_list[[i]], rph_base_use,
+                                                    index_dedup1_list_cpp[[i]], cv_squared_dedup1_list[[i]], deg_size_dedup1_list[[i]], oph_dedup1_list[[i]], loglike_di_list[[i]],
+                                                    index_dedup2_list_cpp[[i]], n_gtc_use, n_peak_use)
+        }
+
+        # Calculate log likelihood in each marker
+        loglike_cpp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
+
+        return(list(Score = - sum(loglike_cpp)))
       }
 
-      tmp <- run_mle(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, num_init)
-      est_param <- tmp$est_param
-      warn_optim <- tmp$warn_optim
-      init_list <- tmp$init_list
+      bounds_list <- make_bounds_list(n_rep, hnc, max(tph_per_mk_use))
+
+      opt_results <- bayesOpt(
+        FUN = like_func_mix,
+        bounds = bounds_list,
+        initPoints = 4,     # 最初にランダムに試す点数
+        iters.n = 10,       # ベイズ最適化で試行する回数
+        acq = "ucb",        # 獲得関数の種類（ucb, ei, poi など）
+        kappa = 2.576,      # UCBのパラメータ
+        parallel = TRUE,    # 並列処理するかどうか
+        verbose = 1
+      )
     }
 
-    if(!any(is.na(est_param))){
-      if(warn_optim){
-        if(hnc == 1){
-          warning_message <- "- Assuming NoC = 1, the most plausible parameters were selected from a diverse set of initializations based on their likelihood values."
-        }else{
-          warning_message <- paste0("- Assuming NoC = ", hnc, ", the most plausible parameters were selected from a diverse set of initializations based on their likelihood values.")
-        }
-      }else{
-        warning_message <- NULL
-      }
 
-      tph <- est_param[paste0("tph[", 1:n_rep, "]")]
-      deg <- est_param[paste0("deg[", 1:hnc, "]")]
-      if(hnc == 1){
-        mp <- 1
-      }else{
-        mp <- est_param[paste0("mp[", 1:hnc, "]")]
-      }
 
-      ######################################################
-      # Calculate likelihood under the estimated parameter #
-      ######################################################
+    dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use)
 
-      index_rph_start <- 1
-      index_dropout_start <- 1
-      index_dropin_start <- 1
-      index_dedup2_start <- 1
-      lpd_gtc_use <- vector(mode = "list", length = n_rep)
-      for(i in 1:n_rep){
-        n_rph_sum_rep1 <- n_rph_sum_per_rep[i]
-        index_dedup1_rep1 <- index_dedup1_mle[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
-        index_dedup1_rep1_cpp <- asplit(index_dedup1_rep1 - 1, 1) # C++ index
-        cv_square_rep1 <- cv_square_mle[, index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
-        cv_square_rep1 <- asplit(cv_square_rep1, 1)
-        size_rep1 <- size_mle[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
-        oph_rep1 <- oph_mle[index_rph_start:(index_rph_start + n_rph_sum_rep1 - 1)]
+    log10like_use <- calc_log10like_use(dt_pg_list)
 
-        n_dedup1_sum_rep1 <- n_dedup1_sum_per_rep[i]
-        n_general_sum_rep1 <- n_general_sum_per_rep[i]
+    dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
+                               Log10_Likelihood = c(log10like_use, sum(log10like_use)))
 
-        n_dropout_sum_rep1 <- n_dropout_sum_per_rep[i]
-        if(n_dropout_sum_rep1 != 0){
-          at_dropout_rep1 <- at_dropout[index_dropout_start:(index_dropout_start + n_dropout_sum_rep1 - 1)]
-        }else{
-          at_dropout_rep1 <- numeric(0)
-        }
+    dt_param <- data.table("Parameter" = c(rep("Template amount", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc)),
+                           "Contributor" = c(rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc)),
+                           "Replicate" = c(1:n_rep, rep(NA, hnc), rep(NA, hnc)),
+                           "Estimated value" = c(tph, mp[hnc:1], deg[hnc:1]))
 
-        n_dropin_sum_rep1 <- n_dropin_sum_per_rep[i]
-        if(n_dropin_sum_rep1 != 0){
-          loglike_di_rep1 <- loglike_di[index_dropin_start:(index_dropin_start + n_dropin_sum_rep1 - 1)]
-        }else{
-          loglike_di_rep1 <- numeric(0)
-        }
+    # End computation
+    end_time <- proc.time()
+    comp_time <- end_time[3] - start_time[3]
 
-        n_dedup2_sum_rep1 <- n_dedup2_sum_per_rep[i]
-        index_dedup2_use_rep1 <- index_dedup2_use[index_dedup2_start:(index_dedup2_start + n_dedup2_sum_rep1 - 1)]
-        index_dedup2_use_rep1_cpp <- index_dedup2_use_rep1 - 1 # C++ index
+    return(list("dt_pg_list" = dt_pg_list,
+                "dt_log10like" = dt_log10like,
+                "dt_param" = dt_param,
+                "logprob_di_use" = logprob_di_use,
+                "comp_time" = comp_time,
+                "init_list" = init_list,
+                "warning_message" = warning_message,
+                "error_message" = NULL))
 
-        lpd_gtc_use[[i]] <- calc_lpd_gtc_all_mk_cpp(mp, deg, hnc, n_rph_sum_rep1, unlist(rph_base_use), index_dedup1_rep1_cpp, size_rep1, min_size,
-                                                    cv_square_rep1, tph[i],
-                                                    n_dedup1_sum_rep1, n_general_sum_rep1, n_dropout_sum_rep1, n_dropin_sum_rep1, oph_rep1, at_dropout_rep1, loglike_di_rep1,
-                                                    n_mk, index_dedup2_use_rep1_cpp, n_dedup2_use, n_peak_use, n_gtc_use)
-
-        index_rph_start <- index_rph_start + n_rph_sum_rep1
-        index_dropout_start <- index_dropout_start + n_dropout_sum_rep1
-        index_dropin_start <- index_dropin_start + n_dropin_sum_rep1
-        index_dedup2_start <- index_dedup2_start + n_dedup2_sum_rep1
-      }
-
-      dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use)
-
-      log10like_use <- calc_log10like_use(dt_pg_list)
-
-      dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
-                                 Log10_Likelihood = c(log10like_use, sum(log10like_use)))
-
-      dt_param <- data.table("Parameter" = c(rep("Template amount", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc)),
-                             "Contributor" = c(rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc)),
-                             "Replicate" = c(1:n_rep, rep(NA, hnc), rep(NA, hnc)),
-                             "Estimated value" = c(tph, mp[hnc:1], deg[hnc:1]))
-
-      # End computation
-      end_time <- proc.time()
-      comp_time <- end_time[3] - start_time[3]
-
-      return(list("dt_pg_list" = dt_pg_list,
-                  "dt_log10like" = dt_log10like,
-                  "dt_param" = dt_param,
-                  "comp_time" = comp_time,
-                  "init_list" = init_list,
-                  "warning_message" = warning_message,
-                  "error_message" = NULL))
-    }else{
-      error_message <- paste0("Convergence failed under ", hnc, " contributor.<br>")
-      return(list("dt_pg_list" = NULL,
-                  "dt_log10like" = NULL,
-                  "dt_param" = NULL,
-                  "comp_time" = NULL,
-                  "init_list" = NULL,
-                  "warning_message" = NULL,
-                  "error_message" = error_message))
-    }
   }else{
     markers_unexplainable <- markers_use[n_gtc_use == 0]
     if(hnc == 1){
@@ -889,6 +662,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     return(list("dt_pg_list" = NULL,
                 "dt_log10like" = NULL,
                 "dt_param" = NULL,
+                "logprob_di_use" = NULL,
                 "comp_time" = NULL,
                 "init_list" = NULL,
                 "warning_message" = NULL,
@@ -918,6 +692,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     markers_at <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
     ats_auto <- dt_anameth$Value[dt_anameth$Category == "AT"]
     ats_use <- as.numeric(ats_auto[match(markers_use, markers_at)])
+    names(ats_use) <- markers_use
     rm(markers_at, ats_auto)
 
     # Extract peak data from crime stain profiles
@@ -970,6 +745,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
         data_hnc_list[[i]] <- list("dt_pg_list" = NULL,
                                    "dt_log10like" = NULL,
                                    "dt_param" = NULL,
+                                   "logprob_di_use" = NULL,
                                    "comp_time" = NULL,
                                    "init_list" = NULL,
                                    "warning_message" = NULL,

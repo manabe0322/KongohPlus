@@ -225,6 +225,8 @@ std::vector<bool> judge_gtc(std::vector<double> gtc,
                             int n_dropin_fltr,
                             double h_dropin_fltr){
   int n_peak = peaks.size();
+
+  // The first object represents whether the genotype combination is adopted or not. The other objects represent whether each peak can be explained by a drop-in or not.
   std::vector<bool> bool_gtc_di(n_peak + 1, false);
   bool_gtc_di[0] = true;
 
