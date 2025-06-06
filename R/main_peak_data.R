@@ -54,7 +54,7 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_use, ats_use){
 
   for(i in 1:n_mk){
     mk <- markers_use[i]
-    at <- ats_use[i]
+    at <- ats_use[mk]
     dt_kit_auto_mk <- dt_kit_auto[Marker == mk]
     dt_csp_mk <- dt_csp[Marker == mk]
     setindex(dt_csp_mk, SampleName)
