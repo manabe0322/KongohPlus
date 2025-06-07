@@ -17,6 +17,7 @@ Imports:
     data.table, 
     dplyr, 
     DT, 
+    GenSA, 
     ggplot2, 
     gridExtra, 
     gtools, 

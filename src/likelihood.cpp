@@ -1,12 +1,12 @@
 #include "header.h"
 
 // [[Rcpp::export]]
-std::vector<double> calc_rph_dedup1_cpp(std::vector<double> mp,
-                                        std::vector<double> deg,
-                                        int hnc,
-                                        std::vector<double> rph_base_use,
-                                        std::vector<int> index_dedup1,
-                                        double deg_size){
+std::vector<double> calc_rph_dedup1_cpp(const std::vector<double>& mp,
+                                        const std::vector<double>& deg,
+                                        const int hnc,
+                                        const std::vector<double>& rph_base_use,
+                                        const std::vector<int>& index_dedup1,
+                                        const double deg_size){
   std::vector<double> rph_dedup1(2 * hnc, 0);
 
   for(int i = 0; i < hnc; ++i){
@@ -26,9 +26,9 @@ std::vector<double> calc_rph_dedup1_cpp(std::vector<double> mp,
 }
 
 // [[Rcpp::export]]
-std::vector<double> calc_gamma_param_cpp(std::vector<double> rph_dedup1,
-                                         std::vector<double> cv_squared_dedup1,
-                                         double tph){
+std::vector<double> calc_gamma_param_cpp(const std::vector<double>& rph_dedup1,
+                                         const std::vector<double>& cv_squared_dedup1,
+                                         const double tph){
 
   double tmp1_sum(0);
   double tmp2_sum(0);
@@ -47,33 +47,33 @@ std::vector<double> calc_gamma_param_cpp(std::vector<double> rph_dedup1,
 }
 
 // [[Rcpp::export]]
-double gamma_pdf(double value, double shape, double scale){
+double gamma_pdf(const double value, const double shape, const double scale){
   boost::math::gamma_distribution<double> d(shape, scale);
   return(pdf(d, value));
 }
 
 // [[Rcpp::export]]
-double gamma_cdf(double threshold, double shape, double scale){
+double gamma_cdf(const double threshold, const double shape, const double scale){
   boost::math::gamma_distribution<double> p(shape, scale);
   return(cdf(p, threshold));
 }
 
 // [[Rcpp::export]]
-std::vector<double> calc_lpd_dedup1_mk(double tph,
-                                       std::vector<double> mp,
-                                       std::vector<double> deg,
-                                       int hnc,
-                                       double at,
-                                       int n_general,
-                                       int n_dropout,
-                                       int n_dropin,
-                                       int n_ignore,
-                                       std::vector<double> rph_base_use_mk1,
-                                       std::vector<std::vector<int>> index_dedup1_rep1_mk1_cpp,
-                                       std::vector<std::vector<double>> cv_squared_dedup1_rep1_mk1,
-                                       std::vector<double> deg_size_dedup1_rep1_mk1,
-                                       std::vector<double> oph_dedup1_rep1_mk1,
-                                       std::vector<double> loglike_di_rep1_mk1){
+std::vector<double> calc_lpd_dedup1_mk(const double tph,
+                                       const std::vector<double>& mp,
+                                       const std::vector<double>& deg,
+                                       const int hnc,
+                                       const double at,
+                                       const int n_general,
+                                       const int n_dropout,
+                                       const int n_dropin,
+                                       const int n_ignore,
+                                       const std::vector<double>& rph_base_use_mk1,
+                                       const std::vector<std::vector<int>>& index_dedup1_rep1_mk1_cpp,
+                                       const std::vector<std::vector<double>>& cv_squared_dedup1_rep1_mk1,
+                                       const std::vector<double>& deg_size_dedup1_rep1_mk1,
+                                       const std::vector<double>& oph_dedup1_rep1_mk1,
+                                       const std::vector<double>& loglike_di_rep1_mk1){
 
   std::vector<double> lpd_dedup1_mk(n_general + n_dropout + n_dropin + n_ignore, 0);
 
@@ -124,24 +124,24 @@ std::vector<double> calc_lpd_gtc_mk(const std::vector<double>& lpd_dedup1_mk,
 }
 
 // [[Rcpp::export]]
-std::vector<std::vector<double>> calc_lpd_gtc_rep1(double tph,
-                                                   std::vector<double> mp,
-                                                   std::vector<double> deg,
-                                                   int hnc,
-                                                   std::vector<double> ats_use,
-                                                   std::vector<int> n_general_rep1,
-                                                   std::vector<int> n_dropout_rep1,
-                                                   std::vector<int> n_dropin_rep1,
-                                                   std::vector<int> n_ignore_rep1,
-                                                   std::vector<std::vector<double>> rph_base_use,
-                                                   std::vector<std::vector<std::vector<int>>> index_dedup1_rep1_cpp,
-                                                   std::vector<std::vector<std::vector<double>>> cv_squared_dedup1_rep1,
-                                                   std::vector<std::vector<double>> deg_size_dedup1_rep1,
-                                                   std::vector<std::vector<double>> oph_dedup1_rep1,
-                                                   std::vector<std::vector<double>> loglike_di_rep1,
-                                                   std::vector<std::vector<int>> index_dedup2_rep1_cpp,
-                                                   std::vector<int> n_gtc_use,
-                                                   std::vector<int> n_peak_use){
+std::vector<std::vector<double>> calc_lpd_gtc_rep1(const double tph,
+                                                   const std::vector<double>& mp,
+                                                   const std::vector<double>& deg,
+                                                   const int hnc,
+                                                   const std::vector<double>& ats_use,
+                                                   const std::vector<int>& n_general_rep1,
+                                                   const std::vector<int>& n_dropout_rep1,
+                                                   const std::vector<int>& n_dropin_rep1,
+                                                   const std::vector<int>& n_ignore_rep1,
+                                                   const std::vector<std::vector<double>>& rph_base_use,
+                                                   const std::vector<std::vector<std::vector<int>>>& index_dedup1_rep1_cpp,
+                                                   const std::vector<std::vector<std::vector<double>>>& cv_squared_dedup1_rep1,
+                                                   const std::vector<std::vector<double>>& deg_size_dedup1_rep1,
+                                                   const std::vector<std::vector<double>>& oph_dedup1_rep1,
+                                                   const std::vector<std::vector<double>>& loglike_di_rep1,
+                                                   const std::vector<std::vector<int>>& index_dedup2_rep1_cpp,
+                                                   const std::vector<int>& n_gtc_use,
+                                                   const std::vector<int>& n_peak_use){
 
   int n_mk = n_general_rep1.size();
   std::vector<std::vector<double>> lpd_gtc_rep1(n_mk, std::vector<double>());
@@ -157,24 +157,24 @@ std::vector<std::vector<double>> calc_lpd_gtc_rep1(double tph,
 }
 
 // [[Rcpp::export]]
-std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(double tph,
-                                                                   std::vector<double> mp,
-                                                                   std::vector<double> deg,
-                                                                   int hnc,
-                                                                   std::vector<double> ats_use,
-                                                                   std::vector<std::vector<int>> n_general_list,
-                                                                   std::vector<std::vector<int>> n_dropout_list,
-                                                                   std::vector<std::vector<int>> n_dropin_list,
-                                                                   std::vector<std::vector<int>> n_ignore_list,
-                                                                   std::vector<std::vector<double>> rph_base_use,
-                                                                   std::vector<std::vector<std::vector<std::vector<int>>>> index_dedup1_list_cpp,
-                                                                   std::vector<std::vector<std::vector<std::vector<double>>>> cv_squared_dedup1_list,
-                                                                   std::vector<std::vector<std::vector<double>>> deg_size_dedup1_list,
-                                                                   std::vector<std::vector<std::vector<double>>> oph_dedup1_list,
-                                                                   std::vector<std::vector<std::vector<double>>> loglike_di_list,
-                                                                   std::vector<std::vector<std::vector<int>>> index_dedup2_list_cpp,
-                                                                   std::vector<int> n_gtc_use,
-                                                                   std::vector<int> n_peak_use){
+std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const double tph,
+                                                                   const std::vector<double>& mp,
+                                                                   const std::vector<double>& deg,
+                                                                   const int hnc,
+                                                                   const std::vector<double>& ats_use,
+                                                                   const std::vector<std::vector<int>>& n_general_list,
+                                                                   const std::vector<std::vector<int>>& n_dropout_list,
+                                                                   const std::vector<std::vector<int>>& n_dropin_list,
+                                                                   const std::vector<std::vector<int>>& n_ignore_list,
+                                                                   const std::vector<std::vector<double>>& rph_base_use,
+                                                                   const std::vector<std::vector<std::vector<std::vector<int>>>>& index_dedup1_list_cpp,
+                                                                   const std::vector<std::vector<std::vector<std::vector<double>>>>& cv_squared_dedup1_list,
+                                                                   const std::vector<std::vector<std::vector<double>>>& deg_size_dedup1_list,
+                                                                   const std::vector<std::vector<std::vector<double>>>& oph_dedup1_list,
+                                                                   const std::vector<std::vector<std::vector<double>>>& loglike_di_list,
+                                                                   const std::vector<std::vector<std::vector<int>>>& index_dedup2_list_cpp,
+                                                                   const std::vector<int>& n_gtc_use,
+                                                                   const std::vector<int>& n_peak_use){
 
   int n_rep = n_general_list.size();
   int n_mk = n_gtc_use.size();

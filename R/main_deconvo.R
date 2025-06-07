@@ -6,7 +6,7 @@
 create_index_dedup2_mk <- function(index_rph_gtc_cpp, index_dedup1_rep1_mk1){
   paste_index_rph_gtc_cpp <- sapply(index_rph_gtc_cpp, paste, collapse = "-")
   paste_index_dedup1_rep1_mk1 <- sapply(index_dedup1_rep1_mk1, paste, collapse = "-")
-  return(match(paste_index_rph_gtc_cpp, paste_index_dedup1_rep1_mk1))
+  return(match(paste_index_rph_gtc_cpp, paste_index_dedup1_rep1_mk1) - 1)
 }
 
 #' softmax
@@ -23,22 +23,48 @@ make_bounds_list <- function(n_rep, hnc, max_tph){
 
   # tph1, tph2, ...
   for(i in 1:n_rep){
-    bounds[[paste0("tph", i)]] <- c(1, max_tph)
+    bounds[[paste0("tph", i)]] <- c(2000, 8000)
   }
 
   # lambda1
-  bounds[["lambda1"]] <- c(-10, 10)
+  bounds[["lambda1"]] <- c(-3, 3)
 
   # delta2, delta3, ...
   if(hnc > 1){
     for(i in 2:hnc){
-      bounds[[paste0("delta", i)]] <- c(-5, 5)
+      bounds[[paste0("delta", i)]] <- c(0, 5)
     }
   }
 
   # deg1, deg2, ...
   for(i in 1:hnc){
-    bounds[[paste0("deg", i)]] <- c(0, 1)
+    bounds[[paste0("deg", i)]] <- c(0.001, 1)
+  }
+
+  return(bounds)
+}
+
+make_bounds_sann <- function(n_rep, hnc, max_tph){
+  bounds <- list()
+
+  # tph1, tph2, ...
+  for(i in 1:n_rep){
+    bounds[[paste0("tph", i)]] <- c(2000, 8000)
+  }
+
+  # lambda1
+  bounds[["lambda1"]] <- c(-3, 3)
+
+  # delta2, delta3, ...
+  if(hnc > 1){
+    for(i in 2:hnc){
+      bounds[[paste0("delta", i)]] <- c(0, 5)
+    }
+  }
+
+  # deg1, deg2, ...
+  for(i in 1:hnc){
+    bounds[[paste0("deg", i)]] <- c(0.001, 1)
   }
 
   return(bounds)
@@ -574,50 +600,46 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     }else{
 
-      # likelihood function
-      like_func_mix <- function(...){
+      lower_bounds <- c(rep(1, n_rep), rep(0.0001, hnc - 1), rep(0.0001, hnc))
+      upper_bounds <- c(rep(32000, n_rep), rep(0.9999, hnc - 1), rep(1, hnc))
+
+      like_func_mix <- function(par){
         # Prepare parameters
-        args <- list(...)
-        tph <- unlist(args[grepl("^tph", names(args))])[1:n_rep]
-        lambda1 <- args$lambda1
-        delta <- unlist(args[grepl("^delta", names(args))])[1:(hnc - 1)]
-        deg <- unlist(args[grepl("^deg", names(args))])[1:hnc]
+        tph <- par[1:n_rep]
+        mp_pre <- par[(n_rep + 1):(n_rep + hnc - 1)]
+        deg <- par[(n_rep + hnc):(n_rep + 2 * hnc - 1)]
 
-        # Prepare lambda
-        lambda <- rep(NA, hnc)
-        lambda[1] <- lambda1
-        for(i in 1:(hnc - 1)){
-          lambda[i + 1] <- lambda[i] + delta[i]
+        mp <- c(mp_pre, 1 - sum(mp_pre))
+        if(any(mp <= 0.0001)){
+          loglike <- Inf
+        }else{
+
+          # Calculate log probability densities of all genotype combinations
+          lpd_gtc_all_rep <- vector(mode = "list", length = n_rep)
+          for(i in 1:n_rep){
+            lpd_gtc_all_rep[[i]] <- calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[[i]], n_dropout_list[[i]], n_dropin_list[[i]], n_ignore_list[[i]], rph_base_use,
+                                                      index_dedup1_list_cpp[[i]], cv_squared_dedup1_list[[i]], deg_size_dedup1_list[[i]], oph_dedup1_list[[i]], loglike_di_list[[i]],
+                                                      index_dedup2_list_cpp[[i]], n_gtc_use, n_peak_use)
+          }
+
+          # Calculate log likelihood in each marker
+          loglike_cpp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
+          loglike <- - sum(loglike_cpp)
+
+          if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+            loglike <- Inf
+          }
         }
 
-        # Prepare mp
-        mp <- softmax(lambda)
-
-        # Calculate log probability densities of all genotype combinations
-        lpd_gtc_all_rep <- vector(mode = "list", length = n_rep)
-        for(i in 1:n_rep){
-          lpd_gtc_all_rep[[i]] <- calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[[i]], n_dropout_list[[i]], n_dropin_list[[i]], n_ignore_list[[i]], rph_base_use,
-                                                    index_dedup1_list_cpp[[i]], cv_squared_dedup1_list[[i]], deg_size_dedup1_list[[i]], oph_dedup1_list[[i]], loglike_di_list[[i]],
-                                                    index_dedup2_list_cpp[[i]], n_gtc_use, n_peak_use)
-        }
-
-        # Calculate log likelihood in each marker
-        loglike_cpp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
-
-        return(list(Score = - sum(loglike_cpp)))
+        return(loglike)
       }
 
-      bounds_list <- make_bounds_list(n_rep, hnc, max(tph_per_mk_use))
-
-      opt_results <- bayesOpt(
-        FUN = like_func_mix,
-        bounds = bounds_list,
-        initPoints = 4,     # 最初にランダムに試す点数
-        iters.n = 10,       # ベイズ最適化で試行する回数
-        acq = "ucb",        # 獲得関数の種類（ucb, ei, poi など）
-        kappa = 2.576,      # UCBのパラメータ
-        parallel = TRUE,    # 並列処理するかどうか
-        verbose = 1
+      result <- GenSA(
+        par = c(rep(5507.119, n_rep), c(0.33, 0.33), rep(0.9, hnc)),
+        fn = like_func_mix,
+        lower = lower_bounds,
+        upper = upper_bounds,
+        control = list(verbose = TRUE, max.call = 5000)
       )
     }
 
