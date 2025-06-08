@@ -108,53 +108,81 @@ calc_ave_het_ph_all_data <- function(height_list){
   return(ave_het_ph_all_data)
 }
 
-#' generate_init_sobol_ae
-#'
-#' @description The function to generate initial values based on Sobol sequence for the LSAE model
-#' @param x Sobol point
-#' @param n_mk The number of markers
-#' @param min_alpha The minimum alpha
-#' @param max_alpha The maximum alpha
-generate_init_sobol_ae <- function(x, n_mk, min_alpha, max_alpha){
-  # Get only one Sobol point (x-th)
-  sobol_vec <- sobol(n = x, d = n_mk, randomize = "digital.shift")[x, ]
-
-  # Scaling
-  alpha <- sobol_vec * (max_alpha - min_alpha) + min_alpha
-
-  return(list(list(alpha = alpha)))
-}
-
 #' run_mle_ae
 #'
 #' @description The function to perform MLE for the locus-specific amplification efficiency
 #' @param prop_ae_data_use A matrix of the proportion of the amplification efficiencies (only data used for MCMC)
-#' @param model_ae The stan model of the locus-specific amplification efficiency
 #' @param min_alpha The minimum alpha
 #' @param max_alpha The maximum alpha
-#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
-run_mle_ae <- function(prop_ae_data_use, model_ae, min_alpha, max_alpha, initial_point_factor){
-  # Prepare data list for the AE model
+#' @param max_call The max.call parameter for GenSA
+#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
+#' @param max_mle_runs The maximum number of MLE attempts with different initial values
+run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_call, num_converged_solutions, max_mle_runs){
+
+  # Likelihood function for the locus-specific amplification efficiency
+  like_fun_ae <- function(par){
+
+    n_data <- ncol(prop_ae_data_use)
+    dens <- rep(Inf, n_data)
+
+    for(i in 1:n_data){
+      dens[i] <- ddirichlet(prop_ae_data_use[, i], par)
+    }
+
+    loglike <- - sum(log(dens))
+
+    if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+      loglike <- Inf
+    }
+
+    return(loglike)
+  }
+
   n_mk <- nrow(prop_ae_data_use)
-  data_list_ae <- list(N = ncol(prop_ae_data_use), N_Mk = n_mk, PAE = prop_ae_data_use)
+  lower_bounds <- rep(min_alpha, n_mk)
+  upper_bounds <- rep(max_alpha, n_mk)
 
-  n_sobol <- initial_point_factor * n_mk
-  init_list <- lapply(1:n_sobol, function(x) generate_init_sobol_ae(x, n_mk, min_alpha, max_alpha))
+  # Perform simulated annealing
+  current_opt <- NULL
+  current_score <- Inf
+  count_mle <- 0
+  count_solution <- 0
+  init_list <- list()
+  record_accept <- rep(NA, max_mle_runs)
+  repeat{
+    count_mle <- count_mle + 1
 
-  tmp_param <- matrix(NA, n_sobol, 1 + n_mk)
-  for(i in 1:n_sobol){
-    fit <- suppressWarnings(model_ae$optimize(data_list_ae, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
-    if(fit$return_codes() == 0){
-      tmp <- try(fit$draws())
-      if(!inherits(tmp, "try-error")){
-        tmp_param[i, ] <- tmp[1, ]
-      }
+    init_list[[count_mle]] <- init <- rdirichlet(1, rep(1, n_mk))
+
+    opt <- GenSA(
+      par = init,
+      fn = like_fun_ae,
+      lower = lower_bounds,
+      upper = upper_bounds,
+      control = list(verbose = TRUE, max.call = max_call)
+    )
+
+    score <- round(opt$value, 3)
+    if(score < current_score){
+      current_opt <- opt
+      current_score <- score
+      count_solution <- 1
+    }else if(score == current_score){
+      count_solution <- count_solution + 1
+    }
+    record_accept[count_mle] <- count_solution
+
+    if(count_solution == num_converged_solutions){
+      break
+    }else if(count_mle == max_mle_runs){
+      current_opt <- NULL
+      break
     }
   }
 
-  index_max_lp <- which.max(tmp_param[, 1])
-  if(length(index_max_lp) == 1){
-    est_param <- tmp_param[index_max_lp, -1]
+  # Extract parameters
+  if(!is.null(current_opt)){
+    est_param <- current_opt$par
   }else{
     est_param <- rep(NA, n_mk)
   }
@@ -382,25 +410,6 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
               "ats_gamma" = ats_gamma))
 }
 
-#' generate_init_sobol_gamma
-#'
-#' @description The function to generate initial values based on Sobol sequence for the gamma model
-#' @param x Sobol point
-#' @param min_cv_allele The minimum CV for alleles
-#' @param max_cv_allele The maximum CV for alleles
-#' @param min_cv_stutter The minimum CV for stutters
-#' @param max_cv_stutter The maximum CV for stutters
-generate_init_sobol_gamma <- function(x, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter){
-  # Get only one Sobol point (x-th)
-  sobol_vec <- sobol(n = x, d = 2, randomize = "digital.shift")[x, ]
-
-  # Index partitioning and scaling
-  cv_allele <- sobol_vec[1] * (max_cv_allele - min_cv_allele) + min_cv_allele
-  cv_stutter <- sobol_vec[2] * (max_cv_stutter - min_cv_stutter) + min_cv_stutter
-
-  return(list(list(cv_allele = cv_allele, cv_stutter = cv_stutter)))
-}
-
 #' run_mle_gamma
 #'
 #' @description The function to perform MLE for the gamma model
@@ -408,33 +417,100 @@ generate_init_sobol_gamma <- function(x, min_cv_allele, max_cv_allele, min_cv_st
 #' @param tphs_gamma The total peak heights in one heterozygote allele for the gamma distribution
 #' @param ophs_gamma The observed peak heights for the gamma distribution
 #' @param ats_gamma The analytical thresholds for the gamma distribution
-#' @param model_gamma The stan model of the gamma model
 #' @param min_cv_allele The minimum CV for alleles
 #' @param max_cv_allele The maximum CV for alleles
 #' @param min_cv_stutter The minimum CV for stutters
 #' @param max_cv_stutter The maximum CV for stutters
-#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
-run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, initial_point_factor){
-  # Prepare data list for the gamma model
-  data_list_gamma <- list(N = length(tphs_gamma), RPH = rphs_gamma, TPH = tphs_gamma, OPH = ophs_gamma, AT = ats_gamma)
+#' @param max_call The max.call parameter for GenSA
+#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
+#' @param max_mle_runs The maximum number of MLE attempts with different initial values
+run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, max_call, num_converged_solutions, max_mle_runs){
 
-  n_sobol <- initial_point_factor * 2
-  init_list <- lapply(1:n_sobol, function(x) generate_init_sobol_gamma(x, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter))
+  like_func_gamma <- function(par){
+    cv_allele_squared <- par[1]^2
+    cv_stutter_squared <- par[2]^2
 
-  tmp_param <- matrix(NA, n_sobol, 3)
-  for(i in 1:n_sobol){
-    fit <- suppressWarnings(model_gamma$optimize(data_list_gamma, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
-    if(fit$return_codes() == 0){
-      tmp <- try(fit$draws())
-      if(!inherits(tmp, "try-error")){
-        tmp_param[i, ] <- tmp[1, ]
+    n_data <- length(tphs_gamma)
+    dens <- rep(Inf, n_data)
+
+    for(i in 1:n_data){
+      tmp1 <- rphs_gamma[, i] * tphs_gamma[i]
+      tmp2 <- tmp1
+      for(j in 1:2){
+        tmp2[j] <- tmp2[j] * cv_allele_squared
       }
+      for(j in 3:10){
+        tmp2[j] <- tmp2[j] * cv_stutter_squared
+      }
+
+      tmp1_sum <- sum(tmp1)
+      tmp2_sum <- sum(tmp2)
+      gamma_alpha <- tmp1_sum^2 / tmp2_sum
+      gamma_beta <- tmp1_sum / tmp2_sum
+
+      at <- ats_gamma[i]
+      oph <- ophs_gamma[i]
+
+      if(oph == 0){
+        dens[i] <- pgamma(at, shape = gamma_alpha, rate = gamma_beta)
+      }else{
+        dens[i] <- dgamma(oph, shape = gamma_alpha, rate = gamma_beta)
+      }
+    }
+
+    loglike <- - sum(log(dens))
+
+    if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+      loglike <- Inf
+    }
+
+    return(loglike)
+  }
+
+  lower_bounds <- c(min_cv_allele, min_cv_stutter)
+  upper_bounds <- c(max_cv_allele, max_cv_stutter)
+
+  # Perform simulated annealing
+  current_opt <- NULL
+  current_score <- Inf
+  count_mle <- 0
+  count_solution <- 0
+  init_list <- list()
+  record_accept <- rep(NA, max_mle_runs)
+  repeat{
+    count_mle <- count_mle + 1
+
+    init_list[[count_mle]] <- init <- c(runif(1, min = min_cv_allele, max = max_cv_allele), runif(1, min = min_cv_stutter, max = max_cv_stutter))
+
+    opt <- GenSA(
+      par = init,
+      fn = like_func_gamma,
+      lower = lower_bounds,
+      upper = upper_bounds,
+      control = list(verbose = TRUE, max.call = max_call)
+    )
+
+    score <- round(opt$value, 3)
+    if(score < current_score){
+      current_opt <- opt
+      current_score <- score
+      count_solution <- 1
+    }else if(score == current_score){
+      count_solution <- count_solution + 1
+    }
+    record_accept[count_mle] <- count_solution
+
+    if(count_solution == num_converged_solutions){
+      break
+    }else if(count_mle == max_mle_runs){
+      current_opt <- NULL
+      break
     }
   }
 
-  index_max_lp <- which.max(tmp_param[, 1])
-  if(length(index_max_lp) == 1){
-    est_param <- tmp_param[index_max_lp, -1]
+  # Extract parameters
+  if(!is.null(current_opt)){
+    est_param <- current_opt$par
   }else{
     est_param <- rep(NA, 2)
   }
@@ -446,10 +522,23 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_g
 #' estimate_parameters
 #'
 #' @description The function to estimate parameters of the locus-specific amplification efficiencies and the gamma distribution
+#' @param dt_exp The data.table for experimental data
+#' @param dt_gt The data.table for genotype data
+#' @param list_dt_average_sr A list of the data.table for average stutter ratios in all markers
+#' @param dt_setting_est_par The data.table for the parameter settings
+#' @param min_alpha The minimum alpha
+#' @param max_alpha The maximum alpha
+#' @param min_cv_allele The minimum CV for alleles
+#' @param max_cv_allele The maximum CV for alleles
+#' @param min_cv_stutter The minimum CV for stutters
+#' @param max_cv_stutter The maximum CV for stutters
+#' @param max_call The max.call parameter for GenSA
+#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
+#' @param max_mle_runs The maximum number of MLE attempts with different initial values
 estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
-                                model_ae, min_alpha, max_alpha,
-                                model_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter,
-                                initial_point_factor){
+                                min_alpha, max_alpha,
+                                min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter,
+                                max_call, num_converged_solutions, max_mle_runs){
   # Extract information on setting
   markers_auto <- dt_setting_est_par$Marker
   n_mk_auto <- length(markers_auto)
@@ -481,7 +570,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   prop_ae_data_use <- prop_ae_data[, which(apply(prop_ae_data, 2, prod) > 0), drop = FALSE]
 
   # Perform MCMC for AE
-  alpha <- run_mle_ae(prop_ae_data_use, model_ae, min_alpha, max_alpha, initial_point_factor)
+  alpha <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, max_call, num_converged_solutions, max_mle_runs)
 
   if(any(is.na(alpha))){
     cv_allele <- cv_stutter <- NA
@@ -502,7 +591,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     ats_gamma <- tmp$ats_gamma
 
     # Perform MCMC for gamma distribution
-    tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, model_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, initial_point_factor)
+    tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, max_call, num_converged_solutions, max_mle_runs)
     cv_allele <- tmp["cv_allele"]
     cv_stutter <- tmp["cv_stutter"]
   }

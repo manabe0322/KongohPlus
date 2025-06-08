@@ -287,7 +287,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         showModal(modalDialog(
           title = "Advanced setting",
           h4("MLE conditions"),
-          numericInput(session$ns("max_call"), label = "Number of initial points", value = rv_deconvo_setting$max_call),
+          numericInput(session$ns("max_call"), label = "Number of simulations", value = rv_deconvo_setting$max_call),
           numericInput(session$ns("num_converged_solutions"), label = "The number of converged solutions required to terminate the MLE", value = rv_deconvo_setting$num_converged_solutions),
           numericInput(session$ns("max_mle_runs"), label = "The maximum number of MLE attempts with different initial values", value = rv_deconvo_setting$max_mle_runs),
           footer = tagList(

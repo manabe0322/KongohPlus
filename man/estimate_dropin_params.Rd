@@ -8,13 +8,35 @@ estimate_dropin_params(
   dt_ntc,
   dt_kit,
   at_dropin,
-  model_dropin,
   min_shape_di,
   max_shape_di,
   min_rate_di,
   max_rate_di,
-  initial_point_factor
+  max_call,
+  num_converged_solutions,
+  max_mle_runs
 )
+}
+\arguments{
+\item{dt_ntc}{The data.table for non-template controls}
+
+\item{dt_kit}{The data.table for information on the kit}
+
+\item{at_dropin}{The analytical threshold for drop-in peaks}
+
+\item{min_shape_di}{The minimum shape}
+
+\item{max_shape_di}{The maximum shape}
+
+\item{min_rate_di}{The minimum rate}
+
+\item{max_rate_di}{The maximum rate}
+
+\item{max_call}{The max.call parameter for GenSA}
+
+\item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
+
+\item{max_mle_runs}{The maximum number of MLE attempts with different initial values}
 }
 \description{
 The function to estimate drop-in parameters

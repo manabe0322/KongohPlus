@@ -345,58 +345,83 @@ create_dt_sr_data <- function(peak_list, height_list, gt_list, sr_consider_auto,
   return(dt_sr_data)
 }
 
-#' generate_init_sobol_sr_gen
-#'
-#' @description The function to generate initial values based on Sobol sequence for the linear model of SR
-#' @param x Sobol point
-#' @param min_slope The minimum slope
-#' @param max_slope The maximum slope
-#' @param min_intercept The minimum intercept
-#' @param max_intercept The maximum intercept
-#' @param min_sigma The minimum sigma
-#' @param max_sigma The maximum sigma
-generate_init_sobol_sr_gen <- function(x, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma){
-  # Get only one Sobol point (x-th)
-  sobol_vec <- sobol(n = x, d = 3, randomize = "digital.shift")[x, ]
-
-  # Index partitioning and scaling
-  slope <- sobol_vec[1] * (max_slope - min_slope) + min_slope
-  intercept <- sobol_vec[2] * (max_intercept - min_intercept) + min_intercept
-  sigma <- sobol_vec[3] * (max_sigma - min_sigma) + min_sigma
-
-  return(list(list(slope = slope, intercept = intercept, sigma = sigma)))
-}
-
 #' run_mle_sr_gen
 #'
-#' @description The function to perform MLE for the stutter ratio (locus-specific with slope)
-#' @param model_sr_gen The stan model of the stutter ratio (linear model)
-#' @param data_list_sr The data list of the stutter ratio
+#' @description The function to perform MLE for the stutter ratio (locus-specific model with slope)
+#' @param x_al A vector of the (corrected) alleles in the experimental data
+#' @param y_sr A vector of the stutter ratios in the experimental data
+#' @param tap A vector of the total allelic products in the experimental data
 #' @param min_slope The minimum slope
 #' @param max_slope The maximum slope
 #' @param min_intercept The minimum intercept
 #' @param max_intercept The maximum intercept
 #' @param min_sigma The minimum sigma
 #' @param max_sigma The maximum sigma
-#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
-run_mle_sr_gen <- function(model_sr_gen, data_list_sr, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, initial_point_factor){
-  n_sobol <- initial_point_factor * 3
-  init_list <- lapply(1:n_sobol, function(x) generate_init_sobol_sr_gen(x, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma))
+#' @param max_call The max.call parameter for GenSA
+#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
+#' @param max_mle_runs The maximum number of MLE attempts with different initial values
+run_mle_sr_gen <- function(x_al, y_sr, tap, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs){
 
-  tmp_param <- matrix(NA, n_sobol, 4)
-  for(i in 1:n_sobol){
-    fit <- suppressWarnings(model_sr_gen$optimize(data_list_sr, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
-    if(fit$return_codes() == 0){
-      tmp <- try(fit$draws())
-      if(!inherits(tmp, "try-error")){
-        tmp_param[i, ] <- tmp[1, ]
-      }
+  # Likelihood function for the stutter ratio (locus-specific model with slope)
+  like_fun_sr_gen <- function(par){
+    slope <- par[1]
+    intercept <- par[2]
+    sigma <- par[3]
+
+    dens <- dlnorm(y_sr, meanlog = log(slope * x_al + intercept), sdlog = sqrt(sigma / tap))
+    loglike <- - sum(log(dens))
+
+    if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+      loglike <- Inf
+    }
+
+    return(loglike)
+  }
+
+  lower_bounds <- c(min_slope, min_intercept, min_sigma)
+  upper_bounds <- c(max_slope, max_intercept, max_sigma)
+
+  # Perform simulated annealing
+  current_opt <- NULL
+  current_score <- Inf
+  count_mle <- 0
+  count_solution <- 0
+  init_list <- list()
+  record_accept <- rep(NA, max_mle_runs)
+  repeat{
+    count_mle <- count_mle + 1
+
+    init_list[[count_mle]] <- init <- c(runif(1, min = min_slope, max = max_slope), runif(1, min = min_intercept, max = max_intercept), runif(1, min = min_sigma, max = max_sigma))
+
+    opt <- GenSA(
+      par = init,
+      fn = like_fun_sr_gen,
+      lower = lower_bounds,
+      upper = upper_bounds,
+      control = list(verbose = TRUE, max.call = max_call)
+    )
+
+    score <- round(opt$value, 3)
+    if(score < current_score){
+      current_opt <- opt
+      current_score <- score
+      count_solution <- 1
+    }else if(score == current_score){
+      count_solution <- count_solution + 1
+    }
+    record_accept[count_mle] <- count_solution
+
+    if(count_solution == num_converged_solutions){
+      break
+    }else if(count_mle == max_mle_runs){
+      current_opt <- NULL
+      break
     }
   }
 
-  index_max_lp <- which.max(tmp_param[, 1])
-  if(length(index_max_lp) == 1){
-    est_param <- tmp_param[index_max_lp, -1]
+  # Extract parameters
+  if(!is.null(current_opt)){
+    est_param <- current_opt$par
   }else{
     est_param <- rep(NA, 3)
   }
@@ -405,53 +430,79 @@ run_mle_sr_gen <- function(model_sr_gen, data_list_sr, min_slope, max_slope, min
   return(est_param)
 }
 
-#' generate_init_sobol_sr_uni
-#'
-#' @description The function to generate initial values based on Sobol sequence for the uniform model of SR
-#' @param x Sobol point
-#' @param min_myu The minimum myu
-#' @param max_myu The maximum myu
-#' @param min_sigma The minimum sigma
-#' @param max_sigma The maximum sigma
-generate_init_sobol_sr_uni <- function(x, min_myu, max_myu, min_sigma, max_sigma){
-  # Get only one Sobol point (x-th)
-  sobol_vec <- sobol(n = x, d = 2, randomize = "digital.shift")[x, ]
-
-  # Index partitioning and scaling
-  myu <- sobol_vec[1] * (max_myu - min_myu) + min_myu
-  sigma <- sobol_vec[2] * (max_sigma - min_sigma) + min_sigma
-
-  return(list(list(myu = myu, sigma = sigma)))
-}
-
 #' run_mle_sr_uni
 #'
-#' @description The function to perform MLE for the stutter ratio (uniform)
-#' @param model_sr_uni The stan model of the stutter ratio (uniform model)
-#' @param data_list_sr The data list of the stutter ratio
+#' @description The function to perform MLE for the stutter ratio (uniform model)
+#' @param y_sr A vector of the stutter ratios in the experimental data
+#' @param tap A vector of the total allelic products in the experimental data
 #' @param min_myu The minimum myu
 #' @param max_myu The maximum myu
 #' @param min_sigma The minimum sigma
 #' @param max_sigma The maximum sigma
-#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
-run_mle_sr_uni <- function(model_sr_uni, data_list_sr, min_myu, max_myu, min_sigma, max_sigma, initial_point_factor){
-  n_sobol <- initial_point_factor * 2
-  init_list <- lapply(1:n_sobol, function(x) generate_init_sobol_sr_uni(x, min_myu, max_myu, min_sigma, max_sigma))
+#' @param max_call The max.call parameter for GenSA
+#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
+#' @param max_mle_runs The maximum number of MLE attempts with different initial values
+run_mle_sr_uni <- function(y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs){
 
-  tmp_param <- matrix(NA, n_sobol, 3)
-  for(i in 1:n_sobol){
-    fit <- suppressWarnings(model_sr_uni$optimize(data_list_sr, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
-    if(fit$return_codes() == 0){
-      tmp <- try(fit$draws())
-      if(!inherits(tmp, "try-error")){
-        tmp_param[i, ] <- tmp[1, ]
-      }
+  # Likelihood function for the stutter ratio (uniform model)
+  like_fun_sr_uni <- function(par){
+    myu <- par[1]
+    sigma <- par[2]
+
+    dens <- dlnorm(y_sr, meanlog = log(myu), sdlog = sqrt(sigma / tap))
+    loglike <- - sum(log(dens))
+
+    if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+      loglike <- Inf
+    }
+
+    return(loglike)
+  }
+
+  lower_bounds <- c(min_myu, min_sigma)
+  upper_bounds <- c(max_myu, max_sigma)
+
+  # Perform simulated annealing
+  current_opt <- NULL
+  current_score <- Inf
+  count_mle <- 0
+  count_solution <- 0
+  init_list <- list()
+  record_accept <- rep(NA, max_mle_runs)
+  repeat{
+    count_mle <- count_mle + 1
+
+    init_list[[count_mle]] <- init <- c(runif(1, min = min_myu, max = max_myu), runif(1, min = min_sigma, max = max_sigma))
+
+    opt <- GenSA(
+      par = init,
+      fn = like_fun_sr_uni,
+      lower = lower_bounds,
+      upper = upper_bounds,
+      control = list(verbose = TRUE, max.call = max_call)
+    )
+
+    score <- round(opt$value, 3)
+    if(score < current_score){
+      current_opt <- opt
+      current_score <- score
+      count_solution <- 1
+    }else if(score == current_score){
+      count_solution <- count_solution + 1
+    }
+    record_accept[count_mle] <- count_solution
+
+    if(count_solution == num_converged_solutions){
+      break
+    }else if(count_mle == max_mle_runs){
+      current_opt <- NULL
+      break
     }
   }
 
-  index_max_lp <- which.max(tmp_param[, 1])
-  if(length(index_max_lp) == 1){
-    est_param <- tmp_param[index_max_lp, -1]
+  # Extract parameters
+  if(!is.null(current_opt)){
+    est_param <- current_opt$par
   }else{
     est_param <- rep(NA, 2)
   }
@@ -478,8 +529,6 @@ calc_average_sr <- function(allele, slope, intercept){
 #' @param stutter_type "BS": back stutter, "FS": forward stutter, "DS": double-back stutter, "M2S": minus 2-nt stutter
 #' @param markers_auto A vector of the autosomal markers
 #' @param meth_model_sr A vector of the methods for estimating parameters of the SR in each marker
-#' @param model_sr_gen The stan model of the stutter ratio (linear model)
-#' @param model_sr_uni The stan model of the stutter ratio (uniform model)
 #' @param min_slope The minimum slope
 #' @param max_slope The maximum slope
 #' @param min_intercept The minimum intercept
@@ -488,9 +537,11 @@ calc_average_sr <- function(allele, slope, intercept){
 #' @param max_myu The maximum myu
 #' @param min_sigma The minimum sigma
 #' @param max_sigma The maximum sigma
-#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
-perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto, meth_model_sr, model_sr_gen, model_sr_uni,
-                                  min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, initial_point_factor){
+#' @param max_call The max.call parameter for GenSA
+#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
+#' @param max_mle_runs The maximum number of MLE attempts with different initial values
+perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto, meth_model_sr,
+                                  min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs){
   # Extract data of the targeted stutter type
   if(stutter_type == "BS"){
     dt_st_type <- dt_sr_data[dt_sr_data$Bool_BS]
@@ -572,8 +623,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
 
         # Perform MLE for uniform model
         else if(meth == "Uniform"){
-          data_list_sr <- list(N = length(x_al), SR = y_sr, Height = tap)
-          est_param <- run_mle_sr_uni(model_sr_uni, data_list_sr, min_myu, max_myu, min_sigma, max_sigma, initial_point_factor)
+          est_param <- run_mle_sr_uni(y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs)
           myu_all_mk[i] <- myu <- est_param["myu"]
           sigma_all_mk[i] <- est_param["sigma"]
 
@@ -589,8 +639,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
 
         # Perform MLE for linear model
         else{
-          data_list_sr <- list(N = length(x_al), SR = y_sr, XVal = x_al, Height = tap)
-          est_param <- run_mle_sr_gen(model_sr_gen, data_list_sr, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, initial_point_factor)
+          est_param <- run_mle_sr_gen(x_al, y_sr, tap, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs)
           slope_all_mk[i] <- slope <- est_param["slope"]
           intercept_all_mk[i] <- intercept <- est_param["intercept"]
           sigma_all_mk[i] <- est_param["sigma"]
@@ -625,8 +674,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
 
   # Perform MLE for uniform model (multiple loci together)
   if(length(y_sr_multi_mk) != 0){
-    data_list_sr <- list(N = length(y_sr_multi_mk), SR = y_sr_multi_mk, Height = tap_multi_mk)
-    est_param <- run_mle_sr_uni(model_sr_uni, data_list_sr, min_myu, max_myu, min_sigma, max_sigma, initial_point_factor)
+    est_param <- run_mle_sr_uni(y_sr_multi_mk, tap_multi_mk, min_myu, max_myu, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs)
     myu_all_mk[index_multi_mk] <- est_param["myu"]
     sigma_all_mk[index_multi_mk] <- est_param["sigma"]
 
@@ -661,8 +709,23 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
 #' estimate_average_sr
 #'
 #' @description The function to estimate average stutter ratios
-estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr, model_sr_gen, model_sr_uni,
-                                min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, initial_point_factor){
+#' @param dt_exp The data.table for experimental data
+#' @param dt_gt The data.table for genotype data
+#' @param dt_kit The data.table for information on the kit
+#' @param dt_setting_est_sr The data.table for the stutter settings
+#' @param min_slope The minimum slope
+#' @param max_slope The maximum slope
+#' @param min_intercept The minimum intercept
+#' @param max_intercept The maximum intercept
+#' @param min_myu The minimum myu
+#' @param max_myu The maximum myu
+#' @param min_sigma The minimum sigma
+#' @param max_sigma The maximum sigma
+#' @param max_call The max.call parameter for GenSA
+#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
+#' @param max_mle_runs The maximum number of MLE attempts with different initial values
+estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
+                                min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs){
   # Extract information on setting
   markers_auto <- dt_setting_est_sr$Marker
   n_mk_auto <- length(markers_auto)
@@ -692,26 +755,26 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr, model_
   dt_sr_data <- create_dt_sr_data(peak_list, height_list, gt_list, sr_consider_auto, dt_kit)
 
   # Perform MLE for BSR
-  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "BS", markers_auto, meth_model_bsr, model_sr_gen, model_sr_uni,
-                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, initial_point_factor)
+  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "BS", markers_auto, meth_model_bsr,
+                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs)
   dt_result_est_bsr <- tmp$dt_result_est_sr
   list_dt_average_bsr <- tmp$dt_average_sr_all_mk
 
   # Perform MLE for FSR
-  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "FS", markers_auto, meth_model_fsr, model_sr_gen, model_sr_uni,
-                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, initial_point_factor)
+  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "FS", markers_auto, meth_model_fsr,
+                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs)
   dt_result_est_fsr <- tmp$dt_result_est_sr
   list_dt_average_fsr <- tmp$dt_average_sr_all_mk
 
   # Perform MLE for DSR
-  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "DS", markers_auto, meth_model_dsr, model_sr_gen, model_sr_uni,
-                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, initial_point_factor)
+  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "DS", markers_auto, meth_model_dsr,
+                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs)
   dt_result_est_dsr <- tmp$dt_result_est_sr
   list_dt_average_dsr <- tmp$dt_average_sr_all_mk
 
   # Perform MLE for M2SR
-  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "M2S", markers_auto, meth_model_m2sr, model_sr_gen, model_sr_uni,
-                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, initial_point_factor)
+  tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "M2S", markers_auto, meth_model_m2sr,
+                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs)
   dt_result_est_m2sr <- tmp$dt_result_est_sr
   list_dt_average_m2sr <- tmp$dt_average_sr_all_mk
 

@@ -6,22 +6,25 @@
 \usage{
 run_mle_ae(
   prop_ae_data_use,
-  model_ae,
   min_alpha,
   max_alpha,
-  initial_point_factor
+  max_call,
+  num_converged_solutions,
+  max_mle_runs
 )
 }
 \arguments{
 \item{prop_ae_data_use}{A matrix of the proportion of the amplification efficiencies (only data used for MCMC)}
 
-\item{model_ae}{The stan model of the locus-specific amplification efficiency}
-
 \item{min_alpha}{The minimum alpha}
 
 \item{max_alpha}{The maximum alpha}
 
-\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
+\item{max_call}{The max.call parameter for GenSA}
+
+\item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
+
+\item{max_mle_runs}{The maximum number of MLE attempts with different initial values}
 }
 \description{
 The function to perform MLE for the locus-specific amplification efficiency

@@ -9,12 +9,13 @@ run_mle_gamma(
   tphs_gamma,
   ophs_gamma,
   ats_gamma,
-  model_gamma,
   min_cv_allele,
   max_cv_allele,
   min_cv_stutter,
   max_cv_stutter,
-  initial_point_factor
+  max_call,
+  num_converged_solutions,
+  max_mle_runs
 )
 }
 \arguments{
@@ -26,8 +27,6 @@ run_mle_gamma(
 
 \item{ats_gamma}{The analytical thresholds for the gamma distribution}
 
-\item{model_gamma}{The stan model of the gamma model}
-
 \item{min_cv_allele}{The minimum CV for alleles}
 
 \item{max_cv_allele}{The maximum CV for alleles}
@@ -36,7 +35,11 @@ run_mle_gamma(
 
 \item{max_cv_stutter}{The maximum CV for stutters}
 
-\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
+\item{max_call}{The max.call parameter for GenSA}
+
+\item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
+
+\item{max_mle_runs}{The maximum number of MLE attempts with different initial values}
 }
 \description{
 The function to perform MLE for the gamma model

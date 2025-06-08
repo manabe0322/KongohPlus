@@ -9,16 +9,43 @@ estimate_parameters(
   dt_gt,
   list_dt_average_sr,
   dt_setting_est_par,
-  model_ae,
   min_alpha,
   max_alpha,
-  model_gamma,
   min_cv_allele,
   max_cv_allele,
   min_cv_stutter,
   max_cv_stutter,
-  initial_point_factor
+  max_call,
+  num_converged_solutions,
+  max_mle_runs
 )
+}
+\arguments{
+\item{dt_exp}{The data.table for experimental data}
+
+\item{dt_gt}{The data.table for genotype data}
+
+\item{list_dt_average_sr}{A list of the data.table for average stutter ratios in all markers}
+
+\item{dt_setting_est_par}{The data.table for the parameter settings}
+
+\item{min_alpha}{The minimum alpha}
+
+\item{max_alpha}{The maximum alpha}
+
+\item{min_cv_allele}{The minimum CV for alleles}
+
+\item{max_cv_allele}{The maximum CV for alleles}
+
+\item{min_cv_stutter}{The minimum CV for stutters}
+
+\item{max_cv_stutter}{The maximum CV for stutters}
+
+\item{max_call}{The max.call parameter for GenSA}
+
+\item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
+
+\item{max_mle_runs}{The maximum number of MLE attempts with different initial values}
 }
 \description{
 The function to estimate parameters of the locus-specific amplification efficiencies and the gamma distribution

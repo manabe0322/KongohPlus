@@ -9,8 +9,6 @@ estimate_average_sr(
   dt_gt,
   dt_kit,
   dt_setting_est_sr,
-  model_sr_gen,
-  model_sr_uni,
   min_slope,
   max_slope,
   min_intercept,
@@ -19,8 +17,41 @@ estimate_average_sr(
   max_myu,
   min_sigma,
   max_sigma,
-  initial_point_factor
+  max_call,
+  num_converged_solutions,
+  max_mle_runs
 )
+}
+\arguments{
+\item{dt_exp}{The data.table for experimental data}
+
+\item{dt_gt}{The data.table for genotype data}
+
+\item{dt_kit}{The data.table for information on the kit}
+
+\item{dt_setting_est_sr}{The data.table for the stutter settings}
+
+\item{min_slope}{The minimum slope}
+
+\item{max_slope}{The maximum slope}
+
+\item{min_intercept}{The minimum intercept}
+
+\item{max_intercept}{The maximum intercept}
+
+\item{min_myu}{The minimum myu}
+
+\item{max_myu}{The maximum myu}
+
+\item{min_sigma}{The minimum sigma}
+
+\item{max_sigma}{The maximum sigma}
+
+\item{max_call}{The max.call parameter for GenSA}
+
+\item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
+
+\item{max_mle_runs}{The maximum number of MLE attempts with different initial values}
 }
 \description{
 The function to estimate average stutter ratios

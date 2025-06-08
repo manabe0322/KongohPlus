@@ -5,21 +5,26 @@
 \title{run_mle_sr_gen}
 \usage{
 run_mle_sr_gen(
-  model_sr_gen,
-  data_list_sr,
+  x_al,
+  y_sr,
+  tap,
   min_slope,
   max_slope,
   min_intercept,
   max_intercept,
   min_sigma,
   max_sigma,
-  initial_point_factor
+  max_call,
+  num_converged_solutions,
+  max_mle_runs
 )
 }
 \arguments{
-\item{model_sr_gen}{The stan model of the stutter ratio (linear model)}
+\item{x_al}{A vector of the (corrected) alleles in the experimental data}
 
-\item{data_list_sr}{The data list of the stutter ratio}
+\item{y_sr}{A vector of the stutter ratios in the experimental data}
+
+\item{tap}{A vector of the total allelic products in the experimental data}
 
 \item{min_slope}{The minimum slope}
 
@@ -33,8 +38,12 @@ run_mle_sr_gen(
 
 \item{max_sigma}{The maximum sigma}
 
-\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
+\item{max_call}{The max.call parameter for GenSA}
+
+\item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
+
+\item{max_mle_runs}{The maximum number of MLE attempts with different initial values}
 }
 \description{
-The function to perform MLE for the stutter ratio (locus-specific with slope)
+The function to perform MLE for the stutter ratio (locus-specific model with slope)
 }

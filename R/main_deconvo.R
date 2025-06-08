@@ -538,20 +538,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       if(hnc == 1){
         mp <- 1
         deg <- est_params[n_rep + 1]
-
-        gtc_ordered <- gtc_use
       }else{
         mp_pre <- est_params[(n_rep + 1):(n_rep + hnc - 1)]
         mp <- c(mp_pre, 1 - sum(mp_pre))
         deg <- est_params[(n_rep + hnc):(n_rep + 2 * hnc - 1)]
-
-        # Descending order for estimated mixture proportions
-        index_order <- order(mp, decreasing = TRUE)
-        mp <- mp[index_order]
-        deg <- deg[index_order]
-
-        # Order genotype combinations
-        gtc_ordered <- order_gtc(gtc_use, index_order)
       }
 
       # Calculate log probability densities of all genotype combinations
@@ -566,6 +556,18 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       tmp <- calc_log10like_cpp(lpd_gtc_all_rep, gtc_logprob_use)
       log10like_all_mk <- tmp[[1]]
       loglike_gtc_all_mk <- tmp[[2]]
+
+      # Descending order for estimated mixture proportions
+      if(hnc == 1){
+        gtc_ordered <- gtc_use
+      }else{
+        index_order <- order(mp, decreasing = TRUE)
+        mp <- mp[index_order]
+        deg <- deg[index_order]
+
+        # Order genotype combinations
+        gtc_ordered <- order_gtc(gtc_use, index_order)
+      }
 
       dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_ordered, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk)
 

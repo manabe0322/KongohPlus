@@ -5,19 +5,21 @@
 \title{run_mle_sr_uni}
 \usage{
 run_mle_sr_uni(
-  model_sr_uni,
-  data_list_sr,
+  y_sr,
+  tap,
   min_myu,
   max_myu,
   min_sigma,
   max_sigma,
-  initial_point_factor
+  max_call,
+  num_converged_solutions,
+  max_mle_runs
 )
 }
 \arguments{
-\item{model_sr_uni}{The stan model of the stutter ratio (uniform model)}
+\item{y_sr}{A vector of the stutter ratios in the experimental data}
 
-\item{data_list_sr}{The data list of the stutter ratio}
+\item{tap}{A vector of the total allelic products in the experimental data}
 
 \item{min_myu}{The minimum myu}
 
@@ -27,8 +29,12 @@ run_mle_sr_uni(
 
 \item{max_sigma}{The maximum sigma}
 
-\item{initial_point_factor}{This factor determines the number of Sobol points: N = initial_point_factor × number of parameters}
+\item{max_call}{The max.call parameter for GenSA}
+
+\item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
+
+\item{max_mle_runs}{The maximum number of MLE attempts with different initial values}
 }
 \description{
-The function to perform MLE for the stutter ratio (uniform)
+The function to perform MLE for the stutter ratio (uniform model)
 }

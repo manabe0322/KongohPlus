@@ -98,12 +98,15 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       rv_est_sr$max_myu <- 1
       rv_est_sr$min_sigma <- 1
       rv_est_sr$max_sigma <- 10000
-      rv_est_sr$initial_point_factor <- 5
+      rv_est_sr$max_call <- 3000
+      rv_est_sr$num_converged_solutions <- 3
+      rv_est_sr$max_mle_runs <- 10
       rv_est_sr$bool_correct_mle_slope <- TRUE
       rv_est_sr$bool_correct_mle_intercept <- TRUE
       rv_est_sr$bool_correct_mle_myu <- TRUE
       rv_est_sr$bool_correct_mle_sigma <- TRUE
-      rv_est_sr$bool_correct_mle_initial_point_factor <- TRUE
+      rv_est_sr$bool_correct_advanced_1 <- TRUE
+      rv_est_sr$bool_correct_advanced_2 <- TRUE
       rv_est_sr$data_est_sr <- NULL
 
       # Load experimental data
@@ -156,13 +159,15 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
                    numericInput(session$ns("min_intercept"), label = "Minimum intercept", value = rv_est_sr$min_intercept),
                    numericInput(session$ns("min_myu"), label = "Minimum myu", value = rv_est_sr$min_myu),
                    numericInput(session$ns("min_sigma"), label = "Minimum sigma", value = rv_est_sr$min_sigma),
-                   numericInput(session$ns("initial_point_factor"), label = "Initial point factor", value = rv_est_sr$initial_point_factor)
+                   numericInput(session$ns("max_call"), label = "Number of simulations", value = rv_est_sr$max_call),
+                   numericInput(session$ns("max_mle_runs"), label = "The maximum number of MLE attempts with different initial values", value = rv_est_sr$max_mle_runs)
             ),
             column(6,
                    numericInput(session$ns("max_slope"), label = "Maximum slope", value = rv_est_sr$max_slope),
                    numericInput(session$ns("max_intercept"), label = "Maximum intercept", value = rv_est_sr$max_intercept),
                    numericInput(session$ns("max_myu"), label = "Maximum myu", value = rv_est_sr$max_myu),
-                   numericInput(session$ns("max_sigma"), label = "Maximum sigma", value = rv_est_sr$max_sigma)
+                   numericInput(session$ns("max_sigma"), label = "Maximum sigma", value = rv_est_sr$max_sigma),
+                   numericInput(session$ns("num_converged_solutions"), label = "The number of converged solutions required to terminate the MLE", value = rv_est_sr$num_converged_solutions)
             )
           ),
           footer = tagList(
@@ -273,16 +278,45 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         }
       })
 
-      observeEvent(input$initial_point_factor, {
-        initial_point_factor <- input$initial_point_factor
+      observeEvent(input$max_call, {
+        max_call <- input$max_call
 
-        hideFeedback("initial_point_factor")
-        rv_est_sr$bool_correct_mle_initial_point_factor <- TRUE
+        hideFeedback("max_call")
+        bool_correct_advanced_1 <- TRUE
 
-        if(!is.integer(initial_point_factor) || initial_point_factor <= 0){
-          showFeedbackDanger(inputId = "initial_point_factor", text = "Value must be an integer greater than zero.")
-          rv_est_sr$bool_correct_mle_initial_point_factor <- FALSE
+        if(!is.integer(max_call) || max_call <= 0){
+          showFeedbackDanger(inputId = "max_call", text = "Value must be an integer greater than zero.")
+          bool_correct_advanced_1 <- FALSE
         }
+
+        rv_est_sr$bool_correct_advanced_1 <- bool_correct_advanced_1
+      })
+
+      observeEvent(input$num_converged_solutions | input$max_mle_runs, {
+        num_converged_solutions <- input$num_converged_solutions
+        max_mle_runs <- input$max_mle_runs
+
+        hideFeedback("num_converged_solutions")
+        hideFeedback("max_mle_runs")
+        bool_correct_advanced_2 <- TRUE
+
+        if(!is.integer(num_converged_solutions) || num_converged_solutions <= 0){
+          showFeedbackDanger(inputId = "num_converged_solutions", text = "Value must be an integer greater than zero.")
+          bool_correct_advanced_2 <- FALSE
+        }
+
+        if(!is.integer(max_mle_runs) || max_mle_runs <= 0){
+          showFeedbackDanger(inputId = "max_mle_runs", text = "Value must be an integer greater than zero.")
+          bool_correct_advanced_2 <- FALSE
+        }
+
+        if(is.integer(num_converged_solutions) && is.integer(max_mle_runs) && num_converged_solutions > max_mle_runs){
+          showFeedbackDanger(inputId = "num_converged_solutions", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
+          bool_correct_advanced_2 <- FALSE
+        }
+
+        rv_est_sr$bool_correct_advanced_2 <- bool_correct_advanced_2
       })
 
       observe({
@@ -292,7 +326,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
                rv_est_sr$bool_correct_mle_intercept,
                rv_est_sr$bool_correct_mle_myu,
                rv_est_sr$bool_correct_mle_sigma,
-               rv_est_sr$bool_correct_mle_initial_point_factor)){
+               rv_est_sr$bool_correct_advanced_1,
+               rv_est_sr$bool_correct_advanced_2)){
           enable("act_advance_sr_save")
         }else{
           disable("act_advance_sr_save")
@@ -308,7 +343,9 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         rv_est_sr$max_myu <- input$max_myu
         rv_est_sr$min_sigma <- input$min_sigma
         rv_est_sr$max_sigma <- input$max_sigma
-        rv_est_sr$initial_point_factor <- input$initial_point_factor
+        rv_est_sr$max_call <- input$max_call
+        rv_est_sr$num_converged_solutions <- input$num_converged_solutions
+        rv_est_sr$max_mle_runs <- input$max_mle_runs
         removeModal()
       })
 
@@ -338,18 +375,16 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         max_myu <- rv_est_sr$max_myu
         min_sigma <- rv_est_sr$min_sigma
         max_sigma <- rv_est_sr$max_sigma
-        initial_point_factor <- rv_est_sr$initial_point_factor
+        max_call <- rv_est_sr$max_call
+        num_converged_solutions <- rv_est_sr$num_converged_solutions
+        max_mle_runs <- rv_est_sr$max_mle_runs
 
         error_message <- check_est_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr)
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          # Load the stan models
-          model_sr_gen <- stan_package_model(name = "model_sr_gen", package = "KongohPlus")
-          model_sr_uni <- stan_package_model(name = "model_sr_uni", package = "KongohPlus")
-
-          rv_est_sr$data_est_sr <- estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr, model_sr_gen, model_sr_uni,
-                                                       min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, initial_point_factor)
+          rv_est_sr$data_est_sr <- estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr,
+                                                       min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs)
 
           updateTabsetPanel(session = session_est_sr_top, inputId = "tabset_est_sr", selected = "Result")
         }

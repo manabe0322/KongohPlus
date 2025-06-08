@@ -12,8 +12,6 @@ Depends:
     R (>= 4.4.0), 
     shiny
 Imports:
-    bayesplot, 
-    cmdstanr, 
     data.table, 
     dplyr, 
     DT, 
@@ -21,10 +19,8 @@ Imports:
     ggplot2, 
     gridExtra, 
     gtools, 
-    instantiate, 
     magrittr, 
     parallel, 
-    qrng, 
     Rcpp, 
     rhandsontable, 
     rmarkdown, 

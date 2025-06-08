@@ -46,33 +46,70 @@ generate_init_sobol_dropin <- function(x, min_shape_di, max_shape_di, min_rate_d
 #' @description The function to perform MLE for the drop-in model
 #' @param n_dropin The number of observed drop-in peaks
 #' @param heights A vector of drop-in peak heights
-#' @param model_dropin The stan model for the drop-in peak heights
 #' @param min_shape_di The minimum shape
 #' @param max_shape_di The maximum shape
 #' @param min_rate_di The minimum rate
 #' @param max_rate_di The maximum rate
-#' @param initial_point_factor This factor determines the number of Sobol points: N = initial_point_factor × number of parameters
-run_mle_dropin <- function(n_dropin, heights, model_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, initial_point_factor){
-  # Prepare data list for the drop-in model
-  data_list_dropin <- list(N = n_dropin, Height = heights)
+#' @param max_call The max.call parameter for GenSA
+#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
+#' @param max_mle_runs The maximum number of MLE attempts with different initial values
+run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_rate_di, max_rate_di, max_call, num_converged_solutions, max_mle_runs){
 
-  n_sobol <- initial_point_factor * 2
-  init_list <- lapply(1:n_sobol, function(x) generate_init_sobol_dropin(x, min_shape_di, max_shape_di, min_rate_di, max_rate_di))
+  like_func_dropin <- function(par){
+    dens <- dgamma(heights, shape = par[1], rate = par[2])
+    loglike <- - sum(log(dens))
 
-  tmp_param <- matrix(NA, n_sobol, 3)
-  for(i in 1:n_sobol){
-    fit <- suppressWarnings(model_dropin$optimize(data_list_dropin, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
-    if(fit$return_codes() == 0){
-      tmp <- try(fit$draws())
-      if(!inherits(tmp, "try-error")){
-        tmp_param[i, ] <- tmp[1, ]
-      }
+    if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+      loglike <- Inf
+    }
+
+    return(loglike)
+  }
+
+  lower_bounds <- c(min_shape_di, min_rate_di)
+  upper_bounds <- c(max_shape_di, max_rate_di)
+
+  # Perform simulated annealing
+  current_opt <- NULL
+  current_score <- Inf
+  count_mle <- 0
+  count_solution <- 0
+  init_list <- list()
+  record_accept <- rep(NA, max_mle_runs)
+  repeat{
+    count_mle <- count_mle + 1
+
+    init_list[[count_mle]] <- init <- c(runif(1, min = min_shape_di, max = max_shape_di), runif(1, min = min_rate_di, max = max_rate_di))
+
+    opt <- GenSA(
+      par = init,
+      fn = like_func_dropin,
+      lower = lower_bounds,
+      upper = upper_bounds,
+      control = list(verbose = TRUE, max.call = max_call)
+    )
+
+    score <- round(opt$value, 3)
+    if(score < current_score){
+      current_opt <- opt
+      current_score <- score
+      count_solution <- 1
+    }else if(score == current_score){
+      count_solution <- count_solution + 1
+    }
+    record_accept[count_mle] <- count_solution
+
+    if(count_solution == num_converged_solutions){
+      break
+    }else if(count_mle == max_mle_runs){
+      current_opt <- NULL
+      break
     }
   }
 
-  index_max_lp <- which.max(tmp_param[, 1])
-  if(length(index_max_lp) == 1){
-    est_param <- tmp_param[index_max_lp, -1]
+  # Extract parameters
+  if(!is.null(current_opt)){
+    est_param <- current_opt$par
   }else{
     est_param <- rep(NA, 2)
   }
@@ -84,7 +121,17 @@ run_mle_dropin <- function(n_dropin, heights, model_dropin, min_shape_di, max_sh
 #' estimate_dropin_params
 #'
 #' @description The function to estimate drop-in parameters
-estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, model_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, initial_point_factor){
+#' @param dt_ntc The data.table for non-template controls
+#' @param dt_kit The data.table for information on the kit
+#' @param at_dropin The analytical threshold for drop-in peaks
+#' @param min_shape_di The minimum shape
+#' @param max_shape_di The maximum shape
+#' @param min_rate_di The minimum rate
+#' @param max_rate_di The maximum rate
+#' @param max_call The max.call parameter for GenSA
+#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
+#' @param max_mle_runs The maximum number of MLE attempts with different initial values
+estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, max_call, num_converged_solutions, max_mle_runs){
   # Extract autosomal markers
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers_auto <- unique(dt_kit_auto[, Marker])
@@ -100,7 +147,7 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, model_dropin, min_
   n_sample <- length(unique(dt_ntc$SampleName))
 
   # Perform MLE
-  tmp <- run_mle_dropin(n_dropin, heights, model_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, initial_point_factor)
+  tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_rate_di, max_rate_di, max_call, num_converged_solutions, max_mle_runs)
   shape_di <- tmp["shape_di"]
   rate_di <- tmp["rate_di"]
 
