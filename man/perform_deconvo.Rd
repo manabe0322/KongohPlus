@@ -29,11 +29,53 @@ perform_deconvo(
   cv_allele,
   cv_stutter,
   list_dt_average_sr,
-  num_init
+  max_call,
+  num_converged_solutions,
+  max_mle_runs
 )
 }
 \arguments{
-\item{hnc}{The number of contributors}
+\item{hnc}{The assumed number of contributors}
+
+\item{n_rep}{The number of replicates}
+
+\item{markers_use}{A vector of the autosomal markers used}
+
+\item{ats_use}{A vector of the analytical thresholds for each marker}
+
+\item{peaks_list}{A list of the peaks}
+
+\item{sizes_list}{A list of the sizes}
+
+\item{heights_list}{A list of the heights}
+
+\item{min_size}{The minimum size in the selected kit}
+
+\item{pop_al_list}{A list of the alleles in the population database}
+
+\item{pop_prob_list}{A list of the allele probabilities in the population database}
+
+\item{theta}{The theta value for sub-population effect}
+
+\item{bsr_fltr}{The back stutter filter to narrow down a list of the genotype combinations}
+
+\item{fsr_fltr}{The forward stutter filter to narrow down a list of the genotype combinations}
+
+\item{dsr_fltr}{The double-back stutter filter to narrow down a list of the genotype combinations}
+
+\item{m2sr_fltr}{The minus 2-nt stutter filter to narrow down a list of the genotype combinations}
+
+\item{n_dropin_fltr}{The number of drop-in filter to narrow down a list of the genotype combinations}
+
+\item{h_dropin_fltr}{The drop-in peak height filter to narrow down a list of the genotype combinations}
+
+\item{freq_di}{The drop-in frequency}
+
+\item{shape_di}{The shape parameter of the gamma distribution for the drop-in model}
+
+\item{rate_di}{The rate parameter of the gamma distribution for the drop-in model}
+
+\item{ae_use}{A vector of the locus-specific amplification efficiencies for each marker}
 
 \item{cv_allele}{The coefficient of variation for allelels}
 
@@ -41,7 +83,11 @@ perform_deconvo(
 
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 
-\item{num_init}{The number of initial points for Pathfinder}
+\item{max_call}{The max.call parameter for GenSA}
+
+\item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
+
+\item{max_mle_runs}{The maximum number of MLE attempts with different initial values}
 }
 \description{
 The function to perform mixture deconvolution

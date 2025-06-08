@@ -256,14 +256,14 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// log_sum_exp
-double log_sum_exp(const std::vector<double>& log_values);
-RcppExport SEXP _KongohPlus_log_sum_exp(SEXP log_valuesSEXP) {
+// log10_sum_exp
+double log10_sum_exp(const std::vector<double>& log_values);
+RcppExport SEXP _KongohPlus_log10_sum_exp(SEXP log_valuesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::vector<double>& >::type log_values(log_valuesSEXP);
-    rcpp_result_gen = Rcpp::wrap(log_sum_exp(log_values));
+    rcpp_result_gen = Rcpp::wrap(log10_sum_exp(log_values));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -598,15 +598,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// calc_loglike_cpp
-std::vector<double> calc_loglike_cpp(const std::vector<std::vector<std::vector<double>>>& lpd_gtc_all_rep, const std::vector<std::vector<double>>& gtc_logprob_use);
-RcppExport SEXP _KongohPlus_calc_loglike_cpp(SEXP lpd_gtc_all_repSEXP, SEXP gtc_logprob_useSEXP) {
+// calc_log10like_cpp
+Rcpp::List calc_log10like_cpp(const std::vector<std::vector<std::vector<double>>>& lpd_gtc_all_rep, const std::vector<std::vector<double>>& gtc_logprob_use);
+RcppExport SEXP _KongohPlus_calc_log10like_cpp(SEXP lpd_gtc_all_repSEXP, SEXP gtc_logprob_useSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::vector<std::vector<std::vector<double>>>& >::type lpd_gtc_all_rep(lpd_gtc_all_repSEXP);
     Rcpp::traits::input_parameter< const std::vector<std::vector<double>>& >::type gtc_logprob_use(gtc_logprob_useSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use));
+    rcpp_result_gen = Rcpp::wrap(calc_log10like_cpp(lpd_gtc_all_rep, gtc_logprob_use));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -660,7 +660,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_parent_al_ds_one", (DL_FUNC) &_KongohPlus_calc_parent_al_ds_one, 1},
     {"_KongohPlus_calc_parent_al_m2s_one", (DL_FUNC) &_KongohPlus_calc_parent_al_m2s_one, 1},
     {"_KongohPlus_extract_gtc", (DL_FUNC) &_KongohPlus_extract_gtc, 3},
-    {"_KongohPlus_log_sum_exp", (DL_FUNC) &_KongohPlus_log_sum_exp, 1},
+    {"_KongohPlus_log10_sum_exp", (DL_FUNC) &_KongohPlus_log10_sum_exp, 1},
     {"_KongohPlus_make_detectable_peak", (DL_FUNC) &_KongohPlus_make_detectable_peak, 6},
     {"_KongohPlus_search_index_dropin", (DL_FUNC) &_KongohPlus_search_index_dropin, 2},
     {"_KongohPlus_judge_gtc_dropin", (DL_FUNC) &_KongohPlus_judge_gtc_dropin, 7},
@@ -679,7 +679,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_calc_lpd_gtc_mk", (DL_FUNC) &_KongohPlus_calc_lpd_gtc_mk, 4},
     {"_KongohPlus_calc_lpd_gtc_rep1", (DL_FUNC) &_KongohPlus_calc_lpd_gtc_rep1, 18},
     {"_KongohPlus_calc_lpd_gtc_all_rep", (DL_FUNC) &_KongohPlus_calc_lpd_gtc_all_rep, 18},
-    {"_KongohPlus_calc_loglike_cpp", (DL_FUNC) &_KongohPlus_calc_loglike_cpp, 2},
+    {"_KongohPlus_calc_log10like_cpp", (DL_FUNC) &_KongohPlus_calc_log10like_cpp, 2},
     {"_KongohPlus_make_cand_peak", (DL_FUNC) &_KongohPlus_make_cand_peak, 2},
     {"_KongohPlus_make_rph_base", (DL_FUNC) &_KongohPlus_make_rph_base, 6},
     {NULL, NULL, 0}

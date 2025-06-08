@@ -8,7 +8,7 @@
 #' @importFrom GenSA GenSA
 #' @importFrom ggplot2 aes element_text geom_col ggplot labs margin scale_x_continuous theme theme_minimal
 #' @importFrom gridExtra grid.arrange
-#' @importFrom gtools combinations permutations
+#' @importFrom gtools combinations permutations rdirichlet
 #' @importFrom instantiate stan_package_model
 #' @importFrom magrittr %>%
 #' @importFrom parallel clusterEvalQ clusterExport detectCores makeCluster parLapply stopCluster

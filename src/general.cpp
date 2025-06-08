@@ -190,11 +190,11 @@ std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts,
 }
 
 // [[Rcpp::export]]
-double log_sum_exp(const std::vector<double>& log_values){
+double log10_sum_exp(const std::vector<double>& log_values){
   double max_val = *std::max_element(log_values.begin(), log_values.end());
   double sum_exp = 0.0;
   for(double v : log_values){
     sum_exp += std::exp(v - max_val);
   }
-  return max_val + std::log(sum_exp);
+  return (max_val + std::log(sum_exp)) / std::log(10.0);
 }

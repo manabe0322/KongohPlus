@@ -9,295 +9,60 @@ create_index_dedup2_mk <- function(index_rph_gtc_cpp, index_dedup1_rep1_mk1){
   return(match(paste_index_rph_gtc_cpp, paste_index_dedup1_rep1_mk1) - 1)
 }
 
-#' softmax
+#' generate_init_deconvo_single
 #'
-#' @description The softmax function
-#' @param x A numeric vector
-softmax <- function(x){
-  exp_x <- exp(x - max(x))
-  return(exp_x / sum(exp_x))
-}
-
-make_bounds_list <- function(n_rep, hnc, max_tph){
-  bounds <- list()
-
-  # tph1, tph2, ...
-  for(i in 1:n_rep){
-    bounds[[paste0("tph", i)]] <- c(2000, 8000)
-  }
-
-  # lambda1
-  bounds[["lambda1"]] <- c(-3, 3)
-
-  # delta2, delta3, ...
-  if(hnc > 1){
-    for(i in 2:hnc){
-      bounds[[paste0("delta", i)]] <- c(0, 5)
-    }
-  }
-
-  # deg1, deg2, ...
-  for(i in 1:hnc){
-    bounds[[paste0("deg", i)]] <- c(0.001, 1)
-  }
-
-  return(bounds)
-}
-
-make_bounds_sann <- function(n_rep, hnc, max_tph){
-  bounds <- list()
-
-  # tph1, tph2, ...
-  for(i in 1:n_rep){
-    bounds[[paste0("tph", i)]] <- c(2000, 8000)
-  }
-
-  # lambda1
-  bounds[["lambda1"]] <- c(-3, 3)
-
-  # delta2, delta3, ...
-  if(hnc > 1){
-    for(i in 2:hnc){
-      bounds[[paste0("delta", i)]] <- c(0, 5)
-    }
-  }
-
-  # deg1, deg2, ...
-  for(i in 1:hnc){
-    bounds[[paste0("deg", i)]] <- c(0.001, 1)
-  }
-
-  return(bounds)
-}
-
-#' generate_init_sobol_1p
-#'
-#' @description The function to generate initial values based on Sobol sequence for one contributor
-#' @param x Sobol point
+#' @description The function to generate initial values for MLE (single-source profile)
 #' @param n_rep The number of replicates
-#' @param tph_mean The mean of the total peak height
-#' @param tph_sd The SD of the total peak height
-generate_init_sobol_1p <- function(x, n_rep, tph_mean, tph_sd){
-  # Dimensions needed in total: tph + deg
-  dim_total <- n_rep + 1
+#' @param tph_mean The mean value for the parameter 'tph'
+#' @param tph_sd The SD value for the parameter 'tph'
+#' @param hnc The assumed number of contributors
+generate_init_deconvo_single <- function(n_rep, tph_mean, tph_sd){
+  tph <- rnorm(n_rep, tph_mean, tph_sd)
+  deg <- rbeta(1, 1, 1)
 
-  # Get only one Sobol point (x-th)
-  sobol_vec <- sobol(n = x, d = dim_total, randomize = "digital.shift")[x, ]
-
-  # Index partitioning
-  tph_raw <- sobol_vec[1:n_rep]
-  deg_raw <- sobol_vec[n_rep + 1]
-
-  # Scaling
-  tph <- qnorm(tph_raw, mean = tph_mean, sd = tph_sd)
-  deg <- qbeta(deg_raw, shape1 = 1, shape2 = 1)
-
-  return(list(list(tph = tph, deg = deg)))
+  return(c(tph, deg))
 }
 
-#' run_mle_1p
+#' generate_init_deconvo_mix
 #'
-#' @description The function to perform MLE for one contributor
-#' @param model_name The name of the stan model for deconvolution
-#' @param data_list_main The input data for stan
+#' @description The function to generate initial values for MLE (mixture profile)
 #' @param n_rep The number of replicates
-#' @param tph_mean The mean of the total peak height
-#' @param tph_sd The SD of the total peak height
-#' @param num_init The number of initial points for Pathfinder
-run_mle_1p <- function(model_name, data_list_main, n_rep, tph_mean, tph_sd, num_init){
-  warn_optim <- FALSE
+#' @param tph_mean The mean value for the parameter 'tph'
+#' @param tph_sd The SD value for the parameter 'tph'
+#' @param hnc The assumed number of contributors
+generate_init_deconvo_mix <- function(n_rep, tph_mean, tph_sd, hnc){
+  tph <- rnorm(n_rep, tph_mean, tph_sd)
+  mp <- rdirichlet(1, rep(1, hnc))
+  mp <- mp[1, 1:(hnc - 1)]
+  deg <- rbeta(hnc, 1, 1)
 
-  init_list <- lapply(1:num_init, function(x) generate_init_sobol_1p(x, n_rep, tph_mean, tph_sd))
-
-  tmp_param <- matrix(NA, num_init, n_rep + 2)
-  model_main <- stan_package_model(name = model_name, package = "KongohPlus")
-  for(i in 1:num_init){
-    fit <- suppressWarnings(model_main$optimize(data_list_main, init = init_list[[i]], refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
-    tmp <- try(fit$draws())
-    if(!inherits(tmp, "try-error")){
-      tmp_param[i, ] <- tmp[1, ]
-    }
-  }
-
-  index_max_lp <- which.max(tmp_param[, 1])
-  if(length(index_max_lp) == 1){
-    est_param <- tmp_param[index_max_lp, -1]
-  }else{
-    warn_optim <- TRUE
-
-    tmp_param <- matrix(NA, num_init, n_rep + 3)
-    for(i in 1:num_init){
-      fit <- model_main$pathfinder(data_list_main, init = init_list[[i]])
-      tmp <- try(fit$draws())
-      if(!inherits(tmp, "try-error")){
-        tmp_param[i, ] <- tmp[which.max(tmp[, 2]), ]
-      }
-    }
-
-    index_max_lp <- which.max(tmp_param[, 2])
-    if(length(index_max_lp) == 1){
-      est_param <- tmp_param[index_max_lp, c(-1, -2)]
-    }else{
-      est_param <- rep(NA, n_rep + 1)
-    }
-  }
-
-  names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), "deg[1]")
-  return(list(est_param = est_param, warn_optim = warn_optim, init_list = init_list))
+  return(c(tph, mp, deg))
 }
 
-#' generate_init_sobol
+#' order_gtc
 #'
-#' @description The function to generate initial values based on Sobol sequence
-#' @param x Sobol point
-#' @param n_rep The number of replicates
-#' @param hnc The hypothesized number of contributors
-#' @param tph_mean The mean of the total peak height
-#' @param tph_sd The SD of the total peak height
-generate_init_sobol <- function(x, n_rep, hnc, tph_mean, tph_sd){
-  # Dimensions needed in total: tph + lambda + deg
-  dim_total <- n_rep + hnc + hnc
+#' @description The function to order genotype combinations
+#' @param gtc_use A list of the genotype combinations in all markers
+#' @param index_order The descending order for estimated mixture proportions
+order_gtc <- function(gtc_use, index_order){
+  n_mk <- length(gtc_use)
+  hnc <- length(index_order)
+  gtc_ordered <- vector(mode = "list", length = n_mk)
+  names(gtc_ordered) <- names(gtc_use)
 
-  # Get only one Sobol point (x-th)
-  sobol_vec <- sobol(n = x, d = dim_total, randomize = "digital.shift")[x, ]
+  for(i in 1:n_mk){
+    gtc_mk <- matrix(unlist(gtc_use[[i]]), ncol = 2 * hnc, byrow = TRUE)
+    gtc_ordered_mk <- gtc_mk * 0
 
-  # Index partitioning
-  tph_raw <- sobol_vec[1:n_rep]
-  lambda_raw <- sobol_vec[(n_rep + 1):(n_rep + hnc)]
-  deg_raw <- sobol_vec[(n_rep + hnc + 1):(dim_total)]
-
-  # Scaling
-  tph <- qnorm(tph_raw, mean = tph_mean, sd = tph_sd)
-  lambda <- sort(qnorm(lambda_raw, mean = 0, sd = 1))
-  deg <- qbeta(deg_raw, shape1 = 1, shape2 = 1)
-
-  return(list(list(tph = tph, lambda = lambda, deg = deg)))
-}
-
-#' run_mle
-#'
-#' @description The function to perform MLE
-#' @param model_name The name of the stan model for deconvolution
-#' @param data_list_main The input data for stan
-#' @param n_rep The number of replicates
-#' @param hnc The hypothesized number of contributors
-#' @param tph_mean The mean of the total peak height
-#' @param tph_sd The SD of the total peak height
-#' @param num_init The number of initial points for Pathfinder
-run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, num_init){
-  warn_optim <- FALSE
-
-  init_list <- lapply(1:num_init, function(x) generate_init_sobol(x, n_rep, hnc, tph_mean, tph_sd))
-
-  if(hnc == 2){
-    tmp_param <- matrix(NA, num_init, 1 + n_rep + 3 * hnc)
-    model_main <- stan_package_model(name = model_name, package = "KongohPlus")
-
-    for(i in 1:num_init){
-      # Create output_dir
-      outdir <- file.path(tempdir(), paste0("run_", i))
-      dir.create(outdir, showWarnings = FALSE)
-
-      fit <- suppressWarnings(model_main$optimize(data_list_main, init = init_list[[i]], output_dir = outdir, refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
-      tmp <- try(fit$draws())
-      if(!inherits(tmp, "try-error")){
-        tmp_param[i, ] <- tmp[1, ]
-      }
+    for(j in 1:hnc){
+      index_contrib <- index_order[j]
+      gtc_ordered_mk[, c(2 * j - 1, 2 * j)] <- gtc_mk[, c(2 * index_contrib - 1, 2 * index_contrib)]
     }
 
-    index_max_lp <- which.max(tmp_param[, 1])
-    if(length(index_max_lp) == 1){
-      est_param <- tmp_param[index_max_lp, -1]
-    }else{
-      warn_optim <- TRUE
-
-      tmp_param <- matrix(NA, num_init, 2 + n_rep + 3 * hnc)
-      for(i in 1:num_init){
-        # Create output_dir
-        outdir <- file.path(tempdir(), paste0("run_", i))
-        dir.create(outdir, showWarnings = FALSE)
-
-        fit <- model_main$pathfinder(data_list_main, init = init_list[[i]], output_dir = outdir)
-        tmp <- try(fit$draws())
-        if(!inherits(tmp, "try-error")){
-          tmp_param[i, ] <- tmp[which.max(tmp[, 2]), ]
-        }
-      }
-
-      index_max_lp <- which.max(tmp_param[, 2])
-      if(length(index_max_lp) == 1){
-        est_param <- tmp_param[index_max_lp, c(-1, -2)]
-      }else{
-        est_param <- rep(NA, n_rep + 3 * hnc)
-      }
-    }
-
-  }else{
-    cores <- min(4, detectCores() - 1)
-    cl <- makeCluster(cores)
-    clusterExport(cl, varlist = c("model_name", "data_list_main", "init_list", "n_rep", "hnc"), envir = environment())
-    clusterEvalQ(cl, library(cmdstanr))
-    clusterEvalQ(cl, library(instantiate))
-
-    tmp_param <- parLapply(cl, 1:num_init, function(i){
-      model_main <- stan_package_model(name = model_name, package = "KongohPlus")
-
-      # Create output_dir
-      outdir <- file.path(tempdir(), paste0("run_", i))
-      dir.create(outdir, showWarnings = FALSE)
-
-      fit <- suppressWarnings(model_main$optimize(data_list_main, init = init_list[[i]], output_dir = outdir, refresh = 0, show_messages = FALSE, show_exceptions = FALSE))
-      tmp <- try(fit$draws())
-      if(!inherits(tmp, "try-error")){
-        return(as.vector(tmp[1, ]))
-      }else{
-        return(rep(NA, 1 + n_rep + 3 * hnc))
-      }
-    })
-    stopCluster(cl)
-    tmp_param <- matrix(unlist(tmp_param), ncol = 1 + n_rep + 3 * hnc, byrow = TRUE)
-
-    index_max_lp <- which.max(tmp_param[, 1])
-    if(length(index_max_lp) == 1){
-      est_param <- tmp_param[index_max_lp, -1]
-    }else{
-      warn_optim <- TRUE
-
-      cores <- min(4, detectCores() - 1)
-      cl <- makeCluster(cores)
-      clusterExport(cl, varlist = c("model_name", "data_list_main", "init_list", "n_rep", "hnc"), envir = environment())
-      clusterEvalQ(cl, library(cmdstanr))
-      clusterEvalQ(cl, library(instantiate))
-
-      tmp_param <- parLapply(cl, 1:num_init, function(i){
-        model_main <- stan_package_model(name = model_name, package = "KongohPlus")
-
-        # Create output_dir
-        outdir <- file.path(tempdir(), paste0("run_", i))
-        dir.create(outdir, showWarnings = FALSE)
-
-        fit <- model_main$pathfinder(data_list_main, init = init_list[[i]], output_dir = outdir)
-        tmp <- try(fit$draws())
-        if(!inherits(tmp, "try-error")){
-          return(as.vector(tmp[which.max(tmp[, 2]), ]))
-        }else{
-          return(rep(NA, 2 + n_rep + 3 * hnc))
-        }
-      })
-      stopCluster(cl)
-      tmp_param <- matrix(unlist(tmp_param), ncol = 2 + n_rep + 3 * hnc, byrow = TRUE)
-
-      index_max_lp <- which.max(tmp_param[, 2])
-      if(length(index_max_lp) == 1){
-        est_param <- tmp_param[index_max_lp, c(-1, -2)]
-      }else{
-        est_param <- rep(NA, n_rep + 3 * hnc)
-      }
-    }
+    gtc_ordered[[i]] <- gtc_ordered_mk
   }
 
-  names(est_param) <- c(paste0("tph[", 1:n_rep, "]"), paste0("lambda[", 1:hnc, "]"), paste0("deg[", 1:hnc, "]"), paste0("mp[", 1:hnc, "]"))
-  return(list(est_param = est_param, warn_optim = warn_optim, init_list = init_list))
+  return(gtc_ordered)
 }
 
 #' make_dt_pg_list
@@ -305,45 +70,35 @@ run_mle <- function(model_name, data_list_main, n_rep, hnc, tph_mean, tph_sd, nu
 #' @description The function to make a list of data.tables for the result of probabilistic genotyping
 #' @param markers_use A character vector of the used markers
 #' @param label_contrib A character vector of the contributor names
-#' @param gtc_use Genotype combinations in the used markers
+#' @param gtc_ordered Genotype combinations in the used markers
 #' @param gtc_logprob_use A list of the genotype probabilities in each used marker
-#' @param lpd_gtc_use A list of the log likelihood of each genotype in all markers and replicates
-make_dt_pg_list <- function(markers_use, label_contrib, gtc_use, gtc_logprob_use, lpd_gtc_use){
+#' @param lpd_gtc_all_rep A list of the log likelihood of obtaining observed peak heights for each genotype combination in all markers and replicates
+#' @param loglike_gtc_all_mk A list of the log likelihood combining genotype probabilities and observed peak heights
+make_dt_pg_list <- function(markers_use, label_contrib, gtc_ordered, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk){
   hnc <- length(label_contrib)
-  n_mk <- length(gtc_use)
-  n_rep <- length(lpd_gtc_use)
+  n_mk <- length(gtc_ordered)
+  n_rep <- length(lpd_gtc_all_rep)
   dt_pg_list <- vector(mode = "list", length = n_mk)
 
   for(i in 1:n_mk){
 
-    # Reverse order of the contributor (minor to major -> major to minor)
-    gtc_mk <- matrix(unlist(gtc_use[[i]]), ncol = 2 * hnc, byrow = TRUE)
-    gtc_mk_reorder <- gtc_mk * 0
-    for(j in 1:hnc){
-      gtc_mk_reorder[, c(2 * j - 1, 2 * j)] <- gtc_mk[, c(2 * (hnc - j) + 1, 2 * (hnc - j) + 2)]
-    }
-
     # Paste two alleles of each contributor
-    tmp_gtc_mk <- gtc_mk_reorder
+    tmp_gtc_mk <- gtc_ordered[[i]]
     tmp_gtc_mk[which(tmp_gtc_mk == 99, arr.ind = TRUE)] <- "Q"
-    gtc_mk_bind <- matrix("", nrow(gtc_mk), hnc)
+    gtc_mk_bind <- matrix("", nrow(tmp_gtc_mk), hnc)
     for(j in 1:hnc){
       gtc_mk_bind[, j] <- apply(tmp_gtc_mk[, c(2 * j - 1, 2 * j), drop = FALSE], 1, paste, collapse = ", ")
     }
 
     # Calculate posterior probabilities of each genotype combination
-    gtc_logprob_mk <- gtc_logprob_use[[i]]
-    loglike_gtc <- gtc_logprob_mk
-    for(j in 1:n_rep){
-      loglike_gtc <- loglike_gtc + lpd_gtc_use[[j]][[i]]
-    }
+    loglike_gtc <- loglike_gtc_all_mk[[i]]
     tmp <- exp(loglike_gtc)
     post_prob_gtc <- tmp / sum(tmp)
 
     # Make a data.table
-    mat_pg <- cbind(gtc_mk_reorder, gtc_mk_bind, gtc_logprob_mk)
+    mat_pg <- cbind(gtc_ordered[[i]], gtc_mk_bind, gtc_logprob_use[[i]])
     for(j in 1:n_rep){
-      mat_pg <- cbind(mat_pg, lpd_gtc_use[[j]][[i]])
+      mat_pg <- cbind(mat_pg, lpd_gtc_all_rep[[j]][[i]])
     }
     mat_pg <- cbind(mat_pg, loglike_gtc, post_prob_gtc)
     mat_pg <- mat_pg[post_prob_gtc != 0, , drop = FALSE]
@@ -366,17 +121,39 @@ make_dt_pg_list <- function(markers_use, label_contrib, gtc_use, gtc_logprob_use
 #' perform_deconvo
 #'
 #' @description The function to perform mixture deconvolution
-#' @param hnc The number of contributors
+#' @param hnc The assumed number of contributors
+#' @param n_rep The number of replicates
+#' @param markers_use A vector of the autosomal markers used
+#' @param ats_use A vector of the analytical thresholds for each marker
+#' @param peaks_list A list of the peaks
+#' @param sizes_list A list of the sizes
+#' @param heights_list A list of the heights
+#' @param min_size The minimum size in the selected kit
+#' @param pop_al_list A list of the alleles in the population database
+#' @param pop_prob_list A list of the allele probabilities in the population database
+#' @param theta The theta value for sub-population effect
+#' @param bsr_fltr The back stutter filter to narrow down a list of the genotype combinations
+#' @param fsr_fltr The forward stutter filter to narrow down a list of the genotype combinations
+#' @param dsr_fltr The double-back stutter filter to narrow down a list of the genotype combinations
+#' @param m2sr_fltr The minus 2-nt stutter filter to narrow down a list of the genotype combinations
+#' @param n_dropin_fltr The number of drop-in filter to narrow down a list of the genotype combinations
+#' @param h_dropin_fltr The drop-in peak height filter to narrow down a list of the genotype combinations
+#' @param freq_di The drop-in frequency
+#' @param shape_di The shape parameter of the gamma distribution for the drop-in model
+#' @param rate_di The rate parameter of the gamma distribution for the drop-in model
+#' @param ae_use A vector of the locus-specific amplification efficiencies for each marker
 #' @param cv_allele The coefficient of variation for allelels
 #' @param cv_stutter The coefficient of variation for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
-#' @param num_init The number of initial points for Pathfinder
+#' @param max_call The max.call parameter for GenSA
+#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
+#' @param max_mle_runs The maximum number of MLE attempts with different initial values
 perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                             pop_al_list, pop_prob_list, theta,
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, rate_di,
                             ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                            num_init){
+                            max_call, num_converged_solutions, max_mle_runs){
 
   # --- Start computation --- #
 
@@ -388,6 +165,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
   n_mk <- length(markers_use)
   n_peak_use <- rep(NA, n_mk)
   names(n_peak_use) <- markers_use
+  median_sizes_use <- rep(NA, n_mk)
   tph_per_mk_use <- matrix(0, n_mk, n_rep)
 
   # Drop-in
@@ -465,6 +243,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     # Extract allele probabilities
     pop_al <- pop_al_list[[mk]]
     pop_prob <- pop_prob_list[[mk]]
+
+    # --- Calculate the median size in the current marker --- #
+
+    median_sizes_use[i] <- median(sizes)
 
     # --- Calculate total peak heights in each replicate --- #
 
@@ -581,6 +363,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         }
 
         # --- Prepare objects for de-duplication (pattern 2) --- #
+
         index_dedup2_list_cpp[[j]][[i]] <- create_index_dedup2_mk(index_rph_gtc_cpp, index_dedup1_list_cpp[[j]][[i]])
       }
     }
@@ -588,21 +371,90 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
   if(!any(is.element(n_gtc_use, 0))){
 
+    # --- Determine the probability distribution for the parameter tph --- #
+
+    median_sizes_use <- rep(median_sizes_use, n_rep)
+    tph_per_mk_use <- as.vector(tph_per_mk_use)
+    fit_exp <- lm(log(tph_per_mk_use) ~ median_sizes_use)
+    tph_mean <- exp(coef(fit_exp)[1]) * exp(coef(fit_exp)[2] * min_size)
+
+    min_tph <- min(tph_per_mk_use)
+    max_tph <- max(tph_per_mk_use)
+    if(min_tph == max_tph){
+      min_tph <- 0
+    }
+    tph_sd <- (max_tph - min_tph) / 2
+
     # --- Bayesian optimization --- #
 
     if(hnc == 1){
 
-      # likelihood function
-      like_func_single <- function(){
+      # likelihood function for single-source profiles
+      like_func_single <- function(par){
+        # Prepare parameters
+        tph <- par[1:n_rep]
+        deg <- par[n_rep + 1]
+        mp <- 1
 
+        # Calculate log probability densities of all genotype combinations
+        lpd_gtc_all_rep <- vector(mode = "list", length = n_rep)
+        for(i in 1:n_rep){
+          lpd_gtc_all_rep[[i]] <- calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[[i]], n_dropout_list[[i]], n_dropin_list[[i]], n_ignore_list[[i]], rph_base_use,
+                                                    index_dedup1_list_cpp[[i]], cv_squared_dedup1_list[[i]], deg_size_dedup1_list[[i]], oph_dedup1_list[[i]], loglike_di_list[[i]],
+                                                    index_dedup2_list_cpp[[i]], n_gtc_use, n_peak_use)
+        }
+
+        # Calculate log likelihood in each marker
+        tmp <- calc_log10like_cpp(lpd_gtc_all_rep, gtc_logprob_use)
+        log10like <- - sum(tmp[[1]])
+
+        if(is.na(log10like) || is.nan(log10like) || is.infinite(log10like)){
+          log10like <- Inf
+        }
+
+        return(log10like)
       }
 
+      lower_bounds <- c(rep(min_tph, n_rep), 0.0001)
+      upper_bounds <- c(rep(max_tph, n_rep), 1)
+
+      # Perform simulated annealing
+      current_opt <- NULL
+      current_score <- Inf
+      count_mle <- 0
+      count_solution <- 0
+      repeat{
+        count_mle <- count_mle + 1
+
+        init <- generate_init_deconvo_single(n_rep, tph_mean, tph_sd)
+
+        opt <- GenSA(
+          par = init,
+          fn = like_func_single,
+          lower = lower_bounds,
+          upper = upper_bounds,
+          control = list(verbose = TRUE, max.call = max_call)
+        )
+
+        score <- round(opt$value, 3)
+        if(score < current_score){
+          current_opt <- opt
+          current_score <- score
+          count_solution <- 1
+        }else if(score == current_score){
+          count_solution <- count_solution + 1
+        }
+
+        if(count_solution == num_converged_solutions){
+          break
+        }else if(count_mle == max_mle_runs){
+          break
+        }
+      }
 
     }else{
 
-      lower_bounds <- c(rep(1, n_rep), rep(0.0001, hnc - 1), rep(0.0001, hnc))
-      upper_bounds <- c(rep(32000, n_rep), rep(0.9999, hnc - 1), rep(1, hnc))
-
+      # likelihood function for mixture profiles
       like_func_mix <- function(par){
         # Prepare parameters
         tph <- par[1:n_rep]
@@ -611,7 +463,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
         mp <- c(mp_pre, 1 - sum(mp_pre))
         if(any(mp <= 0.0001)){
-          loglike <- Inf
+          log10like <- Inf
         }else{
 
           # Calculate log probability densities of all genotype combinations
@@ -623,53 +475,132 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
           }
 
           # Calculate log likelihood in each marker
-          loglike_cpp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
-          loglike <- - sum(loglike_cpp)
+          tmp <- calc_log10like_cpp(lpd_gtc_all_rep, gtc_logprob_use)
+          log10like <- - sum(tmp[[1]])
 
-          if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
-            loglike <- Inf
+          if(is.na(log10like) || is.nan(log10like) || is.infinite(log10like)){
+            log10like <- Inf
           }
         }
 
-        return(loglike)
+        return(log10like)
       }
 
-      result <- GenSA(
-        par = c(rep(5507.119, n_rep), c(0.33, 0.33), rep(0.9, hnc)),
-        fn = like_func_mix,
-        lower = lower_bounds,
-        upper = upper_bounds,
-        control = list(verbose = TRUE, max.call = 5000)
-      )
+      lower_bounds <- c(rep(min_tph, n_rep), rep(0.0001, hnc - 1), rep(0.0001, hnc))
+      upper_bounds <- c(rep(max_tph, n_rep), rep(0.9999, hnc - 1), rep(1, hnc))
+
+      # Perform simulated annealing
+      current_opt <- NULL
+      current_score <- Inf
+      count_mle <- 0
+      count_solution <- 0
+      init_list <- list()
+      record_accept <- rep(NA, max_mle_runs)
+      repeat{
+        count_mle <- count_mle + 1
+
+        init_list[[count_mle]] <- init <- generate_init_deconvo_mix(n_rep, tph_mean, tph_sd, hnc)
+
+        opt <- GenSA(
+          par = init,
+          fn = like_func_mix,
+          lower = lower_bounds,
+          upper = upper_bounds,
+          control = list(verbose = TRUE, max.call = max_call)
+        )
+
+        score <- round(opt$value, 3)
+        if(score < current_score){
+          current_opt <- opt
+          current_score <- score
+          count_solution <- 1
+        }else if(score == current_score){
+          count_solution <- count_solution + 1
+        }
+        record_accept[count_mle] <- count_solution
+
+        if(count_solution == num_converged_solutions){
+          break
+        }else if(count_mle == max_mle_runs){
+          current_opt <- NULL
+          break
+        }
+      }
     }
 
+    if(!is.null(current_opt)){
 
+      # --- Calculate the likelihood using the estimated parameters --- #
 
-    dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_use)
+      # Extract estimated parameters
+      est_params <- current_opt$par
+      tph <- est_params[1:n_rep]
+      if(hnc == 1){
+        mp <- 1
+        deg <- est_params[n_rep + 1]
 
-    log10like_use <- calc_log10like_use(dt_pg_list)
+        gtc_ordered <- gtc_use
+      }else{
+        mp_pre <- est_params[(n_rep + 1):(n_rep + hnc - 1)]
+        mp <- c(mp_pre, 1 - sum(mp_pre))
+        deg <- est_params[(n_rep + hnc):(n_rep + 2 * hnc - 1)]
 
-    dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
-                               Log10_Likelihood = c(log10like_use, sum(log10like_use)))
+        # Descending order for estimated mixture proportions
+        index_order <- order(mp, decreasing = TRUE)
+        mp <- mp[index_order]
+        deg <- deg[index_order]
 
-    dt_param <- data.table("Parameter" = c(rep("Template amount", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc)),
-                           "Contributor" = c(rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc)),
-                           "Replicate" = c(1:n_rep, rep(NA, hnc), rep(NA, hnc)),
-                           "Estimated value" = c(tph, mp[hnc:1], deg[hnc:1]))
+        # Order genotype combinations
+        gtc_ordered <- order_gtc(gtc_use, index_order)
+      }
 
-    # End computation
-    end_time <- proc.time()
-    comp_time <- end_time[3] - start_time[3]
+      # Calculate log probability densities of all genotype combinations
+      lpd_gtc_all_rep <- vector(mode = "list", length = n_rep)
+      for(i in 1:n_rep){
+        lpd_gtc_all_rep[[i]] <- calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[[i]], n_dropout_list[[i]], n_dropin_list[[i]], n_ignore_list[[i]], rph_base_use,
+                                                  index_dedup1_list_cpp[[i]], cv_squared_dedup1_list[[i]], deg_size_dedup1_list[[i]], oph_dedup1_list[[i]], loglike_di_list[[i]],
+                                                  index_dedup2_list_cpp[[i]], n_gtc_use, n_peak_use)
+      }
 
-    return(list("dt_pg_list" = dt_pg_list,
-                "dt_log10like" = dt_log10like,
-                "dt_param" = dt_param,
-                "logprob_di_use" = logprob_di_use,
-                "comp_time" = comp_time,
-                "init_list" = init_list,
-                "warning_message" = warning_message,
-                "error_message" = NULL))
+      # Calculate log likelihood in each marker
+      tmp <- calc_log10like_cpp(lpd_gtc_all_rep, gtc_logprob_use)
+      log10like_all_mk <- tmp[[1]]
+      loglike_gtc_all_mk <- tmp[[2]]
 
+      dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_ordered, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk)
+
+      dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
+                                 Log10_Likelihood = c(log10like_all_mk, sum(log10like_all_mk)))
+
+      dt_param <- data.table("Parameter" = c(rep("Template amount", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc)),
+                             "Contributor" = c(rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc)),
+                             "Replicate" = c(1:n_rep, rep(NA, hnc), rep(NA, hnc)),
+                             "Estimated value" = c(tph, mp, deg))
+
+      # End computation
+      end_time <- proc.time()
+      comp_time <- end_time[3] - start_time[3]
+
+      return(list("dt_pg_list" = dt_pg_list,
+                  "dt_log10like" = dt_log10like,
+                  "dt_param" = dt_param,
+                  "logprob_di_use" = logprob_di_use,
+                  "comp_time" = comp_time,
+                  "init_list" = init_list,
+                  "record_accept" = record_accept,
+                  "error_message" = NULL))
+
+    }else{
+      error_message <- paste0("Convergence failed under ", hnc, " contributor.<br>")
+      return(list("dt_pg_list" = NULL,
+                  "dt_log10like" = NULL,
+                  "dt_param" = NULL,
+                  "logprob_di_use" = NULL,
+                  "comp_time" = NULL,
+                  "init_list" = NULL,
+                  "record_accept" = NULL,
+                  "error_message" = error_message))
+    }
   }else{
     markers_unexplainable <- markers_use[n_gtc_use == 0]
     if(hnc == 1){
@@ -687,7 +618,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                 "logprob_di_use" = NULL,
                 "comp_time" = NULL,
                 "init_list" = NULL,
-                "warning_message" = NULL,
+                "record_accept" = NULL,
                 "error_message" = error_message))
   }
 }
@@ -703,8 +634,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc_all A vector of the assumed number of contributors
 #' @param theta The theta value for sub-population effect
-#' @param num_init The number of initial points for Pathfinder
-perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta, num_init){
+#' @param max_call The max.call parameter for GenSA
+#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
+#' @param max_mle_runs The maximum number of MLE attempts with different initial values
+perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta, max_call, num_converged_solutions, max_mle_runs){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
   if(n_mk != 0){
@@ -760,7 +693,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, rate_di,
                                       ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                                      num_init))
+                                      max_call, num_converged_solutions, max_mle_runs))
       if(!inherits(data_hnc, "try-error")){
         data_hnc_list[[i]] <- data_hnc
       }else{
@@ -770,7 +703,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                    "logprob_di_use" = NULL,
                                    "comp_time" = NULL,
                                    "init_list" = NULL,
-                                   "warning_message" = NULL,
+                                   "record_accept" = NULL,
                                    "error_message" = "Unexpected error")
       }
     }
@@ -779,6 +712,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     heights_list <- NULL
     pop_al_list <- NULL
     pop_prob_list <- NULL
+    ae_use <- NULL
     min_size <- NULL
     data_hnc_list <- NULL
   }

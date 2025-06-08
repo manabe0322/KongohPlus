@@ -13,7 +13,9 @@ perform_deconvo_all_noc(
   list_dt_average_sr,
   hnc_all,
   theta,
-  num_init
+  max_call,
+  num_converged_solutions,
+  max_mle_runs
 )
 }
 \arguments{
@@ -33,7 +35,11 @@ perform_deconvo_all_noc(
 
 \item{theta}{The theta value for sub-population effect}
 
-\item{num_init}{The number of initial points for Pathfinder}
+\item{max_call}{The max.call parameter for GenSA}
+
+\item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
+
+\item{max_mle_runs}{The maximum number of MLE attempts with different initial values}
 }
 \description{
 The function to perform mixture deconvolution for all assumed number of contributors

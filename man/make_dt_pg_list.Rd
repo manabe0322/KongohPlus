@@ -7,9 +7,10 @@
 make_dt_pg_list(
   markers_use,
   label_contrib,
-  gtc_use,
+  gtc_ordered,
   gtc_logprob_use,
-  lpd_gtc_use
+  lpd_gtc_all_rep,
+  loglike_gtc_all_mk
 )
 }
 \arguments{
@@ -17,11 +18,13 @@ make_dt_pg_list(
 
 \item{label_contrib}{A character vector of the contributor names}
 
-\item{gtc_use}{Genotype combinations in the used markers}
+\item{gtc_ordered}{Genotype combinations in the used markers}
 
 \item{gtc_logprob_use}{A list of the genotype probabilities in each used marker}
 
-\item{lpd_gtc_use}{A list of the log likelihood of each genotype in all markers and replicates}
+\item{lpd_gtc_all_rep}{A list of the log likelihood of obtaining observed peak heights for each genotype combination in all markers and replicates}
+
+\item{loglike_gtc_all_mk}{A list of the log likelihood combining genotype probabilities and observed peak heights}
 }
 \description{
 The function to make a list of data.tables for the result of probabilistic genotyping
