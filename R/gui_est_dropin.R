@@ -56,7 +56,7 @@ est_dropin_server <- function(id, path_pack){
       rv_est_dropin$max_shape_di <- 20
       rv_est_dropin$min_rate_di <- 0.01
       rv_est_dropin$max_rate_di <- 20
-      rv_est_dropin$max_iter <- 200
+      rv_est_dropin$max_iter <- 500
       rv_est_dropin$num_converged_solutions <- 3
       rv_est_dropin$max_mle_runs <- 10
       rv_est_dropin$bool_correct_mle_shape_di <- TRUE

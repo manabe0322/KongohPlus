@@ -98,7 +98,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       rv_est_sr$max_myu <- 1
       rv_est_sr$min_sigma <- 1
       rv_est_sr$max_sigma <- 10000
-      rv_est_sr$max_iter <- 200
+      rv_est_sr$max_iter <- 500
       rv_est_sr$num_converged_solutions <- 3
       rv_est_sr$max_mle_runs <- 10
       rv_est_sr$bool_correct_mle_slope <- TRUE

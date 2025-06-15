@@ -77,7 +77,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       rv_est_par$max_cv_allele <- 20
       rv_est_par$min_cv_stutter <- 0.01
       rv_est_par$max_cv_stutter <- 20
-      rv_est_par$max_iter <- 200
+      rv_est_par$max_iter <- 500
       rv_est_par$num_converged_solutions <- 3
       rv_est_par$max_mle_runs <- 10
       rv_est_par$bool_correct_mle_alpha <- TRUE

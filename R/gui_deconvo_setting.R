@@ -74,7 +74,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$theta <- 0
       rv_deconvo_setting$fn_anameth <- ""
       rv_deconvo_setting$dt_anameth <- NULL
-      rv_deconvo_setting$max_iter <- 200
+      rv_deconvo_setting$max_iter <- 500
       rv_deconvo_setting$num_converged_solutions <- 3
       rv_deconvo_setting$max_mle_runs <- 10
       rv_deconvo_setting$bool_correct_noc <- TRUE
