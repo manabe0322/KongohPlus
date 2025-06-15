@@ -368,11 +368,16 @@ run_mle_sr_gen <- function(x_al, y_sr, tap, min_slope, max_slope, min_intercept,
     intercept <- par[2]
     sigma <- par[3]
 
-    dens <- dlnorm(y_sr, meanlog = log(slope * x_al + intercept), sdlog = sqrt(sigma / tap))
-    loglike <- - sum(log(dens))
-
-    if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+    mean_sr <- slope * x_al + intercept
+    if(any(mean_sr <= 0)){
       loglike <- Inf
+    }else{
+      dens <- dlnorm(y_sr, meanlog = log(mean_sr), sdlog = sqrt(sigma / tap))
+      loglike <- - sum(log(dens))
+
+      if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+        loglike <- Inf
+      }
     }
 
     return(loglike)
