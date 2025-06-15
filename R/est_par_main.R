@@ -114,10 +114,10 @@ calc_ave_het_ph_all_data <- function(height_list){
 #' @param prop_ae_data_use A matrix of the proportion of the amplification efficiencies (only data used for MCMC)
 #' @param min_alpha The minimum alpha
 #' @param max_alpha The maximum alpha
-#' @param max_call The max.call parameter for GenSA
+#' @param max_iter The number of iterations for GenSA
 #' @param num_converged_solutions The number of converged solutions required to terminate the MLE
 #' @param max_mle_runs The maximum number of MLE attempts with different initial values
-run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_call, num_converged_solutions, max_mle_runs){
+run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_converged_solutions, max_mle_runs){
 
   # Likelihood function for the locus-specific amplification efficiency
   like_fun_ae <- function(par){
@@ -145,6 +145,7 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_call, num_con
   # Perform simulated annealing
   current_opt <- NULL
   current_score <- Inf
+  current_score_round <- Inf
   count_mle <- 0
   count_solution <- 0
   init_list <- list()
@@ -159,15 +160,20 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_call, num_con
       fn = like_fun_ae,
       lower = lower_bounds,
       upper = upper_bounds,
-      control = list(verbose = TRUE, max.call = max_call)
+      control = list(verbose = TRUE, maxit = max_iter)
     )
 
-    score <- round(opt$value, 3)
+    score <- opt$value
     if(score < current_score){
       current_opt <- opt
       current_score <- score
+    }
+
+    score_round <- round(score, 3)
+    if(score_round < current_score_round){
+      current_score_round <- score_round
       count_solution <- 1
-    }else if(score == current_score){
+    }else if(score_round == current_score_round){
       count_solution <- count_solution + 1
     }
     record_accept[count_mle] <- count_solution
@@ -421,10 +427,10 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
 #' @param max_cv_allele The maximum CV for alleles
 #' @param min_cv_stutter The minimum CV for stutters
 #' @param max_cv_stutter The maximum CV for stutters
-#' @param max_call The max.call parameter for GenSA
+#' @param max_iter The number of iterations for GenSA
 #' @param num_converged_solutions The number of converged solutions required to terminate the MLE
 #' @param max_mle_runs The maximum number of MLE attempts with different initial values
-run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, max_call, num_converged_solutions, max_mle_runs){
+run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, max_iter, num_converged_solutions, max_mle_runs){
 
   like_func_gamma <- function(par){
     cv_allele_squared <- par[1]^2
@@ -473,6 +479,7 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
   # Perform simulated annealing
   current_opt <- NULL
   current_score <- Inf
+  current_score_round <- Inf
   count_mle <- 0
   count_solution <- 0
   init_list <- list()
@@ -487,15 +494,20 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
       fn = like_func_gamma,
       lower = lower_bounds,
       upper = upper_bounds,
-      control = list(verbose = TRUE, max.call = max_call)
+      control = list(verbose = TRUE, maxit = max_iter)
     )
 
-    score <- round(opt$value, 3)
+    score <- opt$value
     if(score < current_score){
       current_opt <- opt
       current_score <- score
+    }
+
+    score_round <- round(score, 3)
+    if(score_round < current_score_round){
+      current_score_round <- score_round
       count_solution <- 1
-    }else if(score == current_score){
+    }else if(score_round == current_score_round){
       count_solution <- count_solution + 1
     }
     record_accept[count_mle] <- count_solution
@@ -532,13 +544,13 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
 #' @param max_cv_allele The maximum CV for alleles
 #' @param min_cv_stutter The minimum CV for stutters
 #' @param max_cv_stutter The maximum CV for stutters
-#' @param max_call The max.call parameter for GenSA
+#' @param max_iter The number of iterations for GenSA
 #' @param num_converged_solutions The number of converged solutions required to terminate the MLE
 #' @param max_mle_runs The maximum number of MLE attempts with different initial values
 estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
                                 min_alpha, max_alpha,
                                 min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter,
-                                max_call, num_converged_solutions, max_mle_runs){
+                                max_iter, num_converged_solutions, max_mle_runs){
   # Extract information on setting
   markers_auto <- dt_setting_est_par$Marker
   n_mk_auto <- length(markers_auto)
@@ -570,7 +582,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   prop_ae_data_use <- prop_ae_data[, which(apply(prop_ae_data, 2, prod) > 0), drop = FALSE]
 
   # Perform MCMC for AE
-  alpha <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, max_call, num_converged_solutions, max_mle_runs)
+  alpha <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_converged_solutions, max_mle_runs)
 
   if(any(is.na(alpha))){
     cv_allele <- cv_stutter <- NA
@@ -591,7 +603,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     ats_gamma <- tmp$ats_gamma
 
     # Perform MCMC for gamma distribution
-    tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, max_call, num_converged_solutions, max_mle_runs)
+    tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, max_iter, num_converged_solutions, max_mle_runs)
     cv_allele <- tmp["cv_allele"]
     cv_stutter <- tmp["cv_stutter"]
   }

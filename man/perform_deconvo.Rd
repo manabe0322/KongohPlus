@@ -29,7 +29,7 @@ perform_deconvo(
   cv_allele,
   cv_stutter,
   list_dt_average_sr,
-  max_call,
+  max_iter,
   num_converged_solutions,
   max_mle_runs
 )
@@ -83,7 +83,7 @@ perform_deconvo(
 
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 
-\item{max_call}{The max.call parameter for GenSA}
+\item{max_iter}{The number of iterations for GenSA}
 
 \item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
 

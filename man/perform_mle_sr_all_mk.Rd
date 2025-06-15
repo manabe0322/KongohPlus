@@ -18,7 +18,7 @@ perform_mle_sr_all_mk(
   max_myu,
   min_sigma,
   max_sigma,
-  max_call,
+  max_iter,
   num_converged_solutions,
   max_mle_runs
 )
@@ -50,7 +50,7 @@ perform_mle_sr_all_mk(
 
 \item{max_sigma}{The maximum sigma}
 
-\item{max_call}{The max.call parameter for GenSA}
+\item{max_iter}{The number of iterations for GenSA}
 
 \item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
 

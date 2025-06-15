@@ -51,7 +51,7 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         max_cv_allele <- rv_est_par$max_cv_allele
         min_cv_stutter <- rv_est_par$min_cv_stutter
         max_cv_stutter <- rv_est_par$max_cv_stutter
-        max_call <- rv_est_par$max_call
+        max_iter <- rv_est_par$max_iter
         num_converged_solutions <- rv_est_par$num_converged_solutions
         max_mle_runs <- rv_est_par$max_mle_runs
         alpha <- data_est_par$alpha
@@ -89,7 +89,7 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
           fn_est_par <- input$fn_est_par
 
           save(list = c("fn_exp_param", "fn_gt_param", "dt_setting_est_par", "list_dt_average_sr", "name_kit_param", "name_sr", "alpha", "expect_ae", "cv_allele", "cv_stutter",
-                        "min_alpha", "max_alpha", "min_cv_allele", "max_cv_allele", "min_cv_stutter", "max_cv_stutter", "max_call", "num_converged_solutions", "max_mle_runs"),
+                        "min_alpha", "max_alpha", "min_cv_allele", "max_cv_allele", "min_cv_stutter", "max_cv_stutter", "max_iter", "num_converged_solutions", "max_mle_runs"),
                file = paste0(path_pack, "/extdata/param/", fn_est_par, ".RData"))
 
           removeModal()

@@ -98,7 +98,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       rv_est_sr$max_myu <- 1
       rv_est_sr$min_sigma <- 1
       rv_est_sr$max_sigma <- 10000
-      rv_est_sr$max_call <- 3000
+      rv_est_sr$max_iter <- 200
       rv_est_sr$num_converged_solutions <- 3
       rv_est_sr$max_mle_runs <- 10
       rv_est_sr$bool_correct_mle_slope <- TRUE
@@ -159,7 +159,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
                    numericInput(session$ns("min_intercept"), label = "Minimum intercept", value = rv_est_sr$min_intercept),
                    numericInput(session$ns("min_myu"), label = "Minimum myu", value = rv_est_sr$min_myu),
                    numericInput(session$ns("min_sigma"), label = "Minimum sigma", value = rv_est_sr$min_sigma),
-                   numericInput(session$ns("max_call"), label = "Number of simulations", value = rv_est_sr$max_call),
+                   numericInput(session$ns("max_iter"), label = "Number of iterations", value = rv_est_sr$max_iter),
                    numericInput(session$ns("max_mle_runs"), label = "The maximum number of MLE attempts with different initial values", value = rv_est_sr$max_mle_runs)
             ),
             column(6,
@@ -278,14 +278,14 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         }
       })
 
-      observeEvent(input$max_call, {
-        max_call <- input$max_call
+      observeEvent(input$max_iter, {
+        max_iter <- input$max_iter
 
-        hideFeedback("max_call")
+        hideFeedback("max_iter")
         bool_correct_advanced_1 <- TRUE
 
-        if(!is.integer(max_call) || max_call <= 0){
-          showFeedbackDanger(inputId = "max_call", text = "Value must be an integer greater than zero.")
+        if(!is.integer(max_iter) || max_iter <= 0){
+          showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
           bool_correct_advanced_1 <- FALSE
         }
 
@@ -343,7 +343,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         rv_est_sr$max_myu <- input$max_myu
         rv_est_sr$min_sigma <- input$min_sigma
         rv_est_sr$max_sigma <- input$max_sigma
-        rv_est_sr$max_call <- input$max_call
+        rv_est_sr$max_iter <- input$max_iter
         rv_est_sr$num_converged_solutions <- input$num_converged_solutions
         rv_est_sr$max_mle_runs <- input$max_mle_runs
         removeModal()
@@ -375,7 +375,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         max_myu <- rv_est_sr$max_myu
         min_sigma <- rv_est_sr$min_sigma
         max_sigma <- rv_est_sr$max_sigma
-        max_call <- rv_est_sr$max_call
+        max_iter <- rv_est_sr$max_iter
         num_converged_solutions <- rv_est_sr$num_converged_solutions
         max_mle_runs <- rv_est_sr$max_mle_runs
 
@@ -384,7 +384,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           rv_est_sr$data_est_sr <- estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr,
-                                                       min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, max_call, num_converged_solutions, max_mle_runs)
+                                                       min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, max_iter, num_converged_solutions, max_mle_runs)
 
           updateTabsetPanel(session = session_est_sr_top, inputId = "tabset_est_sr", selected = "Result")
         }

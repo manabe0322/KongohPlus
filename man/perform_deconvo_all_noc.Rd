@@ -13,7 +13,7 @@ perform_deconvo_all_noc(
   list_dt_average_sr,
   hnc_all,
   theta,
-  max_call,
+  max_iter,
   num_converged_solutions,
   max_mle_runs
 )
@@ -35,7 +35,7 @@ perform_deconvo_all_noc(
 
 \item{theta}{The theta value for sub-population effect}
 
-\item{max_call}{The max.call parameter for GenSA}
+\item{max_iter}{The number of iterations for GenSA}
 
 \item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
 

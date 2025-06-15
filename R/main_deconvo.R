@@ -145,7 +145,7 @@ make_dt_pg_list <- function(markers_use, label_contrib, gtc_ordered, gtc_logprob
 #' @param cv_allele The coefficient of variation for allelels
 #' @param cv_stutter The coefficient of variation for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
-#' @param max_call The max.call parameter for GenSA
+#' @param max_iter The number of iterations for GenSA
 #' @param num_converged_solutions The number of converged solutions required to terminate the MLE
 #' @param max_mle_runs The maximum number of MLE attempts with different initial values
 perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
@@ -153,7 +153,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, rate_di,
                             ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                            max_call, num_converged_solutions, max_mle_runs){
+                            max_iter, num_converged_solutions, max_mle_runs){
 
   # --- Start computation --- #
 
@@ -421,6 +421,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       # Perform simulated annealing
       current_opt <- NULL
       current_score <- Inf
+      current_score_round <- Inf
       count_mle <- 0
       count_solution <- 0
       repeat{
@@ -433,17 +434,23 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
           fn = like_func_single,
           lower = lower_bounds,
           upper = upper_bounds,
-          control = list(verbose = TRUE, max.call = max_call)
+          control = list(verbose = TRUE, maxit = max_iter)
         )
 
-        score <- round(opt$value, 3)
+        score <- opt$value
         if(score < current_score){
           current_opt <- opt
           current_score <- score
+        }
+
+        score_round <- round(score, 3)
+        if(score_round < current_score_round){
+          current_score_round <- score_round
           count_solution <- 1
-        }else if(score == current_score){
+        }else if(score_round == current_score_round){
           count_solution <- count_solution + 1
         }
+        record_accept[count_mle] <- count_solution
 
         if(count_solution == num_converged_solutions){
           break
@@ -492,6 +499,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       # Perform simulated annealing
       current_opt <- NULL
       current_score <- Inf
+      current_score_round <- Inf
       count_mle <- 0
       count_solution <- 0
       init_list <- list()
@@ -506,15 +514,20 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
           fn = like_func_mix,
           lower = lower_bounds,
           upper = upper_bounds,
-          control = list(verbose = TRUE, max.call = max_call)
+          control = list(verbose = TRUE, maxit = max_iter)
         )
 
-        score <- round(opt$value, 3)
+        score <- opt$value
         if(score < current_score){
           current_opt <- opt
           current_score <- score
+        }
+
+        score_round <- round(score, 3)
+        if(score_round < current_score_round){
+          current_score_round <- score_round
           count_solution <- 1
-        }else if(score == current_score){
+        }else if(score_round == current_score_round){
           count_solution <- count_solution + 1
         }
         record_accept[count_mle] <- count_solution
@@ -636,10 +649,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc_all A vector of the assumed number of contributors
 #' @param theta The theta value for sub-population effect
-#' @param max_call The max.call parameter for GenSA
+#' @param max_iter The number of iterations for GenSA
 #' @param num_converged_solutions The number of converged solutions required to terminate the MLE
 #' @param max_mle_runs The maximum number of MLE attempts with different initial values
-perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta, max_call, num_converged_solutions, max_mle_runs){
+perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta, max_iter, num_converged_solutions, max_mle_runs){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
   if(n_mk != 0){
@@ -695,7 +708,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, rate_di,
                                       ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                                      max_call, num_converged_solutions, max_mle_runs))
+                                      max_iter, num_converged_solutions, max_mle_runs))
       if(!inherits(data_hnc, "try-error")){
         data_hnc_list[[i]] <- data_hnc
       }else{

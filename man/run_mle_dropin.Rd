@@ -11,7 +11,7 @@ run_mle_dropin(
   max_shape_di,
   min_rate_di,
   max_rate_di,
-  max_call,
+  max_iter,
   num_converged_solutions,
   max_mle_runs
 )
@@ -29,7 +29,7 @@ run_mle_dropin(
 
 \item{max_rate_di}{The maximum rate}
 
-\item{max_call}{The max.call parameter for GenSA}
+\item{max_iter}{The number of iterations for GenSA}
 
 \item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
 
