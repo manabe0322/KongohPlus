@@ -9,9 +9,9 @@ create_dt_lr(markers_use, log10like_hp, log10like_hd)
 \arguments{
 \item{markers_use}{A vector of the autosomal markers used}
 
-\item{log10like_hp}{Log 10 likelihood in each marker under Hp}
+\item{log10like_hp}{Log 10 likelihood in each marker, sub-sub-source, and sub-source under Hp}
 
-\item{log10like_hd}{Log 10 likelihood in each marker under Hd}
+\item{log10like_hd}{Log 10 likelihood in each marker, sub-sub-source, and sub-source under Hd}
 }
 \description{
 The function to create the data.table for LR

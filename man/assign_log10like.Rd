@@ -14,8 +14,7 @@ assign_log10like(
   dt_pg_list,
   dt_ref,
   hyp,
-  refs,
-  sub_source = TRUE
+  refs
 )
 }
 \arguments{
@@ -38,8 +37,6 @@ assign_log10like(
 \item{hyp}{Known contributors in a hypothesis}
 
 \item{refs}{The names of all references}
-
-\item{sub_source}{Whether the sub-source level likelihood is calculated or not}
 }
 \description{
 The function to assign the log10 likelihood

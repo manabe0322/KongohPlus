@@ -14,8 +14,6 @@ lr_ui <- function(id){
                       uiOutput(ns("hd")),
                       uiOutput(ns("noc_hd")),
                       br(),
-                      checkboxInput(ns("sub_source"), label = "Sub-source LR", value = TRUE),
-                      br(),
                       br(),
                       uiOutput(ns("act_analyze_lr"))
                     )
@@ -120,7 +118,6 @@ lr_server <- function(id, rv_input, rv_deconvo){
             refs <- rv_lr_setting$refs
             dt_ref <- rv_lr_setting$dt_ref
             fn_ref <- rv_lr_setting$fn_ref
-            sub_source <- input$sub_source
 
             dt_csp <- data_deconvo$dt_csp
             dt_af <- data_deconvo$dt_af
@@ -151,7 +148,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
               error_message_hd <- data_hd$error_message
               dt_pg_list_hd <- data_hd$dt_pg_list
 
-              n_row <- length(markers_use) + 1
+              n_mk <- length(markers_use)
               n_ref_hp <- length(hp)
               n_ref_hd <- length(hd)
               if(n_ref_hp > noc_hp || n_ref_hd > noc_hd){
@@ -159,25 +156,19 @@ lr_server <- function(id, rv_input, rv_deconvo){
                 showModal(modalDialog(title = "Error", "The number of contributors is smaller than the number of known individuals who have been checked as contributors.", easyClose = TRUE, footer = NULL))
               }else{
                 if(is.null(error_message_hp) && is.null(error_message_hd)){
-                  log10like_hp <- assign_log10like(noc_hp, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hp, refs, sub_source)
-                  log10like_hd <- assign_log10like(noc_hd, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hd, refs, sub_source)
+                  log10like_hp <- assign_log10like(noc_hp, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hp, refs)
+                  log10like_hd <- assign_log10like(noc_hd, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hd, refs)
                   dt_lr <- create_dt_lr(markers_use, log10like_hp, log10like_hd)
                 }else{
-                  dt_lr <- data.table(Marker = c(markers_use, "Overall"),
-                                      Log10_Likelihood_Hp = rep(NA, n_row),
-                                      Log10_Likelihood_Hd = rep(NA, n_row),
-                                      LR = rep(NA, n_row))
+                  dt_lr <- data.table(Marker = c(markers_use, "Sub-Sub-Source LR", "Sub-Source LR"),
+                                      Log10_Likelihood_Hp = rep(NA, n_mk + 2),
+                                      Log10_Likelihood_Hd = rep(NA, n_mk + 2),
+                                      LR = rep(NA, n_mk + 2))
                 }
                 names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
                 data_lr <- list("hp" = hp,
                                 "hd" = hd,
                                 "dt_lr" = dt_lr)
-
-                if(sub_source){
-                  meth_lr <- "Sub-source"
-                }else{
-                  meth_lr <- "Sub-sub-source"
-                }
 
                 data_lr_list <- rv_lr$data_lr_list
                 data_lr_list[[length(data_lr_list) + 1]] <- data_lr
@@ -185,10 +176,10 @@ lr_server <- function(id, rv_input, rv_deconvo){
 
                 n_unk_hp <- noc_hp - length(hp)
                 n_unk_hd <- noc_hd - length(hd)
-                dt_tmp <- data.table(Method = meth_lr,
-                                     Hp = create_string_hyp(n_unk_hp, hp),
-                                     Hd = create_string_hyp(n_unk_hd, hd),
-                                     LR = dt_lr$LR[n_row])
+                dt_tmp <- data.table("Hp" = create_string_hyp(n_unk_hp, hp),
+                                     "Hd" = create_string_hyp(n_unk_hd, hd),
+                                     "Sub-Sub-Source LR" = dt_lr$LR[n_mk + 1],
+                                     "Sub-Source LR" = dt_lr$LR[n_mk + 2])
                 rv_lr$dt_lr_calc_record <- rbind(rv_lr$dt_lr_calc_record, dt_tmp)
 
                 rv_lr$dt_lr_display <- dt_lr
@@ -239,7 +230,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
                 options = list(dom = "t", iDisplayLength = nrow(dt_lr_calc_record), ordering = FALSE, autowidth = TRUE),
                 rownames = FALSE
               ) %>%
-                formatSignif(columns = c("LR"), digits = 3) %>%
+                formatSignif(columns = c("Sub-Sub-Source LR", "Sub-Source LR"), digits = 3) %>%
                 formatStyle(names(dt_lr_calc_record), lineHeight = "80%")
             }
           })

@@ -130,37 +130,10 @@ calc_log10like_use <- function(dt_pg_list, gtc_logprob_all_mk = NULL, index_hyp 
         }
         log10like_use[i] <- log10(sum(exp(loglike_gtc)))
       }
-
-      # Without reference genotype(s)
-      else{
-        log10like_use[i] <- NA
-      }
     }
   }
 
   return(log10like_use)
-}
-
-#' calc_sub_source_like
-#'
-#' @description The function to calculate sub-source likelihood
-#' @param hyp_id_all IDs of all possible hypotheses
-#' @param log10like_all_hyp Log 10 likelihoods in each marker for all hypotheses
-calc_sub_source_like <- function(hyp_id_all, log10like_all_hyp){
-  n_unk <- length(which(is.element(hyp_id_all[1, ], 0)))
-  log10like_adopt <- log10(factorial(n_unk) * apply(10^log10like_all_hyp, 1, sum))
-  return(log10like_adopt)
-}
-
-#' calc_subsub_source_like
-#'
-#' @description The function to calculate sub-sub-source likelihood
-#' @param log10like_all_hyp Log 10 likelihoods for all hypotheses
-calc_subsub_source_like <- function(log10like_all_hyp){
-  overall_like <- apply(log10like_all_hyp, 2, sum)
-  index_max_like <- which.max(overall_like)
-  log10like_adopt <- log10like_all_hyp[, index_max_like]
-  return(log10like_adopt)
 }
 
 #' calc_gtc_logprob_all_hyp
@@ -207,6 +180,15 @@ calc_gtc_logprob_all_hyp <- function(mk, hyp_id_all, prof_ref_all, prof_ref_99_a
   return(gtc_logprob_all_hyp)
 }
 
+#' log_sum_10
+#'
+#' @description The function to calculate log10 sum 10^log10_vals
+#' @param log10_vals A vector of the log10 values
+calc_log_sum_10 <- function(log10_vals){
+  max_log10 <- max(log10_vals)
+  return(max_log10 + log10(sum(10^(log10_vals - max_log10))))
+}
+
 #' assign_log10like
 #'
 #' @description The function to assign the log10 likelihood
@@ -220,8 +202,7 @@ calc_gtc_logprob_all_hyp <- function(mk, hyp_id_all, prof_ref_all, prof_ref_99_a
 #' @param dt_ref The data.table for the reference profiles
 #' @param hyp Known contributors in a hypothesis
 #' @param refs The names of all references
-#' @param sub_source Whether the sub-source level likelihood is calculated or not
-assign_log10like <- function(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list, dt_ref, hyp, refs, sub_source = TRUE){
+assign_log10like <- function(hnc, markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list, dt_ref, hyp, refs){
   n_mk <- length(markers_use)
   hyp_id_all <- make_hyp_id_all(hnc, hyp, refs)
   n_hyp <- nrow(hyp_id_all)
@@ -249,12 +230,21 @@ assign_log10like <- function(hnc, markers_use, peaks_list, pop_al_list, pop_prob
     }
   }
 
-  if(sub_source){
-    log10like_adopt <- calc_sub_source_like(hyp_id_all, log10like_all_hyp)
-  }else{
-    log10like_adopt <- calc_subsub_source_like(log10like_all_hyp)
-  }
-  names(log10like_adopt) <- markers_use
+  overall_log10like <- apply(log10like_all_hyp, 2, sum)
+
+  # --- sub-sub-source log10 likelihood --- #
+
+  index_max_like <- which.max(overall_log10like)
+  subsub_source_log10like_mk <- log10like_all_hyp[, index_max_like]
+  subsub_source_log10like <- overall_log10like[index_max_like]
+
+  # --- sub-source log10 likelihood --- #
+
+  n_unk <- length(which(is.element(hyp_id_all[1, ], 0)))
+  sub_source_log10like <- log10(factorial(n_unk)) + calc_log_sum_10(overall_log10like)
+
+  log10like_adopt <- c(subsub_source_log10like_mk, subsub_source_log10like, sub_source_log10like)
+  names(log10like_adopt) <- c(markers_use, "sub-sub-source", "sub-source")
 
   return(log10like_adopt)
 }
@@ -263,23 +253,23 @@ assign_log10like <- function(hnc, markers_use, peaks_list, pop_al_list, pop_prob
 #'
 #' @description The function to create the data.table for LR
 #' @param markers_use A vector of the autosomal markers used
-#' @param log10like_hp Log 10 likelihood in each marker under Hp
-#' @param log10like_hd Log 10 likelihood in each marker under Hd
+#' @param log10like_hp Log 10 likelihood in each marker, sub-sub-source, and sub-source under Hp
+#' @param log10like_hd Log 10 likelihood in each marker, sub-sub-source, and sub-source under Hd
 create_dt_lr <- function(markers_use, log10like_hp, log10like_hd){
   n_mk <- length(markers_use)
-  index_adopt_hp <- which(!is.na(log10like_hp))
-  index_adopt_hd <- which(!is.na(log10like_hd))
+  index_adopt_hp <- which(log10like_hp[1:n_mk] != 0)
+  index_adopt_hd <- which(log10like_hd[1:n_mk] != 0)
   index_adopt_lr <- sort(intersect(index_adopt_hp, index_adopt_hd))
 
-  log10like_hp_adopt <- log10like_hd_adopt <- rep(NA, n_mk + 1)
-  tmp_hp <- log10like_hp[index_adopt_lr]
-  log10like_hp_adopt[index_adopt_lr] <- tmp_hp
-  log10like_hp_adopt[n_mk + 1] <- sum(tmp_hp)
-  tmp_hd <- log10like_hd[index_adopt_lr]
-  log10like_hd_adopt[index_adopt_lr] <- tmp_hd
-  log10like_hd_adopt[n_mk + 1] <- sum(tmp_hd)
+  log10like_hp_adopt <- log10like_hd_adopt <- rep(NA, n_mk + 2)
+  log10like_hp_adopt[index_adopt_lr] <- log10like_hp[index_adopt_lr]
+  log10like_hp_adopt[n_mk + 1] <- log10like_hp[n_mk + 1]
+  log10like_hp_adopt[n_mk + 2] <- log10like_hp[n_mk + 2]
+  log10like_hd_adopt[index_adopt_lr] <- log10like_hd[index_adopt_lr]
+  log10like_hd_adopt[n_mk + 1] <- log10like_hd[n_mk + 1]
+  log10like_hd_adopt[n_mk + 2] <- log10like_hd[n_mk + 2]
 
-  dt_lr <- data.table(Marker = c(markers_use, "Overall"),
+  dt_lr <- data.table(Marker = c(markers_use, "Sub-Sub-Source LR", "Sub-Source LR"),
                       Log10_Likelihood_Hp = log10like_hp_adopt,
                       Log10_Likelihood_Hd = log10like_hd_adopt,
                       LR = 10^(log10like_hp_adopt - log10like_hd_adopt))
