@@ -57,7 +57,8 @@ make_dt_pg_list <- function(markers_use, label_contrib, gtc_use, gtc_logprob_use
   for(i in 1:n_mk){
 
     # Paste two alleles of each contributor
-    tmp_gtc_mk <- matrix(unlist(gtc_use[[i]]), ncol = 2 * hnc, byrow = TRUE)
+    gtc_mk <- matrix(unlist(gtc_use[[i]]), ncol = 2 * hnc, byrow = TRUE)
+    tmp_gtc_mk <- gtc_mk
     tmp_gtc_mk[which(tmp_gtc_mk == 99, arr.ind = TRUE)] <- "Q"
     gtc_mk_bind <- matrix("", nrow(tmp_gtc_mk), hnc)
     for(j in 1:hnc){
@@ -70,7 +71,7 @@ make_dt_pg_list <- function(markers_use, label_contrib, gtc_use, gtc_logprob_use
     post_prob_gtc <- tmp / sum(tmp)
 
     # Make a data.table
-    mat_pg <- cbind(gtc_use[[i]], gtc_mk_bind, gtc_logprob_use[[i]])
+    mat_pg <- cbind(gtc_mk, gtc_mk_bind, gtc_logprob_use[[i]])
     for(j in 1:n_rep){
       mat_pg <- cbind(mat_pg, lpd_gtc_all_rep[[j]][[i]])
     }
