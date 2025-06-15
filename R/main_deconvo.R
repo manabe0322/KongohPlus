@@ -39,51 +39,25 @@ generate_init_deconvo_mix <- function(n_rep, tph_mean, tph_sd, hnc){
   return(c(tph, mp, deg))
 }
 
-#' order_gtc
-#'
-#' @description The function to order genotype combinations
-#' @param gtc_use A list of the genotype combinations in all markers
-#' @param index_order The descending order for estimated mixture proportions
-order_gtc <- function(gtc_use, index_order){
-  n_mk <- length(gtc_use)
-  hnc <- length(index_order)
-  gtc_ordered <- vector(mode = "list", length = n_mk)
-  names(gtc_ordered) <- names(gtc_use)
-
-  for(i in 1:n_mk){
-    gtc_mk <- matrix(unlist(gtc_use[[i]]), ncol = 2 * hnc, byrow = TRUE)
-    gtc_ordered_mk <- gtc_mk * 0
-
-    for(j in 1:hnc){
-      index_contrib <- index_order[j]
-      gtc_ordered_mk[, c(2 * j - 1, 2 * j)] <- gtc_mk[, c(2 * index_contrib - 1, 2 * index_contrib)]
-    }
-
-    gtc_ordered[[i]] <- gtc_ordered_mk
-  }
-
-  return(gtc_ordered)
-}
-
 #' make_dt_pg_list
 #'
 #' @description The function to make a list of data.tables for the result of probabilistic genotyping
 #' @param markers_use A character vector of the used markers
 #' @param label_contrib A character vector of the contributor names
-#' @param gtc_ordered Genotype combinations in the used markers
+#' @param gtc_use Genotype combinations in the used markers
 #' @param gtc_logprob_use A list of the genotype probabilities in each used marker
 #' @param lpd_gtc_all_rep A list of the log likelihood of obtaining observed peak heights for each genotype combination in all markers and replicates
 #' @param loglike_gtc_all_mk A list of the log likelihood combining genotype probabilities and observed peak heights
-make_dt_pg_list <- function(markers_use, label_contrib, gtc_ordered, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk){
+make_dt_pg_list <- function(markers_use, label_contrib, gtc_use, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk){
   hnc <- length(label_contrib)
-  n_mk <- length(gtc_ordered)
+  n_mk <- length(gtc_use)
   n_rep <- length(lpd_gtc_all_rep)
   dt_pg_list <- vector(mode = "list", length = n_mk)
 
   for(i in 1:n_mk){
 
     # Paste two alleles of each contributor
-    tmp_gtc_mk <- gtc_ordered[[i]]
+    tmp_gtc_mk <- gtc_use[[i]]
     tmp_gtc_mk[which(tmp_gtc_mk == 99, arr.ind = TRUE)] <- "Q"
     gtc_mk_bind <- matrix("", nrow(tmp_gtc_mk), hnc)
     for(j in 1:hnc){
@@ -96,7 +70,7 @@ make_dt_pg_list <- function(markers_use, label_contrib, gtc_ordered, gtc_logprob
     post_prob_gtc <- tmp / sum(tmp)
 
     # Make a data.table
-    mat_pg <- cbind(gtc_ordered[[i]], gtc_mk_bind, gtc_logprob_use[[i]])
+    mat_pg <- cbind(gtc_use[[i]], gtc_mk_bind, gtc_logprob_use[[i]])
     for(j in 1:n_rep){
       mat_pg <- cbind(mat_pg, lpd_gtc_all_rep[[j]][[i]])
     }
@@ -555,6 +529,11 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         mp_pre <- est_params[(n_rep + 1):(n_rep + hnc - 1)]
         mp <- c(mp_pre, 1 - sum(mp_pre))
         deg <- est_params[(n_rep + hnc):(n_rep + 2 * hnc - 1)]
+
+        # Descending order for estimated mixture proportions
+        index_order <- order(mp, decreasing = TRUE)
+        mp <- mp[index_order]
+        deg <- deg[index_order]
       }
 
       # Calculate log probability densities of all genotype combinations
@@ -570,19 +549,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       log10like_all_mk <- tmp[[1]]
       loglike_gtc_all_mk <- tmp[[2]]
 
-      # Descending order for estimated mixture proportions
-      if(hnc == 1){
-        gtc_ordered <- gtc_use
-      }else{
-        index_order <- order(mp, decreasing = TRUE)
-        mp <- mp[index_order]
-        deg <- deg[index_order]
-
-        # Order genotype combinations
-        gtc_ordered <- order_gtc(gtc_use, index_order)
-      }
-
-      dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_ordered, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk)
+      dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk)
 
       dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
                                  Log10_Likelihood = c(log10like_all_mk, sum(log10like_all_mk)))
