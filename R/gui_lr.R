@@ -154,23 +154,31 @@ lr_server <- function(id, rv_input, rv_deconvo){
               if(n_ref_hp > noc_hp || n_ref_hd > noc_hd){
                 waiter_hide()
                 showModal(modalDialog(title = "Error", "The number of contributors is smaller than the number of known individuals who have been checked as contributors.", easyClose = TRUE, footer = NULL))
+              }else if(!is.null(error_message_hp)){
+                waiter_hide()
+                showModal(modalDialog(title = "Error", HTML(error_message_hp), easyClose = TRUE, footer = NULL))
+              }else if(!is.null(error_message_hd)){
+                waiter_hide()
+                showModal(modalDialog(title = "Error", HTML(error_message_hd), easyClose = TRUE, footer = NULL))
               }else{
-                if(is.null(error_message_hp) && is.null(error_message_hd)){
 
-                  hyp_id_all_hp <- make_hyp_id_all(noc_hp, hp, refs)
-                  loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_hp)
+                hyp_id_all_hp <- make_hyp_id_all(noc_hp, hp, refs)
+                loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_hp)
+                tmp <- calc_subsub_log10like(loglike_all_hyp_hp)
+                index_max_loglike_hp <- tmp$index_max_loglike
+                subsub_log10like_all_mk_hp <- tmp$subsub_log10like_all_mk
+                subsub_log10like_hp <- tmp$subsub_log10like
 
-                  hyp_id_all_hd <- make_hyp_id_all(noc_hd, hd, refs)
-                  loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hyp_id_all_hd)
+                hyp_id_all_hd <- make_hyp_id_all(noc_hd, hd, refs)
+                loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hyp_id_all_hd)
+                tmp <- calc_subsub_log10like(loglike_all_hyp_hd)
+                index_max_loglike_hd <- tmp$index_max_loglike
+                subsub_log10like_all_mk_hd <- tmp$subsub_log10like_all_mk
+                subsub_log10like_hd <- tmp$subsub_log10like
 
-                  dt_lr <- create_dt_lr(loglike_all_hyp_hp, loglike_all_hyp_hd, hyp_id_all_hp, hyp_id_all_hd, markers_use)
-                }else{
-                  dt_lr <- data.table(Marker = c(markers_use, "Sub-Sub-Source LR", "Sub-Source LR"),
-                                      Log10_Likelihood_Hp = rep(NA, n_mk + 2),
-                                      Log10_Likelihood_Hd = rep(NA, n_mk + 2),
-                                      LR = rep(NA, n_mk + 2))
-                }
+                dt_lr <- create_dt_lr(loglike_all_hyp_hp, loglike_all_hyp_hd, markers_use)
                 names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
+
                 data_lr <- list("hp" = hp,
                                 "hd" = hd,
                                 "dt_lr" = dt_lr)
@@ -183,8 +191,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
                 n_unk_hd <- noc_hd - length(hd)
                 dt_tmp <- data.table("Hp" = create_string_hyp(n_unk_hp, hp),
                                      "Hd" = create_string_hyp(n_unk_hd, hd),
-                                     "Sub-Sub-Source LR" = dt_lr$LR[n_mk + 1],
-                                     "Sub-Source LR" = dt_lr$LR[n_mk + 2])
+                                     "LR" = dt_lr$LR[n_mk + 1])
                 rv_lr$dt_lr_calc_record <- rbind(rv_lr$dt_lr_calc_record, dt_tmp)
 
                 rv_lr$dt_lr_display <- dt_lr
@@ -235,7 +242,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
                 options = list(dom = "t", iDisplayLength = nrow(dt_lr_calc_record), ordering = FALSE, autowidth = TRUE),
                 rownames = FALSE
               ) %>%
-                formatSignif(columns = c("Sub-Sub-Source LR", "Sub-Source LR"), digits = 3) %>%
+                formatSignif(columns = c("LR"), digits = 3) %>%
                 formatStyle(names(dt_lr_calc_record), lineHeight = "80%")
             }
           })

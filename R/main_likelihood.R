@@ -221,138 +221,43 @@ calc_loglike_all_hyp <- function(markers_use, peaks_list, pop_al_list, pop_prob_
   return(loglike_all_hyp)
 }
 
-#' select_alternative_hyp
+#' calc_subsub_log10like
 #'
-#' @description The function to select alternative hypothesis
-#' @param hyp_id_best The best contributors' IDs
-#' @param hyp_id_all_alternative IDs of all possible alternative hypotheses
-#' @param overall_log10like_all_hyp_alternative A vector of overall log10 likelihoods in all possible alternative hypotheses
-select_alternative_hyp <- function(hyp_id_best, hyp_id_all_alternative, overall_log10like_all_hyp_alternative){
-  known_ids_best <- setdiff(hyp_id_best, 0)
-  ids_share <- known_ids_best[is.element(known_ids_best, setdiff(hyp_id_all_alternative[1, ], 0))]
-  n_ids_share <- length(ids_share)
+#' @description The function to calculate sub-sub-source log10 likelihood
+#' @param loglike_all_hyp A matrix of log10 likelihoods of all markers in all possible hypotheses
+calc_subsub_log10like <- function(loglike_all_hyp){
+  overall_loglike_all_hyp <- apply(loglike_all_hyp, 2, sum)
+  index_max_loglike <- which.max(overall_loglike_all_hyp)
+  subsub_log10like_all_mk <- loglike_all_hyp[, index_max_loglike] / log(10)
+  subsub_log10like <- overall_loglike_all_hyp[index_max_loglike] / log(10)
 
-  if(n_ids_share != 0){
-    bool_mat <- matrix(FALSE, nrow(hyp_id_all_alternative), n_ids_share)
-
-    for(i in 1:n_ids_share){
-      id1 <- ids_share[i]
-      index_id1 <- which(hyp_id_best == id1)
-      bool_mat[, i] <- hyp_id_all_alternative[, index_id1] == id1
-    }
-
-    best_log10like_alternative <- max(overall_log10like_all_hyp_alternative[apply(bool_mat, 1, all)])
-    index_alternative <- which(overall_log10like_all_hyp_alternative == best_log10like_alternative)
-
-  }else{
-    index_alternative <- integer(0)
-  }
-
-  return(index_alternative)
+  return(list(index_max_loglike = index_max_loglike,
+              subsub_log10like_all_mk = subsub_log10like_all_mk,
+              subsub_log10like = subsub_log10like))
 }
 
 #' create_dt_lr
 #'
 #' @description The function to create the data.table for LR
-#' @param log10like_all_hyp_hp A matrix of log10 likelihoods of all markers in all possible Hp
-#' @param log10like_all_hyp_hd A matrix of log10 likelihoods of all markers in all possible Hd
-#' @param hyp_id_all_hp IDs of all possible hypotheses in Hp
-#' @param hyp_id_all_hd IDs of all possible hypotheses in Hd
+#' @param subsub_log10like_all_mk_hp A vector of the sub-sub-source log10 likelihoods of all markers in Hp
+#' @param subsub_log10like_hp A vector of the overall sub-sub-source log10 likelihood in Hp
+#' @param subsub_log10like_all_mk_hd A vector of the sub-sub-source log10 likelihoods of all markers in Hd
+#' @param subsub_log10like_hd A vector of the overall sub-sub-source log10 likelihood in Hd
 #' @param markers_use A vector of the autosomal markers used
-create_dt_lr <- function(loglike_all_hyp_hp, loglike_all_hyp_hd, hyp_id_all_hp, hyp_id_all_hd, markers_use){
-
-  # --- Calculate sub-sub-source log10 likelihood --- #
-
-  noc_hp <- ncol(hyp_id_all_hp)
-  known_ids_hp <- sort(setdiff(hyp_id_all_hp[1, ], 0))
-
-  noc_hd <- ncol(hyp_id_all_hd)
-  known_ids_hd <- sort(setdiff(hyp_id_all_hd[1, ], 0))
-
-  overall_loglike_all_hyp_hp <- apply(loglike_all_hyp_hp, 2, sum)
-  overall_loglike_all_hyp_hd <- apply(loglike_all_hyp_hd, 2, sum)
-
-  index_max_loglike_hp <- which.max(overall_loglike_all_hyp_hp)
-  max_loglike_hp <- overall_loglike_all_hyp_hp[index_max_loglike_hp]
-  index_max_loglike_hd <- which.max(overall_loglike_all_hyp_hd)
-  max_loglike_hd <- overall_loglike_all_hyp_hd[index_max_loglike_hd]
-
-  # Select the best hypothesis
-  # - NOC in Hp is the same as that in Hd, and
-  # - There is at least one assumed contributor in each hypothesis
-  if(noc_hp == noc_hd && any(is.element(known_ids_hp, known_ids_hd))){
-
-    if(max_loglike_hp > max_loglike_hd){
-
-      # Select alternative hypothesis
-      hyp_id_best <- hyp_id_all_hp[index_max_loglike_hp, ]
-      hyp_id_all_alternative <- hyp_id_all_hd
-      overall_loglike_all_hyp_alternative <- overall_loglike_all_hyp_hd
-      index_alternative <- select_alternative_hyp(hyp_id_best, hyp_id_all_alternative, overall_loglike_all_hyp_alternative)
-
-      # Select Hp based on the maximum likelihood
-      subsub_log10like_all_mk_hp <- loglike_all_hyp_hp[, index_max_loglike_hp] / log(10)
-      subsub_log10like_hp <- max_loglike_hp / log(10)
-
-      # Select Hd based on the selected alternative hypothesis
-      subsub_log10like_all_mk_hd <- loglike_all_hyp_hd[, index_alternative] / log(10)
-      subsub_log10like_hd <- overall_loglike_all_hyp_hd[index_alternative] / log(10)
-    }else{
-
-      # Select alternative hypothesis
-      hyp_id_best <- hyp_id_all_hd[index_max_loglike_hd, ]
-      hyp_id_all_alternative <- hyp_id_all_hp
-      overall_loglike_all_hyp_alternative <- overall_loglike_all_hyp_hp
-      index_alternative <- select_alternative_hyp(hyp_id_best, hyp_id_all_alternative, overall_loglike_all_hyp_alternative)
-
-      # Select Hp based on the selected alternative hypothesis
-      subsub_log10like_all_mk_hp <- loglike_all_hyp_hp[, index_alternative] / log(10)
-      subsub_log10like_hp <- overall_loglike_all_hyp_hp[index_alternative] / log(10)
-
-      # Select Hd based on the maximum likelihood
-      subsub_log10like_all_mk_hd <- loglike_all_hyp_hd[, index_max_loglike_hd] / log(10)
-      subsub_log10like_hd <- max_loglike_hd / log(10)
-    }
-  }
-
-  # Select the best hypothesis
-  # - NOC in Hp is not the same as that in Hd, or
-  # - There is no assumed contributor in each hypothesis
-  else{
-
-    # Select Hp based on the maximum likelihood
-    subsub_log10like_all_mk_hp <- loglike_all_hyp_hp[, index_max_loglike_hp] / log(10)
-    subsub_log10like_hp <- max_loglike_hp / log(10)
-
-    # Select Hd based on the maximum likelihood
-    subsub_log10like_all_mk_hd <- loglike_all_hyp_hd[, index_max_loglike_hd] / log(10)
-    subsub_log10like_hd <- max_loglike_hd / log(10)
-  }
-
-  # --- Calculate sub-source log10 likelihood --- #
-
-  n_unk_hp <- length(which(is.element(hyp_id_all_hp[1, ], 0)))
-  sub_log10like_hp <- log10(factorial(n_unk_hp)) + log_sum_exp(overall_loglike_all_hyp_hp) / log(10)
-
-  n_unk_hd <- length(which(is.element(hyp_id_all_hd[1, ], 0)))
-  sub_log10like_hd <- log10(factorial(n_unk_hd)) + log_sum_exp(overall_loglike_all_hyp_hd) / log(10)
-
-  # --- Create a data.table for LR --- #
+create_dt_lr <- function(subsub_log10like_all_mk_hp, subsub_log10like_hp, subsub_log10like_all_mk_hd, subsub_log10like_hd, markers_use){
 
   n_mk <- length(markers_use)
   index_adopt_hp <- which(subsub_log10like_all_mk_hp != 0)
   index_adopt_hd <- which(subsub_log10like_all_mk_hd != 0)
   index_adopt_lr <- sort(intersect(index_adopt_hp, index_adopt_hd))
 
-  log10like_hp_adopt <- log10like_hd_adopt <- rep(NA, n_mk + 2)
+  log10like_hp_adopt <- log10like_hd_adopt <- rep(NA, n_mk + 1)
   log10like_hp_adopt[index_adopt_lr] <- subsub_log10like_all_mk_hp[index_adopt_lr]
   log10like_hp_adopt[n_mk + 1] <- subsub_log10like_hp
-  log10like_hp_adopt[n_mk + 2] <- sub_log10like_hp
   log10like_hd_adopt[index_adopt_lr] <- subsub_log10like_all_mk_hd[index_adopt_lr]
   log10like_hd_adopt[n_mk + 1] <- subsub_log10like_hd
-  log10like_hd_adopt[n_mk + 2] <- sub_log10like_hd
 
-  dt_lr <- data.table(Marker = c(markers_use, "Sub-Sub-Source LR", "Sub-Source LR"),
+  dt_lr <- data.table(Marker = c(markers_use, "LR"),
                       Log10_Likelihood_Hp = log10like_hp_adopt,
                       Log10_Likelihood_Hd = log10like_hd_adopt,
                       LR = 10^(log10like_hp_adopt - log10like_hd_adopt))
