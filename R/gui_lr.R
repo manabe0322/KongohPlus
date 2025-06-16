@@ -158,12 +158,12 @@ lr_server <- function(id, rv_input, rv_deconvo){
                 if(is.null(error_message_hp) && is.null(error_message_hd)){
 
                   hyp_id_all_hp <- make_hyp_id_all(noc_hp, hp, refs)
-                  log10like_all_hyp_hp <- calc_log10like_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_hp)
+                  loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_hp)
 
                   hyp_id_all_hd <- make_hyp_id_all(noc_hd, hd, refs)
-                  log10like_all_hyp_hd <- calc_log10like_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hyp_id_all_hd)
+                  loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hyp_id_all_hd)
 
-                  dt_lr <- create_dt_lr(log10like_all_hyp_hp, log10like_all_hyp_hd, hyp_id_all_hp, hyp_id_all_hd, markers_use)
+                  dt_lr <- create_dt_lr(loglike_all_hyp_hp, loglike_all_hyp_hd, hyp_id_all_hp, hyp_id_all_hd, markers_use)
                 }else{
                   dt_lr <- data.table(Marker = c(markers_use, "Sub-Sub-Source LR", "Sub-Source LR"),
                                       Log10_Likelihood_Hp = rep(NA, n_mk + 2),

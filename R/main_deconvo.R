@@ -380,14 +380,14 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         }
 
         # Calculate log likelihood in each marker
-        tmp <- calc_log10like_cpp(lpd_gtc_all_rep, gtc_logprob_use)
-        log10like <- - sum(tmp[[1]])
+        tmp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
+        loglike <- - sum(tmp[[1]])
 
-        if(is.na(log10like) || is.nan(log10like) || is.infinite(log10like)){
-          log10like <- Inf
+        if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+          loglike <- Inf
         }
 
-        return(log10like)
+        return(loglike)
       }
 
       lower_bounds <- c(rep(min_tph, n_rep), 0.0001)
@@ -445,7 +445,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
         mp <- c(mp_pre, 1 - sum(mp_pre))
         if(any(mp <= 0.0001)){
-          log10like <- Inf
+          loglike <- Inf
         }else{
 
           # Calculate log probability densities of all genotype combinations
@@ -457,15 +457,15 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
           }
 
           # Calculate log likelihood in each marker
-          tmp <- calc_log10like_cpp(lpd_gtc_all_rep, gtc_logprob_use)
-          log10like <- - sum(tmp[[1]])
+          tmp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
+          loglike <- - sum(tmp[[1]])
 
-          if(is.na(log10like) || is.nan(log10like) || is.infinite(log10like)){
-            log10like <- Inf
+          if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+            loglike <- Inf
           }
         }
 
-        return(log10like)
+        return(loglike)
       }
 
       lower_bounds <- c(rep(min_tph, n_rep), rep(0.0001, hnc - 1), rep(0.0001, hnc))
@@ -546,12 +546,13 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       }
 
       # Calculate log likelihood in each marker
-      tmp <- calc_log10like_cpp(lpd_gtc_all_rep, gtc_logprob_use)
-      log10like_all_mk <- tmp[[1]]
+      tmp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
+      loglike_all_mk <- tmp[[1]]
       loglike_gtc_all_mk <- tmp[[2]]
 
       dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk)
 
+      log10like_all_mk <- loglike_all_mk / log(10)
       dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
                                  Log10_Likelihood = c(log10like_all_mk, sum(log10like_all_mk)))
 

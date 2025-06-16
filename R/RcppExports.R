@@ -81,8 +81,8 @@ extract_gtc <- function(cand_gts, ind_gtc, hnc) {
     .Call(`_KongohPlus_extract_gtc`, cand_gts, ind_gtc, hnc)
 }
 
-log10_sum_exp <- function(log_values) {
-    .Call(`_KongohPlus_log10_sum_exp`, log_values)
+log_sum_exp <- function(log_values) {
+    .Call(`_KongohPlus_log_sum_exp`, log_values)
 }
 
 make_detectable_peak <- function(gtc, peaks, bsrs, fsrs, dsrs, m2srs) {
@@ -157,8 +157,8 @@ calc_lpd_gtc_all_rep <- function(tph, mp, deg, hnc, ats_use, n_general_list, n_d
     .Call(`_KongohPlus_calc_lpd_gtc_all_rep`, tph, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list, rph_base_use, index_dedup1_list_cpp, cv_squared_dedup1_list, deg_size_dedup1_list, oph_dedup1_list, loglike_di_list, index_dedup2_list_cpp, n_gtc_use, n_peak_use)
 }
 
-calc_log10like_cpp <- function(lpd_gtc_all_rep, gtc_logprob_use) {
-    .Call(`_KongohPlus_calc_log10like_cpp`, lpd_gtc_all_rep, gtc_logprob_use)
+calc_loglike_cpp <- function(lpd_gtc_all_rep, gtc_logprob_use) {
+    .Call(`_KongohPlus_calc_loglike_cpp`, lpd_gtc_all_rep, gtc_logprob_use)
 }
 
 make_cand_peak <- function(alleles, sr_consider) {

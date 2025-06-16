@@ -190,12 +190,12 @@ std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const double 
 }
 
 // [[Rcpp::export]]
-Rcpp::List calc_log10like_cpp(const std::vector<std::vector<std::vector<double>>>& lpd_gtc_all_rep,
+Rcpp::List calc_loglike_cpp(const std::vector<std::vector<std::vector<double>>>& lpd_gtc_all_rep,
                               const std::vector<std::vector<double>>& gtc_logprob_use){
 
   int n_mk = gtc_logprob_use.size();
   int n_rep = lpd_gtc_all_rep.size();
-  std::vector<double> log10like_all_mk(n_mk, 0);
+  std::vector<double> loglike_all_mk(n_mk, 0);
   std::vector<std::vector<double>> loglike_gtc_all_mk(n_mk, std::vector<double>());
 
   for(int i = 0; i < n_mk; ++i){
@@ -210,10 +210,10 @@ Rcpp::List calc_log10like_cpp(const std::vector<std::vector<std::vector<double>>
       }
     }
 
-    log10like_all_mk[i] = log10_sum_exp(loglike_gtc_mk);
+    loglike_all_mk[i] = log_sum_exp(loglike_gtc_mk);
     loglike_gtc_all_mk[i] = loglike_gtc_mk;
   }
 
-  List result = List::create(log10like_all_mk, loglike_gtc_all_mk);
+  List result = List::create(loglike_all_mk, loglike_gtc_all_mk);
   return(result);
 }
