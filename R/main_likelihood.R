@@ -281,9 +281,10 @@ create_dt_lr <- function(log10like_all_hyp_hp, log10like_all_hyp_hd, hyp_id_all_
   overall_log10like_all_hyp_hp <- apply(log10like_all_hyp_hp, 2, sum)
   overall_log10like_all_hyp_hd <- apply(log10like_all_hyp_hd, 2, sum)
 
-  # Index of the log10 likelihood in each hypothesis
   index_max_log10like_hp <- which.max(overall_log10like_all_hyp_hp)
+  max_log10like_hp <- overall_log10like_all_hyp_hp[index_max_log10like_hp]
   index_max_log10like_hd <- which.max(overall_log10like_all_hyp_hd)
+  max_log10like_hd <- overall_log10like_all_hyp_hd[index_max_log10like_hd]
 
   # Select the best hypothesis
   # - NOC in Hp is the same as that in Hd, and
@@ -300,7 +301,7 @@ create_dt_lr <- function(log10like_all_hyp_hp, log10like_all_hyp_hd, hyp_id_all_
 
       # Select Hp based on the maximum likelihood
       subsub_log10like_all_mk_hp <- log10like_all_hyp_hp[, index_max_log10like_hp]
-      subsub_log10like_hp <- overall_log10like_all_hyp_hp[index_max_log10like_hp]
+      subsub_log10like_hp <- max_log10like_hp
 
       # Select Hd based on the selected alternative hypothesis
       subsub_log10like_all_mk_hd <- log10like_all_hyp_hd[, index_alternative]
@@ -319,7 +320,7 @@ create_dt_lr <- function(log10like_all_hyp_hp, log10like_all_hyp_hd, hyp_id_all_
 
       # Select Hd based on the maximum likelihood
       subsub_log10like_all_mk_hd <- log10like_all_hyp_hd[, index_max_log10like_hd]
-      subsub_log10like_hd <- overall_log10like_all_hyp_hd[index_max_log10like_hd]
+      subsub_log10like_hd <- max_log10like_hd
     }
   }
 
@@ -330,11 +331,11 @@ create_dt_lr <- function(log10like_all_hyp_hp, log10like_all_hyp_hd, hyp_id_all_
 
     # Select Hp based on the maximum likelihood
     subsub_log10like_all_mk_hp <- log10like_all_hyp_hp[, index_max_log10like_hp]
-    subsub_log10like_hp <- overall_log10like_all_hyp_hp[index_max_log10like_hp]
+    subsub_log10like_hp <- max_log10like_hp
 
     # Select Hd based on the maximum likelihood
     subsub_log10like_all_mk_hd <- log10like_all_hyp_hd[, index_max_log10like_hd]
-    subsub_log10like_hd <- overall_log10like_all_hyp_hd[index_max_log10like_hd]
+    subsub_log10like_hd <- max_log10like_hd
   }
 
   # --- Calculate sub-source log10 likelihood --- #
