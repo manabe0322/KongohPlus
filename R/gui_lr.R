@@ -35,21 +35,21 @@ lr_ui <- function(id){
   )
 }
 
-#' create_string_hyp
+#' create_contrib_order
 #'
-#' @description The function to create a hypothesis as a string.
-#' @param n_unk The number of unknown contributors
-#' @param knowns A character vector of the known contributors
-create_string_hyp <- function(n_unk, knowns = NULL){
-  if(n_unk < 0){
-    return("Error: total number of contributors < number of known contributors")
-  }else if(is.null(knowns)){
-    return(paste(rep("U", n_unk), collapse = ", "))
-  }else if(n_unk == 0){
-    return(paste(knowns, collapse = ", "))
-  }else{
-    return(paste(paste(knowns, collapse = ", "), ", ", paste(rep("U", n_unk), collapse = ", "), sep = ""))
+#' @description The function to create a vector of the ordered contributor
+#' @param hyp_id_best A vector of the contributors' IDs for the best hypothesis
+#' @param refs A vector of the references' names
+create_contrib_order <- function(hyp_id_best, refs){
+  hnc <- length(hyp_id_best)
+  contrib_order <- rep("U", hnc)
+  for(i in 1:hnc){
+    id1 <- hyp_id_best[i]
+    if(id1 != 0){
+      contrib_order[i] <- refs[id1]
+    }
   }
+  return(contrib_order)
 }
 
 #' lr_server
@@ -176,7 +176,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
                 subsub_log10like_all_mk_hd <- tmp$subsub_log10like_all_mk
                 subsub_log10like_hd <- tmp$subsub_log10like
 
-                dt_lr <- create_dt_lr(loglike_all_hyp_hp, loglike_all_hyp_hd, markers_use)
+                rv_lr$dt_lr_display <- dt_lr <- create_dt_lr(subsub_log10like_all_mk_hp, subsub_log10like_hp, subsub_log10like_all_mk_hd, subsub_log10like_hd, markers_use)
                 names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
 
                 data_lr <- list("hp" = hp,
@@ -187,14 +187,16 @@ lr_server <- function(id, rv_input, rv_deconvo){
                 data_lr_list[[length(data_lr_list) + 1]] <- data_lr
                 rv_lr$data_lr_list <- data_lr_list
 
-                n_unk_hp <- noc_hp - length(hp)
-                n_unk_hd <- noc_hd - length(hd)
-                dt_tmp <- data.table("Hp" = create_string_hyp(n_unk_hp, hp),
-                                     "Hd" = create_string_hyp(n_unk_hd, hd),
+                # --- Update a data.table for LR records --- #
+
+                contrib_order_hp <- create_contrib_order(hyp_id_all_hp[index_max_loglike_hp, ], refs)
+                contrib_order_hd <- create_contrib_order(hyp_id_all_hd[index_max_loglike_hd, ], refs)
+                dt_tmp <- data.table("Hp" = paste0(contrib_order_hp, collapse = ", "),
+                                     "Hd" = paste0(contrib_order_hd, collapse = ", "),
                                      "LR" = dt_lr$LR[n_mk + 1])
+
                 rv_lr$dt_lr_calc_record <- rbind(rv_lr$dt_lr_calc_record, dt_tmp)
 
-                rv_lr$dt_lr_display <- dt_lr
                 waiter_hide()
               }
             }

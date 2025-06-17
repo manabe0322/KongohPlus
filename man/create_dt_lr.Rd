@@ -5,23 +5,23 @@
 \title{create_dt_lr}
 \usage{
 create_dt_lr(
-  loglike_all_hyp_hp,
-  loglike_all_hyp_hd,
-  hyp_id_all_hp,
-  hyp_id_all_hd,
+  subsub_log10like_all_mk_hp,
+  subsub_log10like_hp,
+  subsub_log10like_all_mk_hd,
+  subsub_log10like_hd,
   markers_use
 )
 }
 \arguments{
-\item{hyp_id_all_hp}{IDs of all possible hypotheses in Hp}
+\item{subsub_log10like_all_mk_hp}{A vector of the sub-sub-source log10 likelihoods of all markers in Hp}
 
-\item{hyp_id_all_hd}{IDs of all possible hypotheses in Hd}
+\item{subsub_log10like_hp}{A vector of the overall sub-sub-source log10 likelihood in Hp}
+
+\item{subsub_log10like_all_mk_hd}{A vector of the sub-sub-source log10 likelihoods of all markers in Hd}
+
+\item{subsub_log10like_hd}{A vector of the overall sub-sub-source log10 likelihood in Hd}
 
 \item{markers_use}{A vector of the autosomal markers used}
-
-\item{log10like_all_hyp_hp}{A matrix of log10 likelihoods of all markers in all possible Hp}
-
-\item{log10like_all_hyp_hd}{A matrix of log10 likelihoods of all markers in all possible Hd}
 }
 \description{
 The function to create the data.table for LR
