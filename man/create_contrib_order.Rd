@@ -4,12 +4,12 @@
 \alias{create_contrib_order}
 \title{create_contrib_order}
 \usage{
-create_contrib_order(hyp_id_best, hyp)
+create_contrib_order(hyp_id_best, refs)
 }
 \arguments{
 \item{hyp_id_best}{A vector of the contributors' IDs for the best hypothesis}
 
-\item{hyp}{A vector of the contributors' names}
+\item{refs}{A vector of the references' names}
 }
 \description{
 The function to create a vector of the ordered contributor

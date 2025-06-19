@@ -13,11 +13,9 @@ create_index_dedup2_mk <- function(index_rph_gtc_cpp, index_dedup1_rep1_mk1){
 #'
 #' @description The function to generate initial values for MLE (single-source profile)
 #' @param n_rep The number of replicates
-#' @param tph_mean The mean value for the parameter 'tph'
-#' @param tph_sd The SD value for the parameter 'tph'
 #' @param hnc The assumed number of contributors
-generate_init_deconvo_single <- function(n_rep, tph_mean, tph_sd){
-  tph <- rnorm(n_rep, tph_mean, tph_sd)
+generate_init_deconvo_single <- function(n_rep){
+  tph_pre <- rbeta(n_rep, 1, 1)
   deg <- rbeta(1, 1, 1)
 
   return(c(tph, deg))
@@ -27,16 +25,14 @@ generate_init_deconvo_single <- function(n_rep, tph_mean, tph_sd){
 #'
 #' @description The function to generate initial values for MLE (mixture profile)
 #' @param n_rep The number of replicates
-#' @param tph_mean The mean value for the parameter 'tph'
-#' @param tph_sd The SD value for the parameter 'tph'
 #' @param hnc The assumed number of contributors
-generate_init_deconvo_mix <- function(n_rep, tph_mean, tph_sd, hnc){
-  tph <- rnorm(n_rep, tph_mean, tph_sd)
+generate_init_deconvo_mix <- function(n_rep, hnc){
+  tph_pre <- rbeta(n_rep, 1, 1)
   mp <- rdirichlet(1, rep(1, hnc))
   mp <- mp[1, 1:(hnc - 1)]
   deg <- rbeta(hnc, 1, 1)
 
-  return(c(tph, mp, deg))
+  return(c(tph_pre, mp, deg))
 }
 
 #' make_dt_pg_list
@@ -346,19 +342,15 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
   if(!any(is.element(n_gtc_use, 0))){
 
-    # --- Determine the probability distribution for the parameter tph --- #
+    # --- Determine the lower and upper values for the parameter tph --- #
 
     median_sizes_use <- rep(median_sizes_use, n_rep)
     tph_per_mk_use <- as.vector(tph_per_mk_use)
     fit_exp <- lm(log(tph_per_mk_use) ~ median_sizes_use)
-    tph_mean <- exp(coef(fit_exp)[1]) * exp(coef(fit_exp)[2] * min_size)
-
-    min_tph <- min(tph_per_mk_use)
-    max_tph <- max(tph_per_mk_use)
-    if(min_tph == max_tph){
-      min_tph <- 0
-    }
-    tph_sd <- (max_tph - min_tph) / 2
+    mu_log <- coef(fit_exp)[1] + coef(fit_exp)[2] * min_size
+    sigma_log <- sd(residuals(fit_exp))
+    tph_lower <- exp(mu_log - 3 * sigma_log)
+    tph_upper <- exp(mu_log + 3 * sigma_log)
 
     # --- Bayesian optimization --- #
 
@@ -367,7 +359,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       # likelihood function for single-source profiles
       like_func_single <- function(par){
         # Prepare parameters
-        tph <- par[1:n_rep]
+        tph <- par[1:n_rep] * (tph_upper - tph_lower) + tph_lower
         deg <- par[n_rep + 1]
         mp <- 1
 
@@ -390,8 +382,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         return(loglike)
       }
 
-      lower_bounds <- c(rep(min_tph, n_rep), 0.0001)
-      upper_bounds <- c(rep(max_tph, n_rep), 1)
+      lower_bounds <- c(rep(0, n_rep), 0.0001)
+      upper_bounds <- c(rep(1, n_rep), 1)
 
       # Perform simulated annealing
       current_opt <- NULL
@@ -402,7 +394,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       repeat{
         count_mle <- count_mle + 1
 
-        init <- generate_init_deconvo_single(n_rep, tph_mean, tph_sd)
+        init <- generate_init_deconvo_single(n_rep)
 
         opt <- GenSA(
           par = init,
@@ -439,7 +431,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       # likelihood function for mixture profiles
       like_func_mix <- function(par){
         # Prepare parameters
-        tph <- par[1:n_rep]
+        tph <- par[1:n_rep] * (tph_upper - tph_lower) + tph_lower
         mp_pre <- par[(n_rep + 1):(n_rep + hnc - 1)]
         deg <- par[(n_rep + hnc):(n_rep + 2 * hnc - 1)]
 
@@ -468,8 +460,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         return(loglike)
       }
 
-      lower_bounds <- c(rep(min_tph, n_rep), rep(0.0001, hnc - 1), rep(0.0001, hnc))
-      upper_bounds <- c(rep(max_tph, n_rep), rep(0.9999, hnc - 1), rep(1, hnc))
+      lower_bounds <- c(rep(0, n_rep), rep(0.0001, hnc - 1), rep(0.0001, hnc))
+      upper_bounds <- c(rep(1, n_rep), rep(0.9999, hnc - 1), rep(1, hnc))
 
       # Perform simulated annealing
       current_opt <- NULL
@@ -482,7 +474,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       repeat{
         count_mle <- count_mle + 1
 
-        init_list[[count_mle]] <- init <- generate_init_deconvo_mix(n_rep, tph_mean, tph_sd, hnc)
+        init_list[[count_mle]] <- init <- generate_init_deconvo_mix(n_rep, hnc)
 
         opt <- GenSA(
           par = init,
@@ -522,7 +514,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
       # Extract estimated parameters
       est_params <- current_opt$par
-      tph <- est_params[1:n_rep]
+      tph <- est_params[1:n_rep] * (tph_upper - tph_lower) + tph_lower
       if(hnc == 1){
         mp <- 1
         deg <- est_params[n_rep + 1]

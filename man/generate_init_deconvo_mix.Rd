@@ -4,14 +4,10 @@
 \alias{generate_init_deconvo_mix}
 \title{generate_init_deconvo_mix}
 \usage{
-generate_init_deconvo_mix(n_rep, tph_mean, tph_sd, hnc)
+generate_init_deconvo_mix(n_rep, hnc)
 }
 \arguments{
 \item{n_rep}{The number of replicates}
-
-\item{tph_mean}{The mean value for the parameter 'tph'}
-
-\item{tph_sd}{The SD value for the parameter 'tph'}
 
 \item{hnc}{The assumed number of contributors}
 }

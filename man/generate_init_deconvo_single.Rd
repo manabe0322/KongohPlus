@@ -4,14 +4,10 @@
 \alias{generate_init_deconvo_single}
 \title{generate_init_deconvo_single}
 \usage{
-generate_init_deconvo_single(n_rep, tph_mean, tph_sd)
+generate_init_deconvo_single(n_rep)
 }
 \arguments{
 \item{n_rep}{The number of replicates}
-
-\item{tph_mean}{The mean value for the parameter 'tph'}
-
-\item{tph_sd}{The SD value for the parameter 'tph'}
 
 \item{hnc}{The assumed number of contributors}
 }
