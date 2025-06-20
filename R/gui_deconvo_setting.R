@@ -74,8 +74,9 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$theta <- 0
       rv_deconvo_setting$fn_anameth <- ""
       rv_deconvo_setting$dt_anameth <- NULL
-      rv_deconvo_setting$max_iter <- 500
-      rv_deconvo_setting$num_converged_solutions <- 3
+      rv_deconvo_setting$stop_iter <- 500
+      rv_deconvo_setting$max_iter <- 5000
+      rv_deconvo_setting$num_converged <- 3
       rv_deconvo_setting$max_mle_runs <- 10
       rv_deconvo_setting$bool_correct_noc <- TRUE
       rv_deconvo_setting$bool_correct_theta <- TRUE
@@ -287,9 +288,10 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         showModal(modalDialog(
           title = "Advanced setting",
           h4("MLE conditions"),
-          numericInput(session$ns("max_iter"), label = "Number of iterations", value = rv_deconvo_setting$max_iter),
-          numericInput(session$ns("num_converged_solutions"), label = "The number of converged solutions required to terminate the MLE", value = rv_deconvo_setting$num_converged_solutions),
-          numericInput(session$ns("max_mle_runs"), label = "The maximum number of MLE attempts with different initial values", value = rv_deconvo_setting$max_mle_runs),
+          numericInput(session$ns("stop_iter"), label = "Number of iterations without improvement before stopping one MLE run", value = rv_deconvo_setting$stop_iter),
+          numericInput(session$ns("max_iter"), label = "Maximum number of iterations in one MLE run", value = rv_deconvo_setting$max_iter),
+          numericInput(session$ns("num_converged"), label = "Number of converged MLE runs before stopping", value = rv_deconvo_setting$num_converged),
+          numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_deconvo_setting$max_mle_runs),
           footer = tagList(
             actionButton(session$ns("act_advance_deconvo_save"), "Save"),
             modalButton("Cancel")
@@ -298,14 +300,27 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         ))
       })
 
-      observeEvent(input$max_iter, {
+      observeEvent(input$stop_iter | input$max_iter, {
+        stop_iter <- input$stop_iter
         max_iter <- input$max_iter
 
+        hideFeedback("stop_iter")
         hideFeedback("max_iter")
         bool_correct_advanced_1 <- TRUE
 
+        if(!is.integer(stop_iter) || stop_iter <= 0){
+          showFeedbackDanger(inputId = "stop_iter", text = "Value must be an integer greater than zero.")
+          bool_correct_advanced_1 <- FALSE
+        }
+
         if(!is.integer(max_iter) || max_iter <= 0){
           showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
+          bool_correct_advanced_1 <- FALSE
+        }
+
+        if(is.integer(stop_iter) && is.integer(max_iter) && stop_iter > max_iter){
+          showFeedbackDanger(inputId = "stop_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
+          showFeedbackDanger(inputId = "max_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
           bool_correct_advanced_1 <- FALSE
         }
 
@@ -318,16 +333,16 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         }
       })
 
-      observeEvent(input$num_converged_solutions | input$max_mle_runs, {
-        num_converged_solutions <- input$num_converged_solutions
+      observeEvent(input$num_converged | input$max_mle_runs, {
+        num_converged <- input$num_converged
         max_mle_runs <- input$max_mle_runs
 
-        hideFeedback("num_converged_solutions")
+        hideFeedback("num_converged")
         hideFeedback("max_mle_runs")
         bool_correct_advanced_2 <- TRUE
 
-        if(!is.integer(num_converged_solutions) || num_converged_solutions <= 0){
-          showFeedbackDanger(inputId = "num_converged_solutions", text = "Value must be an integer greater than zero.")
+        if(!is.integer(num_converged) || num_converged <= 0){
+          showFeedbackDanger(inputId = "num_converged", text = "Value must be an integer greater than zero.")
           bool_correct_advanced_2 <- FALSE
         }
 
@@ -336,9 +351,9 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           bool_correct_advanced_2 <- FALSE
         }
 
-        if(is.integer(num_converged_solutions) && is.integer(max_mle_runs) && num_converged_solutions > max_mle_runs){
-          showFeedbackDanger(inputId = "num_converged_solutions", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
-          showFeedbackDanger(inputId = "max_mle_runs", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
+        if(is.integer(num_converged) && is.integer(max_mle_runs) && num_converged > max_mle_runs){
+          showFeedbackDanger(inputId = "num_converged", text = "Number of converged MLE runs must not exceed maximum number of MLE attempts.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "Number of converged MLE runs must not exceed maximum number of MLE attempts.")
           bool_correct_advanced_2 <- FALSE
         }
 
@@ -352,8 +367,9 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       })
 
       observeEvent(input$act_advance_deconvo_save, {
+        rv_deconvo_setting$stop_iter <- input$stop_iter
         rv_deconvo_setting$max_iter <- input$max_iter
-        rv_deconvo_setting$num_converged_solutions <- input$num_converged_solutions
+        rv_deconvo_setting$num_converged <- input$num_converged
         rv_deconvo_setting$max_mle_runs <- input$max_mle_runs
         removeModal()
       })
@@ -371,8 +387,9 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         dt_af <- rv_deconvo_setting$dt_af
         fn_anameth <- rv_deconvo_setting$fn_anameth
         dt_anameth <- rv_deconvo_setting$dt_anameth
+        stop_iter <- rv_deconvo_setting$stop_iter
         max_iter <- rv_deconvo_setting$max_iter
-        num_converged_solutions <- rv_deconvo_setting$num_converged_solutions
+        num_converged <- rv_deconvo_setting$num_converged
         max_mle_runs <- rv_deconvo_setting$max_mle_runs
 
         # Extract information on the kit
@@ -398,7 +415,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
           }else{
             hnc_all <- hnc_from:hnc_to
-            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta, max_iter, num_converged_solutions, max_mle_runs)
+            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
+                                                    stop_iter, max_iter, num_converged, max_mle_runs)
             data_deconvo$hnc_all <- hnc_all
             data_deconvo$theta <- theta
             data_deconvo$dt_csp <- dt_csp
@@ -411,8 +429,9 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             data_deconvo$dt_ignore_mk <- dt_ignore_mk
             data_deconvo$list_dt_average_sr <- list_dt_average_sr
             data_deconvo$message_sr <- message_sr
+            data_deconvo$stop_iter <- stop_iter
             data_deconvo$max_iter <- max_iter
-            data_deconvo$num_converged_solutions <- num_converged_solutions
+            data_deconvo$num_converged <- num_converged
             data_deconvo$max_mle_runs <- max_mle_runs
             rv_deconvo$data_deconvo <- data_deconvo
 

@@ -114,19 +114,21 @@ calc_ave_het_ph_all_data <- function(height_list){
 #' @param prop_ae_data_use A matrix of the proportion of the amplification efficiencies (only data used for MCMC)
 #' @param min_alpha The minimum alpha
 #' @param max_alpha The maximum alpha
-#' @param max_iter The number of iterations for GenSA
-#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
-#' @param max_mle_runs The maximum number of MLE attempts with different initial values
-run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_converged_solutions, max_mle_runs){
+#' @param stop_iter Number of iterations without improvement before stopping one MLE run
+#' @param max_iter Maximum number of iterations in one MLE run
+#' @param num_converged Number of converged MLE runs before stopping
+#' @param max_mle_runs Maximum number of MLE attempts
+run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs){
 
   # Likelihood function for the locus-specific amplification efficiency
   like_fun_ae <- function(par){
+    alpha <- par * (max_alpha - min_alpha) + min_alpha
 
     n_data <- ncol(prop_ae_data_use)
     dens <- rep(Inf, n_data)
 
     for(i in 1:n_data){
-      dens[i] <- ddirichlet(prop_ae_data_use[, i], par)
+      dens[i] <- ddirichlet(prop_ae_data_use[, i], alpha)
     }
 
     loglike <- - sum(log(dens))
@@ -139,8 +141,8 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_con
   }
 
   n_mk <- nrow(prop_ae_data_use)
-  lower_bounds <- rep(min_alpha, n_mk)
-  upper_bounds <- rep(max_alpha, n_mk)
+  lower_bounds <- rep(0, n_mk)
+  upper_bounds <- rep(1, n_mk)
 
   # Perform simulated annealing
   current_opt <- NULL
@@ -149,18 +151,18 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_con
   count_mle <- 0
   count_solution <- 0
   init_list <- list()
-  record_accept <- rep(NA, max_mle_runs)
+  opt_list <- list()
   repeat{
     count_mle <- count_mle + 1
 
     init_list[[count_mle]] <- init <- rdirichlet(1, rep(1, n_mk))
 
-    opt <- GenSA(
+    opt_list[[count_mle]] <- opt <- GenSA(
       par = init,
       fn = like_fun_ae,
       lower = lower_bounds,
       upper = upper_bounds,
-      control = list(verbose = TRUE, maxit = max_iter)
+      control = list(verbose = TRUE, nb.stop.improvement = stop_iter, maxit = max_iter)
     )
 
     score <- opt$value
@@ -176,9 +178,8 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_con
     }else if(score_round == current_score_round){
       count_solution <- count_solution + 1
     }
-    record_accept[count_mle] <- count_solution
 
-    if(count_solution == num_converged_solutions){
+    if(count_solution == num_converged){
       break
     }else if(count_mle == max_mle_runs){
       current_opt <- NULL
@@ -188,13 +189,13 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_con
 
   # Extract parameters
   if(!is.null(current_opt)){
-    est_param <- current_opt$par
+    est_param <- current_opt$par * (max_alpha - min_alpha) + min_alpha
   }else{
     est_param <- rep(NA, n_mk)
   }
   names(est_param) <- paste0("alpha[", 1:n_mk, "]")
 
-  return(est_param)
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list))
 }
 
 #' calc_relative_ph
@@ -427,14 +428,15 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
 #' @param max_cv_allele The maximum CV for alleles
 #' @param min_cv_stutter The minimum CV for stutters
 #' @param max_cv_stutter The maximum CV for stutters
-#' @param max_iter The number of iterations for GenSA
-#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
-#' @param max_mle_runs The maximum number of MLE attempts with different initial values
-run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, max_iter, num_converged_solutions, max_mle_runs){
+#' @param stop_iter Number of iterations without improvement before stopping one MLE run
+#' @param max_iter Maximum number of iterations in one MLE run
+#' @param num_converged Number of converged MLE runs before stopping
+#' @param max_mle_runs Maximum number of MLE attempts
+run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, stop_iter, max_iter, num_converged, max_mle_runs){
 
   like_func_gamma <- function(par){
-    cv_allele_squared <- par[1]^2
-    cv_stutter_squared <- par[2]^2
+    cv_allele_squared <- (par[1] * (max_cv_allele - min_cv_allele) + min_cv_allele)^2
+    cv_stutter_squared <- (par[2] * (max_cv_stutter - min_cv_stutter) + min_cv_stutter)^2
 
     n_data <- length(tphs_gamma)
     dens <- rep(Inf, n_data)
@@ -473,8 +475,8 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
     return(loglike)
   }
 
-  lower_bounds <- c(min_cv_allele, min_cv_stutter)
-  upper_bounds <- c(max_cv_allele, max_cv_stutter)
+  lower_bounds <- c(0, 0)
+  upper_bounds <- c(1, 1)
 
   # Perform simulated annealing
   current_opt <- NULL
@@ -483,18 +485,18 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
   count_mle <- 0
   count_solution <- 0
   init_list <- list()
-  record_accept <- rep(NA, max_mle_runs)
+  opt_list <- list()
   repeat{
     count_mle <- count_mle + 1
 
     init_list[[count_mle]] <- init <- c(runif(1, min = min_cv_allele, max = max_cv_allele), runif(1, min = min_cv_stutter, max = max_cv_stutter))
 
-    opt <- GenSA(
+    opt_list[[count_mle]] <- opt <- GenSA(
       par = init,
       fn = like_func_gamma,
       lower = lower_bounds,
       upper = upper_bounds,
-      control = list(verbose = TRUE, maxit = max_iter)
+      control = list(verbose = TRUE, nb.stop.improvement = stop_iter, maxit = max_iter)
     )
 
     score <- opt$value
@@ -510,9 +512,8 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
     }else if(score_round == current_score_round){
       count_solution <- count_solution + 1
     }
-    record_accept[count_mle] <- count_solution
 
-    if(count_solution == num_converged_solutions){
+    if(count_solution == num_converged){
       break
     }else if(count_mle == max_mle_runs){
       current_opt <- NULL
@@ -521,14 +522,15 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
   }
 
   # Extract parameters
-  if(!is.null(current_opt)){
-    est_param <- current_opt$par
-  }else{
-    est_param <- rep(NA, 2)
-  }
+  est_param <- rep(NA, 2)
   names(est_param) <- c("cv_allele", "cv_stutter")
+  if(!is.null(current_opt)){
+    tmp <- current_opt$par
+    est_param[1] <- tmp[1] * (max_cv_allele - min_cv_allele) + min_cv_allele
+    est_param[2] <- tmp[2] * (max_cv_stutter - min_cv_stutter) + min_cv_stutter
+  }
 
-  return(est_param)
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list))
 }
 
 #' estimate_parameters
@@ -544,13 +546,14 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
 #' @param max_cv_allele The maximum CV for alleles
 #' @param min_cv_stutter The minimum CV for stutters
 #' @param max_cv_stutter The maximum CV for stutters
-#' @param max_iter The number of iterations for GenSA
-#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
-#' @param max_mle_runs The maximum number of MLE attempts with different initial values
+#' @param stop_iter Number of iterations without improvement before stopping one MLE run
+#' @param max_iter Maximum number of iterations in one MLE run
+#' @param num_converged Number of converged MLE runs before stopping
+#' @param max_mle_runs Maximum number of MLE attempts
 estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
                                 min_alpha, max_alpha,
                                 min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter,
-                                max_iter, num_converged_solutions, max_mle_runs){
+                                stop_iter, max_iter, num_converged, max_mle_runs){
   # Extract information on setting
   markers_auto <- dt_setting_est_par$Marker
   n_mk_auto <- length(markers_auto)
@@ -582,7 +585,10 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   prop_ae_data_use <- prop_ae_data[, which(apply(prop_ae_data, 2, prod) > 0), drop = FALSE]
 
   # Perform MCMC for AE
-  alpha <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_converged_solutions, max_mle_runs)
+  tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs)
+  alpha <- tmp$est_param
+  init_list_ae <- tmp$init_list
+  opt_list_ae <- tmp$opt_list
 
   if(any(is.na(alpha))){
     cv_allele <- cv_stutter <- NA
@@ -603,13 +609,20 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     ats_gamma <- tmp$ats_gamma
 
     # Perform MCMC for gamma distribution
-    tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, max_iter, num_converged_solutions, max_mle_runs)
-    cv_allele <- tmp["cv_allele"]
-    cv_stutter <- tmp["cv_stutter"]
+    tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, stop_iter, max_iter, num_converged, max_mle_runs)
+    est_param <- tmp$est_param
+    cv_allele <- est_param["cv_allele"]
+    cv_stutter <- est_param["cv_stutter"]
+    init_list_gamma <- tmp$init_list
+    opt_list_gamma <- tmp$opt_list
   }
 
   return(list("alpha" = alpha,
               "expect_ae" = expect_ae,
+              "init_list_ae" = init_list_ae,
+              "opt_list_ae" = opt_list_ae,
               "cv_allele" = cv_allele,
-              "cv_stutter" = cv_stutter))
+              "cv_stutter" = cv_stutter,
+              "init_list_gamma" = init_list_gamma,
+              "opt_list_gamma" = opt_list_gamma))
 }

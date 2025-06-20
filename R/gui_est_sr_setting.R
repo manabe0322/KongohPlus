@@ -98,8 +98,9 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       rv_est_sr$max_myu <- 1
       rv_est_sr$min_sigma <- 1
       rv_est_sr$max_sigma <- 10000
-      rv_est_sr$max_iter <- 500
-      rv_est_sr$num_converged_solutions <- 3
+      rv_est_sr$stop_iter <- 500
+      rv_est_sr$max_iter <- 5000
+      rv_est_sr$num_converged <- 3
       rv_est_sr$max_mle_runs <- 10
       rv_est_sr$bool_correct_mle_slope <- TRUE
       rv_est_sr$bool_correct_mle_intercept <- TRUE
@@ -159,15 +160,17 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
                    numericInput(session$ns("min_intercept"), label = "Minimum intercept", value = rv_est_sr$min_intercept),
                    numericInput(session$ns("min_myu"), label = "Minimum myu", value = rv_est_sr$min_myu),
                    numericInput(session$ns("min_sigma"), label = "Minimum sigma", value = rv_est_sr$min_sigma),
-                   numericInput(session$ns("max_iter"), label = "Number of iterations", value = rv_est_sr$max_iter),
-                   numericInput(session$ns("max_mle_runs"), label = "The maximum number of MLE attempts with different initial values", value = rv_est_sr$max_mle_runs)
+                   numericInput(session$ns("stop_iter"), label = "Number of iterations without improvement before stopping one MLE run", value = rv_est_sr$stop_iter),
+                   numericInput(session$ns("num_converged"), label = "Number of converged MLE runs before stopping", value = rv_est_sr$num_converged)
+
             ),
             column(6,
                    numericInput(session$ns("max_slope"), label = "Maximum slope", value = rv_est_sr$max_slope),
                    numericInput(session$ns("max_intercept"), label = "Maximum intercept", value = rv_est_sr$max_intercept),
                    numericInput(session$ns("max_myu"), label = "Maximum myu", value = rv_est_sr$max_myu),
                    numericInput(session$ns("max_sigma"), label = "Maximum sigma", value = rv_est_sr$max_sigma),
-                   numericInput(session$ns("num_converged_solutions"), label = "The number of converged solutions required to terminate the MLE", value = rv_est_sr$num_converged_solutions)
+                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations in one MLE run", value = rv_est_sr$max_iter),
+                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_sr$max_mle_runs)
             )
           ),
           footer = tagList(
@@ -278,30 +281,43 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         }
       })
 
-      observeEvent(input$max_iter, {
+      observeEvent(input$stop_iter | input$max_iter, {
+        stop_iter <- input$stop_iter
         max_iter <- input$max_iter
 
+        hideFeedback("stop_iter")
         hideFeedback("max_iter")
         bool_correct_advanced_1 <- TRUE
+
+        if(!is.integer(stop_iter) || stop_iter <= 0){
+          showFeedbackDanger(inputId = "stop_iter", text = "Value must be an integer greater than zero.")
+          bool_correct_advanced_1 <- FALSE
+        }
 
         if(!is.integer(max_iter) || max_iter <= 0){
           showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
           bool_correct_advanced_1 <- FALSE
         }
 
+        if(is.integer(stop_iter) && is.integer(max_iter) && stop_iter > max_iter){
+          showFeedbackDanger(inputId = "stop_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
+          showFeedbackDanger(inputId = "max_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
+          bool_correct_advanced_1 <- FALSE
+        }
+
         rv_est_sr$bool_correct_advanced_1 <- bool_correct_advanced_1
       })
 
-      observeEvent(input$num_converged_solutions | input$max_mle_runs, {
-        num_converged_solutions <- input$num_converged_solutions
+      observeEvent(input$num_converged | input$max_mle_runs, {
+        num_converged <- input$num_converged
         max_mle_runs <- input$max_mle_runs
 
-        hideFeedback("num_converged_solutions")
+        hideFeedback("num_converged")
         hideFeedback("max_mle_runs")
         bool_correct_advanced_2 <- TRUE
 
-        if(!is.integer(num_converged_solutions) || num_converged_solutions <= 0){
-          showFeedbackDanger(inputId = "num_converged_solutions", text = "Value must be an integer greater than zero.")
+        if(!is.integer(num_converged) || num_converged <= 0){
+          showFeedbackDanger(inputId = "num_converged", text = "Value must be an integer greater than zero.")
           bool_correct_advanced_2 <- FALSE
         }
 
@@ -310,8 +326,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           bool_correct_advanced_2 <- FALSE
         }
 
-        if(is.integer(num_converged_solutions) && is.integer(max_mle_runs) && num_converged_solutions > max_mle_runs){
-          showFeedbackDanger(inputId = "num_converged_solutions", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
+        if(is.integer(num_converged) && is.integer(max_mle_runs) && num_converged > max_mle_runs){
+          showFeedbackDanger(inputId = "num_converged", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
           showFeedbackDanger(inputId = "max_mle_runs", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
           bool_correct_advanced_2 <- FALSE
         }
@@ -343,8 +359,9 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         rv_est_sr$max_myu <- input$max_myu
         rv_est_sr$min_sigma <- input$min_sigma
         rv_est_sr$max_sigma <- input$max_sigma
+        rv_est_sr$stop_iter <- input$stop_iter
         rv_est_sr$max_iter <- input$max_iter
-        rv_est_sr$num_converged_solutions <- input$num_converged_solutions
+        rv_est_sr$num_converged <- input$num_converged
         rv_est_sr$max_mle_runs <- input$max_mle_runs
         removeModal()
       })
@@ -375,8 +392,9 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         max_myu <- rv_est_sr$max_myu
         min_sigma <- rv_est_sr$min_sigma
         max_sigma <- rv_est_sr$max_sigma
+        stop_iter <- rv_est_sr$stop_iter
         max_iter <- rv_est_sr$max_iter
-        num_converged_solutions <- rv_est_sr$num_converged_solutions
+        num_converged <- rv_est_sr$num_converged
         max_mle_runs <- rv_est_sr$max_mle_runs
 
         error_message <- check_est_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr)
@@ -384,7 +402,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           rv_est_sr$data_est_sr <- estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr,
-                                                       min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, max_iter, num_converged_solutions, max_mle_runs)
+                                                       min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
+                                                       stop_iter, max_iter, num_converged, max_mle_runs)
 
           updateTabsetPanel(session = session_est_sr_top, inputId = "tabset_est_sr", selected = "Result")
         }

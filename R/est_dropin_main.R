@@ -50,13 +50,17 @@ generate_init_sobol_dropin <- function(x, min_shape_di, max_shape_di, min_rate_d
 #' @param max_shape_di The maximum shape
 #' @param min_rate_di The minimum rate
 #' @param max_rate_di The maximum rate
-#' @param max_iter The number of iterations for GenSA
-#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
-#' @param max_mle_runs The maximum number of MLE attempts with different initial values
-run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_rate_di, max_rate_di, max_iter, num_converged_solutions, max_mle_runs){
+#' @param stop_iter Number of iterations without improvement before stopping one MLE run
+#' @param max_iter Maximum number of iterations in one MLE run
+#' @param num_converged Number of converged MLE runs before stopping
+#' @param max_mle_runs Maximum number of MLE attempts
+run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_rate_di, max_rate_di, stop_iter, max_iter, num_converged, max_mle_runs){
 
   like_func_dropin <- function(par){
-    dens <- dgamma(heights, shape = par[1], rate = par[2])
+    shape_di <- par[1] * (max_shape_di - min_shape_di) + min_shape_di
+    rate_di <- par[2] * (max_rate_di - min_rate_di) + min_rate_di
+
+    dens <- dgamma(heights, shape = shape_di, rate = rate_di)
     loglike <- - sum(log(dens))
 
     if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
@@ -66,8 +70,8 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_ra
     return(loglike)
   }
 
-  lower_bounds <- c(min_shape_di, min_rate_di)
-  upper_bounds <- c(max_shape_di, max_rate_di)
+  lower_bounds <- c(0, 0)
+  upper_bounds <- c(1, 1)
 
   # Perform simulated annealing
   current_opt <- NULL
@@ -76,13 +80,13 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_ra
   count_mle <- 0
   count_solution <- 0
   init_list <- list()
-  record_accept <- rep(NA, max_mle_runs)
+  opt_list <- list()
   repeat{
     count_mle <- count_mle + 1
 
     init_list[[count_mle]] <- init <- c(runif(1, min = min_shape_di, max = max_shape_di), runif(1, min = min_rate_di, max = max_rate_di))
 
-    opt <- GenSA(
+    opt_list[[count_mle]] <- opt <- GenSA(
       par = init,
       fn = like_func_dropin,
       lower = lower_bounds,
@@ -103,9 +107,8 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_ra
     }else if(score_round == current_score_round){
       count_solution <- count_solution + 1
     }
-    record_accept[count_mle] <- count_solution
 
-    if(count_solution == num_converged_solutions){
+    if(count_solution == num_converged){
       break
     }else if(count_mle == max_mle_runs){
       current_opt <- NULL
@@ -114,14 +117,15 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_ra
   }
 
   # Extract parameters
-  if(!is.null(current_opt)){
-    est_param <- current_opt$par
-  }else{
-    est_param <- rep(NA, 2)
-  }
+  est_param <- rep(NA, 2)
   names(est_param) <- c("shape_di", "rate_di")
+  if(!is.null(current_opt)){
+    tmp <- current_opt$par
+    est_param[1] <- tmp[1] * (max_shape_di - min_shape_di) + min_shape_di
+    est_param[2] <- tmp[2] * (max_rate_di - min_rate_di) + min_rate_di
+  }
 
-  return(est_param)
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list))
 }
 
 #' estimate_dropin_params
@@ -134,10 +138,11 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_ra
 #' @param max_shape_di The maximum shape
 #' @param min_rate_di The minimum rate
 #' @param max_rate_di The maximum rate
-#' @param max_iter The number of iterations for GenSA
-#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
-#' @param max_mle_runs The maximum number of MLE attempts with different initial values
-estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, max_iter, num_converged_solutions, max_mle_runs){
+#' @param stop_iter Number of iterations without improvement before stopping one MLE run
+#' @param max_iter Maximum number of iterations in one MLE run
+#' @param num_converged Number of converged MLE runs before stopping
+#' @param max_mle_runs Maximum number of MLE attempts
+estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, stop_iter, max_iter, num_converged, max_mle_runs){
   # Extract autosomal markers
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers_auto <- unique(dt_kit_auto[, Marker])
@@ -153,9 +158,12 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
   n_sample <- length(unique(dt_ntc$SampleName))
 
   # Perform MLE
-  tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_rate_di, max_rate_di, max_iter, num_converged_solutions, max_mle_runs)
-  shape_di <- tmp["shape_di"]
-  rate_di <- tmp["rate_di"]
+  tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_rate_di, max_rate_di, stop_iter, max_iter, num_converged, max_mle_runs)
+  est_param <- tmp$est_param
+  shape_di <- est_param["shape_di"]
+  rate_di <- est_param["rate_di"]
+  init_list_di <- tmp$init_list
+  opt_list_di <- tmp$opt_list
 
   return(list("heights" = heights,
               "n_sample" = n_sample,
@@ -163,5 +171,7 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
               "n_dropin" = n_dropin,
               "freq_dropin" = n_dropin / (n_sample * n_mk),
               "shape_di" = shape_di,
-              "rate_di" = rate_di))
+              "rate_di" = rate_di,
+              "init_list_di" = init_list_di,
+              "opt_list_di" = opt_list_di))
 }

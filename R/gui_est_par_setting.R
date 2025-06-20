@@ -77,8 +77,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       rv_est_par$max_cv_allele <- 20
       rv_est_par$min_cv_stutter <- 0.01
       rv_est_par$max_cv_stutter <- 20
-      rv_est_par$max_iter <- 500
-      rv_est_par$num_converged_solutions <- 3
+      rv_est_par$stop_iter <- 500
+      rv_est_par$max_iter <- 5000
+      rv_est_par$num_converged <- 3
       rv_est_par$max_mle_runs <- 10
       rv_est_par$bool_correct_mle_alpha <- TRUE
       rv_est_par$bool_correct_mle_cv_allele <- TRUE
@@ -159,14 +160,15 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
                    numericInput(session$ns("min_alpha"), label = "Minimum alpha for LSAE", value = rv_est_par$min_alpha),
                    numericInput(session$ns("min_cv_allele"), label = "Minimum CV for alleles", value = rv_est_par$min_cv_allele),
                    numericInput(session$ns("min_cv_stutter"), label = "Minimum CV for stutters", value = rv_est_par$min_cv_stutter),
-                   numericInput(session$ns("max_iter"), label = "Number of iterations", value = rv_est_par$max_iter),
-                   numericInput(session$ns("max_mle_runs"), label = "The maximum number of MLE attempts with different initial values", value = rv_est_par$max_mle_runs)
+                   numericInput(session$ns("stop_iter"), label = "Number of iterations without improvement before stopping one MLE run", value = rv_est_par$stop_iter),
+                   numericInput(session$ns("num_converged"), label = "The number of converged solutions required to terminate the MLE", value = rv_est_par$num_converged)
             ),
             column(6,
                    numericInput(session$ns("max_alpha"), label = "Maximum alpha for LSAE", value = rv_est_par$max_alpha),
                    numericInput(session$ns("max_cv_allele"), label = "Maximum CV for alleles", value = rv_est_par$max_cv_allele),
                    numericInput(session$ns("max_cv_stutter"), label = "Maximum CV for stutters", value = rv_est_par$max_cv_stutter),
-                   numericInput(session$ns("num_converged_solutions"), label = "The number of converged solutions required to terminate the MLE", value = rv_est_par$num_converged_solutions)
+                   numericInput(session$ns("max_iter"), label = "Number of iterations", value = rv_est_par$max_iter),
+                   numericInput(session$ns("max_mle_runs"), label = "The maximum number of MLE attempts with different initial values", value = rv_est_par$max_mle_runs)
             )
           ),
           footer = tagList(
@@ -252,30 +254,43 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         }
       })
 
-      observeEvent(input$max_iter, {
+      observeEvent(input$stop_iter | input$max_iter, {
+        stop_iter <- input$stop_iter
         max_iter <- input$max_iter
 
+        hideFeedback("stop_iter")
         hideFeedback("max_iter")
         bool_correct_advanced_1 <- TRUE
+
+        if(!is.integer(stop_iter) || stop_iter <= 0){
+          showFeedbackDanger(inputId = "stop_iter", text = "Value must be an integer greater than zero.")
+          bool_correct_advanced_1 <- FALSE
+        }
 
         if(!is.integer(max_iter) || max_iter <= 0){
           showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
           bool_correct_advanced_1 <- FALSE
         }
 
+        if(is.integer(stop_iter) && is.integer(max_iter) && stop_iter > max_iter){
+          showFeedbackDanger(inputId = "stop_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
+          showFeedbackDanger(inputId = "max_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
+          bool_correct_advanced_1 <- FALSE
+        }
+
         rv_est_par$bool_correct_advanced_1 <- bool_correct_advanced_1
       })
 
-      observeEvent(input$num_converged_solutions | input$max_mle_runs, {
-        num_converged_solutions <- input$num_converged_solutions
+      observeEvent(input$num_converged | input$max_mle_runs, {
+        num_converged <- input$num_converged
         max_mle_runs <- input$max_mle_runs
 
-        hideFeedback("num_converged_solutions")
+        hideFeedback("num_converged")
         hideFeedback("max_mle_runs")
         bool_correct_advanced_2 <- TRUE
 
-        if(!is.integer(num_converged_solutions) || num_converged_solutions <= 0){
-          showFeedbackDanger(inputId = "num_converged_solutions", text = "Value must be an integer greater than zero.")
+        if(!is.integer(num_converged) || num_converged <= 0){
+          showFeedbackDanger(inputId = "num_converged", text = "Value must be an integer greater than zero.")
           bool_correct_advanced_2 <- FALSE
         }
 
@@ -284,8 +299,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           bool_correct_advanced_2 <- FALSE
         }
 
-        if(is.integer(num_converged_solutions) && is.integer(max_mle_runs) && num_converged_solutions > max_mle_runs){
-          showFeedbackDanger(inputId = "num_converged_solutions", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
+        if(is.integer(num_converged) && is.integer(max_mle_runs) && num_converged > max_mle_runs){
+          showFeedbackDanger(inputId = "num_converged", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
           showFeedbackDanger(inputId = "max_mle_runs", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
           bool_correct_advanced_2 <- FALSE
         }
@@ -314,8 +329,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         rv_est_par$max_cv_allele <- input$max_cv_allele
         rv_est_par$min_cv_stutter <- input$min_cv_stutter
         rv_est_par$max_cv_stutter <- input$max_cv_stutter
+        rv_est_par$stop_iter <- input$stop_iter
         rv_est_par$max_iter <- input$max_iter
-        rv_est_par$num_converged_solutions <- input$num_converged_solutions
+        rv_est_par$num_converged <- input$num_converged
         rv_est_par$max_mle_runs <- input$max_mle_runs
         removeModal()
       })
@@ -333,8 +349,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         max_cv_allele <- rv_est_par$max_cv_allele
         min_cv_stutter <- rv_est_par$min_cv_stutter
         max_cv_stutter <- rv_est_par$max_cv_stutter
+        stop_iter <- rv_est_par$stop_iter
         max_iter <- rv_est_par$max_iter
-        num_converged_solutions <- rv_est_par$num_converged_solutions
+        num_converged <- rv_est_par$num_converged
         max_mle_runs <- rv_est_par$max_mle_runs
 
         # Check input files and setting
@@ -345,7 +362,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           rv_est_par$data_est_par <- estimate_parameters(dt_exp_param, dt_gt_param, list_dt_average_sr, dt_setting_est_par,
                                                          min_alpha, max_alpha,
                                                          min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter,
-                                                         max_iter, num_converged_solutions, max_mle_runs)
+                                                         stop_iter, max_iter, num_converged, max_mle_runs)
 
           updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result")
         }

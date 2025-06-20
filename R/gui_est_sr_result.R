@@ -93,18 +93,27 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         max_myu <- rv_est_sr$max_myu
         min_sigma <- rv_est_sr$min_sigma
         max_sigma <- rv_est_sr$max_sigma
+        stop_iter <- rv_est_sr$stop_iter
         max_iter <- rv_est_sr$max_iter
-        num_converged_solutions <- rv_est_sr$num_converged_solutions
+        num_converged <- rv_est_sr$num_converged
         max_mle_runs <- rv_est_sr$max_mle_runs
 
         dt_result_est_bsr <- data_est_sr$dt_result_est_bsr
         list_dt_average_bsr <- data_est_sr$list_dt_average_bsr
+        init_list_all_mk_bsr <- data_est_sr$init_list_all_mk_bsr
+        opt_list_all_mk_bsr <- data_est_sr$opt_list_all_mk_bsr
         dt_result_est_fsr <- data_est_sr$dt_result_est_fsr
         list_dt_average_fsr <- data_est_sr$list_dt_average_fsr
+        init_list_all_mk_fsr <- data_est_sr$init_list_all_mk_fsr
+        opt_list_all_mk_fsr <- data_est_sr$opt_list_all_mk_fsr
         dt_result_est_dsr <- data_est_sr$dt_result_est_dsr
         list_dt_average_dsr <- data_est_sr$list_dt_average_dsr
+        init_list_all_mk_dsr <- data_est_sr$init_list_all_mk_dsr
+        opt_list_all_mk_dsr <- data_est_sr$opt_list_all_mk_dsr
         dt_result_est_m2sr <- data_est_sr$dt_result_est_m2sr
         list_dt_average_m2sr <- data_est_sr$list_dt_average_m2sr
+        init_list_all_mk_m2sr <- data_est_sr$init_list_all_mk_m2sr
+        opt_list_all_mk_m2sr <- data_est_sr$opt_list_all_mk_m2sr
 
         output$select_mk <- renderUI({
           ns <- session$ns
@@ -204,8 +213,10 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           list_dt_average_sr <- full_join_average_sr(list_dt_average_bsr, list_dt_average_fsr, list_dt_average_dsr, list_dt_average_m2sr)
 
           save(list = c("fn_exp_sr", "fn_gt_sr", "dt_setting_est_sr", "name_kit_stutter",
-                        "min_slope", "max_slope", "min_intercept", "max_intercept", "min_myu", "max_myu", "min_sigma", "max_sigma", "max_iter", "num_converged_solutions", "max_mle_runs",
-                        "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr", "list_dt_average_sr"),
+                        "min_slope", "max_slope", "min_intercept", "max_intercept", "min_myu", "max_myu", "min_sigma", "max_sigma",
+                        "stop_iter", "max_iter", "num_converged", "max_mle_runs",
+                        "dt_result_est_bsr", "dt_result_est_fsr", "dt_result_est_dsr", "dt_result_est_m2sr", "list_dt_average_sr",
+                        "init_list_all_mk_bsr", "opt_list_all_mk_bsr", "init_list_all_mk_fsr", "opt_list_all_mk_fsr", "init_list_all_mk_dsr", "opt_list_all_mk_dsr", "init_list_all_mk_m2sr", "opt_list_all_mk_m2sr"),
                file = paste0(path_pack, "/extdata/stutter/", fn_est_sr, ".RData"))
 
           removeModal()

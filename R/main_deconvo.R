@@ -116,15 +116,16 @@ make_dt_pg_list <- function(markers_use, label_contrib, gtc_use, gtc_logprob_use
 #' @param cv_allele The coefficient of variation for allelels
 #' @param cv_stutter The coefficient of variation for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
-#' @param max_iter The number of iterations for GenSA
-#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
-#' @param max_mle_runs The maximum number of MLE attempts with different initial values
+#' @param stop_iter Number of iterations without improvement before stopping one MLE run
+#' @param max_iter Maximum number of iterations in one MLE run
+#' @param num_converged Number of converged MLE runs before stopping
+#' @param max_mle_runs Maximum number of MLE attempts
 perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                             pop_al_list, pop_prob_list, theta,
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, rate_di,
                             ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                            max_iter, num_converged_solutions, max_mle_runs){
+                            stop_iter, max_iter, num_converged, max_mle_runs){
 
   # --- Start computation --- #
 
@@ -391,17 +392,19 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       current_score_round <- Inf
       count_mle <- 0
       count_solution <- 0
+      init_list <- list()
+      opt_list <- list()
       repeat{
         count_mle <- count_mle + 1
 
-        init <- generate_init_deconvo_single(n_rep)
+        init_list[[count_mle]] <- init <- generate_init_deconvo_single(n_rep)
 
-        opt <- GenSA(
+        opt_list[[count_mle]] <- opt <- GenSA(
           par = init,
           fn = like_func_single,
           lower = lower_bounds,
           upper = upper_bounds,
-          control = list(verbose = TRUE, maxit = max_iter)
+          control = list(verbose = TRUE, nb.stop.improvement = stop_iter, maxit = max_iter)
         )
 
         score <- opt$value
@@ -417,9 +420,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         }else if(score_round == current_score_round){
           count_solution <- count_solution + 1
         }
-        record_accept[count_mle] <- count_solution
 
-        if(count_solution == num_converged_solutions){
+        if(count_solution == num_converged){
           break
         }else if(count_mle == max_mle_runs){
           break
@@ -470,18 +472,18 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       count_mle <- 0
       count_solution <- 0
       init_list <- list()
-      record_accept <- rep(NA, max_mle_runs)
+      opt_list <- list()
       repeat{
         count_mle <- count_mle + 1
 
         init_list[[count_mle]] <- init <- generate_init_deconvo_mix(n_rep, hnc)
 
-        opt <- GenSA(
+        opt_list[[count_mle]] <- opt <- GenSA(
           par = init,
           fn = like_func_mix,
           lower = lower_bounds,
           upper = upper_bounds,
-          control = list(verbose = TRUE, maxit = max_iter)
+          control = list(verbose = TRUE, nb.stop.improvement = stop_iter, maxit = max_iter)
         )
 
         score <- opt$value
@@ -497,9 +499,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         }else if(score_round == current_score_round){
           count_solution <- count_solution + 1
         }
-        record_accept[count_mle] <- count_solution
 
-        if(count_solution == num_converged_solutions){
+        if(count_solution == num_converged){
           break
         }else if(count_mle == max_mle_runs){
           current_opt <- NULL
@@ -563,7 +564,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                   "logprob_di_use" = logprob_di_use,
                   "comp_time" = comp_time,
                   "init_list" = init_list,
-                  "record_accept" = record_accept,
+                  "opt_list" = opt_list,
                   "error_message" = NULL))
 
     }else{
@@ -574,7 +575,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                   "logprob_di_use" = NULL,
                   "comp_time" = NULL,
                   "init_list" = NULL,
-                  "record_accept" = NULL,
+                  "opt_list" = NULL,
                   "error_message" = error_message))
     }
   }else{
@@ -594,7 +595,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                 "logprob_di_use" = NULL,
                 "comp_time" = NULL,
                 "init_list" = NULL,
-                "record_accept" = NULL,
+                "opt_list" = NULL,
                 "error_message" = error_message))
   }
 }
@@ -610,10 +611,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc_all A vector of the assumed number of contributors
 #' @param theta The theta value for sub-population effect
-#' @param max_iter The number of iterations for GenSA
-#' @param num_converged_solutions The number of converged solutions required to terminate the MLE
-#' @param max_mle_runs The maximum number of MLE attempts with different initial values
-perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta, max_iter, num_converged_solutions, max_mle_runs){
+#' @param stop_iter Number of iterations without improvement before stopping one MLE run
+#' @param max_iter Maximum number of iterations in one MLE run
+#' @param num_converged Number of converged MLE runs before stopping
+#' @param max_mle_runs Maximum number of MLE attempts
+perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
+                                    stop_iter, max_iter, num_converged, max_mle_runs){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
   if(n_mk != 0){
@@ -669,7 +672,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, rate_di,
                                       ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                                      max_iter, num_converged_solutions, max_mle_runs))
+                                      stop_iter, max_iter, num_converged, max_mle_runs))
       if(!inherits(data_hnc, "try-error")){
         data_hnc_list[[i]] <- data_hnc
       }else{
@@ -679,7 +682,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                    "logprob_di_use" = NULL,
                                    "comp_time" = NULL,
                                    "init_list" = NULL,
-                                   "record_accept" = NULL,
+                                   "opt_list" = NULL,
                                    "error_message" = "Unexpected error")
       }
     }

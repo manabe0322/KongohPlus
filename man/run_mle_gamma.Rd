@@ -13,8 +13,9 @@ run_mle_gamma(
   max_cv_allele,
   min_cv_stutter,
   max_cv_stutter,
+  stop_iter,
   max_iter,
-  num_converged_solutions,
+  num_converged,
   max_mle_runs
 )
 }
@@ -35,11 +36,13 @@ run_mle_gamma(
 
 \item{max_cv_stutter}{The maximum CV for stutters}
 
-\item{max_iter}{The number of iterations for GenSA}
+\item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
 
-\item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
+\item{max_iter}{Maximum number of iterations in one MLE run}
 
-\item{max_mle_runs}{The maximum number of MLE attempts with different initial values}
+\item{num_converged}{Number of converged MLE runs before stopping}
+
+\item{max_mle_runs}{Maximum number of MLE attempts}
 }
 \description{
 The function to perform MLE for the gamma model

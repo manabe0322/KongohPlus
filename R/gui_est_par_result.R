@@ -51,13 +51,19 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         max_cv_allele <- rv_est_par$max_cv_allele
         min_cv_stutter <- rv_est_par$min_cv_stutter
         max_cv_stutter <- rv_est_par$max_cv_stutter
+        stop_iter <- rv_est_par$stop_iter
         max_iter <- rv_est_par$max_iter
-        num_converged_solutions <- rv_est_par$num_converged_solutions
+        num_converged <- rv_est_par$num_converged
         max_mle_runs <- rv_est_par$max_mle_runs
+
         alpha <- data_est_par$alpha
         expect_ae <- data_est_par$expect_ae
+        init_list_ae <- data_est_par$init_list_ae
+        opt_list_ae <- data_est_par$opt_list_ae
         cv_allele <- data_est_par$cv_allele
         cv_stutter <- data_est_par$cv_stutter
+        init_list_gamma <- data_est_par$init_list_gamma
+        opt_list_gamma <- data_est_par$opt_list_gamma
 
         observeEvent(input$act_saveas_est_par_1, {
           showModal(modalDialog(
@@ -88,8 +94,9 @@ est_par_result_server <- function(id, path_pack, rv_est_par){
         observeEvent(input$act_saveas_est_par_2, {
           fn_est_par <- input$fn_est_par
 
-          save(list = c("fn_exp_param", "fn_gt_param", "dt_setting_est_par", "list_dt_average_sr", "name_kit_param", "name_sr", "alpha", "expect_ae", "cv_allele", "cv_stutter",
-                        "min_alpha", "max_alpha", "min_cv_allele", "max_cv_allele", "min_cv_stutter", "max_cv_stutter", "max_iter", "num_converged_solutions", "max_mle_runs"),
+          save(list = c("fn_exp_param", "fn_gt_param", "dt_setting_est_par", "list_dt_average_sr", "name_kit_param", "name_sr",
+                        "alpha", "expect_ae", "init_list_ae", "opt_list_ae", "cv_allele", "cv_stutter", "init_list_gamma", "opt_list_gamma",
+                        "min_alpha", "max_alpha", "min_cv_allele", "max_cv_allele", "min_cv_stutter", "max_cv_stutter", "stop_iter", "max_iter", "num_converged", "max_mle_runs"),
                file = paste0(path_pack, "/extdata/param/", fn_est_par, ".RData"))
 
           removeModal()

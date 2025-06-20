@@ -8,8 +8,9 @@ run_mle_ae(
   prop_ae_data_use,
   min_alpha,
   max_alpha,
+  stop_iter,
   max_iter,
-  num_converged_solutions,
+  num_converged,
   max_mle_runs
 )
 }
@@ -20,11 +21,13 @@ run_mle_ae(
 
 \item{max_alpha}{The maximum alpha}
 
-\item{max_iter}{The number of iterations for GenSA}
+\item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
 
-\item{num_converged_solutions}{The number of converged solutions required to terminate the MLE}
+\item{max_iter}{Maximum number of iterations in one MLE run}
 
-\item{max_mle_runs}{The maximum number of MLE attempts with different initial values}
+\item{num_converged}{Number of converged MLE runs before stopping}
+
+\item{max_mle_runs}{Maximum number of MLE attempts}
 }
 \description{
 The function to perform MLE for the locus-specific amplification efficiency

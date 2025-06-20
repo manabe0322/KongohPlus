@@ -56,8 +56,9 @@ est_dropin_server <- function(id, path_pack){
       rv_est_dropin$max_shape_di <- 20
       rv_est_dropin$min_rate_di <- 0.01
       rv_est_dropin$max_rate_di <- 20
-      rv_est_dropin$max_iter <- 500
-      rv_est_dropin$num_converged_solutions <- 3
+      rv_est_dropin$stop_iter <- 500
+      rv_est_dropin$max_iter <- 5000
+      rv_est_dropin$num_converged <- 3
       rv_est_dropin$max_mle_runs <- 10
       rv_est_dropin$bool_correct_mle_shape_di <- TRUE
       rv_est_dropin$bool_correct_mle_rate_di <- TRUE
@@ -103,13 +104,14 @@ est_dropin_server <- function(id, path_pack){
             column(6,
                    numericInput(session$ns("min_shape_di"), label = "Minimum shape parameter", value = rv_est_dropin$min_shape_di),
                    numericInput(session$ns("min_rate_di"), label = "Minimum rate parameter", value = rv_est_dropin$min_rate_di),
-                   numericInput(session$ns("max_iter"), label = "Number of iterations", value = rv_est_dropin$max_iter),
-                   numericInput(session$ns("max_mle_runs"), label = "The maximum number of MLE attempts with different initial values", value = rv_est_dropin$max_mle_runs)
+                   numericInput(session$ns("stop_iter"), label = "Number of iterations without improvement before stopping one MLE run", value = rv_est_dropin$stop_iter),
+                   numericInput(session$ns("num_converged"), label = "The number of converged solutions required to terminate the MLE", rv_est_dropin$num_converged)
             ),
             column(6,
                    numericInput(session$ns("max_shape_di"), label = "Maximum shape parameter", value = rv_est_dropin$max_shape_di),
                    numericInput(session$ns("max_rate_di"), label = "Maximum rate parameter", value = rv_est_dropin$max_rate_di),
-                   numericInput(session$ns("num_converged_solutions"), label = "The number of converged solutions required to terminate the MLE", rv_est_dropin$num_converged_solutions)
+                   numericInput(session$ns("max_iter"), label = "Number of iterations", value = rv_est_dropin$max_iter),
+                   numericInput(session$ns("max_mle_runs"), label = "The maximum number of MLE attempts with different initial values", value = rv_est_dropin$max_mle_runs)
             )
           ),
           footer = tagList(
@@ -170,30 +172,43 @@ est_dropin_server <- function(id, path_pack){
         }
       })
 
-      observeEvent(input$max_iter, {
+      observeEvent(input$stop_iter | input$max_iter, {
+        stop_iter <- input$stop_iter
         max_iter <- input$max_iter
 
+        hideFeedback("stop_iter")
         hideFeedback("max_iter")
         bool_correct_advanced_1 <- TRUE
+
+        if(!is.integer(stop_iter) || stop_iter <= 0){
+          showFeedbackDanger(inputId = "stop_iter", text = "Value must be an integer greater than zero.")
+          bool_correct_advanced_1 <- FALSE
+        }
 
         if(!is.integer(max_iter) || max_iter <= 0){
           showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
           bool_correct_advanced_1 <- FALSE
         }
 
+        if(is.integer(stop_iter) && is.integer(max_iter) && stop_iter > max_iter){
+          showFeedbackDanger(inputId = "stop_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
+          showFeedbackDanger(inputId = "max_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
+          bool_correct_advanced_1 <- FALSE
+        }
+
         rv_est_dropin$bool_correct_advanced_1 <- bool_correct_advanced_1
       })
 
-      observeEvent(input$num_converged_solutions | input$max_mle_runs, {
-        num_converged_solutions <- input$num_converged_solutions
+      observeEvent(input$num_converged | input$max_mle_runs, {
+        num_converged <- input$num_converged
         max_mle_runs <- input$max_mle_runs
 
-        hideFeedback("num_converged_solutions")
+        hideFeedback("num_converged")
         hideFeedback("max_mle_runs")
         bool_correct_advanced_2 <- TRUE
 
-        if(!is.integer(num_converged_solutions) || num_converged_solutions <= 0){
-          showFeedbackDanger(inputId = "num_converged_solutions", text = "Value must be an integer greater than zero.")
+        if(!is.integer(num_converged) || num_converged <= 0){
+          showFeedbackDanger(inputId = "num_converged", text = "Value must be an integer greater than zero.")
           bool_correct_advanced_2 <- FALSE
         }
 
@@ -202,8 +217,8 @@ est_dropin_server <- function(id, path_pack){
           bool_correct_advanced_2 <- FALSE
         }
 
-        if(is.integer(num_converged_solutions) && is.integer(max_mle_runs) && num_converged_solutions > max_mle_runs){
-          showFeedbackDanger(inputId = "num_converged_solutions", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
+        if(is.integer(num_converged) && is.integer(max_mle_runs) && num_converged > max_mle_runs){
+          showFeedbackDanger(inputId = "num_converged", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
           showFeedbackDanger(inputId = "max_mle_runs", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
           bool_correct_advanced_2 <- FALSE
         }
@@ -229,8 +244,9 @@ est_dropin_server <- function(id, path_pack){
         rv_est_dropin$max_shape_di <- input$max_shape_di
         rv_est_dropin$min_rate_di <- input$min_rate_di
         rv_est_dropin$max_rate_di <- input$max_rate_di
+        rv_est_dropin$stop_iter <- input$stop_iter
         rv_est_dropin$max_iter <- input$max_iter
-        rv_est_dropin$num_converged_solutions <- input$num_converged_solutions
+        rv_est_dropin$num_converged <- input$num_converged
         rv_est_dropin$max_mle_runs <- input$max_mle_runs
         removeModal()
       })
@@ -246,8 +262,9 @@ est_dropin_server <- function(id, path_pack){
         max_shape_di <- rv_est_dropin$max_shape_di
         min_rate_di <- rv_est_dropin$min_rate_di
         max_rate_di <- rv_est_dropin$max_rate_di
+        stop_iter <- rv_est_dropin$stop_iter
         max_iter <- rv_est_dropin$max_iter
-        num_converged_solutions <- rv_est_dropin$num_converged_solutions
+        num_converged <- rv_est_dropin$num_converged
         max_mle_runs <- rv_est_dropin$max_mle_runs
         dt_kit <- rv_est_dropin$dt_kit
 
@@ -256,7 +273,7 @@ est_dropin_server <- function(id, path_pack){
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          data_est_dropin <- estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, max_iter, num_converged_solutions, max_mle_runs)
+          data_est_dropin <- estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, stop_iter, max_iter, num_converged, max_mle_runs)
           data_est_dropin$fn_ntc <- fn_ntc
           data_est_dropin$name_kit_dropin <- name_kit_dropin
           data_est_dropin$at_dropin <- at_dropin
@@ -264,8 +281,9 @@ est_dropin_server <- function(id, path_pack){
           data_est_dropin$max_shape_di <- max_shape_di
           data_est_dropin$min_rate_di <- min_rate_di
           data_est_dropin$max_rate_di <- max_rate_di
+          data_est_dropin$stop_iter <- stop_iter
           data_est_dropin$max_iter <- max_iter
-          data_est_dropin$num_converged_solutions <- num_converged_solutions
+          data_est_dropin$num_converged <- num_converged
           data_est_dropin$max_mle_runs <- max_mle_runs
           rv_est_dropin$data_est_dropin <- data_est_dropin
         }
@@ -282,8 +300,9 @@ est_dropin_server <- function(id, path_pack){
           max_shape_di <- data_est_dropin$max_shape_di
           min_rate_di <- data_est_dropin$min_rate_di
           max_rate_di <- data_est_dropin$max_rate_di
+          stop_iter <- data_est_dropin$stop_iter
           max_iter <- data_est_dropin$max_iter
-          num_converged_solutions <- data_est_dropin$num_converged_solutions
+          num_converged <- data_est_dropin$num_converged
           max_mle_runs <- data_est_dropin$max_mle_runs
           n_sample_di <- data_est_dropin$n_sample
           n_mk_di <- data_est_dropin$n_mk
@@ -291,6 +310,8 @@ est_dropin_server <- function(id, path_pack){
           freq_dropin <- data_est_dropin$freq_dropin
           shape_di <- data_est_dropin$shape_di
           rate_di <- data_est_dropin$rate_di
+          init_list_di <- data_est_dropin$init_list_di
+          opt_list_di <- data_est_dropin$opt_list_di
           enable("act_saveas_est_dropin_1")
 
           dt_dropin <- data.table(Parameter = c("Number of samples", "Number of markers", "Number of drop-in peaks", "Frequency", "Shape parameter", "Rate parameter"),
@@ -334,7 +355,8 @@ est_dropin_server <- function(id, path_pack){
           observeEvent(input$act_saveas_est_dropin_2, {
             fn_est_dropin <- input$fn_est_dropin
 
-            save(list = c("fn_ntc", "name_kit_dropin", "at_dropin", "min_shape_di", "max_shape_di", "min_rate_di", "max_rate_di", "max_iter", "num_converged_solutions", "max_mle_runs", "n_sample_di", "n_mk_di", "n_dropin", "freq_dropin", "shape_di", "rate_di"),
+            save(list = c("fn_ntc", "name_kit_dropin", "at_dropin", "min_shape_di", "max_shape_di", "min_rate_di", "max_rate_di", "stop_iter", "max_iter", "num_converged", "max_mle_runs",
+                          "n_sample_di", "n_mk_di", "n_dropin", "freq_dropin", "shape_di", "rate_di", "init_list_di", "opt_list_di"),
                  file = paste0(path_pack, "/extdata/dropin/", fn_est_dropin, ".RData"))
 
             removeModal()
