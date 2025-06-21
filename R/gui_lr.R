@@ -67,7 +67,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
       rv_lr <- reactiveValues()
       rv_lr$dt_ref <- NULL
       rv_lr$fn_ref <- NULL
-      rv_lr$data_lr_list <- list()
+      rv_lr$lr_list <- list()
       rv_lr$dt_lr_calc_record <- NULL
       rv_lr$dt_lr_display <- NULL
 
@@ -179,13 +179,11 @@ lr_server <- function(id, rv_input, rv_deconvo){
                 rv_lr$dt_lr_display <- dt_lr <- create_dt_lr(subsub_log10like_all_mk_hp, subsub_log10like_hp, subsub_log10like_all_mk_hd, subsub_log10like_hd, markers_use)
                 names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
 
-                data_lr <- list("hp" = hp,
-                                "hd" = hd,
-                                "dt_lr" = dt_lr)
-
-                data_lr_list <- rv_lr$data_lr_list
-                data_lr_list[[length(data_lr_list) + 1]] <- data_lr
-                rv_lr$data_lr_list <- data_lr_list
+                lr_list <- rv_lr$lr_list
+                lr_list[[length(lr_list) + 1]] <- list("hp" = hp,
+                                                       "hd" = hd,
+                                                       "dt_lr" = dt_lr)
+                rv_lr$lr_list <- lr_list
 
                 # --- Update a data.table for LR records --- #
 
@@ -253,8 +251,8 @@ lr_server <- function(id, rv_input, rv_deconvo){
             index_select <- input$dt_lr_calc_record_rows_selected
 
             if(!is.null(index_select)){
-              data_lr <- rv_lr$data_lr_list[[index_select]]
-              rv_lr$dt_lr_display <- data_lr$dt_lr
+              lr_tmp <- rv_lr$lr_list[[index_select]]
+              rv_lr$dt_lr_display <- lr_tmp$dt_lr
             }
           })
         }

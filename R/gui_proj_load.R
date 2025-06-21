@@ -23,9 +23,9 @@ load_proj_server <- function(id, session_top){
     function(input, output, session){
       rv_load_proj <- reactiveValues()
       rv_load_proj$data_deconvo <- NULL
-      rv_load_proj$data_lr_list <- NULL
-      rv_load_proj$dt_lr_calc_record <- NULL
-      rv_load_proj$lr_rand <- NULL
+      rv_load_proj$data_lr <- NULL
+      rv_load_proj$hd_true_random <- NULL
+      rv_load_proj$hd_true_importance <- NULL
 
       load_proj <- reactive({
         file_input <- input$file_proj
@@ -44,11 +44,9 @@ load_proj_server <- function(id, session_top){
           waiter_show(html = spin_3k(), color = "white")
           load(input$file_proj$datapath)
           rv_load_proj$data_deconvo <- data_deconvo
-          rv_load_proj$dt_ref <- dt_ref
-          rv_load_proj$fn_ref <- fn_ref
-          rv_load_proj$data_lr_list <- data_lr_list
-          rv_load_proj$dt_lr_calc_record <- dt_lr_calc_record
-          rv_load_proj$lr_rand <- lr_rand
+          rv_load_proj$data_lr <- data_lr
+          rv_load_proj$hd_true_random <- hd_true_random
+          rv_load_proj$hd_true_importance <- hd_true_importance
 
           if(is.null(data_deconvo)){
             updateNavbarPage(session = session_top, "navbar", selected = "File")

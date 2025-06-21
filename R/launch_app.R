@@ -48,7 +48,8 @@ KongohPlus <- function(){
 
                              navbarMenu("Tools",
                                         tabPanel("Example files"),
-                                        hd_true_ui("hd_true"),
+                                        hd_true_random_ui("hd_true_random"),
+                                        hd_true_importance_ui("hd_true_importance"),
                                         tabPanel("Validation mode")
                              ),
 
@@ -62,7 +63,8 @@ KongohPlus <- function(){
     rv_input <- file_server("file", session, bool_load_proj)
     rv_deconvo <- deconvo_server("deconvo", path_pack, session, rv_input)
     rv_lr <- lr_server("lr", rv_input, rv_deconvo)
-    rv_hd_true <- hd_true_server("hd_true", path_pack, rv_deconvo)
+    rv_hd_true_random <- hd_true_random_server("hd_true_random", path_pack, rv_deconvo)
+    rv_hd_true_importance <- hd_true_importance_server("hd_true_importance", path_pack, rv_deconvo)
 
     anameth_server("anameth", path_pack)
     kit_server("kit", path_pack)
@@ -83,7 +85,8 @@ KongohPlus <- function(){
       req(rv_input)
       req(rv_deconvo)
       req(rv_lr)
-      req(rv_hd_true)
+      req(rv_hd_true_random)
+      req(rv_hd_true_importance)
 
       data_deconvo <- rv_load_proj$data_deconvo
       if(!is.null(data_deconvo)){
@@ -99,30 +102,33 @@ KongohPlus <- function(){
         rv_input$dt_ignore_mk <- data_deconvo$dt_ignore_mk
       }
 
-      dt_ref <- rv_load_proj$dt_ref
-      if(!is.null(dt_ref)){
-        rv_input$dt_ref <- dt_ref
-        rv_lr$dt_ref <- dt_ref
-        rv_lr$fn_ref <- rv_load_proj$fn_ref
+      data_lr <- rv_load_proj$data_lr
+      if(!is.null(data_lr)){
+        rv_input$dt_ref <- rv_lr$dt_ref <- data_lr$dt_ref
+        rv_input$fn_ref <- rv_lr$fn_ref <- data_lr$fn_ref
+        rv_lr$lr_list <- data_lr$lr_list
+        rv_lr$dt_lr_calc_record <- data_lr$dt_lr_calc_record
       }
 
-      data_lr_list <- rv_load_proj$data_lr_list
-      if(length(data_lr_list) != 0){
-        rv_lr$data_lr_list <- data_lr_list
-        rv_lr$dt_lr_calc_record <- rv_load_proj$dt_lr_calc_record
+      hd_true_random <- rv_load_proj$hd_true_random
+      if(!is.null(hd_true_random)){
+        rv_hd_true_random$lr_rand <- hd_true_random$lr_rand
       }
 
-      lr_rand <- rv_load_proj$lr_rand
-      if(!is.null(lr_rand)){
-        rv_hd_true$lr_rand <- lr_rand
+      hd_true_importance <- rv_load_proj$hd_true_importance
+      if(!is.null(hd_true_importance)){
+        rv_hd_true_importance$lr_importance <- hd_true_importance$lr_importance
+        rv_hd_true_importance$bias <- hd_true_importance$bias
+        rv_hd_true_importance$expect_lr_hd <- hd_true_importance$expect_lr_hd
       }
     })
 
     observe({
       req(rv_deconvo)
       req(rv_lr)
-      req(rv_hd_true)
-      save_proj_server("save_proj", rv_deconvo, rv_lr, rv_hd_true)
+      req(rv_hd_true_random)
+      req(rv_hd_true_importance)
+      save_proj_server("save_proj", rv_deconvo, rv_lr, rv_hd_true_random, rv_hd_true_importance)
       report_server("report", path_pack, rv_deconvo)
     })
   }
