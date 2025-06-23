@@ -59,24 +59,24 @@ lr_server <- function(id, rv_input, rv_deconvo){
   moduleServer(
     id,
     function(input, output, session){
-      rv_lr_setting <- reactiveValues()
-      rv_lr_setting$dt_ref <- NULL
-      rv_lr_setting$fn_ref <- NULL
-      rv_lr_setting$refs <- NULL
-
       rv_lr <- reactiveValues()
       rv_lr$dt_ref <- NULL
       rv_lr$fn_ref <- NULL
-      rv_lr$lr_list <- list()
+      rv_lr$refs <- NULL
+      rv_lr$lr_list <- NULL
       rv_lr$dt_lr_calc_record <- NULL
       rv_lr$dt_lr_display <- NULL
 
       observe({
         req(rv_input)
-        rv_lr_setting$dt_ref <- dt_ref <- rv_input$dt_ref
-        rv_lr_setting$fn_ref <- rv_input$fn_ref
-        if(!is.null(dt_ref)){
-          rv_lr_setting$refs <- unique(dt_ref[, SampleName])
+        req(rv_lr)
+
+        if(!is.null(rv_input$dt_ref)){
+          rv_lr$dt_ref <- dt_ref <- rv_input$dt_ref
+          rv_lr$fn_ref <- rv_input$fn_ref
+          if(!is.null(dt_ref)){
+            rv_lr$refs <- unique(dt_ref[, SampleName])
+          }
         }
       })
 
@@ -88,7 +88,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
           hnc_all <- data_deconvo$hnc_all
 
           output$hp <- renderUI({
-            checkboxGroupInput(session$ns("hp"), label = h4("Prosecutor hypothesis (Hp)"), choices = rv_lr_setting$refs)
+            checkboxGroupInput(session$ns("hp"), label = h4("Prosecutor hypothesis (Hp)"), choices = rv_lr$refs)
           })
 
           output$noc_hp <- renderUI({
@@ -96,7 +96,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
           })
 
           output$hd <- renderUI({
-            checkboxGroupInput(session$ns("hd"), label = h4("Defense hypothesis (Hd)"), choices = rv_lr_setting$refs)
+            checkboxGroupInput(session$ns("hd"), label = h4("Defense hypothesis (Hd)"), choices = rv_lr$refs)
           })
 
           output$noc_hd <- renderUI({
@@ -115,9 +115,8 @@ lr_server <- function(id, rv_input, rv_deconvo){
             noc_hp <- as.numeric(input$noc_hp)
             hd <- input$hd
             noc_hd <- as.numeric(input$noc_hd)
-            refs <- rv_lr_setting$refs
-            dt_ref <- rv_lr_setting$dt_ref
-            fn_ref <- rv_lr_setting$fn_ref
+            refs <- rv_lr$refs
+            dt_ref <- rv_lr$dt_ref
 
             dt_csp <- data_deconvo$dt_csp
             dt_af <- data_deconvo$dt_af
@@ -164,25 +163,30 @@ lr_server <- function(id, rv_input, rv_deconvo){
 
                 hyp_id_all_hp <- make_hyp_id_all(noc_hp, hp, refs)
                 loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_hp)
-                tmp <- calc_subsub_log10like(loglike_all_hyp_hp)
+                tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hp)
                 index_max_loglike_hp <- tmp$index_max_loglike
                 subsub_log10like_all_mk_hp <- tmp$subsub_log10like_all_mk
-                subsub_log10like_hp <- tmp$subsub_log10like
 
                 hyp_id_all_hd <- make_hyp_id_all(noc_hd, hd, refs)
                 loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hyp_id_all_hd)
-                tmp <- calc_subsub_log10like(loglike_all_hyp_hd)
+                tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hd)
                 index_max_loglike_hd <- tmp$index_max_loglike
                 subsub_log10like_all_mk_hd <- tmp$subsub_log10like_all_mk
-                subsub_log10like_hd <- tmp$subsub_log10like
 
-                rv_lr$dt_lr_display <- dt_lr <- create_dt_lr(subsub_log10like_all_mk_hp, subsub_log10like_hp, subsub_log10like_all_mk_hd, subsub_log10like_hd, markers_use)
+                rv_lr$dt_lr_display <- dt_lr <- create_dt_lr(subsub_log10like_all_mk_hp, subsub_log10like_all_mk_hd, markers_use)
                 names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
 
                 lr_list <- rv_lr$lr_list
-                lr_list[[length(lr_list) + 1]] <- list("hp" = hp,
-                                                       "hd" = hd,
-                                                       "dt_lr" = dt_lr)
+                if(is.null(lr_list)){
+                  lr_list <- list()
+                  lr_list[[1]] <- list("hp" = hp,
+                                                         "hd" = hd,
+                                                         "dt_lr" = dt_lr)
+                }else{
+                  lr_list[[length(lr_list) + 1]] <- list("hp" = hp,
+                                                         "hd" = hd,
+                                                         "dt_lr" = dt_lr)
+                }
                 rv_lr$lr_list <- lr_list
 
                 # --- Update a data.table for LR records --- #

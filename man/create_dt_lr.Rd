@@ -6,20 +6,14 @@
 \usage{
 create_dt_lr(
   subsub_log10like_all_mk_hp,
-  subsub_log10like_hp,
   subsub_log10like_all_mk_hd,
-  subsub_log10like_hd,
   markers_use
 )
 }
 \arguments{
 \item{subsub_log10like_all_mk_hp}{A vector of the sub-sub-source log10 likelihoods of all markers in Hp}
 
-\item{subsub_log10like_hp}{A vector of the overall sub-sub-source log10 likelihood in Hp}
-
 \item{subsub_log10like_all_mk_hd}{A vector of the sub-sub-source log10 likelihoods of all markers in Hd}
-
-\item{subsub_log10like_hd}{A vector of the overall sub-sub-source log10 likelihood in Hd}
 
 \item{markers_use}{A vector of the autosomal markers used}
 }

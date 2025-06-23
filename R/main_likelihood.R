@@ -128,7 +128,12 @@ calc_loglike_r <- function(dt_pg_list, gtc_logprob_all_mk = NULL, index_hyp = NU
         for(j in 1:n_rep){
           loglike_gtc <- loglike_gtc + dt_pg[[paste0("Loglike_ph_rep", j)]]
         }
-        loglike_all_mk[i] <- log_sum_exp(loglike_gtc)
+        loglike_mk <- log_sum_exp(loglike_gtc)
+        if(is.nan(loglike_mk)){
+          loglike_all_mk[i] <- -Inf
+        }else{
+          loglike_all_mk[i] <- loglike_mk
+        }
       }
     }
   }
@@ -221,30 +226,26 @@ calc_loglike_all_hyp <- function(markers_use, peaks_list, pop_al_list, pop_prob_
   return(loglike_all_hyp)
 }
 
-#' calc_subsub_log10like
+#' calc_subsub_log10like_all_mk
 #'
 #' @description The function to calculate sub-sub-source log10 likelihood
 #' @param loglike_all_hyp A matrix of log10 likelihoods of all markers in all possible hypotheses
-calc_subsub_log10like <- function(loglike_all_hyp){
+calc_subsub_log10like_all_mk <- function(loglike_all_hyp){
   overall_loglike_all_hyp <- apply(loglike_all_hyp, 2, sum)
   index_max_loglike <- which.max(overall_loglike_all_hyp)
   subsub_log10like_all_mk <- loglike_all_hyp[, index_max_loglike] / log(10)
-  subsub_log10like <- overall_loglike_all_hyp[index_max_loglike] / log(10)
 
   return(list(index_max_loglike = index_max_loglike,
-              subsub_log10like_all_mk = subsub_log10like_all_mk,
-              subsub_log10like = subsub_log10like))
+              subsub_log10like_all_mk = subsub_log10like_all_mk))
 }
 
 #' create_dt_lr
 #'
 #' @description The function to create the data.table for LR
 #' @param subsub_log10like_all_mk_hp A vector of the sub-sub-source log10 likelihoods of all markers in Hp
-#' @param subsub_log10like_hp A vector of the overall sub-sub-source log10 likelihood in Hp
 #' @param subsub_log10like_all_mk_hd A vector of the sub-sub-source log10 likelihoods of all markers in Hd
-#' @param subsub_log10like_hd A vector of the overall sub-sub-source log10 likelihood in Hd
 #' @param markers_use A vector of the autosomal markers used
-create_dt_lr <- function(subsub_log10like_all_mk_hp, subsub_log10like_hp, subsub_log10like_all_mk_hd, subsub_log10like_hd, markers_use){
+create_dt_lr <- function(subsub_log10like_all_mk_hp, subsub_log10like_all_mk_hd, markers_use){
 
   n_mk <- length(markers_use)
   index_adopt_hp <- which(subsub_log10like_all_mk_hp != 0)
@@ -253,9 +254,9 @@ create_dt_lr <- function(subsub_log10like_all_mk_hp, subsub_log10like_hp, subsub
 
   log10like_hp_adopt <- log10like_hd_adopt <- rep(NA, n_mk + 1)
   log10like_hp_adopt[index_adopt_lr] <- subsub_log10like_all_mk_hp[index_adopt_lr]
-  log10like_hp_adopt[n_mk + 1] <- subsub_log10like_hp
+  log10like_hp_adopt[n_mk + 1] <- sum(subsub_log10like_all_mk_hp[index_adopt_lr])
   log10like_hd_adopt[index_adopt_lr] <- subsub_log10like_all_mk_hd[index_adopt_lr]
-  log10like_hd_adopt[n_mk + 1] <- subsub_log10like_hd
+  log10like_hd_adopt[n_mk + 1] <- sum(subsub_log10like_all_mk_hd[index_adopt_lr])
 
   dt_lr <- data.table(Marker = c(markers_use, "LR"),
                       Log10_Likelihood_Hp = log10like_hp_adopt,
