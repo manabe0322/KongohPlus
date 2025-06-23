@@ -7,9 +7,9 @@ file_ui <- function(id){
   tabPanel("File",
            sidebarLayout(
              sidebarPanel(width = 3,
-                          uiOutput(ns("file_csp")),
+                          fileInput(ns("file_csp"), label = h4("Crime stain profile"), accept = ".csv", buttonLabel = "Load"),
                           fileInput(ns("file_ref"), label = h4("Reference profile"), accept = ".csv", buttonLabel = "Load"),
-                          uiOutput(ns("file_af")),
+                          fileInput(ns("file_af"), label = h4("Allele frequency"), accept = ".csv", buttonLabel = "Load"),
                           br(),
                           actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg")
              ),
@@ -45,19 +45,8 @@ file_server <- function(id, session_top, bool_load_proj){
       rv_input$fn_csp <- NULL
       rv_input$fn_ref <- NULL
       rv_input$fn_af <- NULL
-      rv_input$hnc_from <- 1
-      rv_input$hnc_to <- 1
-      rv_input$fn_anameth <- ""
-      rv_input$dt_ignore_mk <- NULL
 
-      # Load the crime stain profile
-      output$file_csp <- renderUI({
-        if(bool_load_proj()){
-          disabled(textInput(session$ns("fn_csp_load_proj"), label = h4("Crime stain profile"), value = rv_input$fn_csp))
-        }else{
-          fileInput(session$ns("file_csp"), label = h4("Crime stain profile"), accept = ".csv", buttonLabel = "Load")
-        }
-      })
+      # --- Load crime stain profiles --- #
 
       observeEvent(input$file_csp, {
         file_input <- input$file_csp
@@ -70,7 +59,8 @@ file_server <- function(id, session_top, bool_load_proj){
         }
       })
 
-      # Load the reference profile
+      # --- Load reference profiles --- #
+
       observeEvent(input$file_ref, {
         file_input <- input$file_ref
         if(!is.null(file_input)){
@@ -82,14 +72,7 @@ file_server <- function(id, session_top, bool_load_proj){
         }
       })
 
-      # Load the allele frequency
-      output$file_af <- renderUI({
-        if(bool_load_proj()){
-          disabled(textInput(session$ns("fn_af_load_proj"), label = h4("Allele frequency"), value = rv_input$fn_af))
-        }else{
-          fileInput(session$ns("file_af"), label = h4("Allele frequency"), accept = ".csv", buttonLabel = "Load")
-        }
-      })
+      # --- Load allele frequencies --- #
 
       observeEvent(input$file_af, {
         file_input <- input$file_af
@@ -102,7 +85,8 @@ file_server <- function(id, session_top, bool_load_proj){
         }
       })
 
-      # Display the crime stain profile
+      # --- Display crime stain profiles --- #
+
       output$dt_csp <- renderDataTable(server = FALSE, {
         dt_csp <- rv_input$dt_csp
 
@@ -126,7 +110,8 @@ file_server <- function(id, session_top, bool_load_proj){
         }
       })
 
-      # Display the reference profile
+      # --- Display reference profiles --- #
+
       output$dt_ref <- renderDataTable(server = FALSE, {
         dt_ref <- rv_input$dt_ref
 
@@ -150,7 +135,8 @@ file_server <- function(id, session_top, bool_load_proj){
         }
       })
 
-      # Display the allele frequency
+      # --- Display allele frequencies --- #
+
       output$dt_af <- renderDataTable(server = FALSE, {
         dt_af <- rv_input$dt_af
         if(!is.null(dt_af)){

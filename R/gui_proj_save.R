@@ -26,11 +26,7 @@ save_proj_server <- function(id, rv_deconvo, rv_lr, rv_hd_true_random, rv_hd_tru
       data_deconvo <- rv_deconvo$data_deconvo
 
       # Data for LR
-      if(is.null(rv_lr$dt_lr_calc_record)){
-        data_lr <- NULL
-      }else{
-        data_lr <- list(dt_ref = rv_lr$dt_ref, fn_ref = rv_lr$fn_ref, lr_list = rv_lr$lr_list, dt_lr_calc_record = rv_lr$dt_lr_calc_record)
-      }
+      data_lr <- list(dt_ref = rv_lr$dt_ref, fn_ref = rv_lr$fn_ref, refs = rv_lr$refs, lr_list = rv_lr$lr_list, dt_lr_calc_record = rv_lr$dt_lr_calc_record)
 
       # Data for Hd true test (random genotypes)
       if(is.null(rv_hd_true_random$lr_rand)){

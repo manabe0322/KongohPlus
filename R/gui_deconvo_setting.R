@@ -14,7 +14,7 @@ deconvo_setting_ui <- function(id){
            )),
            br(),
            fluidRow(
-             column(3,
+             column(4,
                     wellPanel(
                       h4("Number of contributors"),
                       uiOutput(ns("ui_noc_from")),
@@ -24,8 +24,10 @@ deconvo_setting_ui <- function(id){
                       uiOutput(ns("ui_theta")),
                       br(),
                       h4("Analysis method"),
-                      shinyFilesButton(ns("load_anameth_deconvo"), label = "Load", title = "Select a file", multiple = FALSE),
-                      uiOutput(ns("anameth_deconvo")),
+                      fluidRow(
+                        column(3, br(), shinyFilesButton(ns("load_anameth_deconvo"), label = "Load", title = "Select a file", multiple = FALSE)),
+                        column(9, uiOutput(ns("anameth_deconvo")))
+                      ),
                       br(),
                       actionButton(ns("act_advance_deconvo"), label = "Advanced setting"),
                       br(),
@@ -33,25 +35,17 @@ deconvo_setting_ui <- function(id){
                       actionButton(ns("act_analyze_deconvo"), label = "Analyze", class = "btn btn-primary btn-lg")
                     )
              ),
-             column(3,
+             column(4,
+                    h4("Crime stain profile"),
+                    dataTableOutput(ns("dt_info_csp")),
+                    br(),
+                    h4("Allele frequency"),
+                    dataTableOutput(ns("dt_info_af")),
+                    br()
+             ),
+             column(4,
                     h4(textOutput(ns("title_ignore_mk"))),
                     rHandsontableOutput(ns("dt_ignore_mk"))
-             ),
-             column(3,
-                    h4(textOutput(ns("title_at"))),
-                    dataTableOutput(ns("anameth_at")),
-                    br()
-             ),
-             column(3,
-                    h4(textOutput(ns("title_al_gt_prob"))),
-                    dataTableOutput(ns("anameth_algt_prob")),
-                    br(),
-                    h4(textOutput(ns("title_gt_fltr"))),
-                    dataTableOutput(ns("anameth_gt_fltr")),
-                    br(),
-                    h4(textOutput(ns("title_dropin"))),
-                    dataTableOutput(ns("anameth_dropin")),
-                    br()
              )
            )
   )
@@ -80,10 +74,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$max_mle_runs <- 10
       rv_deconvo_setting$bool_correct_noc <- TRUE
       rv_deconvo_setting$bool_correct_theta <- TRUE
-      rv_deconvo_setting$bool_before_deconvo <- TRUE
       rv_deconvo_setting$bool_correct_advanced_1 <- TRUE
       rv_deconvo_setting$bool_correct_advanced_2 <- TRUE
-      rv_deconvo_setting$bool_ignore_readonly <- FALSE
       rv_deconvo_setting$dt_ignore_mk <- NULL
 
       rv_deconvo <- reactiveValues()
@@ -91,47 +83,60 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
 
       observe({
         req(rv_input)
-        rv_deconvo_setting$dt_csp <- rv_input$dt_csp
-        rv_deconvo_setting$dt_af <- rv_input$dt_af
-        rv_deconvo_setting$fn_csp <- rv_input$fn_csp
-        rv_deconvo_setting$fn_af <- rv_input$fn_af
-        rv_deconvo_setting$hnc_from <- rv_input$hnc_from
-        rv_deconvo_setting$hnc_to <- rv_input$hnc_to
-        rv_deconvo_setting$fn_anameth <- rv_input$fn_anameth
-        rv_deconvo_setting$dt_ignore_mk <- rv_input$dt_ignore_mk
-      })
-
-      observe({
         req(rv_deconvo)
-        if(is.null(rv_deconvo$data_deconvo)){
-          rv_deconvo_setting$bool_before_deconvo <- TRUE
-          rv_deconvo_setting$bool_ignore_readonly <- FALSE
-          enable("load_anameth_deconvo")
-          enable("act_advance_deconvo")
-          enable("act_analyze_deconvo")
+        data_deconvo <- rv_deconvo$data_deconvo
+
+        if(is.null(data_deconvo)){
+          rv_deconvo_setting$dt_csp <- rv_input$dt_csp
+          rv_deconvo_setting$dt_af <- rv_input$dt_af
+          rv_deconvo_setting$fn_csp <- rv_input$fn_csp
+          rv_deconvo_setting$fn_af <- rv_input$fn_af
         }else{
-          rv_deconvo_setting$bool_before_deconvo <- FALSE
-          rv_deconvo_setting$bool_ignore_readonly <- TRUE
-          disable("load_anameth_deconvo")
-          disable("act_advance_deconvo")
-          disable("act_analyze_deconvo")
+          rv_deconvo_setting$dt_csp <- data_deconvo$dt_csp
+          rv_deconvo_setting$dt_af <- data_deconvo$dt_af
+          rv_deconvo_setting$fn_csp <- data_deconvo$fn_csp
+          rv_deconvo_setting$fn_af <- data_deconvo$fn_af
+          hnc_all <- data_deconvo$hnc_all
+          rv_deconvo_setting$hnc_to <- max(hnc_all)
+          rv_deconvo_setting$hnc_from <- min(hnc_all)
+          rv_deconvo_setting$fn_anameth <- data_deconvo$fn_anameth
+          rv_deconvo_setting$dt_ignore_mk <- data_deconvo$dt_ignore_mk
         }
       })
+
+      output$dt_info_csp <- renderDataTable(server = FALSE, {
+        dt_csp <- rv_deconvo_setting$dt_csp
+        dt_info_csp <- data.table("Sample Name" = unique(dt_csp$SampleName))
+
+        datatable(
+          dt_info_csp,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_info_csp), ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE,
+          escape = FALSE
+        )
+      })
+
+      output$dt_info_af <- renderDataTable(server = FALSE, {
+        dt_info_af <- data.table("File Name" = rv_deconvo_setting$fn_af)
+
+        datatable(
+          dt_info_af,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_info_af), ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE,
+          escape = FALSE
+        )
+      })
+
+      # --- Set the number of contributors --- #
 
       output$ui_noc_from <- renderUI({
-        if(rv_deconvo_setting$bool_before_deconvo){
-          numericInput(session$ns("noc_from"), label = "From", value = rv_deconvo_setting$hnc_from)
-        }else{
-          disabled(numericInput(session$ns("noc_from"), label = "From", value = rv_deconvo_setting$hnc_from))
-        }
+        numericInput(session$ns("noc_from"), label = "From", value = rv_deconvo_setting$hnc_from)
       })
 
       output$ui_noc_to <- renderUI({
-        if(rv_deconvo_setting$bool_before_deconvo){
-          numericInput(session$ns("noc_to"), label = "To", value = rv_deconvo_setting$hnc_to)
-        }else{
-          disabled(numericInput(session$ns("noc_to"), label = "To", value = rv_deconvo_setting$hnc_to))
-        }
+        numericInput(session$ns("noc_to"), label = "To", value = rv_deconvo_setting$hnc_to)
       })
 
       observeEvent(input$noc_from | input$noc_to, {
@@ -160,19 +165,17 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
 
         rv_deconvo_setting$bool_correct_noc <- bool_correct_noc
 
-        if(all(bool_correct_noc, rv_deconvo_setting$bool_correct_theta, rv_deconvo_setting$bool_before_deconvo, rv_deconvo_setting$fn_anameth != "")){
+        if(all(bool_correct_noc, rv_deconvo_setting$bool_correct_theta, rv_deconvo_setting$fn_anameth != "")){
           enable("act_analyze_deconvo")
         }else{
           disable("act_analyze_deconvo")
         }
       })
 
+      # --- Set the theta value --- #
+
       output$ui_theta <- renderUI({
-        if(rv_deconvo_setting$bool_before_deconvo){
-          numericInput(session$ns("theta"), label = "", value = rv_deconvo_setting$theta)
-        }else{
-          disabled(numericInput(session$ns("theta"), label = "", value = rv_deconvo_setting$theta))
-        }
+        numericInput(session$ns("theta"), label = "", value = rv_deconvo_setting$theta)
       })
 
       observeEvent(input$theta, {
@@ -186,7 +189,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           bool_correct_theta <- TRUE
         }
 
-        if(all(bool_correct_theta, rv_deconvo_setting$bool_correct_noc, rv_deconvo_setting$bool_before_deconvo, rv_deconvo_setting$fn_anameth != "")){
+        if(all(bool_correct_theta, rv_deconvo_setting$bool_correct_noc, rv_deconvo_setting$fn_anameth != "")){
           enable("act_analyze_deconvo")
         }else{
           disable("act_analyze_deconvo")
@@ -195,6 +198,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         rv_deconvo_setting$bool_correct_theta <- bool_correct_theta
       })
 
+      # --- Set analysis method --- #
+
       shinyFileChoose(input, "load_anameth_deconvo", roots = c(documents = paste0(path_pack, "/extdata/anameth")), session = session, filetypes = c("csv"))
 
       observeEvent(input$load_anameth_deconvo, {
@@ -202,7 +207,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         path_anameth <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/anameth")), input$load_anameth_deconvo)$datapath
         if(length(path_anameth) > 0){
           rv_deconvo_setting$fn_anameth <- basename(path_anameth)
-          if(all(rv_deconvo_setting$bool_correct_noc, rv_deconvo_setting$bool_correct_theta, rv_deconvo_setting$bool_before_deconvo, rv_deconvo_setting$fn_anameth != "")){
+          if(all(rv_deconvo_setting$bool_correct_noc, rv_deconvo_setting$bool_correct_theta, rv_deconvo_setting$fn_anameth != "")){
             enable("act_analyze_deconvo")
           }else{
             disable("act_analyze_deconvo")
@@ -220,56 +225,10 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           rv_deconvo_setting$dt_anameth <- dt_anameth <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth))
           markers_auto <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
 
+          output$title_ignore_mk <- renderText({"Ignored marker"})
+
           rv_deconvo_setting$dt_ignore_mk <- data.table(Ignore = rep(FALSE, length(markers_auto)),
                                                         Marker = markers_auto)
-
-          output$title_ignore_mk <- renderText({"Ignored marker"})
-          output$title_at <- renderText({"Analytical threshold"})
-          output$title_al_gt_prob <- renderText({"Genotype probability"})
-          output$title_gt_fltr <- renderText({"Genotype filter"})
-          output$title_dropin <- renderText({"Drop-in"})
-
-          output$anameth_at <- renderRHandsontable({
-            dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"],
-                                AT = dt_anameth$Value[dt_anameth$Category == "AT"])
-
-            datatable(
-              dt_at,
-              selection = "none",
-              options = list(dom = "t", iDisplayLength = nrow(dt_at), ordering = FALSE, autowidth = TRUE),
-              rownames = FALSE,
-              escape = FALSE
-            ) %>%
-              formatStyle(names(dt_at), lineHeight = "80%")
-          })
-
-          output$anameth_gt_fltr <- renderRHandsontable({
-            dt_gt_fltr <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Genotype filter"],
-                                     Value = dt_anameth$Value[dt_anameth$Category == "Genotype filter"])
-
-            datatable(
-              dt_gt_fltr,
-              selection = "none",
-              options = list(dom = "t", iDisplayLength = nrow(dt_gt_fltr), ordering = FALSE, autowidth = TRUE),
-              rownames = FALSE,
-              escape = FALSE
-            ) %>%
-              formatStyle(names(dt_gt_fltr), lineHeight = "80%")
-          })
-
-          output$anameth_dropin <- renderRHandsontable({
-            dt_dropin <- data.table(Subcategory = dt_anameth$Subcategory[dt_anameth$Category == "Drop-in"],
-                                    Value = dt_anameth$Value[dt_anameth$Category == "Drop-in"])
-
-            datatable(
-              dt_dropin,
-              selection = "none",
-              options = list(dom = "t", iDisplayLength = nrow(dt_dropin), ordering = FALSE, autowidth = TRUE),
-              rownames = FALSE,
-              escape = FALSE
-            ) %>%
-              formatStyle(names(dt_dropin), lineHeight = "80%")
-          })
         }
       })
 
@@ -279,10 +238,12 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         if(!is.null(dt_ignore_mk)){
           rhandsontable(dt_ignore_mk, rowHeaders = FALSE) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-            hot_col("Ignore", type = "checkbox", readOnly = rv_deconvo_setting$bool_ignore_readonly, width = 100) %>%
+            hot_col("Ignore", type = "checkbox", width = 100) %>%
             hot_col("Marker", type = "text", readOnly = TRUE, width = 100)
         }
       })
+
+      # --- Advanced setting --- #
 
       observeEvent(input$act_advance_deconvo, {
         showModal(modalDialog(
@@ -373,6 +334,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         rv_deconvo_setting$max_mle_runs <- input$max_mle_runs
         removeModal()
       })
+
+      # --- Perform deconvolution --- #
 
       observeEvent(input$act_analyze_deconvo, {
         waiter_show(html = spin_3k(), color = "white")

@@ -58,9 +58,7 @@ KongohPlus <- function(){
   )
 
   server <- function(input, output, session){
-    bool_load_proj <- reactiveVal(FALSE)
-
-    rv_input <- file_server("file", session, bool_load_proj)
+    rv_input <- file_server("file", session)
     rv_deconvo <- deconvo_server("deconvo", path_pack, session, rv_input)
     rv_lr <- lr_server("lr", rv_input, rv_deconvo)
     rv_hd_true_random <- hd_true_random_server("hd_true_random", path_pack, rv_deconvo)
@@ -82,30 +80,18 @@ KongohPlus <- function(){
     rv_load_proj <- load_proj_server("load_proj", session)
     observe({
       req(rv_load_proj)
-      req(rv_input)
       req(rv_deconvo)
       req(rv_lr)
       req(rv_hd_true_random)
       req(rv_hd_true_importance)
 
-      data_deconvo <- rv_load_proj$data_deconvo
-      if(!is.null(data_deconvo)){
-        bool_load_proj(TRUE)
-        rv_deconvo$data_deconvo <- data_deconvo
-        rv_input$dt_csp <- data_deconvo$dt_csp
-        rv_input$fn_csp <- data_deconvo$fn_csp
-        rv_input$dt_af <- data_deconvo$dt_af
-        rv_input$fn_af <- data_deconvo$fn_af
-        rv_input$hnc_from <- min(data_deconvo$hnc_all)
-        rv_input$hnc_to <- max(data_deconvo$hnc_all)
-        rv_input$fn_anameth <- data_deconvo$fn_anameth
-        rv_input$dt_ignore_mk <- data_deconvo$dt_ignore_mk
-      }
+      rv_deconvo$data_deconvo <- rv_load_proj$data_deconvo
 
       data_lr <- rv_load_proj$data_lr
-      if(!is.null(data_lr)){
-        rv_input$dt_ref <- rv_lr$dt_ref <- data_lr$dt_ref
-        rv_input$fn_ref <- rv_lr$fn_ref <- data_lr$fn_ref
+      if(length(data_lr) != 0){
+        rv_lr$dt_ref <- data_lr$dt_ref
+        rv_lr$fn_ref <- data_lr$fn_ref
+        rv_lr$refs <- data_lr$refs
         rv_lr$lr_list <- data_lr$lr_list
         rv_lr$dt_lr_calc_record <- data_lr$dt_lr_calc_record
       }
