@@ -63,10 +63,10 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
             data_hnc <- data_hnc_list[[i]]
             tmp <- data_hnc$warning_message
             if(!is.null(tmp)){
-              warning_message <- paste0(warning_message, tmp, "<br>")
+              warning_message <- paste0(warning_message, tmp)
             }
           }
-          warning_message <- paste0(warning_message, message_sr, "<br>")
+          warning_message <- paste0(warning_message, message_sr)
           HTML(warning_message)
         })
 

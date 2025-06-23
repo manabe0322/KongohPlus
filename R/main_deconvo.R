@@ -428,6 +428,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         }
       }
 
+      # Extract estimated parameters
+      est_params <- current_opt$par
+      tph <- est_params[1:n_rep] * (tph_upper - tph_lower) + tph_lower
+      mp <- 1
+      deg <- est_params[n_rep + 1]
+
     }else{
 
       # likelihood function for mixture profiles
@@ -507,77 +513,65 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
           break
         }
       }
-    }
-
-    if(!is.null(current_opt)){
-
-      # --- Calculate the likelihood using the estimated parameters --- #
 
       # Extract estimated parameters
       est_params <- current_opt$par
       tph <- est_params[1:n_rep] * (tph_upper - tph_lower) + tph_lower
-      if(hnc == 1){
-        mp <- 1
-        deg <- est_params[n_rep + 1]
-      }else{
-        mp_pre <- est_params[(n_rep + 1):(n_rep + hnc - 1)]
-        mp <- c(mp_pre, 1 - sum(mp_pre))
-        deg <- est_params[(n_rep + hnc):(n_rep + 2 * hnc - 1)]
+      mp_pre <- est_params[(n_rep + 1):(n_rep + hnc - 1)]
+      mp <- c(mp_pre, 1 - sum(mp_pre))
+      deg <- est_params[(n_rep + hnc):(n_rep + 2 * hnc - 1)]
 
-        # Descending order for estimated mixture proportions
-        index_order <- order(mp, decreasing = TRUE)
-        mp <- mp[index_order]
-        deg <- deg[index_order]
-      }
-
-      # Calculate log probability densities of all genotype combinations
-      lpd_gtc_all_rep <- vector(mode = "list", length = n_rep)
-      for(i in 1:n_rep){
-        lpd_gtc_all_rep[[i]] <- calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[[i]], n_dropout_list[[i]], n_dropin_list[[i]], n_ignore_list[[i]], rph_base_use,
-                                                  index_dedup1_list_cpp[[i]], cv_squared_dedup1_list[[i]], deg_size_dedup1_list[[i]], oph_dedup1_list[[i]], loglike_di_list[[i]],
-                                                  index_dedup2_list_cpp[[i]], n_gtc_use, n_peak_use)
-      }
-
-      # Calculate log likelihood in each marker
-      tmp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
-      loglike_all_mk <- tmp[[1]]
-      loglike_gtc_all_mk <- tmp[[2]]
-
-      dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk)
-
-      log10like_all_mk <- loglike_all_mk / log(10)
-      dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
-                                 Log10_Likelihood = c(log10like_all_mk, sum(log10like_all_mk)))
-
-      dt_param <- data.table("Parameter" = c(rep("Template amount", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc)),
-                             "Contributor" = c(rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc)),
-                             "Replicate" = c(1:n_rep, rep(NA, hnc), rep(NA, hnc)),
-                             "Estimated value" = c(tph, mp, deg))
-
-      # End computation
-      end_time <- proc.time()
-      comp_time <- end_time[3] - start_time[3]
-
-      return(list("dt_pg_list" = dt_pg_list,
-                  "dt_log10like" = dt_log10like,
-                  "dt_param" = dt_param,
-                  "logprob_di_use" = logprob_di_use,
-                  "comp_time" = comp_time,
-                  "init_list" = init_list,
-                  "opt_list" = opt_list,
-                  "error_message" = NULL))
-
-    }else{
-      error_message <- paste0("Convergence failed under ", hnc, " contributor.<br>")
-      return(list("dt_pg_list" = NULL,
-                  "dt_log10like" = NULL,
-                  "dt_param" = NULL,
-                  "logprob_di_use" = NULL,
-                  "comp_time" = NULL,
-                  "init_list" = NULL,
-                  "opt_list" = NULL,
-                  "error_message" = error_message))
+      # Descending order for estimated mixture proportions
+      index_order <- order(mp, decreasing = TRUE)
+      mp <- mp[index_order]
+      deg <- deg[index_order]
     }
+
+    if(count_solution == num_converged){
+      warning_message <- NULL
+    }else{
+      warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged under", hnc, " contributor. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
+    }
+
+    # --- Calculate the likelihood using the estimated parameters --- #
+
+    # Calculate log probability densities of all genotype combinations
+    lpd_gtc_all_rep <- vector(mode = "list", length = n_rep)
+    for(i in 1:n_rep){
+      lpd_gtc_all_rep[[i]] <- calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[[i]], n_dropout_list[[i]], n_dropin_list[[i]], n_ignore_list[[i]], rph_base_use,
+                                                index_dedup1_list_cpp[[i]], cv_squared_dedup1_list[[i]], deg_size_dedup1_list[[i]], oph_dedup1_list[[i]], loglike_di_list[[i]],
+                                                index_dedup2_list_cpp[[i]], n_gtc_use, n_peak_use)
+    }
+
+    # Calculate log likelihood in each marker
+    tmp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
+    loglike_all_mk <- tmp[[1]]
+    loglike_gtc_all_mk <- tmp[[2]]
+
+    dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk)
+
+    log10like_all_mk <- loglike_all_mk / log(10)
+    dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
+                               Log10_Likelihood = c(log10like_all_mk, sum(log10like_all_mk)))
+
+    dt_param <- data.table("Parameter" = c(rep("Template amount", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc)),
+                           "Contributor" = c(rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc)),
+                           "Replicate" = c(1:n_rep, rep(NA, hnc), rep(NA, hnc)),
+                           "Estimated value" = c(tph, mp, deg))
+
+    # End computation
+    end_time <- proc.time()
+    comp_time <- end_time[3] - start_time[3]
+
+    return(list("dt_pg_list" = dt_pg_list,
+                "dt_log10like" = dt_log10like,
+                "dt_param" = dt_param,
+                "logprob_di_use" = logprob_di_use,
+                "comp_time" = comp_time,
+                "init_list" = init_list,
+                "opt_list" = opt_list,
+                "warning_message" = warning_message,
+                "error_message" = NULL))
   }else{
     markers_unexplainable <- markers_use[n_gtc_use == 0]
     if(hnc == 1){
@@ -596,6 +590,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                 "comp_time" = NULL,
                 "init_list" = NULL,
                 "opt_list" = NULL,
+                "warning_message" = NULL,
                 "error_message" = error_message))
   }
 }
@@ -683,6 +678,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                    "comp_time" = NULL,
                                    "init_list" = NULL,
                                    "opt_list" = NULL,
+                                   "warning_message" = NULL,
                                    "error_message" = "Unexpected error")
       }
     }
