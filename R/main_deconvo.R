@@ -364,26 +364,30 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         deg <- par[n_rep + 1]
         mp <- 1
 
-        # Calculate log probability densities of all genotype combinations
-        lpd_gtc_all_rep <- vector(mode = "list", length = n_rep)
-        for(i in 1:n_rep){
-          lpd_gtc_all_rep[[i]] <- calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[[i]], n_dropout_list[[i]], n_dropin_list[[i]], n_ignore_list[[i]], rph_base_use,
-                                                    index_dedup1_list_cpp[[i]], cv_squared_dedup1_list[[i]], deg_size_dedup1_list[[i]], oph_dedup1_list[[i]], loglike_di_list[[i]],
-                                                    index_dedup2_list_cpp[[i]], n_gtc_use, n_peak_use)
-        }
-
-        # Calculate log likelihood in each marker
-        tmp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
-        loglike <- - sum(tmp[[1]])
-
-        if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+        if(any(deg == 0)){
           loglike <- Inf
+        }else{
+          # Calculate log probability densities of all genotype combinations
+          lpd_gtc_all_rep <- vector(mode = "list", length = n_rep)
+          for(i in 1:n_rep){
+            lpd_gtc_all_rep[[i]] <- calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[[i]], n_dropout_list[[i]], n_dropin_list[[i]], n_ignore_list[[i]], rph_base_use,
+                                                      index_dedup1_list_cpp[[i]], cv_squared_dedup1_list[[i]], deg_size_dedup1_list[[i]], oph_dedup1_list[[i]], loglike_di_list[[i]],
+                                                      index_dedup2_list_cpp[[i]], n_gtc_use, n_peak_use)
+          }
+
+          # Calculate log likelihood in each marker
+          tmp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
+          loglike <- - sum(tmp[[1]])
+
+          if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+            loglike <- Inf
+          }
         }
 
         return(loglike)
       }
 
-      lower_bounds <- c(rep(0, n_rep), 0.0001)
+      lower_bounds <- c(rep(0, n_rep), 0)
       upper_bounds <- c(rep(1, n_rep), 1)
 
       # Perform simulated annealing
@@ -444,7 +448,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         deg <- par[(n_rep + hnc):(n_rep + 2 * hnc - 1)]
 
         mp <- c(mp_pre, 1 - sum(mp_pre))
-        if(any(mp <= 0.0001)){
+        if(any(mp == 0)){
+          loglike <- Inf
+        }else if(any(deg == 0)){
           loglike <- Inf
         }else{
 
@@ -468,8 +474,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         return(loglike)
       }
 
-      lower_bounds <- c(rep(0, n_rep), rep(0.0001, hnc - 1), rep(0.0001, hnc))
-      upper_bounds <- c(rep(1, n_rep), rep(0.9999, hnc - 1), rep(1, hnc))
+      lower_bounds <- c(rep(0, n_rep), rep(0, hnc - 1), rep(0, hnc))
+      upper_bounds <- c(rep(1, n_rep), rep(1, hnc - 1), rep(1, hnc))
 
       # Perform simulated annealing
       current_opt <- NULL

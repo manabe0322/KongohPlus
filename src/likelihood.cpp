@@ -48,14 +48,46 @@ std::vector<double> calc_gamma_param_cpp(const std::vector<double>& rph_dedup1,
 
 // [[Rcpp::export]]
 double gamma_pdf(const double value, const double shape, const double scale){
-  boost::math::gamma_distribution<double> d(shape, scale);
-  return(pdf(d, value));
+
+  // Check input values
+  if(!std::isfinite(value) || value < 0.0 ||
+     !std::isfinite(shape) || shape <= 0.0 ||
+     !std::isfinite(scale) || scale <= 0.0){
+    return 0.0;
+  }
+
+  try{
+    boost::math::gamma_distribution<double> d(shape, scale);
+    double result = pdf(d, value);
+    if(!std::isfinite(result)){
+      return 0.0;
+    }
+    return result;
+  }catch(...){
+    return 0.0;
+  }
 }
 
 // [[Rcpp::export]]
 double gamma_cdf(const double threshold, const double shape, const double scale){
-  boost::math::gamma_distribution<double> p(shape, scale);
-  return(cdf(p, threshold));
+
+  // Check input values
+  if(!std::isfinite(threshold) || threshold < 0.0 ||
+     !std::isfinite(shape) || shape <= 0.0 ||
+     !std::isfinite(scale) || scale <= 0.0){
+     return 0.0;
+  }
+
+  try{
+    boost::math::gamma_distribution<double> p(shape, scale);
+    double result = cdf(p, threshold);
+    if(!std::isfinite(result)){
+      return 0.0;
+    }
+    return result;
+  }catch(...){
+    return 0.0;
+  }
 }
 
 // [[Rcpp::export]]
@@ -82,7 +114,15 @@ std::vector<double> calc_lpd_dedup1_mk(const double tph,
     for(int i = 0; i < n_general; ++i){
       std::vector<double> rph_dedup1_general = calc_rph_dedup1_cpp(mp, deg, hnc, rph_base_use_mk1, index_dedup1_rep1_mk1_cpp[i], deg_size_dedup1_rep1_mk1[i]);
       std::vector<double> gamma_param = calc_gamma_param_cpp(rph_dedup1_general, cv_squared_dedup1_rep1_mk1[i], tph);
-      lpd_dedup1_mk[i] = log(gamma_pdf(oph_dedup1_rep1_mk1[i], gamma_param[0], gamma_param[1]));
+
+      double pd = gamma_pdf(oph_dedup1_rep1_mk1[i], gamma_param[0], gamma_param[1]);
+      double log_pd;
+      if(pd > 0.0 && std::isfinite(pd)){
+        log_pd = std::log(pd);
+      }else{
+        log_pd = -std::numeric_limits<double>::infinity();
+      }
+      lpd_dedup1_mk[i] = log_pd;
     }
   }
 
@@ -91,7 +131,15 @@ std::vector<double> calc_lpd_dedup1_mk(const double tph,
     for(int i = 0; i < n_dropout; ++i){
       std::vector<double> rph_dedup1_dropout = calc_rph_dedup1_cpp(mp, deg, hnc, rph_base_use_mk1, index_dedup1_rep1_mk1_cpp[n_general + i], deg_size_dedup1_rep1_mk1[n_general + i]);
       std::vector<double> gamma_param = calc_gamma_param_cpp(rph_dedup1_dropout, cv_squared_dedup1_rep1_mk1[n_general + i], tph);
-      lpd_dedup1_mk[n_general + i] = log(gamma_cdf(at, gamma_param[0], gamma_param[1]));
+
+      double cd = gamma_cdf(at, gamma_param[0], gamma_param[1]);
+      double log_cd;
+      if(cd > 0.0 && std::isfinite(cd)){
+        log_cd = std::log(cd);
+      }else{
+        log_cd = -std::numeric_limits<double>::infinity();
+      }
+      lpd_dedup1_mk[n_general + i] = log_cd;
     }
   }
 
