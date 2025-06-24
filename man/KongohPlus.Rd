@@ -6,6 +6,9 @@
 \usage{
 KongohPlus()
 }
+\arguments{
+\item{num_threads}{Number of threads for parallelization}
+}
 \description{
 Main window
 }
