@@ -509,7 +509,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         if(count_solution == num_converged){
           break
         }else if(count_mle == max_mle_runs){
-          current_opt <- NULL
           break
         }
       }
