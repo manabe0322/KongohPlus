@@ -8,7 +8,7 @@
 #' @importFrom gridExtra grid.arrange
 #' @importFrom gtools combinations ddirichlet permutations rdirichlet
 #' @importFrom magrittr %>%
-#' @importFrom parallel clusterEvalQ clusterExport detectCores makeCluster parLapply stopCluster
+#' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
 #' @importFrom rhandsontable hot_cell hot_col hot_table hot_to_r renderRHandsontable rhandsontable rHandsontableOutput
 #' @importFrom rmarkdown render
