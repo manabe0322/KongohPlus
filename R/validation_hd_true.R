@@ -37,7 +37,7 @@ generate_importance_gt <- function(np, dt_pg_list_h1, pop_al_list, pop_prob_list
     pop_prob <- pop_prob_list[[i]]
     n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
     obs_al <- as.numeric(names(n_obs))
-    gt_prob <- calc_gtc_prob_mk(gt_mk, pop_al, pop_prob, theta = 0, prof_ref = numeric(0), hyp_id = 0, n_obs, obs_al)
+    gt_prob <- calc_gts_prob_mk(gt_mk, pop_al, pop_prob, theta = 0, prof_ref = numeric(0), hyp_id = 0, n_obs, obs_al)
 
     # --- Randomly select genotype combinations based on 'Probability' --- #
 

@@ -117,12 +117,12 @@ extract_gt_comb_adopt <- function(cand_gt, index_gt_comb_adopt_cpp) {
     .Call(`_KongohPlus_extract_gt_comb_adopt`, cand_gt, index_gt_comb_adopt_cpp)
 }
 
-calc_gtc_prob <- function(gtc, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al) {
-    .Call(`_KongohPlus_calc_gtc_prob`, gtc, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al)
+calc_gts_prob <- function(gts, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al) {
+    .Call(`_KongohPlus_calc_gts_prob`, gts, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al)
 }
 
-calc_gtc_prob_mk <- function(gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al) {
-    .Call(`_KongohPlus_calc_gtc_prob_mk`, gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al)
+calc_gts_prob_mk <- function(gts_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al) {
+    .Call(`_KongohPlus_calc_gts_prob_mk`, gts_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al)
 }
 
 calc_rph_dedup1_cpp <- function(mp, deg, hnc, rph_base_use, index_dedup1, deg_size) {

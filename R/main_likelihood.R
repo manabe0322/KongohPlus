@@ -177,7 +177,7 @@ calc_gtc_logprob_all_hyp <- function(mk, hyp_id_all, prof_ref_all, prof_ref_99_a
 
     # Calculate genotype probabilities
     for(i in 1:n_hyp){
-      gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id_all[i, ], n_obs, obs_al)
+      gtc_prob_mk <- calc_gts_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id_all[i, ], n_obs, obs_al)
       gtc_logprob_all_hyp[[i]] <- log(gtc_prob_mk)
     }
   }
