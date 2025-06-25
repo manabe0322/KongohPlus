@@ -400,15 +400,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
-// extract_gt_comb_adopt
-std::vector<std::vector<double>> extract_gt_comb_adopt(std::vector<std::vector<double>> cand_gt, std::vector<std::vector<int>> index_gt_comb_adopt_cpp);
-RcppExport SEXP _KongohPlus_extract_gt_comb_adopt(SEXP cand_gtSEXP, SEXP index_gt_comb_adopt_cppSEXP) {
+// extract_gts_adopt
+std::vector<std::vector<double>> extract_gts_adopt(std::vector<std::vector<double>> cand_gt, std::vector<std::vector<int>> index_gts_adopt_cpp);
+RcppExport SEXP _KongohPlus_extract_gts_adopt(SEXP cand_gtSEXP, SEXP index_gts_adopt_cppSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< std::vector<std::vector<double>> >::type cand_gt(cand_gtSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::vector<int>> >::type index_gt_comb_adopt_cpp(index_gt_comb_adopt_cppSEXP);
-    rcpp_result_gen = Rcpp::wrap(extract_gt_comb_adopt(cand_gt, index_gt_comb_adopt_cpp));
+    Rcpp::traits::input_parameter< std::vector<std::vector<int>> >::type index_gts_adopt_cpp(index_gts_adopt_cppSEXP);
+    rcpp_result_gen = Rcpp::wrap(extract_gts_adopt(cand_gt, index_gts_adopt_cpp));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -668,7 +668,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_KongohPlus_judge_gt_comb_sr", (DL_FUNC) &_KongohPlus_judge_gt_comb_sr, 16},
     {"_KongohPlus_judge_gt_comb", (DL_FUNC) &_KongohPlus_judge_gt_comb, 15},
     {"_KongohPlus_judge_gt_comb_mk", (DL_FUNC) &_KongohPlus_judge_gt_comb_mk, 14},
-    {"_KongohPlus_extract_gt_comb_adopt", (DL_FUNC) &_KongohPlus_extract_gt_comb_adopt, 2},
+    {"_KongohPlus_extract_gts_adopt", (DL_FUNC) &_KongohPlus_extract_gts_adopt, 2},
     {"_KongohPlus_calc_gts_prob", (DL_FUNC) &_KongohPlus_calc_gts_prob, 8},
     {"_KongohPlus_calc_gts_prob_mk", (DL_FUNC) &_KongohPlus_calc_gts_prob_mk, 8},
     {"_KongohPlus_calc_rph_dedup1_cpp", (DL_FUNC) &_KongohPlus_calc_rph_dedup1_cpp, 6},

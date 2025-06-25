@@ -113,8 +113,8 @@ judge_gt_comb_mk <- function(cand_gt, index_gt_comb_cpp, peaks, heights_all_rep,
     .Call(`_KongohPlus_judge_gt_comb_mk`, cand_gt, index_gt_comb_cpp, peaks, heights_all_rep, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
 }
 
-extract_gt_comb_adopt <- function(cand_gt, index_gt_comb_adopt_cpp) {
-    .Call(`_KongohPlus_extract_gt_comb_adopt`, cand_gt, index_gt_comb_adopt_cpp)
+extract_gts_adopt <- function(cand_gt, index_gts_adopt_cpp) {
+    .Call(`_KongohPlus_extract_gts_adopt`, cand_gt, index_gts_adopt_cpp)
 }
 
 calc_gts_prob <- function(gts, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al) {

@@ -326,14 +326,14 @@ Rcpp::List judge_gt_comb_mk(std::vector<std::vector<double>> cand_gt,
 }
 
 // [[Rcpp::export]]
-std::vector<std::vector<double>> extract_gt_comb_adopt(std::vector<std::vector<double>> cand_gt,
-                                                       std::vector<std::vector<int>> index_gt_comb_adopt_cpp){
-  int n_gt_comb_adopt = index_gt_comb_adopt_cpp.size();
-  int hnc = index_gt_comb_adopt_cpp[0].size();
+std::vector<std::vector<double>> extract_gts_adopt(std::vector<std::vector<double>> cand_gt,
+                                                   std::vector<std::vector<int>> index_gts_adopt_cpp){
+  int n_gt_comb_adopt = index_gts_adopt_cpp.size();
+  int hnc = index_gts_adopt_cpp[0].size();
   std::vector<std::vector<double>> gt_comb(n_gt_comb_adopt, std::vector<double>(2 * hnc));
 
   for(int i = 0; i < n_gt_comb_adopt; ++i){
-    std::vector<int> ind_gtc = index_gt_comb_adopt_cpp[i];
+    std::vector<int> ind_gtc = index_gts_adopt_cpp[i];
     for(int j = 0; j < hnc; ++j){
       std::vector<double> gt = cand_gt[ind_gtc[j]];
       gt_comb[i][2 * j] = gt[0];
