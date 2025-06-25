@@ -99,9 +99,9 @@ std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::v
 
   #pragma omp parallel for
   for(int i = 0; i < n_gt_comb; ++i){
-    std::vector<int> ind_gtc = index_gt_comb_adopt.at(i);
+    std::vector<int> ind_gtc = index_gt_comb_adopt[i];
     std::vector<double> gtc = extract_gtc(cand_gts, ind_gtc, hnc);
-    std::vector<bool> bool_gtc_di = bool_gtc_di_mk.at(i);
+    std::vector<bool> bool_gtc_di = bool_gtc_di_mk[i];
 
     std::vector<double> bs_gtc = calc_bs(gtc);
     std::vector<double> fs_gtc = calc_fs(gtc);
