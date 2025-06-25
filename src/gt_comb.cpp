@@ -329,13 +329,13 @@ Rcpp::List judge_gtc_mk(std::vector<std::vector<double>> cand_gts,
 std::vector<std::vector<double>> extract_gtc_adopt(std::vector<std::vector<double>> cand_gts,
                                                    std::vector<std::vector<int>> index_gtc_adopt_cpp){
   int n_gtc_adopt = index_gtc_adopt_cpp.size();
-  int hnc = index_gtc_adopt_cpp.at(0).size();
+  int hnc = index_gtc_adopt_cpp[0].size();
   std::vector<std::vector<double>> gtc_adopt(n_gtc_adopt, std::vector<double>(2 * hnc));
 
   for(int i = 0; i < n_gtc_adopt; ++i){
-    std::vector<int> ind_gtc = index_gtc_adopt_cpp.at(i);
+    std::vector<int> ind_gtc = index_gtc_adopt_cpp[i];
     for(int j = 0; j < hnc; ++j){
-      std::vector<double> gt = cand_gts.at(ind_gtc[j]);
+      std::vector<double> gt = cand_gts[ind_gtc[j]];
       gtc_adopt[i][2 * j] = gt[0];
       gtc_adopt[i][2 * j + 1] = gt[1];
     }
