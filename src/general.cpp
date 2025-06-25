@@ -182,7 +182,7 @@ std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts,
                                 int hnc){
   std::vector<double> gtc(2 * hnc);
   for(int i = 0; i < hnc; ++i){
-    std::vector<double> gt = cand_gts.at(ind_gtc[i]);
+    std::vector<double> gt = cand_gts[ind_gtc[i]];
     gtc[2 * i] = gt[0];
     gtc[2 * i + 1] = gt[1];
   }
