@@ -237,7 +237,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     cv_square_base_mk <- c(rep(cv_allele^2, n_peak), rep(cv_stutter^2, 4 * n_peak), 0, -1)
 
-    # --- List all possible genotype combinations --- #
+    # --- Generate all possible genotype combinations --- #
 
     # All candidate genotypes of one contributor
     cand_gt <- combinations(n = n_peak, r = 2, v = peaks, repeats.allowed = TRUE)
@@ -276,7 +276,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         # Search the indices of the relative peak heights for each genotype combinations
         index_rph_gtc_cpp <- connect_rph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di_mk_rep[[j]])
         index_rph_gtc_cpp <- unlist(index_rph_gtc_cpp, recursive = FALSE)
-        index_rph_gtc <- matrix(unlist(index_rph_gtc_cpp) + 1, nrow = 2 * hnc) # R and stan index
+        index_rph_gtc <- matrix(unlist(index_rph_gtc_cpp) + 1, nrow = 2 * hnc) # R index
 
         # Delete duplicated indices
         bool_duplicated_adopt <- !duplicated(t(index_rph_gtc))
