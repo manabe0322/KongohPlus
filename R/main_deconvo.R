@@ -535,7 +535,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     if(count_solution == num_converged){
       warning_message <- NULL
     }else{
-      warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged under", hnc, " contributor. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
+      warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged under ", hnc, " contributor. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
     }
 
     # --- Calculate the likelihood using the estimated parameters --- #
