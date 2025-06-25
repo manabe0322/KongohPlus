@@ -7,7 +7,7 @@
 make_dt_pg_list(
   markers_use,
   label_contrib,
-  gtc_use,
+  gt_perm_use,
   gtc_logprob_use,
   lpd_gtc_all_rep,
   loglike_gtc_all_mk
@@ -18,7 +18,7 @@ make_dt_pg_list(
 
 \item{label_contrib}{A character vector of the contributor names}
 
-\item{gtc_use}{Genotype combinations in the used markers}
+\item{gt_perm_use}{Genotype permutations in each used markers}
 
 \item{gtc_logprob_use}{A list of the genotype probabilities in each used marker}
 

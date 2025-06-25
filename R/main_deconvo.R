@@ -1,3 +1,41 @@
+#' create_gt_perm_obj
+#'
+#' @description The function to create objects for genotype permutations
+#' @param cand_gt A list of all possible candidate genotypes
+#' @param index_gt_comb_adopt_cpp A list of the indices of the adopted genotype combinations (C++ index)
+#' @param bool_gt_comb_di_mk_rep A list of indicators for drop-in peaks in each genotype combination
+create_gt_perm_obj <- function(cand_gt, index_gt_comb_adopt_cpp, log_gt_comb_prob_mk, bool_gt_comb_di_mk_rep){
+  list_gt_perm <- list()
+  list_log_gt_perm_prob_mk <- list()
+
+  n_rep <- length(bool_gt_comb_di_mk_rep)
+  bool_gt_perm_di_mk_rep <- vector(mode = "list", length = n_rep)
+  for(i in 1:n_rep){
+    bool_gt_perm_di_mk_rep[[i]] <- list()
+  }
+
+  for(i in 1:length(index_gt_comb_adopt_cpp)){
+    index_gt_perm_cpp <- permn(index_gt_comb_adopt_cpp[[i]]) # C++ index
+    tmp <- extract_gts_adopt(cand_gt, index_gt_perm_cpp)
+    n_perm <- length(tmp)
+    list_gt_perm[[i]] <- tmp
+    list_log_gt_perm_prob_mk[[i]] <- rep(log_gt_comb_prob_mk[i], n_perm)
+
+    for(j in 1:n_rep){
+      bool_gt_comb_di <- bool_gt_comb_di_mk_rep[[j]][[i]]
+      count <- length(bool_gt_perm_di_mk_rep[[j]])
+      for(k in 1:n_perm){
+        bool_gt_perm_di_mk_rep[[j]][[count + k]] <- bool_gt_comb_di
+      }
+    }
+  }
+
+  gt_perm <- unlist(list_gt_perm, recursive = FALSE, use.names = FALSE)
+  log_gt_perm_prob_mk <- unlist(list_log_gt_perm_prob_mk)
+
+  return(list(gt_perm = gt_perm, log_gt_perm_prob_mk = log_gt_perm_prob_mk, bool_gt_perm_di_mk_rep = bool_gt_perm_di_mk_rep))
+}
+
 #' create_index_dedup2_mk
 #'
 #' @description The function to create 'index_dedup2_mk'
@@ -40,20 +78,20 @@ generate_init_deconvo_mix <- function(n_rep, hnc){
 #' @description The function to make a list of data.tables for the result of probabilistic genotyping
 #' @param markers_use A character vector of the used markers
 #' @param label_contrib A character vector of the contributor names
-#' @param gtc_use Genotype combinations in the used markers
+#' @param gt_perm_use Genotype permutations in each used markers
 #' @param gtc_logprob_use A list of the genotype probabilities in each used marker
 #' @param lpd_gtc_all_rep A list of the log likelihood of obtaining observed peak heights for each genotype combination in all markers and replicates
 #' @param loglike_gtc_all_mk A list of the log likelihood combining genotype probabilities and observed peak heights
-make_dt_pg_list <- function(markers_use, label_contrib, gtc_use, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk){
+make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk){
   hnc <- length(label_contrib)
-  n_mk <- length(gtc_use)
+  n_mk <- length(gt_perm_use)
   n_rep <- length(lpd_gtc_all_rep)
   dt_pg_list <- vector(mode = "list", length = n_mk)
 
   for(i in 1:n_mk){
 
     # Paste two alleles of each contributor
-    gtc_mk <- matrix(unlist(gtc_use[[i]]), ncol = 2 * hnc, byrow = TRUE)
+    gtc_mk <- matrix(unlist(gt_perm_use[[i]]), ncol = 2 * hnc, byrow = TRUE)
     tmp_gtc_mk <- gtc_mk
     tmp_gtc_mk[which(tmp_gtc_mk == 99, arr.ind = TRUE)] <- "Q"
     gtc_mk_bind <- matrix("", nrow(tmp_gtc_mk), hnc)
@@ -149,9 +187,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
   names(rph_base_use) <- markers_use
 
   # Genotype combinations
-  n_gtc_use <- rep(NA, n_mk)
-  gtc_use <- vector(mode = "list", length = n_mk)
-  names(gtc_use) <- markers_use
+  n_gt_comb_use <- rep(NA, n_mk)
+  n_gt_perm_use <- rep(0, n_mk)
+  gt_perm_use <- vector(mode = "list", length = n_mk)
+  names(gt_perm_use) <- markers_use
 
   # Genotype probabilities
   gtc_logprob_use <- vector(mode = "list", length = n_mk)
@@ -244,37 +283,44 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     cand_gt <- asplit(cand_gt, 1)
 
     # Indices of genotypes of each contributor in all candidate genotype combinations
-    index_gtc <- permutations(n = length(cand_gt), r = hnc, repeats.allowed = TRUE)
-    index_gtc_cpp <- index_gtc - 1 # C++ index
-    index_gtc_cpp <- asplit(index_gtc_cpp, 1)
+    index_gt_comb <- combinations(n = length(cand_gt), r = hnc, repeats.allowed = TRUE)
+    index_gt_comb_cpp <- index_gt_comb - 1 # C++ index
+    index_gt_comb_cpp <- asplit(index_gt_comb_cpp, 1)
 
     # Indices of genotypes of each contributor in each adopted genotype combination
-    tmp <- judge_gtc_mk(cand_gt, index_gtc_cpp, peaks, heights_all_rep,
-                        bsrs, fsrs, dsrs, m2srs,
-                        bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
-    index_gtc_adopt_cpp <- tmp[[1]]
-    bool_gtc_di_mk_rep <- tmp[[2]]
+    tmp <- judge_gt_comb_mk(cand_gt, index_gt_comb_cpp, peaks, heights_all_rep,
+                            bsrs, fsrs, dsrs, m2srs,
+                            bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+    index_gt_comb_adopt_cpp <- tmp[[1]]
+    bool_gt_comb_di_mk_rep <- tmp[[2]]
 
     # The number of adopted genotype combinations
-    n_gtc_use[i] <- n_gtc <- length(index_gtc_adopt_cpp)
+    n_gt_comb_use[i] <- length(index_gt_comb_adopt_cpp)
 
-    # --- Prepare objects for de-duplication (pattern 1) --- #
+    if(!any(is.element(n_gt_comb_use, 0))){
 
-    if(!any(is.element(n_gtc_use, 0))){
+      # --- Calculate genotype probabilities in each genotype combination --- #
 
-      # Extract genotype combinations
-      gtc_use[[i]] <- gtc_mk <- extract_gtc_adopt(cand_gt, index_gtc_adopt_cpp)
-
-      # Calculate genotype probabilities
+      gt_comb <- extract_gts_adopt(cand_gt, index_gt_comb_adopt_cpp)
       n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
       obs_al <- as.numeric(names(n_obs))
-      gtc_prob_mk <- calc_gtc_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = rep(0, hnc), n_obs, obs_al)
-      gtc_logprob_use[[i]] <- log(gtc_prob_mk)
+      gt_comb_prob_mk <- calc_gts_prob_mk(gt_comb, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = rep(0, hnc), n_obs, obs_al)
+      log_gt_comb_prob_mk <- log(gt_comb_prob_mk)
+
+      # --- Create objects for genotype permutations --- #
+
+      tmp <- create_gt_perm_obj(cand_gt, index_gt_comb_adopt_cpp, log_gt_comb_prob_mk, bool_gt_comb_di_mk_rep)
+      gt_perm_use[[i]] <- gt_perm <- tmp$gt_perm
+      n_gt_perm_use[i] <- n_gt_perm <- length(gt_perm)
+      gtc_logprob_use[[i]] <- tmp$log_gt_perm_prob_mk
+      bool_gt_perm_di_mk_rep <- tmp$bool_gt_perm_di_mk_rep
+
+      # --- Prepare objects for de-duplication (pattern 1) --- #
 
       for(j in 1:n_rep){
 
         # Search the indices of the relative peak heights for each genotype combinations
-        index_rph_gtc_cpp <- connect_rph_gtc_mk(cand_gt, index_gtc_adopt_cpp, peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di_mk_rep[[j]])
+        index_rph_gtc_cpp <- connect_rph_gtc_mk(gt_perm, peaks, bsrs, fsrs, dsrs, m2srs, bool_gt_perm_di_mk_rep[[j]])
         index_rph_gtc_cpp <- unlist(index_rph_gtc_cpp, recursive = FALSE)
         index_rph_gtc <- matrix(unlist(index_rph_gtc_cpp) + 1, nrow = 2 * hnc) # R index
 
@@ -286,12 +332,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         cv_square_dedup1_tmp <- matrix(cv_square_base_mk[index_dedup1_tmp], nrow = 2 * hnc)
 
         # Scale of degradation  corrected by sizes for de-duplicated objects (pattern 1)
-        deg_size_dedup1_tmp <- rep((sizes - min_size) / min_size, n_gtc)
+        deg_size_dedup1_tmp <- rep((sizes - min_size) / min_size, n_gt_perm)
         deg_size_dedup1_tmp <- deg_size_dedup1_tmp[bool_duplicated_adopt]
 
         # Observe peak heights for de-duplicated objects (pattern 1)
         heights <- heights_all_rep[[j]]
-        oph_dedup1_tmp <- rep(heights, n_gtc)
+        oph_dedup1_tmp <- rep(heights, n_gt_perm)
         oph_dedup1_tmp <- oph_dedup1_tmp[bool_duplicated_adopt]
 
         # Calculate relative peak heights in each peak for de-duplicated objects
@@ -338,10 +384,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
         index_dedup2_list_cpp[[j]][[i]] <- create_index_dedup2_mk(index_rph_gtc_cpp, index_dedup1_list_cpp[[j]][[i]])
       }
+    }else{
+      n_gt_perm_use[i] <- 0
     }
   }
 
-  if(!any(is.element(n_gtc_use, 0))){
+  if(!any(is.element(n_gt_perm_use, 0))){
 
     # --- Determine the lower and upper values for the parameter tph --- #
 
@@ -372,7 +420,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
           for(i in 1:n_rep){
             lpd_gtc_all_rep[[i]] <- calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[[i]], n_dropout_list[[i]], n_dropin_list[[i]], n_ignore_list[[i]], rph_base_use,
                                                       index_dedup1_list_cpp[[i]], cv_squared_dedup1_list[[i]], deg_size_dedup1_list[[i]], oph_dedup1_list[[i]], loglike_di_list[[i]],
-                                                      index_dedup2_list_cpp[[i]], n_gtc_use, n_peak_use)
+                                                      index_dedup2_list_cpp[[i]], n_gt_perm_use, n_peak_use)
           }
 
           # Calculate log likelihood in each marker
@@ -459,7 +507,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
           for(i in 1:n_rep){
             lpd_gtc_all_rep[[i]] <- calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[[i]], n_dropout_list[[i]], n_dropin_list[[i]], n_ignore_list[[i]], rph_base_use,
                                                       index_dedup1_list_cpp[[i]], cv_squared_dedup1_list[[i]], deg_size_dedup1_list[[i]], oph_dedup1_list[[i]], loglike_di_list[[i]],
-                                                      index_dedup2_list_cpp[[i]], n_gtc_use, n_peak_use)
+                                                      index_dedup2_list_cpp[[i]], n_gt_perm_use, n_peak_use)
           }
 
           # Calculate log likelihood in each marker
@@ -545,7 +593,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     for(i in 1:n_rep){
       lpd_gtc_all_rep[[i]] <- calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[[i]], n_dropout_list[[i]], n_dropin_list[[i]], n_ignore_list[[i]], rph_base_use,
                                                 index_dedup1_list_cpp[[i]], cv_squared_dedup1_list[[i]], deg_size_dedup1_list[[i]], oph_dedup1_list[[i]], loglike_di_list[[i]],
-                                                index_dedup2_list_cpp[[i]], n_gtc_use, n_peak_use)
+                                                index_dedup2_list_cpp[[i]], n_gt_perm_use, n_peak_use)
     }
 
     # Calculate log likelihood in each marker
@@ -553,7 +601,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     loglike_all_mk <- tmp[[1]]
     loglike_gtc_all_mk <- tmp[[2]]
 
-    dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gtc_use, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk)
+    dt_pg_list <- make_dt_pg_list(markers_use, paste0("U", 1:hnc), gt_perm_use, gtc_logprob_use, lpd_gtc_all_rep, loglike_gtc_all_mk)
 
     log10like_all_mk <- loglike_all_mk / log(10)
     dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
@@ -578,7 +626,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                 "warning_message" = warning_message,
                 "error_message" = NULL))
   }else{
-    markers_unexplainable <- markers_use[n_gtc_use == 0]
+    markers_unexplainable <- markers_use[n_gt_perm_use == 0]
     if(hnc == 1){
       error_message <- paste0("The following marker(s) cannot be explained under ", hnc, " contributor.<br>")
     }else{

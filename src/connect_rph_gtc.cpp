@@ -59,7 +59,7 @@ std::vector<std::vector<int>> connect_rph_gtc(std::vector<double> gtc,
   //Index for drop-in
   for(int i = 0; i < n_peak; ++i){
     if(bool_gtc_di[i + 1]){
-      index_rph_gtc_cpp.at(i) = std::vector<int>(n_allele, 5 * n_peak + 1);
+      index_rph_gtc_cpp[i] = std::vector<int>(n_allele, 5 * n_peak + 1);
     }
   }
 
@@ -83,24 +83,22 @@ std::vector<std::vector<int>> connect_rph_gtc(std::vector<double> gtc,
 }
 
 // [[Rcpp::export]]
-std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::vector<double>> cand_gts,
-                                                              std::vector<std::vector<int>> index_gt_comb_adopt,
+std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::vector<double>> gt_perm,
                                                               std::vector<double> peaks,
                                                               std::vector<double> bsrs,
                                                               std::vector<double> fsrs,
                                                               std::vector<double> dsrs,
                                                               std::vector<double> m2srs,
                                                               std::vector<std::vector<bool>> bool_gtc_di_mk){
-  int n_gt_comb = index_gt_comb_adopt.size();
-  int hnc = index_gt_comb_adopt.at(0).size();
+  int n_gt_comb = gt_perm.size();
+  int n_al = gt_perm[0].size();
   int n_peak = peaks.size();
 
-  std::vector<std::vector<std::vector<int>>> index_rph_gtc_mk(n_gt_comb, std::vector<std::vector<int>>(n_peak, std::vector<int>(2 * hnc)));
+  std::vector<std::vector<std::vector<int>>> index_rph_gtc_mk(n_gt_comb, std::vector<std::vector<int>>(n_peak, std::vector<int>(n_al)));
 
   #pragma omp parallel for
   for(int i = 0; i < n_gt_comb; ++i){
-    std::vector<int> ind_gtc = index_gt_comb_adopt[i];
-    std::vector<double> gtc = extract_gt_comb(cand_gts, ind_gtc, hnc);
+    std::vector<double> gtc = gt_perm[i];
     std::vector<bool> bool_gtc_di = bool_gtc_di_mk[i];
 
     std::vector<double> bs_gtc = calc_bs(gtc);
@@ -110,7 +108,7 @@ std::vector<std::vector<std::vector<int>>> connect_rph_gtc_mk(std::vector<std::v
 
     auto result = connect_rph_gtc(gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc,
                                   peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di);
-    index_rph_gtc_mk.at(i) = std::move(result);
+    index_rph_gtc_mk[i] = std::move(result);
   }
 
   return(index_rph_gtc_mk);

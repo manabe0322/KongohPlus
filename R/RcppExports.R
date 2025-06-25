@@ -5,8 +5,8 @@ connect_rph_gtc <- function(gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc, peaks, bsrs, f
     .Call(`_KongohPlus_connect_rph_gtc`, gtc, bs_gtc, fs_gtc, ds_gtc, m2s_gtc, peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di)
 }
 
-connect_rph_gtc_mk <- function(cand_gts, index_gt_comb_adopt, peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di_mk) {
-    .Call(`_KongohPlus_connect_rph_gtc_mk`, cand_gts, index_gt_comb_adopt, peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di_mk)
+connect_rph_gtc_mk <- function(gt_perm, peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di_mk) {
+    .Call(`_KongohPlus_connect_rph_gtc_mk`, gt_perm, peaks, bsrs, fsrs, dsrs, m2srs, bool_gtc_di_mk)
 }
 
 extract_subvec_int <- function(vec, index_start, index_end) {
@@ -93,16 +93,16 @@ search_index_dropin <- function(peaks_rm99, detectable_peak) {
     .Call(`_KongohPlus_search_index_dropin`, peaks_rm99, detectable_peak)
 }
 
-judge_gt_comb_dropin <- function(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gtc_di) {
-    .Call(`_KongohPlus_judge_gt_comb_dropin`, peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gtc_di)
+judge_gt_comb_dropin <- function(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gt_comb_di) {
+    .Call(`_KongohPlus_judge_gt_comb_dropin`, peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gt_comb_di)
 }
 
 remove_dropin <- function(peaks_rm99, heights_rm99, index_dropin) {
     .Call(`_KongohPlus_remove_dropin`, peaks_rm99, heights_rm99, index_dropin)
 }
 
-judge_gt_comb_sr <- function(gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr, n_dropin, bool_gtc_di) {
-    .Call(`_KongohPlus_judge_gt_comb_sr`, gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr, n_dropin, bool_gtc_di)
+judge_gt_comb_sr <- function(gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr, n_dropin, bool_gt_comb_di) {
+    .Call(`_KongohPlus_judge_gt_comb_sr`, gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr, n_dropin, bool_gt_comb_di)
 }
 
 judge_gt_comb <- function(gtc, peaks, heights, peaks_rm99, heights_rm99, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr) {
