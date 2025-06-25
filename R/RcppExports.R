@@ -77,8 +77,8 @@ calc_parent_al_m2s_one <- function(m2s) {
     .Call(`_KongohPlus_calc_parent_al_m2s_one`, m2s)
 }
 
-extract_gtc <- function(cand_gts, ind_gtc, hnc) {
-    .Call(`_KongohPlus_extract_gtc`, cand_gts, ind_gtc, hnc)
+extract_gt_comb <- function(cand_gt, ind_gtc, hnc) {
+    .Call(`_KongohPlus_extract_gt_comb`, cand_gt, ind_gtc, hnc)
 }
 
 log_sum_exp <- function(log_values) {
@@ -93,28 +93,28 @@ search_index_dropin <- function(peaks_rm99, detectable_peak) {
     .Call(`_KongohPlus_search_index_dropin`, peaks_rm99, detectable_peak)
 }
 
-judge_gtc_dropin <- function(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gtc_di) {
-    .Call(`_KongohPlus_judge_gtc_dropin`, peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gtc_di)
+judge_gt_comb_dropin <- function(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gtc_di) {
+    .Call(`_KongohPlus_judge_gt_comb_dropin`, peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gtc_di)
 }
 
 remove_dropin <- function(peaks_rm99, heights_rm99, index_dropin) {
     .Call(`_KongohPlus_remove_dropin`, peaks_rm99, heights_rm99, index_dropin)
 }
 
-judge_gtc_sr <- function(gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr, n_dropin, bool_gtc_di) {
-    .Call(`_KongohPlus_judge_gtc_sr`, gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr, n_dropin, bool_gtc_di)
+judge_gt_comb_sr <- function(gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr, n_dropin, bool_gtc_di) {
+    .Call(`_KongohPlus_judge_gt_comb_sr`, gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr, n_dropin, bool_gtc_di)
 }
 
-judge_gtc <- function(gtc, peaks, heights, peaks_rm99, heights_rm99, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr) {
-    .Call(`_KongohPlus_judge_gtc`, gtc, peaks, heights, peaks_rm99, heights_rm99, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+judge_gt_comb <- function(gtc, peaks, heights, peaks_rm99, heights_rm99, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr) {
+    .Call(`_KongohPlus_judge_gt_comb`, gtc, peaks, heights, peaks_rm99, heights_rm99, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
 }
 
-judge_gtc_mk <- function(cand_gts, index_gtc_cpp, peaks, heights_all_rep, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr) {
-    .Call(`_KongohPlus_judge_gtc_mk`, cand_gts, index_gtc_cpp, peaks, heights_all_rep, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+judge_gt_comb_mk <- function(cand_gt, index_gt_comb_cpp, peaks, heights_all_rep, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr) {
+    .Call(`_KongohPlus_judge_gt_comb_mk`, cand_gt, index_gt_comb_cpp, peaks, heights_all_rep, bsrs, fsrs, dsrs, m2srs, bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
 }
 
-extract_gtc_adopt <- function(cand_gts, index_gtc_adopt_cpp) {
-    .Call(`_KongohPlus_extract_gtc_adopt`, cand_gts, index_gtc_adopt_cpp)
+extract_gt_comb_adopt <- function(cand_gt, index_gt_comb_adopt_cpp) {
+    .Call(`_KongohPlus_extract_gt_comb_adopt`, cand_gt, index_gt_comb_adopt_cpp)
 }
 
 calc_gtc_prob <- function(gtc, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al) {

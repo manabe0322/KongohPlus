@@ -177,12 +177,12 @@ double calc_parent_al_m2s_one(double m2s){
 }
 
 // [[Rcpp::export]]
-std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts,
-                                std::vector<int> ind_gtc,
-                                int hnc){
+std::vector<double> extract_gt_comb(std::vector<std::vector<double>> cand_gt,
+                                    std::vector<int> ind_gtc,
+                                    int hnc){
   std::vector<double> gtc(2 * hnc);
   for(int i = 0; i < hnc; ++i){
-    std::vector<double> gt = cand_gts[ind_gtc[i]];
+    std::vector<double> gt = cand_gt[ind_gtc[i]];
     gtc[2 * i] = gt[0];
     gtc[2 * i + 1] = gt[1];
   }

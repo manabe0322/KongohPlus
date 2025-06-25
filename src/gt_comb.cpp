@@ -54,7 +54,7 @@ std::vector<int> search_index_dropin(std::vector<double> peaks_rm99,
 }
 
 // [[Rcpp::export]]
-std::vector<bool> judge_gtc_dropin(std::vector<double> peaks_rm99,
+std::vector<bool> judge_gt_comb_dropin(std::vector<double> peaks_rm99,
                                    std::vector<double> heights_rm99,
                                    std::vector<double> detectable_peak,
                                    std::vector<int> index_dropin,
@@ -97,7 +97,7 @@ std::vector<std::vector<double>> remove_dropin(std::vector<double> peaks_rm99,
 }
 
 // [[Rcpp::export]]
-std::vector<bool> judge_gtc_sr(std::vector<double> gtc,
+std::vector<bool> judge_gt_comb_sr(std::vector<double> gtc,
                                std::vector<double> peaks,
                                std::vector<double> peaks_rm99_rmdi,
                                std::vector<double> heights_rm99_rmdi,
@@ -209,21 +209,21 @@ std::vector<bool> judge_gtc_sr(std::vector<double> gtc,
 }
 
 // [[Rcpp::export]]
-std::vector<bool> judge_gtc(std::vector<double> gtc,
-                            std::vector<double> peaks,
-                            std::vector<double> heights,
-                            std::vector<double> peaks_rm99,
-                            std::vector<double> heights_rm99,
-                            std::vector<double> bsrs,
-                            std::vector<double> fsrs,
-                            std::vector<double> dsrs,
-                            std::vector<double> m2srs,
-                            double bsr_fltr,
-                            double fsr_fltr,
-                            double dsr_fltr,
-                            double m2sr_fltr,
-                            int n_dropin_fltr,
-                            double h_dropin_fltr){
+std::vector<bool> judge_gt_comb(std::vector<double> gtc,
+                                std::vector<double> peaks,
+                                std::vector<double> heights,
+                                std::vector<double> peaks_rm99,
+                                std::vector<double> heights_rm99,
+                                std::vector<double> bsrs,
+                                std::vector<double> fsrs,
+                                std::vector<double> dsrs,
+                                std::vector<double> m2srs,
+                                double bsr_fltr,
+                                double fsr_fltr,
+                                double dsr_fltr,
+                                double m2sr_fltr,
+                                int n_dropin_fltr,
+                                double h_dropin_fltr){
   int n_peak = peaks.size();
 
   // The first object represents whether the genotype combination is adopted or not. The other objects represent whether each peak can be explained by a drop-in or not.
@@ -235,7 +235,7 @@ std::vector<bool> judge_gtc(std::vector<double> gtc,
 
   int n_dropin = index_dropin.size();
   if(n_dropin != 0){
-    bool_gtc_di = judge_gtc_dropin(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gtc_di);
+    bool_gtc_di = judge_gt_comb_dropin(peaks_rm99, heights_rm99, detectable_peak, index_dropin, n_dropin_fltr, h_dropin_fltr, bool_gtc_di);
   }
 
   if(bool_gtc_di[0]){
@@ -245,32 +245,32 @@ std::vector<bool> judge_gtc(std::vector<double> gtc,
     std::vector<double> heights_rm99_rmdi = tmp.at(1);
 
     // Judge a genotype combination considering both stutters and drop-in
-    bool_gtc_di = judge_gtc_sr(gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi,
-                               bsrs, fsrs, dsrs, m2srs,
-                               bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr,
-                               n_dropin_fltr, h_dropin_fltr, n_dropin, bool_gtc_di);
+    bool_gtc_di = judge_gt_comb_sr(gtc, peaks, peaks_rm99_rmdi, heights_rm99_rmdi,
+                                   bsrs, fsrs, dsrs, m2srs,
+                                   bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr,
+                                   n_dropin_fltr, h_dropin_fltr, n_dropin, bool_gtc_di);
   }
 
   return(bool_gtc_di);
 }
 
 // [[Rcpp::export]]
-Rcpp::List judge_gtc_mk(std::vector<std::vector<double>> cand_gts,
-                        std::vector<std::vector<int>> index_gtc_cpp,
-                        std::vector<double> peaks,
-                        std::vector<std::vector<double>> heights_all_rep,
-                        std::vector<double> bsrs,
-                        std::vector<double> fsrs,
-                        std::vector<double> dsrs,
-                        std::vector<double> m2srs,
-                        double bsr_fltr,
-                        double fsr_fltr,
-                        double dsr_fltr,
-                        double m2sr_fltr,
-                        int n_dropin_fltr,
-                        double h_dropin_fltr){
-  int n_gt_comb = index_gtc_cpp.size();
-  int hnc = index_gtc_cpp.at(0).size();
+Rcpp::List judge_gt_comb_mk(std::vector<std::vector<double>> cand_gt,
+                            std::vector<std::vector<int>> index_gt_comb_cpp,
+                            std::vector<double> peaks,
+                            std::vector<std::vector<double>> heights_all_rep,
+                            std::vector<double> bsrs,
+                            std::vector<double> fsrs,
+                            std::vector<double> dsrs,
+                            std::vector<double> m2srs,
+                            double bsr_fltr,
+                            double fsr_fltr,
+                            double dsr_fltr,
+                            double m2sr_fltr,
+                            int n_dropin_fltr,
+                            double h_dropin_fltr){
+  int n_gt_comb = index_gt_comb_cpp.size();
+  int hnc = index_gt_comb_cpp.at(0).size();
   int n_peak = peaks.size();
   int n_rep = heights_all_rep.size();
 
@@ -278,13 +278,13 @@ Rcpp::List judge_gtc_mk(std::vector<std::vector<double>> cand_gts,
   std::vector<double> peaks_rm99 = peaks;
   peaks_rm99.erase(peaks_rm99.begin() + n_peak - 1);
 
-  std::vector<std::vector<int>> index_gtc_adopt_cpp;
-  std::vector<std::vector<std::vector<bool>>> bool_gtc_di_mk_rep(n_rep);
+  std::vector<std::vector<int>> index_gt_comb_adopt_cpp;
+  std::vector<std::vector<std::vector<bool>>> bool_gt_comb_di_mk_rep(n_rep);
 
   int count = 0;
   for(int i = 0; i < n_gt_comb; ++i){
-    std::vector<int> ind_gtc = index_gtc_cpp.at(i);
-    std::vector<double> gtc = extract_gtc(cand_gts, ind_gtc, hnc);
+    std::vector<int> ind_gtc = index_gt_comb_cpp.at(i);
+    std::vector<double> gtc = extract_gt_comb(cand_gt, ind_gtc, hnc);
 
     bool adopt_gtc = true;
     std::vector<std::vector<bool>> bool_gtc_di_rep(n_rep, std::vector<bool>(n_peak + 1, false));
@@ -295,9 +295,9 @@ Rcpp::List judge_gtc_mk(std::vector<std::vector<double>> cand_gts,
       std::vector<double> heights_rm99 = heights;
       heights_rm99.erase(heights_rm99.begin() + n_peak - 1);
 
-      bool_gtc_di_rep[j] = judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99,
-                                     bsrs, fsrs, dsrs, m2srs,
-                                     bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr);
+      bool_gtc_di_rep[j] = judge_gt_comb(gtc, peaks, heights, peaks_rm99, heights_rm99,
+                                         bsrs, fsrs, dsrs, m2srs,
+                                         bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr);
       adopt_gtc = bool_gtc_di_rep[j][0];
       if(!adopt_gtc){
         break;
@@ -305,15 +305,15 @@ Rcpp::List judge_gtc_mk(std::vector<std::vector<double>> cand_gts,
     }
 
     if(adopt_gtc){
-      index_gtc_adopt_cpp.push_back(std::vector<int>(hnc));
+      index_gt_comb_adopt_cpp.push_back(std::vector<int>(hnc));
       for(int j = 0; j < hnc; ++j){
-        index_gtc_adopt_cpp[count][j] = ind_gtc[j];
+        index_gt_comb_adopt_cpp[count][j] = ind_gtc[j];
       }
 
       for(int j = 0; j < n_rep; ++j){
-        bool_gtc_di_mk_rep[j].push_back(std::vector<bool>(n_peak + 1));
+        bool_gt_comb_di_mk_rep[j].push_back(std::vector<bool>(n_peak + 1));
         for(int k = 0; k < n_peak + 1; ++k){
-          bool_gtc_di_mk_rep[j][count][k] = bool_gtc_di_rep[j][k];
+          bool_gt_comb_di_mk_rep[j][count][k] = bool_gtc_di_rep[j][k];
         }
       }
 
@@ -321,25 +321,25 @@ Rcpp::List judge_gtc_mk(std::vector<std::vector<double>> cand_gts,
     }
   }
 
-  List result = List::create(index_gtc_adopt_cpp, bool_gtc_di_mk_rep);
+  List result = List::create(index_gt_comb_adopt_cpp, bool_gt_comb_di_mk_rep);
   return(result);
 }
 
 // [[Rcpp::export]]
-std::vector<std::vector<double>> extract_gtc_adopt(std::vector<std::vector<double>> cand_gts,
-                                                   std::vector<std::vector<int>> index_gtc_adopt_cpp){
-  int n_gtc_adopt = index_gtc_adopt_cpp.size();
-  int hnc = index_gtc_adopt_cpp[0].size();
-  std::vector<std::vector<double>> gtc_adopt(n_gtc_adopt, std::vector<double>(2 * hnc));
+std::vector<std::vector<double>> extract_gt_comb_adopt(std::vector<std::vector<double>> cand_gt,
+                                                       std::vector<std::vector<int>> index_gt_comb_adopt_cpp){
+  int n_gt_comb_adopt = index_gt_comb_adopt_cpp.size();
+  int hnc = index_gt_comb_adopt_cpp[0].size();
+  std::vector<std::vector<double>> gt_comb(n_gt_comb_adopt, std::vector<double>(2 * hnc));
 
-  for(int i = 0; i < n_gtc_adopt; ++i){
-    std::vector<int> ind_gtc = index_gtc_adopt_cpp[i];
+  for(int i = 0; i < n_gt_comb_adopt; ++i){
+    std::vector<int> ind_gtc = index_gt_comb_adopt_cpp[i];
     for(int j = 0; j < hnc; ++j){
-      std::vector<double> gt = cand_gts[ind_gtc[j]];
-      gtc_adopt[i][2 * j] = gt[0];
-      gtc_adopt[i][2 * j + 1] = gt[1];
+      std::vector<double> gt = cand_gt[ind_gtc[j]];
+      gt_comb[i][2 * j] = gt[0];
+      gt_comb[i][2 * j + 1] = gt[1];
     }
   }
 
-  return(gtc_adopt);
+  return(gt_comb);
 }

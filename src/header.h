@@ -27,5 +27,5 @@ double calc_parent_al_bs_one(double bs);
 double calc_parent_al_fs_one(double fs);
 double calc_parent_al_ds_one(double ds);
 double calc_parent_al_m2s_one(double m2s);
-std::vector<double> extract_gtc(std::vector<std::vector<double>> cand_gts, std::vector<int> ind_gtc, int hnc);
+std::vector<double> extract_gt_comb(std::vector<std::vector<double>> cand_gt, std::vector<int> ind_gtc, int hnc);
 double log_sum_exp(const std::vector<double>& log_values);
