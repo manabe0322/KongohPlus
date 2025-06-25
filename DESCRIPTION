@@ -1,7 +1,7 @@
 Package: KongohPlus
 Type: Package
 Title: Probabilistic genotyping software based on a quantitative continuous model
-Version: 0.19.0
+Version: 0.20.0
 Author: Sho Manabe <manabe.sho@kmu.ac.jp>
 Maintainer: Sho Manabe <manabe.sho@kmu.ac.jp>
 Description: Probabilistic genotyping software based on a quantitative continuous model.
