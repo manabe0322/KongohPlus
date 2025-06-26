@@ -154,6 +154,8 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
 #' @param cv_allele The coefficient of variation for allelels
 #' @param cv_stutter The coefficient of variation for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
+#' @param min_mp Minimum mixture proportion
+#' @param min_deg Minimum degradation parameter
 #' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
@@ -163,7 +165,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, rate_di,
                             ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                            stop_iter, max_iter, num_converged, max_mle_runs){
+                            min_mp, min_deg, stop_iter, max_iter, num_converged, max_mle_runs){
 
   # --- Start computation --- #
 
@@ -433,7 +435,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         return(loglike)
       }
 
-      lower_bounds <- c(rep(0, n_rep), 0)
+      lower_bounds <- c(rep(0, n_rep), min_deg)
       upper_bounds <- c(rep(1, n_rep), 1)
 
       # Perform simulated annealing
@@ -517,8 +519,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         return(loglike)
       }
 
-      lower_bounds <- c(rep(0, n_rep), rep(0, hnc - 1), rep(0, hnc))
-      upper_bounds <- c(rep(1, n_rep), rep(1, hnc - 1), rep(1, hnc))
+      lower_bounds <- c(rep(0, n_rep), rep(min_mp, hnc - 1), rep(min_deg, hnc))
+      upper_bounds <- c(rep(1, n_rep), rep(1 - min_mp, hnc - 1), rep(1, hnc))
 
       # Perform simulated annealing
       current_opt <- NULL
@@ -651,12 +653,14 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc_all A vector of the assumed number of contributors
 #' @param theta The theta value for sub-population effect
+#' @param min_mp Minimum mixture proportion
+#' @param min_deg Minimum degradation parameter
 #' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
-                                    stop_iter, max_iter, num_converged, max_mle_runs){
+                                    min_mp, min_deg, stop_iter, max_iter, num_converged, max_mle_runs){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
   if(n_mk != 0){
@@ -712,7 +716,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, rate_di,
                                       ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                                      stop_iter, max_iter, num_converged, max_mle_runs))
+                                      min_mp, min_deg, stop_iter, max_iter, num_converged, max_mle_runs))
       if(!inherits(data_hnc, "try-error")){
         data_hnc_list[[i]] <- data_hnc
       }else{

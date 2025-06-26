@@ -29,6 +29,8 @@ perform_deconvo(
   cv_allele,
   cv_stutter,
   list_dt_average_sr,
+  min_mp,
+  min_deg,
   stop_iter,
   max_iter,
   num_converged,
@@ -83,6 +85,10 @@ perform_deconvo(
 \item{cv_stutter}{The coefficient of variation for stutters}
 
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
+
+\item{min_mp}{Minimum mixture proportion}
+
+\item{min_deg}{Minimum degradation parameter}
 
 \item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
 
