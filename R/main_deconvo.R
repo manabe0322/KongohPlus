@@ -311,11 +311,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     # The number of adopted genotype combinations
     n_gt_comb_use[i] <- length(index_gt_comb_adopt_cpp)
 
-    # --- Remove temporal objects --- #
-
-    rm(tmp, index_gt_comb, index_gt_comb_cpp, auc_below_at)
-    gc()
-
     if(!any(is.element(n_gt_comb_use, 0))){
 
       # --- Calculate genotype probabilities in each genotype combination --- #
@@ -333,11 +328,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       n_gt_perm_use[i] <- n_gt_perm <- length(gt_perm)
       gtc_logprob_use[[i]] <- tmp$log_gt_perm_prob_mk
       bool_gt_perm_di_mk_rep <- tmp$bool_gt_perm_di_mk_rep
-
-      # --- Remove temporal objects --- #
-
-      rm(tmp, gt_comb, n_obs, obs_al, gt_comb_prob_mk, log_gt_comb_prob_mk)
-      gc()
 
       for(j in 1:n_rep){
 
@@ -394,19 +384,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         # --- Prepare objects for de-duplication (pattern 2) --- #
 
         index_dedup2_list_cpp[[j]][[i]] <- create_index_dedup2_mk(index_rph_gtc_cpp, index_dedup1_list_cpp[[j]][[i]])
-
-        # --- Remove temporal objects --- #
-
-        rm(index_rph_gtc_cpp, index_rph_gtc, bool_duplicated_adopt, index_dedup1_tmp,
-           heights, oph_dedup1_tmp, rph_dedup1_tmp, index_oph0, index_ignore, index_dropin, index_dropout, index_general)
-        gc()
       }
-
-      # --- Remove temporal objects --- #
-
-      rm(gt_perm, n_gt_perm, bool_gt_perm_di_mk_rep)
-      gc()
-
     }else{
       n_gt_perm_use[i] <- 0
     }
