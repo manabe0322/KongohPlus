@@ -4,7 +4,7 @@
 std::vector<double> calc_rph_dedup1_cpp(const std::vector<double>& mp,
                                         const std::vector<double>& deg,
                                         const int hnc,
-                                        const std::vector<double>& rph_base_use,
+                                        const std::vector<double>& rph_base_use_mk1,
                                         const std::vector<int>& index_dedup1,
                                         const double deg_size){
   std::vector<double> rph_dedup1(2 * hnc, 0);
@@ -18,8 +18,8 @@ std::vector<double> calc_rph_dedup1_cpp(const std::vector<double>& mp,
 
     double rph_mpdeg = mp_c1 * std::pow(deg_c1, deg_size);
 
-    rph_dedup1[2 * i] = rph_base_use[index_al1] * rph_mpdeg;
-    rph_dedup1[2 * i + 1] = rph_base_use[index_al2] * rph_mpdeg;
+    rph_dedup1[2 * i] = rph_base_use_mk1[index_al1] * rph_mpdeg;
+    rph_dedup1[2 * i + 1] = rph_base_use_mk1[index_al2] * rph_mpdeg;
   }
 
   return(rph_dedup1);
@@ -27,7 +27,8 @@ std::vector<double> calc_rph_dedup1_cpp(const std::vector<double>& mp,
 
 // [[Rcpp::export]]
 std::vector<double> calc_gamma_param_cpp(const std::vector<double>& rph_dedup1,
-                                         const std::vector<double>& cv_squared_dedup1,
+                                         const std::vector<double>& cv_square_base_mk1,
+                                         const std::vector<int>& index_dedup1,
                                          const double tph){
 
   double tmp1_sum(0);
@@ -36,7 +37,7 @@ std::vector<double> calc_gamma_param_cpp(const std::vector<double>& rph_dedup1,
 
   for(int i = 0; i < n_al; ++i){
     tmp1_sum += rph_dedup1[i];
-    tmp2_sum += rph_dedup1[i] * cv_squared_dedup1[i];
+    tmp2_sum += rph_dedup1[i] * cv_square_base_mk1[index_dedup1[i]];
   }
 
   std::vector<double> gamma_param(2);
@@ -101,21 +102,24 @@ std::vector<double> calc_lpd_dedup1_mk(const double tph,
                                        const int n_dropin,
                                        const int n_ignore,
                                        const std::vector<double>& rph_base_use_mk1,
-                                       const std::vector<std::vector<int>>& index_dedup1_rep1_mk1_cpp,
-                                       const std::vector<std::vector<double>>& cv_squared_dedup1_rep1_mk1,
-                                       const std::vector<double>& deg_size_dedup1_rep1_mk1,
-                                       const std::vector<double>& oph_dedup1_rep1_mk1,
-                                       const std::vector<double>& loglike_di_rep1_mk1){
+                                       const std::vector<double>& cv_square_base_mk1,
+                                       const std::vector<double>& deg_size_base_mk1,
+                                       const std::vector<double>& oph_base_rep1_mk1,
+                                       const std::vector<double>& loglike_di_rep1_mk1,
+                                       const std::vector<std::vector<int>>& index_dedup1_rep1_mk1_cpp){
 
   std::vector<double> lpd_dedup1_mk(n_general + n_dropout + n_dropin + n_ignore, 0);
 
   if(n_general != 0){
     #pragma omp parallel for
     for(int i = 0; i < n_general; ++i){
-      std::vector<double> rph_dedup1_general = calc_rph_dedup1_cpp(mp, deg, hnc, rph_base_use_mk1, index_dedup1_rep1_mk1_cpp[i], deg_size_dedup1_rep1_mk1[i]);
-      std::vector<double> gamma_param = calc_gamma_param_cpp(rph_dedup1_general, cv_squared_dedup1_rep1_mk1[i], tph);
+      std::vector<int> index_dedup1 = index_dedup1_rep1_mk1_cpp[i];
+      int min_index = *std::min_element(index_dedup1.begin(), index_dedup1.end());
 
-      double pd = gamma_pdf(oph_dedup1_rep1_mk1[i], gamma_param[0], gamma_param[1]);
+      std::vector<double> rph_dedup1_general = calc_rph_dedup1_cpp(mp, deg, hnc, rph_base_use_mk1, index_dedup1, deg_size_base_mk1[min_index]);
+      std::vector<double> gamma_param = calc_gamma_param_cpp(rph_dedup1_general, cv_square_base_mk1, index_dedup1, tph);
+
+      double pd = gamma_pdf(oph_base_rep1_mk1[min_index], gamma_param[0], gamma_param[1]);
       double log_pd;
       if(pd > 0.0 && std::isfinite(pd)){
         log_pd = std::log(pd);
@@ -129,8 +133,11 @@ std::vector<double> calc_lpd_dedup1_mk(const double tph,
   if(n_dropout != 0){
     #pragma omp parallel for
     for(int i = 0; i < n_dropout; ++i){
-      std::vector<double> rph_dedup1_dropout = calc_rph_dedup1_cpp(mp, deg, hnc, rph_base_use_mk1, index_dedup1_rep1_mk1_cpp[n_general + i], deg_size_dedup1_rep1_mk1[n_general + i]);
-      std::vector<double> gamma_param = calc_gamma_param_cpp(rph_dedup1_dropout, cv_squared_dedup1_rep1_mk1[n_general + i], tph);
+      std::vector<int> index_dedup1 = index_dedup1_rep1_mk1_cpp[n_general + i];
+      int min_index = *std::min_element(index_dedup1.begin(), index_dedup1.end());
+
+      std::vector<double> rph_dedup1_dropout = calc_rph_dedup1_cpp(mp, deg, hnc, rph_base_use_mk1, index_dedup1, deg_size_base_mk1[min_index]);
+      std::vector<double> gamma_param = calc_gamma_param_cpp(rph_dedup1_dropout, cv_square_base_mk1, index_dedup1, tph);
 
       double cd = gamma_cdf(at, gamma_param[0], gamma_param[1]);
       double log_cd;
@@ -182,11 +189,11 @@ std::vector<std::vector<double>> calc_lpd_gtc_rep1(const double tph,
                                                    const std::vector<int>& n_dropin_rep1,
                                                    const std::vector<int>& n_ignore_rep1,
                                                    const std::vector<std::vector<double>>& rph_base_use,
-                                                   const std::vector<std::vector<std::vector<int>>>& index_dedup1_rep1_cpp,
-                                                   const std::vector<std::vector<std::vector<double>>>& cv_squared_dedup1_rep1,
-                                                   const std::vector<std::vector<double>>& deg_size_dedup1_rep1,
-                                                   const std::vector<std::vector<double>>& oph_dedup1_rep1,
+                                                   const std::vector<std::vector<double>>& cv_square_base_use,
+                                                   const std::vector<std::vector<double>>& deg_size_base_use,
+                                                   const std::vector<std::vector<double>>& oph_base_use_rep1,
                                                    const std::vector<std::vector<double>>& loglike_di_rep1,
+                                                   const std::vector<std::vector<std::vector<int>>>& index_dedup1_rep1_cpp,
                                                    const std::vector<std::vector<int>>& index_dedup2_rep1_cpp,
                                                    const std::vector<int>& n_gtc_use,
                                                    const std::vector<int>& n_peak_use){
@@ -195,8 +202,9 @@ std::vector<std::vector<double>> calc_lpd_gtc_rep1(const double tph,
   std::vector<std::vector<double>> lpd_gtc_rep1(n_mk, std::vector<double>());
 
   for(int i = 0; i < n_mk; ++i){
-    std::vector<double> lpd_dedup1_mk = calc_lpd_dedup1_mk(tph, mp, deg, hnc, ats_use[i], n_general_rep1[i], n_dropout_rep1[i], n_dropin_rep1[i], n_ignore_rep1[i], rph_base_use[i],
-                                                           index_dedup1_rep1_cpp[i], cv_squared_dedup1_rep1[i], deg_size_dedup1_rep1[i], oph_dedup1_rep1[i], loglike_di_rep1[i]);
+    std::vector<double> lpd_dedup1_mk = calc_lpd_dedup1_mk(tph, mp, deg, hnc, ats_use[i], n_general_rep1[i], n_dropout_rep1[i], n_dropin_rep1[i], n_ignore_rep1[i],
+                                                           rph_base_use[i], cv_square_base_use[i], deg_size_base_use[i], oph_base_use_rep1[i], loglike_di_rep1[i],
+                                                           index_dedup1_rep1_cpp[i]);
 
     lpd_gtc_rep1[i] = calc_lpd_gtc_mk(lpd_dedup1_mk, index_dedup2_rep1_cpp[i], n_gtc_use[i], n_peak_use[i]);
   }
@@ -215,11 +223,11 @@ std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const double 
                                                                    const std::vector<std::vector<int>>& n_dropin_list,
                                                                    const std::vector<std::vector<int>>& n_ignore_list,
                                                                    const std::vector<std::vector<double>>& rph_base_use,
-                                                                   const std::vector<std::vector<std::vector<std::vector<int>>>>& index_dedup1_list_cpp,
-                                                                   const std::vector<std::vector<std::vector<std::vector<double>>>>& cv_squared_dedup1_list,
-                                                                   const std::vector<std::vector<std::vector<double>>>& deg_size_dedup1_list,
-                                                                   const std::vector<std::vector<std::vector<double>>>& oph_dedup1_list,
+                                                                   const std::vector<std::vector<double>>& cv_square_base_use,
+                                                                   const std::vector<std::vector<double>>& deg_size_base_use,
+                                                                   const std::vector<std::vector<std::vector<double>>>& oph_base_use,
                                                                    const std::vector<std::vector<std::vector<double>>>& loglike_di_list,
+                                                                   const std::vector<std::vector<std::vector<std::vector<int>>>>& index_dedup1_list_cpp,
                                                                    const std::vector<std::vector<std::vector<int>>>& index_dedup2_list_cpp,
                                                                    const std::vector<int>& n_gtc_use,
                                                                    const std::vector<int>& n_peak_use){
@@ -229,9 +237,9 @@ std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const double 
   std::vector<std::vector<std::vector<double>>> lpd_gtc_all_rep(n_rep, std::vector<std::vector<double>>(n_mk, std::vector<double>()));
 
   for(int i = 0; i < n_rep; ++i){
-    lpd_gtc_all_rep[i] = calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[i], n_dropout_list[i], n_dropin_list[i], n_ignore_list[i], rph_base_use,
-                                           index_dedup1_list_cpp[i], cv_squared_dedup1_list[i], deg_size_dedup1_list[i], oph_dedup1_list[i], loglike_di_list[i],
-                                           index_dedup2_list_cpp[i], n_gtc_use, n_peak_use);
+    lpd_gtc_all_rep[i] = calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[i], n_dropout_list[i], n_dropin_list[i], n_ignore_list[i],
+                                           rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use[i], loglike_di_list[i],
+                                           index_dedup1_list_cpp[i], index_dedup2_list_cpp[i], n_gtc_use, n_peak_use);
   }
 
   return(lpd_gtc_all_rep);
