@@ -412,7 +412,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       like_func_single <- function(par){
         # Prepare parameters
         tph <- par[1:n_rep] * (tph_upper - tph_lower) + tph_lower
-        deg <- par[n_rep + 1]
+        deg <- par[n_rep + 1] * (1 - min_deg) + min_deg
         mp <- 1
 
         if(any(deg == 0)){
@@ -435,7 +435,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         return(loglike)
       }
 
-      lower_bounds <- c(rep(0, n_rep), min_deg)
+      lower_bounds <- c(rep(0, n_rep), 0)
       upper_bounds <- c(rep(1, n_rep), 1)
 
       # Perform simulated annealing
@@ -484,7 +484,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       est_params <- current_opt$par
       tph <- est_params[1:n_rep] * (tph_upper - tph_lower) + tph_lower
       mp <- 1
-      deg <- est_params[n_rep + 1]
+      deg <- est_params[n_rep + 1] * (1 - min_deg) + min_deg
 
     }else{
 
@@ -492,8 +492,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       like_func_mix <- function(par){
         # Prepare parameters
         tph <- par[1:n_rep] * (tph_upper - tph_lower) + tph_lower
-        mp_pre <- par[(n_rep + 1):(n_rep + hnc - 1)]
-        deg <- par[(n_rep + hnc):(n_rep + 2 * hnc - 1)]
+        mp_pre <- par[(n_rep + 1):(n_rep + hnc - 1)] * (1 - 2 * min_mp) + min_mp
+        deg <- par[(n_rep + hnc):(n_rep + 2 * hnc - 1)] * (1 - min_deg) + min_deg
 
         mp <- c(mp_pre, 1 - sum(mp_pre))
         if(any(mp == 0)){
@@ -519,8 +519,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         return(loglike)
       }
 
-      lower_bounds <- c(rep(0, n_rep), rep(min_mp, hnc - 1), rep(min_deg, hnc))
-      upper_bounds <- c(rep(1, n_rep), rep(1 - min_mp, hnc - 1), rep(1, hnc))
+      lower_bounds <- c(rep(0, n_rep), rep(0, hnc - 1), rep(0, hnc))
+      upper_bounds <- c(rep(1, n_rep), rep(1, hnc - 1), rep(1, hnc))
 
       # Perform simulated annealing
       current_opt <- NULL
@@ -567,9 +567,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       # Extract estimated parameters
       est_params <- current_opt$par
       tph <- est_params[1:n_rep] * (tph_upper - tph_lower) + tph_lower
-      mp_pre <- est_params[(n_rep + 1):(n_rep + hnc - 1)]
+      mp_pre <- est_params[(n_rep + 1):(n_rep + hnc - 1)] * (1 - 2 * min_mp) + min_mp
       mp <- c(mp_pre, 1 - sum(mp_pre))
-      deg <- est_params[(n_rep + hnc):(n_rep + 2 * hnc - 1)]
+      deg <- est_params[(n_rep + hnc):(n_rep + 2 * hnc - 1)] * (1 - min_deg) + min_deg
 
       # Descending order for estimated mixture proportions
       index_order <- order(mp, decreasing = TRUE)
