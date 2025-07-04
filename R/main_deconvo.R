@@ -66,7 +66,7 @@ generate_init_deconvo_single <- function(n_rep){
 #' @param hnc The assumed number of contributors
 generate_init_deconvo_mix <- function(n_rep, hnc){
   tph_pre <- rbeta(n_rep, 1, 1)
-  mp <- rdirichlet(1, rep(1, hnc))
+  mp <- sort(rdirichlet(1, rep(1, hnc)), decreasing = TRUE)
   mp <- mp[1, 1:(hnc - 1)]
   deg <- rbeta(hnc, 1, 1)
 
