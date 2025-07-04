@@ -496,7 +496,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         deg <- par[(n_rep + hnc):(n_rep + 2 * hnc - 1)] * (1 - min_deg) + min_deg
 
         mp <- c(mp_pre, 1 - sum(mp_pre))
-        if(any(mp == 0)){
+        if(any(mp <= 0)){
+          loglike <- Inf
+        }else if(any(diff(mp) > 0)){
           loglike <- Inf
         }else if(any(deg == 0)){
           loglike <- Inf
@@ -570,11 +572,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       mp_pre <- est_params[(n_rep + 1):(n_rep + hnc - 1)] * (1 - 2 * min_mp) + min_mp
       mp <- c(mp_pre, 1 - sum(mp_pre))
       deg <- est_params[(n_rep + hnc):(n_rep + 2 * hnc - 1)] * (1 - min_deg) + min_deg
-
-      # Descending order for estimated mixture proportions
-      index_order <- order(mp, decreasing = TRUE)
-      mp <- mp[index_order]
-      deg <- deg[index_order]
     }
 
     if(count_solution == num_converged){
