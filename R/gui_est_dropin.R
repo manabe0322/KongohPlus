@@ -18,7 +18,7 @@ est_dropin_ui <- function(id){
                         column(9, uiOutput(ns("name_kit_dropin")))
                       ),
                       br(),
-                      numericInput(ns("at_dropin"), label = h4("Analytical threshold"), value = 25),
+                      numericInput(ns("at_dropin"), label = h4("Analytical threshold"), value = 35),
                       br(),
                       actionButton(ns("act_advance_dropin"), "Advanced setting"),
                       br(),
