@@ -147,11 +147,12 @@ extract_sr_data <- function(peaks, heights, gt, sr_consider){
 
   parent_al <- stutter <- rep("", n_peak)
   stutter_ph <- parent_ph <- total_al_prod <- stutter_ratio <- rep(NA, n_peak)
-  bool_al <- bool_bs <- bool_fs <- bool_ds <- bool_m2s <- bool_shared_allele <- bool_shared_stutter <- rep(FALSE, n_peak)
+  bool_al <- bool_bs <- bool_fs <- bool_ds <- bool_m2s <- bool_shared_allele <- bool_shared_stutter <- bool_allele_dropout <- rep(FALSE, n_peak)
 
   # At least one peak
   if(n_peak > 0){
     bool_al <- is.element(peaks, gt)
+
     if(sr_consider["BS"]){
       bs <- calc_bs(gt)
       bool_bs <- is.element(peaks, bs)
@@ -201,6 +202,10 @@ extract_sr_data <- function(peaks, heights, gt, sr_consider){
             stutter_ratio[i] <- stutter_ph[i] / parent_ph[i]
             bool_shared_allele[i] <- bool_shared_allele_base[index_al]
           }
+
+          else{
+            bool_allele_dropout[i] <- TRUE
+          }
         }
 
         # Shared stutters
@@ -223,6 +228,7 @@ extract_sr_data <- function(peaks, heights, gt, sr_consider){
     bool_ds <- bool_ds[!bool_al]
     bool_m2s <- bool_m2s[!bool_al]
     bool_shared_allele <- bool_shared_allele[!bool_al]
+    bool_allele_dropout <- bool_allele_dropout[!bool_al]
   }
 
   return(list("parent_al" = parent_al,
@@ -235,7 +241,8 @@ extract_sr_data <- function(peaks, heights, gt, sr_consider){
               "bool_fs" = bool_fs,
               "bool_ds" = bool_ds,
               "bool_m2s" = bool_m2s,
-              "bool_shared_allele" = bool_shared_allele))
+              "bool_shared_allele" = bool_shared_allele,
+              "bool_allele_dropout" = bool_allele_dropout))
 }
 
 #' create_dt_sr_data
@@ -267,6 +274,7 @@ create_dt_sr_data <- function(peak_list, height_list, gt_list, sr_consider_auto,
   bool_ds_all <- rep(FALSE, n_max_data)
   bool_m2s_all <- rep(FALSE, n_max_data)
   bool_shared_allele_all <- rep(FALSE, n_max_data)
+  bool_allele_dropout_all <- rep(FALSE, n_max_data)
   bool_info_al_all <- rep(FALSE, n_max_data)
 
   current_index <- 1
@@ -304,6 +312,7 @@ create_dt_sr_data <- function(peak_list, height_list, gt_list, sr_consider_auto,
           bool_ds_all[index_assign] <- tmp$bool_ds
           bool_m2s_all[index_assign] <- tmp$bool_m2s
           bool_shared_allele_all[index_assign] <- tmp$bool_shared_allele
+          bool_allele_dropout_all[index_assign] <- tmp$bool_allele_dropout
           bool_info_al_all[index_assign] <- is.element(parent_al, register_info_al)
 
           current_index <- current_index + n_data
@@ -325,6 +334,7 @@ create_dt_sr_data <- function(peak_list, height_list, gt_list, sr_consider_auto,
   bool_ds_all <- bool_ds_all[1:(current_index - 1)]
   bool_m2s_all <- bool_m2s_all[1:(current_index - 1)]
   bool_shared_allele_all <- bool_shared_allele_all[1:(current_index - 1)]
+  bool_allele_dropout_all <- bool_allele_dropout_all[1:(current_index - 1)]
   bool_info_al_all <- bool_info_al_all[1:(current_index - 1)]
 
   dt_sr_data <- data.table(SampleName = sample_name_all,
@@ -340,6 +350,7 @@ create_dt_sr_data <- function(peak_list, height_list, gt_list, sr_consider_auto,
                            Bool_DS = bool_ds_all,
                            Bool_M2S = bool_m2s_all,
                            Bool_SharedAllele = bool_shared_allele_all,
+                           Bool_AlleleDropout = bool_allele_dropout_all,
                            Bool_InfoAllele = bool_info_al_all)
 
   return(dt_sr_data)
@@ -606,34 +617,25 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
       dt_st_mk <- dt_st_type[Marker == mk]
       dt_st_mk <- dt_st_mk[Allele != "Multiple"]
       dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_SharedAllele]
+      dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_AlleleDropout]
+      dt_st_mk <- dt_st_mk[dt_st_mk$Bool_InfoAllele]
+
+      st_alleles <- dt_st_mk$Allele
+      y_sr <- dt_st_mk$SR
+      tap <- dt_st_mk$TAP
+
       dt_kit_mk <- dt_kit[Marker == mk]
+      alname <- dt_kit_mk[["Allele"]]
 
       if(nrow(dt_st_mk) != 0){
 
-        # Extract (corrected) allele repeat numbers, stutter ratios, and total allelic products
+        # Extract (corrected) allele repeat numbers
         if(meth == "Linear (Corrected Allele)"){
-          dt_st_mk <- dt_st_mk[dt_st_mk$Bool_InfoAllele]
-          st_alleles <- dt_st_mk$Allele
-
-          alname <- dt_kit_mk[["Allele"]]
           alcor <- dt_kit_mk[["Corrected Allele"]]
-
-          index_adopt <- which(is.element(st_alleles, alname))
-          st_alleles <- st_alleles[index_adopt]
-
-          index_alcor <- match(st_alleles, alname)
-          x_al <- alcor[index_alcor]
-          y_sr <- dt_st_mk$SR[index_adopt]
-          tap <- dt_st_mk$TAP[index_adopt]
+          x_al <- alcor[match(dt_st_mk$Allele, alname)]
         }else{
-          st_alleles <- dt_st_mk$Allele
-          x_al <- as.numeric(st_alleles)
-          y_sr <- dt_st_mk$SR
-          tap <- dt_st_mk$TAP
-
-          tmp_alname <- c(dt_kit_mk[["Allele"]], st_alleles)
-          alcor <- sort(unique(as.numeric(tmp_alname)))
-          alname <- as.character(alcor)
+          alcor <- sort(unique(as.numeric(alname)))
+          x_al <- as.numeric(dt_st_mk$Allele)
         }
 
         # Merge the data of the current marker with data from other markers where Uniform (Multiple loci) is selected.
