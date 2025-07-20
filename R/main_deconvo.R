@@ -154,7 +154,10 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
 #' @param cv_allele The coefficient of variation for allelels
 #' @param cv_stutter The coefficient of variation for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
-#' @param min_mp Minimum mixture proportion
+#' @param min_temp Minimum template amount
+#' @param max_temp Maximum template amount
+#' @param min_rep_ae Minimum replicate amplification efficiency
+#' @param max_rep_ae Maximum replicate amplification efficiency
 #' @param min_deg Minimum degradation parameter
 #' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
@@ -165,7 +168,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, rate_di,
                             ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                            min_mp, min_deg, stop_iter, max_iter, num_converged, max_mle_runs){
+                            min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs){
 
   # --- Start computation --- #
 
@@ -177,8 +180,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
   n_mk <- length(markers_use)
   n_peak_use <- rep(NA, n_mk)
   names(n_peak_use) <- markers_use
-  median_sizes_use <- rep(NA, n_mk)
-  tph_per_mk_use <- matrix(0, n_mk, n_rep)
 
   # Genotype combinations
   n_gt_comb_use <- rep(NA, n_mk)
@@ -266,14 +267,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     # Extract allele probabilities
     pop_al <- pop_al_list[[mk]]
     pop_prob <- pop_prob_list[[mk]]
-
-    # --- Calculate the median size in the current marker --- #
-
-    median_sizes_use[i] <- median(sizes)
-
-    # --- Calculate total peak heights in each replicate --- #
-
-    tph_per_mk_use[i, ] <- sapply(heights_all_rep, sum) / 2
 
     # --- Calculate the probability of drop-in in the current marker --- #
 
@@ -394,188 +387,102 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
   if(!any(is.element(n_gt_perm_use, 0))){
 
-    # --- Determine the lower and upper values for the parameter tph --- #
+    # --- Optimization --- #
 
-    median_sizes_use <- rep(median_sizes_use, n_rep)
-    tph_per_mk_use <- as.vector(tph_per_mk_use)
-    fit_exp <- lm(log(tph_per_mk_use) ~ median_sizes_use)
-    mu_log <- coef(fit_exp)[1] + coef(fit_exp)[2] * min_size
-    sigma_log <- sd(residuals(fit_exp))
-    tph_lower <- exp(mu_log - 3 * sigma_log)
-    tph_upper <- exp(mu_log + 3 * sigma_log)
+    # likelihood function
+    like_func <- function(par){
 
-    # --- Bayesian optimization --- #
-
-    if(hnc == 1){
-
-      # likelihood function for single-source profiles
-      like_func_single <- function(par){
-        # Prepare parameters
-        tph <- par[1:n_rep] * (tph_upper - tph_lower) + tph_lower
-        deg <- par[n_rep + 1] * (1 - min_deg) + min_deg
-        mp <- 1
-
-        if(any(deg == 0)){
-          loglike <- Inf
-        }else{
-          # Calculate log probability densities of all genotype combinations
-          lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(tph, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
-                                                  rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list,
-                                                  index_dedup1_list_cpp, index_dedup2_list_cpp, n_gt_perm_use, n_peak_use)
-
-          # Calculate log likelihood in each marker
-          tmp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
-          loglike <- - sum(tmp[[1]])
-
-          if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
-            loglike <- Inf
-          }
-        }
-
-        return(loglike)
+      # Prepare parameters
+      temp <- par[1:hnc] * (max_temp - min_temp) + min_temp
+      deg <- par[(hnc + 1):(2 * hnc)] * (1 - min_deg) + min_deg
+      if(n_rep == 1){
+        rep_ae <- 1
+      }else{
+        rep_ae <- c(1, par[(2 * hnc + 1):(2 * hnc + n_rep - 1)] * (max_rep_ae - min_rep_ae) + min_rep_ae)
       }
 
-      lower_bounds <- c(rep(0, n_rep), 0)
-      upper_bounds <- c(rep(1, n_rep), 1)
+      tph <- sum(temp) * rep_ae
+      mp <- temp / sum(temp)
 
-      # Perform simulated annealing
-      current_opt <- NULL
-      current_score <- Inf
-      current_score_round <- Inf
-      count_mle <- 0
-      count_solution <- 0
-      init_list <- list()
-      opt_list <- list()
-      repeat{
-        count_mle <- count_mle + 1
+      # Calculate log probability densities of all genotype combinations
+      lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(tph, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
+                                              rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list,
+                                              index_dedup1_list_cpp, index_dedup2_list_cpp, n_gt_perm_use, n_peak_use)
 
-        init_list[[count_mle]] <- init <- generate_init_deconvo_single(n_rep)
+      # Calculate log likelihood in each marker
+      tmp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
+      loglike <- - sum(tmp[[1]])
 
-        opt_list[[count_mle]] <- opt <- GenSA(
-          par = init,
-          fn = like_func_single,
-          lower = lower_bounds,
-          upper = upper_bounds,
-          control = list(verbose = TRUE, nb.stop.improvement = stop_iter, maxit = max_iter)
-        )
-
-        score <- opt$value
-        if(score < current_score){
-          current_opt <- opt
-          current_score <- score
-        }
-
-        score_round <- round(score, 3)
-        if(score_round < current_score_round){
-          current_score_round <- score_round
-          count_solution <- 1
-        }else if(score_round == current_score_round){
-          count_solution <- count_solution + 1
-        }
-
-        if(count_solution == num_converged){
-          break
-        }else if(count_mle == max_mle_runs){
-          break
-        }
+      if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+        loglike <- Inf
       }
 
-      # Extract estimated parameters
-      est_params <- current_opt$par
-      tph <- est_params[1:n_rep] * (tph_upper - tph_lower) + tph_lower
-      mp <- 1
-      deg <- est_params[n_rep + 1] * (1 - min_deg) + min_deg
-
-    }else{
-
-      # likelihood function for mixture profiles
-      like_func_mix <- function(par){
-        # Prepare parameters
-        tph <- par[1:n_rep] * (tph_upper - tph_lower) + tph_lower
-        mp_pre <- par[(n_rep + 1):(n_rep + hnc - 1)] * (1 - 2 * min_mp) + min_mp
-        deg <- par[(n_rep + hnc):(n_rep + 2 * hnc - 1)] * (1 - min_deg) + min_deg
-
-        mp <- c(mp_pre, 1 - sum(mp_pre))
-        if(any(mp == 0)){
-          loglike <- Inf
-        }else if(any(deg == 0)){
-          loglike <- Inf
-        }else{
-
-          # Calculate log probability densities of all genotype combinations
-          lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(tph, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
-                                                  rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list,
-                                                  index_dedup1_list_cpp, index_dedup2_list_cpp, n_gt_perm_use, n_peak_use)
-
-          # Calculate log likelihood in each marker
-          tmp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
-          loglike <- - sum(tmp[[1]])
-
-          if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
-            loglike <- Inf
-          }
-        }
-
-        return(loglike)
-      }
-
-      lower_bounds <- c(rep(0, n_rep), rep(0, hnc - 1), rep(0, hnc))
-      upper_bounds <- c(rep(1, n_rep), rep(1, hnc - 1), rep(1, hnc))
-
-      # Perform simulated annealing
-      current_opt <- NULL
-      current_score <- Inf
-      current_score_round <- Inf
-      count_mle <- 0
-      count_solution <- 0
-      init_list <- list()
-      opt_list <- list()
-      repeat{
-        count_mle <- count_mle + 1
-
-        init_list[[count_mle]] <- init <- generate_init_deconvo_mix(n_rep, hnc)
-
-        opt_list[[count_mle]] <- opt <- GenSA(
-          par = init,
-          fn = like_func_mix,
-          lower = lower_bounds,
-          upper = upper_bounds,
-          control = list(verbose = TRUE, nb.stop.improvement = stop_iter, maxit = max_iter)
-        )
-
-        score <- opt$value
-        if(score < current_score){
-          current_opt <- opt
-          current_score <- score
-        }
-
-        score_round <- round(score, 3)
-        if(score_round < current_score_round){
-          current_score_round <- score_round
-          count_solution <- 1
-        }else if(score_round == current_score_round){
-          count_solution <- count_solution + 1
-        }
-
-        if(count_solution == num_converged){
-          break
-        }else if(count_mle == max_mle_runs){
-          break
-        }
-      }
-
-      # Extract estimated parameters
-      est_params <- current_opt$par
-      tph <- est_params[1:n_rep] * (tph_upper - tph_lower) + tph_lower
-      mp_pre <- est_params[(n_rep + 1):(n_rep + hnc - 1)] * (1 - 2 * min_mp) + min_mp
-      mp <- c(mp_pre, 1 - sum(mp_pre))
-      deg <- est_params[(n_rep + hnc):(n_rep + 2 * hnc - 1)] * (1 - min_deg) + min_deg
-
-      # Descending order for estimated mixture proportions
-      index_order <- order(mp, decreasing = TRUE)
-      mp <- mp[index_order]
-      deg <- deg[index_order]
+      return(loglike)
     }
+
+    lower_bounds <- c(rep(0, hnc), rep(0, hnc), rep(0, n_rep - 1))
+    upper_bounds <- c(rep(1, hnc), rep(1, hnc), rep(1, n_rep - 1))
+
+    # Perform simulated annealing
+    current_opt <- NULL
+    current_score <- Inf
+    current_score_round <- Inf
+    count_mle <- 0
+    count_solution <- 0
+    init_list <- list()
+    opt_list <- list()
+    repeat{
+      count_mle <- count_mle + 1
+
+      init_list[[count_mle]] <- init <- generate_init_deconvo_mix(n_rep, hnc)
+
+      opt_list[[count_mle]] <- opt <- GenSA(
+        par = init,
+        fn = like_func,
+        lower = lower_bounds,
+        upper = upper_bounds,
+        control = list(verbose = TRUE, nb.stop.improvement = stop_iter, maxit = max_iter)
+      )
+
+      score <- opt$value
+      if(score < current_score){
+        current_opt <- opt
+        current_score <- score
+      }
+
+      score_round <- round(score, 3)
+      if(score_round < current_score_round){
+        current_score_round <- score_round
+        count_solution <- 1
+      }else if(score_round == current_score_round){
+        count_solution <- count_solution + 1
+      }
+
+      if(count_solution == num_converged){
+        break
+      }else if(count_mle == max_mle_runs){
+        break
+      }
+    }
+
+    # Extract estimated parameters
+    est_params <- current_opt$par
+    temp <- est_params[1:hnc] * (max_temp - min_temp) + min_temp
+    deg <- est_params[(hnc + 1):(2 * hnc)] * (1 - min_deg) + min_deg
+    if(n_rep == 1){
+      rep_ae <- 1
+    }else{
+      rep_ae <- c(1, par[(2 * hnc + 1):(2 * hnc + n_rep - 1)] * (max_rep_ae - min_rep_ae) + min_rep_ae)
+    }
+
+    tph <- sum(temp) * rep_ae
+    mp <- temp / sum(temp)
+
+    # Descending order for estimated mixture proportions
+    index_order <- order(mp, decreasing = TRUE)
+    temp <- temp[index_order]
+    mp <- mp[index_order]
+    deg <- deg[index_order]
 
     if(count_solution == num_converged){
       warning_message <- NULL
@@ -601,10 +508,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
                                Log10_Likelihood = c(log10like_all_mk, sum(log10like_all_mk)))
 
-    dt_param <- data.table("Parameter" = c(rep("Template amount", n_rep), rep("Mixture proportion", hnc), rep("Degradation", hnc)),
-                           "Contributor" = c(rep(NA, n_rep), paste0("U", 1:hnc), paste0("U", 1:hnc)),
-                           "Replicate" = c(1:n_rep, rep(NA, hnc), rep(NA, hnc)),
-                           "Estimated value" = c(tph, mp, deg))
+    dt_param <- data.table("Parameter" = c(rep("Template amount", hnc), rep("Degradation", hnc), rep("Replicate amplification efficiency", n_rep)),
+                           "Contributor" = c(paste0("U", 1:hnc), paste0("U", 1:hnc), rep(NA, n_rep)),
+                           "Replicate" = c(rep(NA, hnc), rep(NA, hnc), 1:n_rep),
+                           "Estimated value" = c(temp, deg, rep_ae))
 
     # End computation
     end_time <- proc.time()
@@ -653,14 +560,17 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param hnc_all A vector of the assumed number of contributors
 #' @param theta The theta value for sub-population effect
-#' @param min_mp Minimum mixture proportion
+#' @param min_temp Minimum template amount
+#' @param max_temp Maximum template amount
+#' @param min_rep_ae Minimum replicate amplification efficiency
+#' @param max_rep_ae Maximum replicate amplification efficiency
 #' @param min_deg Minimum degradation parameter
 #' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
-                                    min_mp, min_deg, stop_iter, max_iter, num_converged, max_mle_runs){
+                                    min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
   if(n_mk != 0){
@@ -716,7 +626,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, rate_di,
                                       ae_use, cv_allele, cv_stutter, list_dt_average_sr,
-                                      min_mp, min_deg, stop_iter, max_iter, num_converged, max_mle_runs))
+                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs))
       if(!inherits(data_hnc, "try-error")){
         data_hnc_list[[i]] <- data_hnc
       }else{

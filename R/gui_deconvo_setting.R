@@ -68,7 +68,10 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$theta <- 0
       rv_deconvo_setting$fn_anameth <- ""
       rv_deconvo_setting$dt_anameth <- NULL
-      rv_deconvo_setting$min_mp <- 0.0001
+      rv_deconvo_setting$min_temp <- 1
+      rv_deconvo_setting$max_temp <- 32000
+      rv_deconvo_setting$min_rep_ae <- 0.2
+      rv_deconvo_setting$max_rep_ae <- 5
       rv_deconvo_setting$min_deg <- 0.0001
       rv_deconvo_setting$stop_iter <- 500
       rv_deconvo_setting$max_iter <- 5000
@@ -76,6 +79,9 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$max_mle_runs <- 10
       rv_deconvo_setting$bool_correct_noc <- TRUE
       rv_deconvo_setting$bool_correct_theta <- TRUE
+      rv_deconvo_setting$bool_correct_advanced_temp <- TRUE
+      rv_deconvo_setting$bool_correct_advanced_rep_ae <- TRUE
+      rv_deconvo_setting$bool_correct_advanced_deg <- TRUE
       rv_deconvo_setting$bool_correct_advanced_1 <- TRUE
       rv_deconvo_setting$bool_correct_advanced_2 <- TRUE
       rv_deconvo_setting$dt_ignore_mk <- NULL
@@ -253,14 +259,17 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           h4("MLE conditions"),
           fluidRow(
             column(6,
-                   numericInput(session$ns("min_mp"), label = "Minimum mixture proportion", value = rv_deconvo_setting$min_mp),
                    numericInput(session$ns("stop_iter"), label = "Number of iterations without improvement before stopping one MLE run", value = rv_deconvo_setting$stop_iter),
-                   numericInput(session$ns("num_converged"), label = "Number of converged MLE runs before stopping", value = rv_deconvo_setting$num_converged)
+                   numericInput(session$ns("num_converged"), label = "Number of converged MLE runs before stopping", value = rv_deconvo_setting$num_converged),
+                   numericInput(session$ns("min_temp"), label = "Minimum template amount", value = rv_deconvo_setting$min_temp),
+                   numericInput(session$ns("min_rep_ae"), label = "Minimum replicate amplification efficiency", value = rv_deconvo_setting$min_temp),
+                   numericInput(session$ns("min_deg"), label = "Minimum degradation parameter", value = rv_deconvo_setting$min_deg)
             ),
             column(6,
-                   numericInput(session$ns("min_deg"), label = "Minimum degradation parameter", value = rv_deconvo_setting$min_deg),
                    numericInput(session$ns("max_iter"), label = "Maximum number of iterations in one MLE run", value = rv_deconvo_setting$max_iter),
-                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_deconvo_setting$max_mle_runs)
+                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_deconvo_setting$max_mle_runs),
+                   numericInput(session$ns("max_temp"), label = "Maximum template amount", value = rv_deconvo_setting$max_temp),
+                   numericInput(session$ns("max_rep_ae"), label = "Maximum replicate amplification efficiency", value = rv_deconvo_setting$max_temp)
             )
           ),
           footer = tagList(
@@ -271,18 +280,58 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         ))
       })
 
-      observeEvent(input$min_mp, {
-        min_mp <- input$min_mp
+      observeEvent(input$min_temp | input$max_temp, {
+        min_temp <- input$min_temp
+        input$max_temp
 
-        hideFeedback("min_mp")
-        bool_correct_advanced_mp <- TRUE
+        hideFeedback("min_temp")
+        hideFeedback("max_temp")
+        bool_correct_advanced_temp <- TRUE
 
-        if(!is.numeric(min_mp) || min_mp < 0 || min_mp > 0.25){
-          showFeedbackDanger(inputId = "min_mp", text = "Value must be between 0 and 0.25.")
-          bool_correct_advanced_mp <- FALSE
+        if(!is.numeric(min_temp) || min_temp <= 0){
+          showFeedbackDanger(inputId = "min_temp", text = "Value must be positive.")
+          bool_correct_advanced_temp <- FALSE
         }
 
-        rv_deconvo_setting$bool_correct_advanced_mp <- bool_correct_advanced_mp
+        if(!is.numeric(max_temp) || max_temp <= 0){
+          showFeedbackDanger(inputId = "max_temp", text = "Value must be positive.")
+          bool_correct_advanced_temp <- FALSE
+        }
+
+        if(is.numeric(min_temp) && is.numeric(max_temp) && max_temp < min_temp){
+          showFeedbackDanger(inputId = "min_temp", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_temp", text = "Minimum value cannot be greater than maximum value.")
+          bool_correct_advanced_temp <- FALSE
+        }
+
+        rv_deconvo_setting$bool_correct_advanced_temp <- bool_correct_advanced_temp
+      })
+
+      observeEvent(input$min_rep_ae | input$max_rep_ae, {
+        min_rep_ae <- input$min_rep_ae
+        input$max_rep_ae
+
+        hideFeedback("min_rep_ae")
+        hideFeedback("max_rep_ae")
+        bool_correct_advanced_rep_ae <- TRUE
+
+        if(!is.numeric(min_rep_ae) || min_rep_ae <= 0){
+          showFeedbackDanger(inputId = "min_rep_ae", text = "Value must be positive.")
+          bool_correct_advanced_rep_ae <- FALSE
+        }
+
+        if(!is.numeric(max_rep_ae) || max_rep_ae <= 0){
+          showFeedbackDanger(inputId = "max_rep_ae", text = "Value must be positive.")
+          bool_correct_advanced_rep_ae <- FALSE
+        }
+
+        if(is.numeric(min_rep_ae) && is.numeric(max_rep_ae) && max_rep_ae < min_rep_ae){
+          showFeedbackDanger(inputId = "min_rep_ae", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_rep_ae", text = "Minimum value cannot be greater than maximum value.")
+          bool_correct_advanced_rep_ae <- FALSE
+        }
+
+        rv_deconvo_setting$bool_correct_advanced_rep_ae <- bool_correct_advanced_rep_ae
       })
 
       observeEvent(input$min_deg, {
@@ -291,7 +340,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         hideFeedback("min_deg")
         bool_correct_advanced_deg <- TRUE
 
-        if(!is.numeric(min_deg) || min_deg < 0 || min_deg > 1){
+        if(!is.numeric(min_deg) || min_deg <= 0 || min_deg > 1){
           showFeedbackDanger(inputId = "min_deg", text = "Value must be between 0 and 1.")
           bool_correct_advanced_deg <- FALSE
         }
@@ -356,7 +405,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       observe({
         req(rv_deconvo_setting)
 
-        if(all(rv_deconvo_setting$bool_correct_advanced_mp,
+        if(all(rv_deconvo_setting$bool_correct_advanced_temp,
+               rv_deconvo_setting$bool_correct_advanced_rep_ae,
                rv_deconvo_setting$bool_correct_advanced_deg,
                rv_deconvo_setting$bool_correct_advanced_1,
                rv_deconvo_setting$bool_correct_advanced_2)){
@@ -367,7 +417,10 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       })
 
       observeEvent(input$act_advance_deconvo_save, {
-        rv_deconvo_setting$min_mp <- input$min_mp
+        rv_deconvo_setting$min_temp <- input$min_temp
+        rv_deconvo_setting$max_temp <- input$max_temp
+        rv_deconvo_setting$min_rep_ae <- input$min_rep_ae
+        rv_deconvo_setting$max_rep_ae <- input$max_rep_ae
         rv_deconvo_setting$min_deg <- input$min_deg
         rv_deconvo_setting$stop_iter <- input$stop_iter
         rv_deconvo_setting$max_iter <- input$max_iter
@@ -391,7 +444,10 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         dt_af <- rv_deconvo_setting$dt_af
         fn_anameth <- rv_deconvo_setting$fn_anameth
         dt_anameth <- rv_deconvo_setting$dt_anameth
-        min_mp <- rv_deconvo_setting$min_mp
+        min_temp <- rv_deconvo_setting$min_temp
+        max_temp <- rv_deconvo_setting$max_temp
+        min_rep_ae <- rv_deconvo_setting$min_rep_ae
+        max_rep_ae <- rv_deconvo_setting$max_rep_ae
         min_deg <- rv_deconvo_setting$min_deg
         stop_iter <- rv_deconvo_setting$stop_iter
         max_iter <- rv_deconvo_setting$max_iter
@@ -422,7 +478,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           }else{
             hnc_all <- hnc_from:hnc_to
             data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
-                                                    min_mp, min_deg, stop_iter, max_iter, num_converged, max_mle_runs)
+                                                    min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs)
             data_deconvo$hnc_all <- hnc_all
             data_deconvo$theta <- theta
             data_deconvo$dt_csp <- dt_csp
@@ -435,7 +491,10 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             data_deconvo$dt_ignore_mk <- dt_ignore_mk
             data_deconvo$list_dt_average_sr <- list_dt_average_sr
             data_deconvo$message_sr <- message_sr
-            data_deconvo$min_mp <- min_mp
+            data_deconvo$min_temp <- min_temp
+            data_deconvo$max_temp <- max_temp
+            data_deconvo$min_rep_ae <- min_rep_ae
+            data_deconvo$max_rep_ae <- max_rep_ae
             data_deconvo$min_deg <- min_deg
             data_deconvo$stop_iter <- stop_iter
             data_deconvo$max_iter <- max_iter
