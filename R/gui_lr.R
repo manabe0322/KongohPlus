@@ -147,10 +147,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
               error_message_hd <- data_hd$error_message
               dt_pg_list_hd <- data_hd$dt_pg_list
 
-              n_mk <- length(markers_use)
-              n_ref_hp <- length(hp)
-              n_ref_hd <- length(hd)
-              if(n_ref_hp > noc_hp || n_ref_hd > noc_hd){
+              if(length(hp) > noc_hp || length(hd) > noc_hd){
                 waiter_hide()
                 showModal(modalDialog(title = "Error", "The number of contributors is smaller than the number of known individuals who have been checked as contributors.", easyClose = TRUE, footer = NULL))
               }else if(!is.null(error_message_hp)){
@@ -160,44 +157,22 @@ lr_server <- function(id, rv_input, rv_deconvo){
                 waiter_hide()
                 showModal(modalDialog(title = "Error", HTML(error_message_hd), easyClose = TRUE, footer = NULL))
               }else{
+                tmp <- calculate_lr(noc_hp, hp, noc_hd, hd, refs,
+                                    markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_pg_list_hd, dt_ref)
 
-                hyp_id_all_hp <- make_hyp_id_all(noc_hp, hp, refs)
-                loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_hp)
-                tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hp)
-                index_max_loglike_hp <- tmp$index_max_loglike
-                subsub_log10like_all_mk_hp <- tmp$subsub_log10like_all_mk
-
-                hyp_id_all_hd <- make_hyp_id_all(noc_hd, hd, refs)
-                loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hyp_id_all_hd)
-                tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hd)
-                index_max_loglike_hd <- tmp$index_max_loglike
-                subsub_log10like_all_mk_hd <- tmp$subsub_log10like_all_mk
-
-                rv_lr$dt_lr_display <- dt_lr <- create_dt_lr(subsub_log10like_all_mk_hp, subsub_log10like_all_mk_hd, markers_use)
-                names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
+                lr_data <- tmp$lr_data
+                rv_lr$dt_lr_display <- lr_data$dt_lr
 
                 lr_list <- rv_lr$lr_list
                 if(is.null(lr_list)){
                   lr_list <- list()
-                  lr_list[[1]] <- list("hp" = hp,
-                                                         "hd" = hd,
-                                                         "dt_lr" = dt_lr)
+                  lr_list[[1]] <- lr_data
                 }else{
-                  lr_list[[length(lr_list) + 1]] <- list("hp" = hp,
-                                                         "hd" = hd,
-                                                         "dt_lr" = dt_lr)
+                  lr_list[[length(lr_list) + 1]] <- lr_data
                 }
                 rv_lr$lr_list <- lr_list
 
-                # --- Update a data.table for LR records --- #
-
-                contrib_order_hp <- create_contrib_order(hyp_id_all_hp[index_max_loglike_hp, ], refs)
-                contrib_order_hd <- create_contrib_order(hyp_id_all_hd[index_max_loglike_hd, ], refs)
-                dt_tmp <- data.table("Hp" = paste0(contrib_order_hp, collapse = ", "),
-                                     "Hd" = paste0(contrib_order_hd, collapse = ", "),
-                                     "LR" = dt_lr$LR[n_mk + 1])
-
-                rv_lr$dt_lr_calc_record <- rbind(rv_lr$dt_lr_calc_record, dt_tmp)
+                rv_lr$dt_lr_calc_record <- rbind(rv_lr$dt_lr_calc_record, tmp$dt_lr_calc_record_1)
 
                 waiter_hide()
               }

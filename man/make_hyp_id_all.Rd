@@ -7,9 +7,9 @@
 make_hyp_id_all(hnc, hyp, refs)
 }
 \arguments{
-\item{hnc}{The hypothesized number of contributors}
+\item{hnc}{The assumed number of contributors}
 
-\item{hyp}{Known contributors in a hypothesis}
+\item{hyp}{The contributor names in a hypothesis}
 
 \item{refs}{The names of all references}
 }

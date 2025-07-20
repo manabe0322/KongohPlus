@@ -62,8 +62,8 @@ create_prof_ref_all <- function(dt_ref, markers_auto, peaks_list){
 #' make_hyp_id_all
 #'
 #' @description The function to make ids of all possible hypotheses
-#' @param hnc The hypothesized number of contributors
-#' @param hyp Known contributors in a hypothesis
+#' @param hnc The assumed number of contributors
+#' @param hyp The contributor names in a hypothesis
 #' @param refs The names of all references
 make_hyp_id_all <- function(hnc, hyp, refs){
   known_id <- which(is.element(refs, hyp))
@@ -79,6 +79,23 @@ make_hyp_id_all <- function(hnc, hyp, refs){
     }
   }
   return(hyp_id_all)
+}
+
+#' select_hyp_id_assumed_contrib
+#'
+#' @description The function to select hyp_id fixing assumed contributors' position
+#' @param hyp_id_all Contributors' IDs of all possible hypotheses
+#' @param hyp_id_best_assumed_contrib The best hyp_id when considering assumed contributors
+select_hyp_id_assumed_contrib <- function(hyp_id_all, hyp_id_best_assumed_contrib){
+  index_assumed_contrib <- which(hyp_id_best_assumed_contrib != 0)
+  n_assumed_contrib <- length(index_assumed_contrib)
+  bool_mat_hyp <- matrix(TRUE, nrow = nrow(hyp_id_all), ncol = n_assumed_contrib)
+  for(i in 1:n_assumed_contrib){
+    index_tmp <- index_assumed_contrib[i]
+    bool_mat_hyp[, i] <- hyp_id_all[, index_tmp] == hyp_id_best_assumed_contrib[index_tmp]
+  }
+  hyp_id_all_new <- hyp_id_all[apply(bool_mat_hyp, 1, all), , drop = FALSE]
+  return(hyp_id_all_new)
 }
 
 #' make_n_obs
@@ -145,7 +162,7 @@ calc_loglike_r <- function(dt_pg_list, gtc_logprob_all_mk = NULL, index_hyp = NU
 #'
 #' @description The function to calculate log-probability of each genotype combination for all hypotheses
 #' @param mk The marker name
-#' @param hyp_id_all IDs of all possible hypotheses
+#' @param hyp_id_all Contributors' IDs of all possible hypotheses
 #' @param prof_ref_all The object is created by the function 'create_prof_ref_all'
 #' @param prof_ref_99_all The object is created by the function 'create_prof_ref_all'
 #' @param pop_al_list A list of the alleles in population database
@@ -195,7 +212,7 @@ calc_gtc_logprob_all_hyp <- function(mk, hyp_id_all, prof_ref_all, prof_ref_99_a
 #' @param theta The theta correction to consider sub-population
 #' @param dt_pg_list A list of the PG data.table for all markers
 #' @param dt_ref The data.table for the reference profiles
-#' @param hyp_id_all IDs of all possible hypotheses
+#' @param hyp_id_all Contributors' IDs of all possible hypotheses
 calc_loglike_all_hyp <- function(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list, dt_ref, hyp_id_all){
   n_mk <- length(markers_use)
   n_hyp <- nrow(hyp_id_all)
@@ -265,3 +282,79 @@ create_dt_lr <- function(subsub_log10like_all_mk_hp, subsub_log10like_all_mk_hd,
 
   return(dt_lr)
 }
+
+#' calculate_lr
+#'
+#' @description The function to calculate a likelihood ratio
+#' @param noc_hp The assumed number of contributors in Hp
+#' @param hp The contributor names in Hp
+#' @param noc_hd The assumed number of contributors in Hd
+#' @param hd The contributor names in Hd
+#' @param refs The names of all references
+#' @param markers_use A vector of the autosomal markers used
+#' @param peaks_list A list of peaks
+#' @param pop_al_list A list of the alleles in population database
+#' @param pop_prob_list A list of the allele probabilities in population database
+#' @param theta The theta correction to consider sub-population
+#' @param dt_pg_list_hp A list of the PG data.table for all markers in Hp
+#' @param dt_pg_list_hd A list of the PG data.table for all markers in Hd
+#' @param dt_ref The data.table for the reference profiles
+calculate_lr <- function(noc_hp, hp, noc_hd, hd, refs,
+                         markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_pg_list_hd, dt_ref){
+
+  # --- Contributor IDs for all possible hypotheses --- #
+
+  hyp_id_all_hp <- make_hyp_id_all(noc_hp, hp, refs)
+  hyp_id_all_hd <- make_hyp_id_all(noc_hd, hd, refs)
+
+  if(noc_hp == noc_hd && any(is.element(hp, hd))){
+
+    # --- Calculate the likelihood considering assumed contributors --- #
+
+    assumed_contrib <- hp[is.element(hp, hd)]
+    hyp_id_all_assumed_contrib <- make_hyp_id_all(noc_hp, assumed_contrib, refs)
+    loglike_all_hyp_assumed_contrib <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_assumed_contrib)
+    tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_assumed_contrib)
+    index_max_loglike_assumed_contrib <- tmp$index_max_loglike
+    hyp_id_best_assumed_contrib <- hyp_id_all_assumed_contrib[index_max_loglike_assumed_contrib, ]
+
+    # --- Select possible hypotheses from hyp_id_all_hp and hyp_id_all_hd fixing assumed contributors' position --- #
+
+    hyp_id_all_hp <- select_hyp_id_assumed_contrib(hyp_id_all_hp, hyp_id_best_assumed_contrib)
+    hyp_id_all_hd <- select_hyp_id_assumed_contrib(hyp_id_all_hd, hyp_id_best_assumed_contrib)
+  }
+
+  # --- Calculate log10 likelihood of Hp --- #
+
+  loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_hp)
+  tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hp)
+  index_max_loglike_hp <- tmp$index_max_loglike
+  subsub_log10like_all_mk_hp <- tmp$subsub_log10like_all_mk
+
+  # --- Calculate log10 likelihood of Hd --- #
+
+  loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hyp_id_all_hd)
+  tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hd)
+  index_max_loglike_hd <- tmp$index_max_loglike
+  subsub_log10like_all_mk_hd <- tmp$subsub_log10like_all_mk
+
+  # --- Calculate LR --- #
+
+  dt_lr <- create_dt_lr(subsub_log10like_all_mk_hp, subsub_log10like_all_mk_hd, markers_use)
+  names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
+
+  # --- Create output data --- #
+
+  lr_data <- list("hp" = hp,
+                  "hd" = hd,
+                  "dt_lr" = dt_lr)
+
+  contrib_order_hp <- create_contrib_order(hyp_id_all_hp[index_max_loglike_hp, ], refs)
+  contrib_order_hd <- create_contrib_order(hyp_id_all_hd[index_max_loglike_hd, ], refs)
+  dt_lr_calc_record_1 <- data.table("Hp" = paste0(contrib_order_hp, collapse = ", "),
+                                    "Hd" = paste0(contrib_order_hd, collapse = ", "),
+                                    "LR" = dt_lr$LR[length(markers_use) + 1])
+
+  return(list("lr_data" = lr_data, "dt_lr_calc_record_1" = dt_lr_calc_record_1))
+}
+

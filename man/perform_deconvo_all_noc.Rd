@@ -13,7 +13,10 @@ perform_deconvo_all_noc(
   list_dt_average_sr,
   hnc_all,
   theta,
-  min_mp,
+  min_temp,
+  max_temp,
+  min_rep_ae,
+  max_rep_ae,
   min_deg,
   stop_iter,
   max_iter,
@@ -38,7 +41,13 @@ perform_deconvo_all_noc(
 
 \item{theta}{The theta value for sub-population effect}
 
-\item{min_mp}{Minimum mixture proportion}
+\item{min_temp}{Minimum template amount}
+
+\item{max_temp}{Maximum template amount}
+
+\item{min_rep_ae}{Minimum replicate amplification efficiency}
+
+\item{max_rep_ae}{Maximum replicate amplification efficiency}
 
 \item{min_deg}{Minimum degradation parameter}
 

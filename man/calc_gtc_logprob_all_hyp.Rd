@@ -18,7 +18,7 @@ calc_gtc_logprob_all_hyp(
 \arguments{
 \item{mk}{The marker name}
 
-\item{hyp_id_all}{IDs of all possible hypotheses}
+\item{hyp_id_all}{Contributors' IDs of all possible hypotheses}
 
 \item{prof_ref_all}{The object is created by the function 'create_prof_ref_all'}
 

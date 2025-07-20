@@ -30,7 +30,7 @@ calc_loglike_all_hyp(
 
 \item{dt_ref}{The data.table for the reference profiles}
 
-\item{hyp_id_all}{IDs of all possible hypotheses}
+\item{hyp_id_all}{Contributors' IDs of all possible hypotheses}
 }
 \description{
 The function to assign the log10 likelihood

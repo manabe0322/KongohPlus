@@ -29,7 +29,10 @@ perform_deconvo(
   cv_allele,
   cv_stutter,
   list_dt_average_sr,
-  min_mp,
+  min_temp,
+  max_temp,
+  min_rep_ae,
+  max_rep_ae,
   min_deg,
   stop_iter,
   max_iter,
@@ -86,7 +89,13 @@ perform_deconvo(
 
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 
-\item{min_mp}{Minimum mixture proportion}
+\item{min_temp}{Minimum template amount}
+
+\item{max_temp}{Maximum template amount}
+
+\item{min_rep_ae}{Minimum replicate amplification efficiency}
+
+\item{max_rep_ae}{Maximum replicate amplification efficiency}
 
 \item{min_deg}{Minimum degradation parameter}
 
