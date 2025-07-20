@@ -102,16 +102,16 @@ est_dropin_server <- function(id, path_pack){
           h4("MLE conditions"),
           fluidRow(
             column(6,
+                   numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_dropin$stop_iter),
+                   numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", rv_est_dropin$num_converged),
                    numericInput(session$ns("min_shape_di"), label = "Minimum shape parameter", value = rv_est_dropin$min_shape_di),
-                   numericInput(session$ns("min_rate_di"), label = "Minimum rate parameter", value = rv_est_dropin$min_rate_di),
-                   numericInput(session$ns("stop_iter"), label = "Number of iterations without improvement before stopping one MLE run", value = rv_est_dropin$stop_iter),
-                   numericInput(session$ns("num_converged"), label = "The number of converged solutions required to terminate the MLE", rv_est_dropin$num_converged)
+                   numericInput(session$ns("min_rate_di"), label = "Minimum rate parameter", value = rv_est_dropin$min_rate_di)
             ),
             column(6,
+                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_dropin$max_iter),
+                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_dropin$max_mle_runs),
                    numericInput(session$ns("max_shape_di"), label = "Maximum shape parameter", value = rv_est_dropin$max_shape_di),
-                   numericInput(session$ns("max_rate_di"), label = "Maximum rate parameter", value = rv_est_dropin$max_rate_di),
-                   numericInput(session$ns("max_iter"), label = "Number of iterations", value = rv_est_dropin$max_iter),
-                   numericInput(session$ns("max_mle_runs"), label = "The maximum number of MLE attempts with different initial values", value = rv_est_dropin$max_mle_runs)
+                   numericInput(session$ns("max_rate_di"), label = "Maximum rate parameter", value = rv_est_dropin$max_rate_di)
             )
           ),
           footer = tagList(
@@ -191,8 +191,8 @@ est_dropin_server <- function(id, path_pack){
         }
 
         if(is.integer(stop_iter) && is.integer(max_iter) && stop_iter > max_iter){
-          showFeedbackDanger(inputId = "stop_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
-          showFeedbackDanger(inputId = "max_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
+          showFeedbackDanger(inputId = "stop_iter", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_iter", text = "Minimum value cannot be greater than maximum value.")
           bool_correct_advanced_1 <- FALSE
         }
 
@@ -218,8 +218,8 @@ est_dropin_server <- function(id, path_pack){
         }
 
         if(is.integer(num_converged) && is.integer(max_mle_runs) && num_converged > max_mle_runs){
-          showFeedbackDanger(inputId = "num_converged", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
-          showFeedbackDanger(inputId = "max_mle_runs", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
+          showFeedbackDanger(inputId = "num_converged", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "Minimum value cannot be greater than maximum value.")
           bool_correct_advanced_2 <- FALSE
         }
 

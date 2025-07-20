@@ -259,17 +259,17 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           h4("MLE conditions"),
           fluidRow(
             column(6,
-                   numericInput(session$ns("stop_iter"), label = "Number of iterations without improvement before stopping one MLE run", value = rv_deconvo_setting$stop_iter),
-                   numericInput(session$ns("num_converged"), label = "Number of converged MLE runs before stopping", value = rv_deconvo_setting$num_converged),
+                   numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_deconvo_setting$stop_iter),
+                   numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_deconvo_setting$num_converged),
                    numericInput(session$ns("min_temp"), label = "Minimum template amount", value = rv_deconvo_setting$min_temp),
-                   numericInput(session$ns("min_rep_ae"), label = "Minimum replicate amplification efficiency", value = rv_deconvo_setting$min_temp),
+                   numericInput(session$ns("min_rep_ae"), label = "Minimum replicate amplification efficiency", value = rv_deconvo_setting$min_rep_ae),
                    numericInput(session$ns("min_deg"), label = "Minimum degradation parameter", value = rv_deconvo_setting$min_deg)
             ),
             column(6,
-                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations in one MLE run", value = rv_deconvo_setting$max_iter),
+                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_deconvo_setting$max_iter),
                    numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_deconvo_setting$max_mle_runs),
                    numericInput(session$ns("max_temp"), label = "Maximum template amount", value = rv_deconvo_setting$max_temp),
-                   numericInput(session$ns("max_rep_ae"), label = "Maximum replicate amplification efficiency", value = rv_deconvo_setting$max_temp)
+                   numericInput(session$ns("max_rep_ae"), label = "Maximum replicate amplification efficiency", value = rv_deconvo_setting$max_rep_ae)
             )
           ),
           footer = tagList(
@@ -282,7 +282,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
 
       observeEvent(input$min_temp | input$max_temp, {
         min_temp <- input$min_temp
-        input$max_temp
+        max_temp <- input$max_temp
 
         hideFeedback("min_temp")
         hideFeedback("max_temp")
@@ -309,7 +309,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
 
       observeEvent(input$min_rep_ae | input$max_rep_ae, {
         min_rep_ae <- input$min_rep_ae
-        input$max_rep_ae
+        max_rep_ae <- input$max_rep_ae
 
         hideFeedback("min_rep_ae")
         hideFeedback("max_rep_ae")
@@ -367,8 +367,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         }
 
         if(is.integer(stop_iter) && is.integer(max_iter) && stop_iter > max_iter){
-          showFeedbackDanger(inputId = "stop_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
-          showFeedbackDanger(inputId = "max_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
+          showFeedbackDanger(inputId = "stop_iter", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_iter", text = "Minimum value cannot be greater than maximum value.")
           bool_correct_advanced_1 <- FALSE
         }
 
@@ -394,8 +394,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         }
 
         if(is.integer(num_converged) && is.integer(max_mle_runs) && num_converged > max_mle_runs){
-          showFeedbackDanger(inputId = "num_converged", text = "Number of converged MLE runs must not exceed maximum number of MLE attempts.")
-          showFeedbackDanger(inputId = "max_mle_runs", text = "Number of converged MLE runs must not exceed maximum number of MLE attempts.")
+          showFeedbackDanger(inputId = "num_converged", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "Minimum value cannot be greater than maximum value.")
           bool_correct_advanced_2 <- FALSE
         }
 

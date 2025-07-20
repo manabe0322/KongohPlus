@@ -156,21 +156,20 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           h4("MLE conditions"),
           fluidRow(
             column(6,
+                   numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_sr$stop_iter),
+                   numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_est_sr$num_converged),
                    numericInput(session$ns("min_slope"), label = "Minimum slope", value = rv_est_sr$min_slope),
                    numericInput(session$ns("min_intercept"), label = "Minimum intercept", value = rv_est_sr$min_intercept),
                    numericInput(session$ns("min_myu"), label = "Minimum myu", value = rv_est_sr$min_myu),
                    numericInput(session$ns("min_sigma"), label = "Minimum sigma", value = rv_est_sr$min_sigma),
-                   numericInput(session$ns("stop_iter"), label = "Number of iterations without improvement before stopping one MLE run", value = rv_est_sr$stop_iter),
-                   numericInput(session$ns("num_converged"), label = "Number of converged MLE runs before stopping", value = rv_est_sr$num_converged)
-
             ),
             column(6,
+                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_sr$max_iter),
+                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_sr$max_mle_runs),
                    numericInput(session$ns("max_slope"), label = "Maximum slope", value = rv_est_sr$max_slope),
                    numericInput(session$ns("max_intercept"), label = "Maximum intercept", value = rv_est_sr$max_intercept),
                    numericInput(session$ns("max_myu"), label = "Maximum myu", value = rv_est_sr$max_myu),
-                   numericInput(session$ns("max_sigma"), label = "Maximum sigma", value = rv_est_sr$max_sigma),
-                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations in one MLE run", value = rv_est_sr$max_iter),
-                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_sr$max_mle_runs)
+                   numericInput(session$ns("max_sigma"), label = "Maximum sigma", value = rv_est_sr$max_sigma)
             )
           ),
           footer = tagList(
@@ -300,8 +299,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         }
 
         if(is.integer(stop_iter) && is.integer(max_iter) && stop_iter > max_iter){
-          showFeedbackDanger(inputId = "stop_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
-          showFeedbackDanger(inputId = "max_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
+          showFeedbackDanger(inputId = "stop_iter", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_iter", text = "Minimum value cannot be greater than maximum value.")
           bool_correct_advanced_1 <- FALSE
         }
 
@@ -327,8 +326,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         }
 
         if(is.integer(num_converged) && is.integer(max_mle_runs) && num_converged > max_mle_runs){
-          showFeedbackDanger(inputId = "num_converged", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
-          showFeedbackDanger(inputId = "max_mle_runs", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
+          showFeedbackDanger(inputId = "num_converged", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "Minimum value cannot be greater than maximum value.")
           bool_correct_advanced_2 <- FALSE
         }
 

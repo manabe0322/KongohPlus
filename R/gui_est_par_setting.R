@@ -157,18 +157,18 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           h4("MLE conditions"),
           fluidRow(
             column(6,
+                   numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_par$stop_iter),
+                   numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_est_par$num_converged),
                    numericInput(session$ns("min_alpha"), label = "Minimum alpha for LSAE", value = rv_est_par$min_alpha),
                    numericInput(session$ns("min_cv_allele"), label = "Minimum CV for alleles", value = rv_est_par$min_cv_allele),
-                   numericInput(session$ns("min_cv_stutter"), label = "Minimum CV for stutters", value = rv_est_par$min_cv_stutter),
-                   numericInput(session$ns("stop_iter"), label = "Number of iterations without improvement before stopping one MLE run", value = rv_est_par$stop_iter),
-                   numericInput(session$ns("num_converged"), label = "The number of converged solutions required to terminate the MLE", value = rv_est_par$num_converged)
+                   numericInput(session$ns("min_cv_stutter"), label = "Minimum CV for stutters", value = rv_est_par$min_cv_stutter)
             ),
             column(6,
+                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_par$max_iter),
+                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_par$max_mle_runs),
                    numericInput(session$ns("max_alpha"), label = "Maximum alpha for LSAE", value = rv_est_par$max_alpha),
                    numericInput(session$ns("max_cv_allele"), label = "Maximum CV for alleles", value = rv_est_par$max_cv_allele),
-                   numericInput(session$ns("max_cv_stutter"), label = "Maximum CV for stutters", value = rv_est_par$max_cv_stutter),
-                   numericInput(session$ns("max_iter"), label = "Number of iterations", value = rv_est_par$max_iter),
-                   numericInput(session$ns("max_mle_runs"), label = "The maximum number of MLE attempts with different initial values", value = rv_est_par$max_mle_runs)
+                   numericInput(session$ns("max_cv_stutter"), label = "Maximum CV for stutters", value = rv_est_par$max_cv_stutter)
             )
           ),
           footer = tagList(
@@ -273,8 +273,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         }
 
         if(is.integer(stop_iter) && is.integer(max_iter) && stop_iter > max_iter){
-          showFeedbackDanger(inputId = "stop_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
-          showFeedbackDanger(inputId = "max_iter", text = "Number of iterations without improvement must not exceed maximum number of iterations.")
+          showFeedbackDanger(inputId = "stop_iter", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_iter", text = "Minimum value cannot be greater than maximum value.")
           bool_correct_advanced_1 <- FALSE
         }
 
@@ -300,8 +300,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         }
 
         if(is.integer(num_converged) && is.integer(max_mle_runs) && num_converged > max_mle_runs){
-          showFeedbackDanger(inputId = "num_converged", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
-          showFeedbackDanger(inputId = "max_mle_runs", text = "The number of converged solutions must not exceed the maximum number of MLE attempts.")
+          showFeedbackDanger(inputId = "num_converged", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "Minimum value cannot be greater than maximum value.")
           bool_correct_advanced_2 <- FALSE
         }
 
