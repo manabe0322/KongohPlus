@@ -189,9 +189,11 @@ deconvo_pg_server <- function(id, rv_deconvo){
             dt_param <- data_hnc$dt_param
             param_names <- dt_param[["Parameter"]]
             est_vals <- dt_param[["Estimated value"]]
-            tphs <- est_vals[param_names == "Template amount"]
-            mp <- est_vals[param_names == "Mixture proportion"]
+            temps <- est_vals[param_names == "Template amount"]
+            rep_ae <- est_vals[param_names == "Replicate amplification efficiency"]
             deg <- est_vals[param_names == "Degradation"]
+            tphs <- sum(temps) * rep_ae
+            mp <- temps / sum(temps)
             ae <- ae_use[markers_use == mk]
 
             dt_average_sr <- list_dt_average_sr[[mk]]
@@ -260,10 +262,12 @@ deconvo_pg_server <- function(id, rv_deconvo){
             dt_param <- data_hnc$dt_param
             param_names <- dt_param[["Parameter"]]
             est_vals <- dt_param[["Estimated value"]]
-            tphs <- est_vals[param_names == "Template amount"]
-            mp <- est_vals[param_names == "Mixture proportion"]
-            mp_c1 <- mp[index_contrib]
+            temps <- est_vals[param_names == "Template amount"]
+            rep_ae <- est_vals[param_names == "Replicate amplification efficiency"]
             deg <- est_vals[param_names == "Degradation"]
+            tphs <- sum(temps) * rep_ae
+            mp <- temps / sum(temps)
+            mp_c1 <- mp[index_contrib]
             deg_c1 <- deg[index_contrib]
             ae <- ae_use[markers_use == mk]
 
