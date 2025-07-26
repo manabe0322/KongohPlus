@@ -107,6 +107,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           hnc_all <- data_deconvo$hnc_all
           rv_deconvo_setting$hnc_to <- max(hnc_all)
           rv_deconvo_setting$hnc_from <- min(hnc_all)
+          rv_deconvo_setting$theta <- data_deconvo$theta
           rv_deconvo_setting$fn_anameth <- data_deconvo$fn_anameth
           rv_deconvo_setting$dt_ignore_mk <- data_deconvo$dt_ignore_mk
         }
