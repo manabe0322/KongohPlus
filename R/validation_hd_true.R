@@ -103,7 +103,7 @@ perform_hd_true <- function(hnc, n_simu, data_deconvo, importance_sampling = FAL
     # --- Calculate log10 likelihood for Hd --- #
 
     loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_h1, dt_ref_rand, hyp_id_all_hd)
-    tmp <- calc_subsub_log10like(loglike_all_hyp_hd)
+    tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hd)
     subsub_log10like_hd <- sum(tmp$subsub_log10like_all_mk)
 
     for(i in 1:n_simu){
@@ -121,7 +121,7 @@ perform_hd_true <- function(hnc, n_simu, data_deconvo, importance_sampling = FAL
       # --- Calculate log10 likelihood for Hp --- #
 
       loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_h1, dt_ref_rand, hyp_id_all_hp)
-      tmp <- calc_subsub_log10like(loglike_all_hyp_hp)
+      tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hp)
       subsub_log10like_hp <- sum(tmp$subsub_log10like_all_mk)
 
       # --- Calculate LR --- #
