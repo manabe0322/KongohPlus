@@ -141,11 +141,11 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       # --- Set the number of contributors --- #
 
       output$ui_noc_from <- renderUI({
-        numericInput(session$ns("noc_from"), label = "From", value = rv_deconvo_setting$hnc_from)
+        numericInput(session$ns("noc_from"), label = "From", value = rv_deconvo_setting$hnc_from, min = 1, max = 4, step = 1)
       })
 
       output$ui_noc_to <- renderUI({
-        numericInput(session$ns("noc_to"), label = "To", value = rv_deconvo_setting$hnc_to)
+        numericInput(session$ns("noc_to"), label = "To", value = rv_deconvo_setting$hnc_to, min = 1, max = 4, step = 1)
       })
 
       observeEvent(input$noc_from | input$noc_to, {
@@ -184,7 +184,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       # --- Set the theta value --- #
 
       output$ui_theta <- renderUI({
-        numericInput(session$ns("theta"), label = "", value = rv_deconvo_setting$theta)
+        numericInput(session$ns("theta"), label = "", value = rv_deconvo_setting$theta, min = 0, max = 1, step = 0.01)
       })
 
       observeEvent(input$theta, {

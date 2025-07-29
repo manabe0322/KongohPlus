@@ -15,7 +15,7 @@ generate_rand_gt <- function(np, pop_al_list, pop_prob_list){
 #' @param dt_pg_list_h1 A list of data.tables for probabilistic genotyping results in each marker
 #' @param pop_al_list A list of the alleles in population database
 #' @param pop_prob_list A list of the allele probabilities in population database
-generate_importance_gt <- function(np, dt_pg_list_h1, pop_al_list, pop_prob_list){
+generate_importance_gt <- function(np, dt_pg_list_h1, pop_al_list, pop_prob_list, theta){
   n_mk <- length(dt_pg_list_h1)
   hnc <- length(grep("Allele", names(dt_pg_list_h1[[1]]))) / 2
   importance_gt <- matrix(NA, n_mk, 2 * np)
@@ -37,7 +37,7 @@ generate_importance_gt <- function(np, dt_pg_list_h1, pop_al_list, pop_prob_list
     pop_prob <- pop_prob_list[[i]]
     n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
     obs_al <- as.numeric(names(n_obs))
-    gt_prob <- calc_gts_prob_mk(gt_mk, pop_al, pop_prob, theta = 0, prof_ref = numeric(0), hyp_id = 0, n_obs, obs_al)
+    gt_prob <- calc_gts_prob_mk(gt_mk, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = 0, n_obs, obs_al, n_dropout = 0)
 
     # --- Randomly select genotype combinations based on 'Probability' --- #
 
@@ -84,7 +84,7 @@ perform_hd_true <- function(hnc, n_simu, data_deconvo, importance_sampling = FAL
     # --- Generate random genotypes --- #
 
     if(importance_sampling){
-      tmp <- generate_importance_gt(n_simu, dt_pg_list_h1, pop_al_list, pop_prob_list)
+      tmp <- generate_importance_gt(n_simu, dt_pg_list_h1, pop_al_list, pop_prob_list, theta)
       randgt <- tmp$importance_gt
       bias <- tmp$bias
     }else{
@@ -100,11 +100,8 @@ perform_hd_true <- function(hnc, n_simu, data_deconvo, importance_sampling = FAL
     hyp_id_all_hp <- hyp_id_all_hd
     hyp_id_all_hp[length(hyp_id_all_hp)] <- 1 # Assuming 'Ref' as the minor contributor
 
-    # --- Calculate log10 likelihood for Hd --- #
-
-    loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_h1, dt_ref_rand, hyp_id_all_hd)
-    tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hd)
-    subsub_log10like_hd <- sum(tmp$subsub_log10like_all_mk)
+    # References' IDs included in any hypotheses
+    ref_id_lr <- 1
 
     for(i in 1:n_simu){
 
@@ -120,9 +117,15 @@ perform_hd_true <- function(hnc, n_simu, data_deconvo, importance_sampling = FAL
 
       # --- Calculate log10 likelihood for Hp --- #
 
-      loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_h1, dt_ref_rand, hyp_id_all_hp)
+      loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_h1, dt_ref_rand, hyp_id_all_hp, ref_id_lr)
       tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hp)
       subsub_log10like_hp <- sum(tmp$subsub_log10like_all_mk)
+
+      # --- Calculate log10 likelihood for Hd --- #
+
+      loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_h1, dt_ref_rand, hyp_id_all_hd, ref_id_lr)
+      tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hd)
+      subsub_log10like_hd <- sum(tmp$subsub_log10like_all_mk)
 
       # --- Calculate LR --- #
 
