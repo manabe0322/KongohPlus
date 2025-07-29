@@ -182,7 +182,7 @@ calc_gtc_logprob_all_hyp <- function(mk, hyp_id_all, prof_ref_all, prof_ref_99_a
     n_dropout <- length(which(!is.element(prof_ref[index_ref_contrib], peaks)))
 
     # Calculate genotype probabilities
-    n_obs <- make_n_obs(pop_al, prof_ref[index_ref_contrib])
+    n_obs <- make_n_obs(pop_al, prof_ref[prof_ref != -1])
     obs_al <- as.numeric(names(n_obs))
 
     # Make a list of genotype combinations for C++ format
