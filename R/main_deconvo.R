@@ -15,7 +15,7 @@ create_gt_perm_obj <- function(cand_gt, index_gt_comb_adopt_cpp, log_gt_comb_pro
   }
 
   for(i in 1:length(index_gt_comb_adopt_cpp)){
-    index_gt_perm_cpp <- permn(index_gt_comb_adopt_cpp[[i]]) # C++ index
+    index_gt_perm_cpp <- unique(permn(index_gt_comb_adopt_cpp[[i]])) # C++ index
     tmp <- extract_gts_adopt(cand_gt, index_gt_perm_cpp)
     n_perm <- length(tmp)
     list_gt_perm[[i]] <- tmp
@@ -311,9 +311,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       # --- Calculate genotype probabilities in each genotype combination --- #
 
       gt_comb <- extract_gts_adopt(cand_gt, index_gt_comb_adopt_cpp)
-      n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
+      n_obs <- make_n_obs(pop_al, prof_ref_lr = numeric(0))
       obs_al <- as.numeric(names(n_obs))
-      gt_comb_prob_mk <- calc_gts_prob_mk(gt_comb, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = rep(0, hnc), n_obs, obs_al)
+      gt_comb_prob_mk <- calc_gts_prob_mk(gt_comb, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = rep(0, hnc), n_obs, obs_al, n_dropout = 0)
       log_gt_comb_prob_mk <- log(gt_comb_prob_mk)
 
       # --- Create objects for genotype permutations --- #

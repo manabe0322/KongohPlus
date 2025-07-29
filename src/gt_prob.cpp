@@ -8,7 +8,8 @@ double calc_gts_prob(std::vector<double> gts,
                      std::vector<double> prof_ref_99,
                      std::vector<int> hyp_id,
                      std::vector<int> n_obs,
-                     std::vector<double> obs_al){
+                     std::vector<double> obs_al,
+                     int n_dropout){
   int hnc = hyp_id.size();
   double gts_prob = 1;
 
@@ -35,6 +36,11 @@ double calc_gts_prob(std::vector<double> gts,
         double al_prob = pop_prob[index_pop_al];
         int index_obs_al = find_index_double(al, obs_al);
         int n_al = n_obs[index_obs_al];
+
+        if(std::abs(al - 99.0) < 1e-6){
+          n_al += n_dropout;
+        }
+
         gt_prob *= (n_al * theta + al_prob * (1 - theta)) / (1 + (sum_n_obs - 1) * theta);
         n_obs[index_obs_al] += 1;
         sum_n_obs += 1;
@@ -60,7 +66,8 @@ std::vector<double> calc_gts_prob_mk(std::vector<std::vector<double>> gts_mk,
                                     std::vector<double> prof_ref_99,
                                     std::vector<int> hyp_id,
                                     std::vector<int> n_obs,
-                                    std::vector<double> obs_al){
+                                    std::vector<double> obs_al,
+                                    int n_dropout){
   int n_gts_mk = gts_mk.size();
   std::vector<double> gts_prob_mk(n_gts_mk);
 
@@ -68,7 +75,7 @@ std::vector<double> calc_gts_prob_mk(std::vector<std::vector<double>> gts_mk,
   for(int i = 0; i < n_gts_mk; ++i){
     std::vector<double> gts = gts_mk[i];
     std::vector<int> n_obs_copy = n_obs;
-    gts_prob_mk[i] = calc_gts_prob(gts, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs_copy, obs_al);
+    gts_prob_mk[i] = calc_gts_prob(gts, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs_copy, obs_al, n_dropout);
   }
 
   return(gts_prob_mk);

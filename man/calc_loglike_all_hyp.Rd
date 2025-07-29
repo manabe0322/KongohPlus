@@ -12,7 +12,8 @@ calc_loglike_all_hyp(
   theta,
   dt_pg_list,
   dt_ref,
-  hyp_id_all
+  hyp_id_all,
+  ref_id_lr
 )
 }
 \arguments{
@@ -31,6 +32,8 @@ calc_loglike_all_hyp(
 \item{dt_ref}{The data.table for the reference profiles}
 
 \item{hyp_id_all}{Contributors' IDs of all possible hypotheses}
+
+\item{ref_id_lr}{References' IDs included in any hypotheses}
 }
 \description{
 The function to assign the log10 likelihood

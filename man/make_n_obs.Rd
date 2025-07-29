@@ -4,12 +4,12 @@
 \alias{make_n_obs}
 \title{make_n_obs}
 \usage{
-make_n_obs(pop_al, prof_ref)
+make_n_obs(pop_al, prof_ref_lr)
 }
 \arguments{
 \item{pop_al}{A vector of the alleles in the population database}
 
-\item{prof_ref}{A vector of the reference alleles in one marker}
+\item{prof_ref_lr}{A vector of the reference alleles in one marker. The references are included in any hypotheses.}
 }
 \description{
 The function to make an object for the number of observed alleles in reference profiles

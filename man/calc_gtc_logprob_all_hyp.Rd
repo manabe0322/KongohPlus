@@ -9,10 +9,12 @@ calc_gtc_logprob_all_hyp(
   hyp_id_all,
   prof_ref_all,
   prof_ref_99_all,
+  peaks_list,
   pop_al_list,
   pop_prob_list,
   dt_pg_list,
-  theta
+  theta,
+  ref_id_lr
 )
 }
 \arguments{
@@ -24,6 +26,8 @@ calc_gtc_logprob_all_hyp(
 
 \item{prof_ref_99_all}{The object is created by the function 'create_prof_ref_all'}
 
+\item{peaks_list}{A list of peaks}
+
 \item{pop_al_list}{A list of the alleles in population database}
 
 \item{pop_prob_list}{A list of the allele probabilities in population database}
@@ -31,6 +35,8 @@ calc_gtc_logprob_all_hyp(
 \item{dt_pg_list}{A list of the PG data.table for all markers}
 
 \item{theta}{The theta value to consider sub-population effect}
+
+\item{ref_id_lr}{References' IDs included in any hypotheses}
 }
 \description{
 The function to calculate log-probability of each genotype combination for all hypotheses

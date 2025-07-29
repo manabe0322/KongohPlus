@@ -102,14 +102,14 @@ select_hyp_id_assumed_contrib <- function(hyp_id_all, hyp_id_best_assumed_contri
 #'
 #' @description The function to make an object for the number of observed alleles in reference profiles
 #' @param pop_al A vector of the alleles in the population database
-#' @param prof_ref A vector of the reference alleles in one marker
-make_n_obs <- function(pop_al, prof_ref){
-  prob_al <- sort(unique(c(pop_al, prof_ref)))
+#' @param prof_ref_lr A vector of the reference alleles in one marker. The references are included in any hypotheses.
+make_n_obs <- function(pop_al, prof_ref_lr){
+  prob_al <- sort(unique(c(pop_al, prof_ref_lr)))
   n_obs <- rep(0, length(prob_al))
   names(n_obs) <- prob_al
-  if(length(prof_ref) != 0){
-    for(i in 1:length(prof_ref)){
-      index_al <- which(prob_al == prof_ref[i])
+  if(length(prof_ref_lr) != 0){
+    for(i in 1:length(prof_ref_lr)){
+      index_al <- which(prob_al == prof_ref_lr[i])
       n_obs[index_al] <- n_obs[index_al] + 1
     }
   }
@@ -122,35 +122,27 @@ make_n_obs <- function(pop_al, prof_ref){
 #' @param dt_pg_list A list of the PG data.table for all markers
 #' @param gtc_logprob_all_mk A list of the lob probabilities of each genotype combination for all markers when assuming POI or known contributors
 #' @param index_hyp The index of the targeted hypothesis
-calc_loglike_r <- function(dt_pg_list, gtc_logprob_all_mk = NULL, index_hyp = NULL){
+calc_loglike_r <- function(dt_pg_list, gtc_logprob_all_mk, index_hyp){
   n_mk <- length(dt_pg_list)
   loglike_all_mk <- rep(0, n_mk)
   names(loglike_all_mk) <- names(dt_pg_list)
 
   # log10 likelihood in each marker
-  if(is.null(gtc_logprob_all_mk)){
-    for(i in 1:n_mk){
-      dt_pg <- dt_pg_list[[i]]
-      loglike_gtc <- dt_pg$Loglike
-      loglike_all_mk[i] <- log_sum_exp(loglike_gtc)
-    }
-  }else{
-    n_rep <- length(grep("Loglike_ph_rep", names(dt_pg_list[[1]])))
-    for(i in 1:n_mk){
-      dt_pg <- dt_pg_list[[i]]
-      loglike_gtc <- gtc_logprob_all_mk[[i]][[index_hyp]]
+  n_rep <- length(grep("Loglike_ph_rep", names(dt_pg_list[[1]])))
+  for(i in 1:n_mk){
+    dt_pg <- dt_pg_list[[i]]
+    loglike_gtc <- gtc_logprob_all_mk[[i]][[index_hyp]]
 
-      # With reference genotype(s)
-      if(!is.null(loglike_gtc)){
-        for(j in 1:n_rep){
-          loglike_gtc <- loglike_gtc + dt_pg[[paste0("Loglike_ph_rep", j)]]
-        }
-        loglike_mk <- log_sum_exp(loglike_gtc)
-        if(is.nan(loglike_mk)){
-          loglike_all_mk[i] <- -Inf
-        }else{
-          loglike_all_mk[i] <- loglike_mk
-        }
+    # With reference genotype(s)
+    if(!is.null(loglike_gtc)){
+      for(j in 1:n_rep){
+        loglike_gtc <- loglike_gtc + dt_pg[[paste0("Loglike_ph_rep", j)]]
+      }
+      loglike_mk <- log_sum_exp(loglike_gtc)
+      if(is.nan(loglike_mk)){
+        loglike_all_mk[i] <- -Inf
+      }else{
+        loglike_all_mk[i] <- loglike_mk
       }
     }
   }
@@ -165,27 +157,32 @@ calc_loglike_r <- function(dt_pg_list, gtc_logprob_all_mk = NULL, index_hyp = NU
 #' @param hyp_id_all Contributors' IDs of all possible hypotheses
 #' @param prof_ref_all The object is created by the function 'create_prof_ref_all'
 #' @param prof_ref_99_all The object is created by the function 'create_prof_ref_all'
+#' @param peaks_list A list of peaks
 #' @param pop_al_list A list of the alleles in population database
 #' @param pop_prob_list A list of the allele probabilities in population database
 #' @param dt_pg_list A list of the PG data.table for all markers
 #' @param theta The theta value to consider sub-population effect
-calc_gtc_logprob_all_hyp <- function(mk, hyp_id_all, prof_ref_all, prof_ref_99_all, pop_al_list, pop_prob_list, dt_pg_list, theta){
+#' @param ref_id_lr References' IDs included in any hypotheses
+calc_gtc_logprob_all_hyp <- function(mk, hyp_id_all, prof_ref_all, prof_ref_99_all, peaks_list, pop_al_list, pop_prob_list, dt_pg_list, theta, ref_id_lr){
   n_hyp <- nrow(hyp_id_all)
   gtc_logprob_all_hyp <- vector(mode = "list", length = n_hyp)
 
   # Check reference profiles of assumed contributors are obtained or not
   prof_ref <- prof_ref_all[mk, ]
-  tmp <- setdiff(as.vector(hyp_id_all), 0)
-  index_ref_contrib <- sort(c(2 * tmp - 1, 2 * tmp))
+  index_ref_contrib <- sort(c(2 * ref_id_lr - 1, 2 * ref_id_lr))
   if(all(prof_ref[index_ref_contrib] != -1)){
     # Extract data of one marker
     prof_ref_99 <- prof_ref_99_all[mk, ]
+    peaks <- peaks_list[[mk]]
     pop_al <- pop_al_list[[mk]]
     pop_prob <- pop_prob_list[[mk]]
     dt_pg <- dt_pg_list[[mk]]
 
+    # Number of drop-out
+    n_dropout <- length(which(!is.element(prof_ref[index_ref_contrib], peaks)))
+
     # Calculate genotype probabilities
-    n_obs <- make_n_obs(pop_al, prof_ref[prof_ref != -1])
+    n_obs <- make_n_obs(pop_al, prof_ref[index_ref_contrib])
     obs_al <- as.numeric(names(n_obs))
 
     # Make a list of genotype combinations for C++ format
@@ -194,7 +191,7 @@ calc_gtc_logprob_all_hyp <- function(mk, hyp_id_all, prof_ref_all, prof_ref_99_a
 
     # Calculate genotype probabilities
     for(i in 1:n_hyp){
-      gtc_prob_mk <- calc_gts_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id_all[i, ], n_obs, obs_al)
+      gtc_prob_mk <- calc_gts_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id_all[i, ], n_obs, obs_al, n_dropout)
       gtc_logprob_all_hyp[[i]] <- log(gtc_prob_mk)
     }
   }
@@ -213,31 +210,23 @@ calc_gtc_logprob_all_hyp <- function(mk, hyp_id_all, prof_ref_all, prof_ref_99_a
 #' @param dt_pg_list A list of the PG data.table for all markers
 #' @param dt_ref The data.table for the reference profiles
 #' @param hyp_id_all Contributors' IDs of all possible hypotheses
-calc_loglike_all_hyp <- function(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list, dt_ref, hyp_id_all){
+#' @param ref_id_lr References' IDs included in any hypotheses
+calc_loglike_all_hyp <- function(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list, dt_ref, hyp_id_all, ref_id_lr){
   n_mk <- length(markers_use)
   n_hyp <- nrow(hyp_id_all)
 
-  # Only unknowns
-  if(all(as.vector(hyp_id_all) == 0)){
-    loglike_all_hyp <- matrix(0, n_mk, 1)
-    loglike_all_hyp[, 1] <- calc_loglike_r(dt_pg_list)
+  tmp <- create_prof_ref_all(dt_ref, markers_use, peaks_list)
+  prof_ref_all <- tmp$prof_ref_all
+  prof_ref_99_all <- tmp$prof_ref_99_all
+
+  gtc_logprob_all_mk <- vector(mode = "list", length = n_mk)
+  for(i in 1:n_mk){
+    gtc_logprob_all_mk[[i]] <- calc_gtc_logprob_all_hyp(markers_use[i], hyp_id_all, prof_ref_all, prof_ref_99_all, peaks_list, pop_al_list, pop_prob_list, dt_pg_list, theta, ref_id_lr)
   }
 
-  # Including contributors with profiles
-  else{
-    tmp <- create_prof_ref_all(dt_ref, markers_use, peaks_list)
-    prof_ref_all <- tmp$prof_ref_all
-    prof_ref_99_all <- tmp$prof_ref_99_all
-
-    gtc_logprob_all_mk <- vector(mode = "list", length = n_mk)
-    for(i in 1:n_mk){
-      gtc_logprob_all_mk[[i]] <- calc_gtc_logprob_all_hyp(markers_use[i], hyp_id_all, prof_ref_all, prof_ref_99_all, pop_al_list, pop_prob_list, dt_pg_list, theta)
-    }
-
-    loglike_all_hyp <- matrix(0, n_mk, n_hyp)
-    for(i in 1:n_hyp){
-      loglike_all_hyp[, i] <- calc_loglike_r(dt_pg_list, gtc_logprob_all_mk, i)
-    }
+  loglike_all_hyp <- matrix(0, n_mk, n_hyp)
+  for(i in 1:n_hyp){
+    loglike_all_hyp[, i] <- calc_loglike_r(dt_pg_list, gtc_logprob_all_mk, i)
   }
 
   return(loglike_all_hyp)
@@ -306,6 +295,7 @@ calculate_lr <- function(noc_hp, hp, noc_hd, hd, refs,
 
   hyp_id_all_hp <- make_hyp_id_all(noc_hp, hp, refs)
   hyp_id_all_hd <- make_hyp_id_all(noc_hd, hd, refs)
+  ref_id_lr <- sort(setdiff(c(as.vector(hyp_id_all_hp), as.vector(hyp_id_all_hd)), 0))
 
   if(noc_hp == noc_hd && any(is.element(hp, hd))){
 
@@ -313,7 +303,7 @@ calculate_lr <- function(noc_hp, hp, noc_hd, hd, refs,
 
     assumed_contrib <- hp[is.element(hp, hd)]
     hyp_id_all_assumed_contrib <- make_hyp_id_all(noc_hp, assumed_contrib, refs)
-    loglike_all_hyp_assumed_contrib <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_assumed_contrib)
+    loglike_all_hyp_assumed_contrib <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_assumed_contrib, ref_id_lr)
     tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_assumed_contrib)
     index_max_loglike_assumed_contrib <- tmp$index_max_loglike
     hyp_id_best_assumed_contrib <- hyp_id_all_assumed_contrib[index_max_loglike_assumed_contrib, ]
@@ -326,14 +316,14 @@ calculate_lr <- function(noc_hp, hp, noc_hd, hd, refs,
 
   # --- Calculate log10 likelihood of Hp --- #
 
-  loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_hp)
+  loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_hp, ref_id_lr)
   tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hp)
   index_max_loglike_hp <- tmp$index_max_loglike
   subsub_log10like_all_mk_hp <- tmp$subsub_log10like_all_mk
 
   # --- Calculate log10 likelihood of Hd --- #
 
-  loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hyp_id_all_hd)
+  loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hyp_id_all_hd, ref_id_lr)
   tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hd)
   index_max_loglike_hd <- tmp$index_max_loglike
   subsub_log10like_all_mk_hd <- tmp$subsub_log10like_all_mk
