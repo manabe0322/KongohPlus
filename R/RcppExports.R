@@ -153,8 +153,8 @@ calc_lpd_gtc_rep1 <- function(tph, mp, deg, hnc, ats_use, n_general_rep1, n_drop
     .Call(`_KongohPlus_calc_lpd_gtc_rep1`, tph, mp, deg, hnc, ats_use, n_general_rep1, n_dropout_rep1, n_dropin_rep1, n_ignore_rep1, rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use_rep1, loglike_di_rep1, index_dedup1_rep1_cpp, index_dedup2_rep1_cpp, n_gtc_use, n_peak_use)
 }
 
-calc_lpd_gtc_all_rep <- function(tph, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list, rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list, index_dedup1_list_cpp, index_dedup2_list_cpp, n_gtc_use, n_peak_use) {
-    .Call(`_KongohPlus_calc_lpd_gtc_all_rep`, tph, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list, rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list, index_dedup1_list_cpp, index_dedup2_list_cpp, n_gtc_use, n_peak_use)
+calc_lpd_gtc_all_rep <- function(tph_all_rep, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list, rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list, index_dedup1_list_cpp, index_dedup2_list_cpp, n_gtc_use, n_peak_use) {
+    .Call(`_KongohPlus_calc_lpd_gtc_all_rep`, tph_all_rep, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list, rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list, index_dedup1_list_cpp, index_dedup2_list_cpp, n_gtc_use, n_peak_use)
 }
 
 calc_loglike_cpp <- function(lpd_gtc_all_rep, gtc_logprob_use) {

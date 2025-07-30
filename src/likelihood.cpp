@@ -213,7 +213,7 @@ std::vector<std::vector<double>> calc_lpd_gtc_rep1(const double tph,
 }
 
 // [[Rcpp::export]]
-std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const double tph,
+std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const std::vector<double>& tph_all_rep,
                                                                    const std::vector<double>& mp,
                                                                    const std::vector<double>& deg,
                                                                    const int hnc,
@@ -237,7 +237,7 @@ std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const double 
   std::vector<std::vector<std::vector<double>>> lpd_gtc_all_rep(n_rep, std::vector<std::vector<double>>(n_mk, std::vector<double>()));
 
   for(int i = 0; i < n_rep; ++i){
-    lpd_gtc_all_rep[i] = calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_list[i], n_dropout_list[i], n_dropin_list[i], n_ignore_list[i],
+    lpd_gtc_all_rep[i] = calc_lpd_gtc_rep1(tph_all_rep[i], mp, deg, hnc, ats_use, n_general_list[i], n_dropout_list[i], n_dropin_list[i], n_ignore_list[i],
                                            rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use[i], loglike_di_list[i],
                                            index_dedup1_list_cpp[i], index_dedup2_list_cpp[i], n_gtc_use, n_peak_use);
   }

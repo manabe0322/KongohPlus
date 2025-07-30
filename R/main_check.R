@@ -29,10 +29,6 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, markers_auto, method){
   if(bool_load_all){
     setindex(dt_csp, SampleName)
     sn_all_csp <- unique(dt_csp[, SampleName])
-    n_rep <- length(sn_all_csp)
-    if(n_rep > 2){
-      error_message <- paste0(error_message, "Three or more PCR replicates cannot be analyzed concurrently!<br>")
-    }
     for(i in 1:length(sn_all_csp)){
       sn1_csp <- sn_all_csp[i]
       dt_csp_sn1 <- dt_csp[SampleName == sn1_csp]

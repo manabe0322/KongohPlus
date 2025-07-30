@@ -47,32 +47,6 @@ create_index_dedup2_mk <- function(index_rph_gtc_cpp, index_dedup1_rep1_mk1){
   return(match(paste_index_rph_gtc_cpp, paste_index_dedup1_rep1_mk1) - 1)
 }
 
-#' generate_init_deconvo_single
-#'
-#' @description The function to generate initial values for MLE (single-source profile)
-#' @param n_rep The number of replicates
-#' @param hnc The assumed number of contributors
-generate_init_deconvo_single <- function(n_rep){
-  tph_pre <- rbeta(n_rep, 1, 1)
-  deg <- rbeta(1, 1, 1)
-
-  return(c(tph, deg))
-}
-
-#' generate_init_deconvo_mix
-#'
-#' @description The function to generate initial values for MLE (mixture profile)
-#' @param n_rep The number of replicates
-#' @param hnc The assumed number of contributors
-generate_init_deconvo_mix <- function(n_rep, hnc){
-  tph_pre <- rbeta(n_rep, 1, 1)
-  mp <- rdirichlet(1, rep(1, hnc))
-  mp <- mp[1, 1:(hnc - 1)]
-  deg <- rbeta(hnc, 1, 1)
-
-  return(c(tph_pre, mp, deg))
-}
-
 #' make_dt_pg_list
 #'
 #' @description The function to make a list of data.tables for the result of probabilistic genotyping
@@ -401,11 +375,11 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         rep_ae <- c(1, par[(2 * hnc + 1):(2 * hnc + n_rep - 1)] * (max_rep_ae - min_rep_ae) + min_rep_ae)
       }
 
-      tph <- sum(temp) * rep_ae
+      tph_all_rep <- sum(temp) * rep_ae
       mp <- temp / sum(temp)
 
       # Calculate log probability densities of all genotype combinations
-      lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(tph, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
+      lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(tph_all_rep, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
                                               rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list,
                                               index_dedup1_list_cpp, index_dedup2_list_cpp, n_gt_perm_use, n_peak_use)
 
@@ -434,7 +408,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     repeat{
       count_mle <- count_mle + 1
 
-      init_list[[count_mle]] <- init <- generate_init_deconvo_mix(n_rep, hnc)
+      init_list[[count_mle]] <- init <- rbeta(2 * hnc + n_rep - 1, 1, 1)
 
       opt_list[[count_mle]] <- opt <- GenSA(
         par = init,
@@ -472,10 +446,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     if(n_rep == 1){
       rep_ae <- 1
     }else{
-      rep_ae <- c(1, par[(2 * hnc + 1):(2 * hnc + n_rep - 1)] * (max_rep_ae - min_rep_ae) + min_rep_ae)
+      rep_ae <- c(1, est_params[(2 * hnc + 1):(2 * hnc + n_rep - 1)] * (max_rep_ae - min_rep_ae) + min_rep_ae)
     }
 
-    tph <- sum(temp) * rep_ae
+    tph_all_rep <- sum(temp) * rep_ae
     mp <- temp / sum(temp)
 
     # Descending order for estimated mixture proportions
@@ -493,7 +467,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     # --- Calculate the likelihood using the estimated parameters --- #
 
     # Calculate log probability densities of all genotype combinations
-    lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(tph, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
+    lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(tph_all_rep, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
                                             rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list,
                                             index_dedup1_list_cpp, index_dedup2_list_cpp, n_gt_perm_use, n_peak_use)
 

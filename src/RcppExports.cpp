@@ -573,12 +573,12 @@ BEGIN_RCPP
 END_RCPP
 }
 // calc_lpd_gtc_all_rep
-std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const double tph, const std::vector<double>& mp, const std::vector<double>& deg, const int hnc, const std::vector<double>& ats_use, const std::vector<std::vector<int>>& n_general_list, const std::vector<std::vector<int>>& n_dropout_list, const std::vector<std::vector<int>>& n_dropin_list, const std::vector<std::vector<int>>& n_ignore_list, const std::vector<std::vector<double>>& rph_base_use, const std::vector<std::vector<double>>& cv_square_base_use, const std::vector<std::vector<double>>& deg_size_base_use, const std::vector<std::vector<std::vector<double>>>& oph_base_use, const std::vector<std::vector<std::vector<double>>>& loglike_di_list, const std::vector<std::vector<std::vector<std::vector<int>>>>& index_dedup1_list_cpp, const std::vector<std::vector<std::vector<int>>>& index_dedup2_list_cpp, const std::vector<int>& n_gtc_use, const std::vector<int>& n_peak_use);
-RcppExport SEXP _KongohPlus_calc_lpd_gtc_all_rep(SEXP tphSEXP, SEXP mpSEXP, SEXP degSEXP, SEXP hncSEXP, SEXP ats_useSEXP, SEXP n_general_listSEXP, SEXP n_dropout_listSEXP, SEXP n_dropin_listSEXP, SEXP n_ignore_listSEXP, SEXP rph_base_useSEXP, SEXP cv_square_base_useSEXP, SEXP deg_size_base_useSEXP, SEXP oph_base_useSEXP, SEXP loglike_di_listSEXP, SEXP index_dedup1_list_cppSEXP, SEXP index_dedup2_list_cppSEXP, SEXP n_gtc_useSEXP, SEXP n_peak_useSEXP) {
+std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const std::vector<double>& tph_all_rep, const std::vector<double>& mp, const std::vector<double>& deg, const int hnc, const std::vector<double>& ats_use, const std::vector<std::vector<int>>& n_general_list, const std::vector<std::vector<int>>& n_dropout_list, const std::vector<std::vector<int>>& n_dropin_list, const std::vector<std::vector<int>>& n_ignore_list, const std::vector<std::vector<double>>& rph_base_use, const std::vector<std::vector<double>>& cv_square_base_use, const std::vector<std::vector<double>>& deg_size_base_use, const std::vector<std::vector<std::vector<double>>>& oph_base_use, const std::vector<std::vector<std::vector<double>>>& loglike_di_list, const std::vector<std::vector<std::vector<std::vector<int>>>>& index_dedup1_list_cpp, const std::vector<std::vector<std::vector<int>>>& index_dedup2_list_cpp, const std::vector<int>& n_gtc_use, const std::vector<int>& n_peak_use);
+RcppExport SEXP _KongohPlus_calc_lpd_gtc_all_rep(SEXP tph_all_repSEXP, SEXP mpSEXP, SEXP degSEXP, SEXP hncSEXP, SEXP ats_useSEXP, SEXP n_general_listSEXP, SEXP n_dropout_listSEXP, SEXP n_dropin_listSEXP, SEXP n_ignore_listSEXP, SEXP rph_base_useSEXP, SEXP cv_square_base_useSEXP, SEXP deg_size_base_useSEXP, SEXP oph_base_useSEXP, SEXP loglike_di_listSEXP, SEXP index_dedup1_list_cppSEXP, SEXP index_dedup2_list_cppSEXP, SEXP n_gtc_useSEXP, SEXP n_peak_useSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< const double >::type tph(tphSEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type tph_all_rep(tph_all_repSEXP);
     Rcpp::traits::input_parameter< const std::vector<double>& >::type mp(mpSEXP);
     Rcpp::traits::input_parameter< const std::vector<double>& >::type deg(degSEXP);
     Rcpp::traits::input_parameter< const int >::type hnc(hncSEXP);
@@ -596,7 +596,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::vector<std::vector<std::vector<int>>>& >::type index_dedup2_list_cpp(index_dedup2_list_cppSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type n_gtc_use(n_gtc_useSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type n_peak_use(n_peak_useSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_lpd_gtc_all_rep(tph, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list, rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list, index_dedup1_list_cpp, index_dedup2_list_cpp, n_gtc_use, n_peak_use));
+    rcpp_result_gen = Rcpp::wrap(calc_lpd_gtc_all_rep(tph_all_rep, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list, rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list, index_dedup1_list_cpp, index_dedup2_list_cpp, n_gtc_use, n_peak_use));
     return rcpp_result_gen;
 END_RCPP
 }
