@@ -313,7 +313,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       gt_comb <- extract_gts_adopt(cand_gt, index_gt_comb_adopt_cpp)
       n_obs <- make_n_obs(pop_al, prof_ref_lr = numeric(0))
       obs_al <- as.numeric(names(n_obs))
-      gt_comb_prob_mk <- calc_gts_prob_mk(gt_comb, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = rep(0, hnc), n_obs, obs_al, n_dropout = 0)
+      gt_comb_prob_mk <- calc_gts_prob_mk(gt_comb, pop_al, pop_prob, theta, prof_ref_99 = numeric(0), hyp_id = rep(0, hnc), n_obs, obs_al, n_dropout = 0)
       log_gt_comb_prob_mk <- log(gt_comb_prob_mk)
 
       # --- Create objects for genotype permutations --- #

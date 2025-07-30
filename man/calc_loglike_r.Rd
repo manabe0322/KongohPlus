@@ -4,7 +4,7 @@
 \alias{calc_loglike_r}
 \title{calc_loglike_r}
 \usage{
-calc_loglike_r(dt_pg_list, gtc_logprob_all_mk = NULL, index_hyp = NULL)
+calc_loglike_r(dt_pg_list, gtc_logprob_all_mk, index_hyp)
 }
 \arguments{
 \item{dt_pg_list}{A list of the PG data.table for all markers}
