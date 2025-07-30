@@ -15,7 +15,7 @@ generate_rand_gt <- function(np, pop_al_list, pop_prob_list){
 #' @param dt_pg_list_h1 A list of data.tables for probabilistic genotyping results in each marker
 #' @param pop_al_list A list of the alleles in population database
 #' @param pop_prob_list A list of the allele probabilities in population database
-generate_importance_gt <- function(np, dt_pg_list_h1, pop_al_list, pop_prob_list, theta){
+generate_importance_gt <- function(np, dt_pg_list_h1, pop_al_list, pop_prob_list){
   n_mk <- length(dt_pg_list_h1)
   hnc <- length(grep("Allele", names(dt_pg_list_h1[[1]]))) / 2
   importance_gt <- matrix(NA, n_mk, 2 * np)
@@ -37,7 +37,7 @@ generate_importance_gt <- function(np, dt_pg_list_h1, pop_al_list, pop_prob_list
     pop_prob <- pop_prob_list[[i]]
     n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
     obs_al <- as.numeric(names(n_obs))
-    gt_prob <- calc_gts_prob_mk(gt_mk, pop_al, pop_prob, theta, prof_ref = numeric(0), hyp_id = 0, n_obs, obs_al, n_dropout = 0)
+    gt_prob <- calc_gts_prob_mk(gt_mk, pop_al, pop_prob, theta = 0, prof_ref_99 = numeric(0), hyp_id = 0, n_obs, obs_al, n_dropout = 0)
 
     # --- Randomly select genotype combinations based on 'Probability' --- #
 
@@ -84,7 +84,7 @@ perform_hd_true <- function(hnc, n_simu, data_deconvo, importance_sampling = FAL
     # --- Generate random genotypes --- #
 
     if(importance_sampling){
-      tmp <- generate_importance_gt(n_simu, dt_pg_list_h1, pop_al_list, pop_prob_list, theta)
+      tmp <- generate_importance_gt(n_simu, dt_pg_list_h1, pop_al_list, pop_prob_list)
       randgt <- tmp$importance_gt
       bias <- tmp$bias
     }else{

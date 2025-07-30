@@ -30,7 +30,9 @@ hd_true_importance_ui_sub <- function(id){
                       numericInput(ns("n_simu"), label = h4("Number of simulations"), value = 100),
                       br(),
                       br(),
-                      actionButton(ns("act_analyze_hd_true"), label = "Analyze", class = "btn btn-primary btn-lg")
+                      actionButton(ns("act_analyze_hd_true"), label = "Analyze", class = "btn btn-primary btn-lg"),
+                      br(),
+                      textOutput(ns("act_reason"))
                     )
              ),
              column(9,
@@ -78,8 +80,21 @@ hd_true_importance_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true_
         disable("act_analyze_hd_true")
       }else{
         hnc_all <- data_deconvo$hnc_all
+        rv_hd_true_importance$theta <- data_deconvo$theta
 
-        enable("act_analyze_hd_true")
+        if(rv_hd_true_importance$theta == 0){
+          enable("act_analyze_hd_true")
+        }else{
+          disable("act_analyze_hd_true")
+        }
+
+        output$act_reason <- renderText({
+          if(rv_hd_true_importance$theta == 0){
+            ""
+          }else{
+            "This feature is available only when theta is set to 0."
+          }
+        })
 
         output$fn_csp <- renderText({paste0(data_deconvo$fn_csp)})
         output$fn_af <- renderText({paste0(data_deconvo$fn_af)})
