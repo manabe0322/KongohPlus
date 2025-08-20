@@ -28,6 +28,7 @@ KongohPlus <- function(num_threads = NULL){
                   useShinyjs(),
                   useShinyFeedback(),
                   tags$style(type = "text/css", "body{padding-top: 65px;}"),
+                  tags$style(HTML(".gt_table { font-family: inherit !important; }")),
 
                   navbarPage(title = paste0("KongohPlus ver. ", ver_soft),
                              id = "navbar",
