@@ -19,7 +19,6 @@ Imports:
     GenSA, 
     ggplot2, 
     gridExtra, 
-    gt, 
     gtools, 
     magrittr, 
     parallel, 

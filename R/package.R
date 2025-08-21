@@ -7,7 +7,6 @@
 #' @importFrom GenSA GenSA
 #' @importFrom ggplot2 aes element_text geom_col ggplot labs margin scale_x_continuous theme theme_minimal
 #' @importFrom gridExtra grid.arrange
-#' @importFrom gt cell_text cells_body cols_label gt gt_output opt_all_caps px render_gt sub_missing tab_options tab_spanner tab_style
 #' @importFrom gtools combinations ddirichlet permutations rdirichlet
 #' @importFrom magrittr %>%
 #' @importFrom parallel detectCores

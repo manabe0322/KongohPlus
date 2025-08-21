@@ -5,12 +5,6 @@ file_ui <- function(id){
   ns <- NS(id)
 
   tabPanel("File",
-           tags$style(HTML("
-             .gt_table {
-               margin-left: 0 !important;
-               margin-right: auto !important;
-             }
-           ")),
            sidebarLayout(
              sidebarPanel(width = 3,
                           fileInput(ns("file_csp"), label = h4("Crime stain profile"), accept = ".csv", buttonLabel = "Load"),
@@ -23,21 +17,10 @@ file_ui <- function(id){
                        tabsetPanel(id = ns("tabset_load_file"),
                                    type = "tabs",
                                    tabPanel("Crime stain profile",
-                                            br(),
-                                            fluidRow(
-                                              column(3, uiOutput(ns("select_csp_sn"))),
-                                              column(3, uiOutput(ns("select_csp_mk"))),
-                                              column(3),
-                                              column(3)
-                                            ),
-                                            div(style = "overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 150px); max-width: 100%;",
-                                              gt_output(ns("dt_csp"))
-                                            )
+                                            dataTableOutput(ns("dt_csp"))
                                    ),
                                    tabPanel("Reference profile",
-                                            div(style = "overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 150px); max-width: 100%;",
-                                              gt_output(ns("dt_ref"))
-                                            )
+                                            dataTableOutput(ns("dt_ref"))
                                    ),
                                    tabPanel("Allele frequency",
                                             dataTableOutput(ns("dt_af"))
@@ -104,117 +87,98 @@ file_server <- function(id, session_top, bool_load_proj){
 
       # --- Display crime stain profiles --- #
 
-      output$select_csp_sn <- renderUI({
+      output$dt_csp <- renderDataTable({
         dt_csp <- rv_input$dt_csp
+
         if(!is.null(dt_csp)){
-          selectInput(session$ns("select_csp_sn"), label = "Sample name", choices = c("All", unique(dt_csp$SampleName)), selected = "All", selectize = FALSE)
-        }
-      })
+          name_dt_csp <- names(dt_csp)
 
-      output$select_csp_mk <- renderUI({
-        dt_csp <- rv_input$dt_csp
-        if(!is.null(dt_csp)){
-          selectInput(session$ns("select_csp_mk"), label = "Marker", choices = c("All", unique(dt_csp$Marker)), selected = "All", selectize = FALSE)
-        }
-      })
+          mat_alleles <- as.matrix(dt_csp[, grep("Allele", name_dt_csp), with = FALSE])
+          mat_heights <- as.matrix(dt_csp[, grep("Height", name_dt_csp), with = FALSE])
+          n_row <- nrow(mat_alleles)
+          paste_alleles <- rep(NA, n_row)
+          paste_heights <- rep(NA, n_row)
+          for(i in 1:n_row){
+            alleles_mk <- mat_alleles[i, ]
+            alleles_mk <- alleles_mk[!is.na(alleles_mk)]
+            if(length(alleles_mk) != 0){
+              paste_alleles[i] <- paste0(alleles_mk, collapse = ", ")
+            }
 
-      output$dt_csp <- render_gt({
-        dt_csp <- rv_input$dt_csp
-        select_csp_sn <- input$select_csp_sn
-        select_csp_mk <- input$select_csp_mk
-
-        if(all(!is.null(dt_csp), !is.null(select_csp_sn), !is.null(select_csp_mk))){
-          if(select_csp_sn != "All"){
-            dt_csp <- dt_csp[dt_csp$SampleName == select_csp_sn]
-          }
-          if(select_csp_mk != "All"){
-            dt_csp <- dt_csp[dt_csp$Marker == select_csp_mk]
+            heights_mk <- mat_heights[i, ]
+            heights_mk <- heights_mk[!is.na(heights_mk)]
+            if(length(heights_mk) != 0){
+              paste_heights[i] <- paste0(heights_mk, collapse = ", ")
+            }
           }
 
-          allele_cols <- names(dt_csp)[grep("Allele", names(dt_csp))]
-          height_cols <- names(dt_csp)[grep("Height", names(dt_csp))]
+          dt_csp_display <- data.table(SampleName = factor(dt_csp$SampleName, levels = unique(dt_csp$SampleName), labels = unique(dt_csp$SampleName)),
+                                       Marker = factor(dt_csp$Marker, levels = unique(dt_csp$Marker), labels = unique(dt_csp$Marker)),
+                                       Allele = paste_alleles,
+                                       Height = paste_heights)
 
-          gt(dt_csp) %>%
-            sub_missing(
-              columns = 1:ncol(dt_csp),
-              missing_text = ""
-            ) %>%
-            tab_spanner(
-              label = "Allele",
-              columns = allele_cols
-            ) %>%
-            cols_label(
-              !!!setNames(rep("", length(allele_cols)), allele_cols)
-            ) %>%
-            tab_spanner(
-              label = "Height",
-              columns = height_cols
-            ) %>%
-            cols_label(
-              !!!setNames(rep("", length(height_cols)), height_cols)
-            ) %>%
-            tab_options(
-              table.font.size = px(14),
-              data_row.padding = px(5),
-              data_row.padding.horizontal = px(7.5),
-              column_labels.padding.horizontal = px(7.5)
-            ) %>%
-            tab_style(
-              style = cell_text(whitespace = "nowrap"), # No string wrapping
-              locations = cells_body()
-            )
+
+          index_sn <- which(name_dt_csp == "SampleName") - 1
+          index_mk <- which(name_dt_csp == "Marker") - 1
+          index_num <- setdiff(0:(ncol(dt_csp) - 1), c(index_sn, index_mk))
+
+          datatable(
+            dt_csp_display,
+            filter = "top",
+            selection = "none",
+            extensions = c("FixedColumns", "FixedHeader"),
+            options = list(dom = "t", iDisplayLength = nrow(dt_csp_display), ordering = FALSE, autoWidth = FALSE, scrollX = TRUE, scrollY = "calc(100vh - 200px)",
+                           fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0),
+                           columnDefs = list(list(targets = c(2, 3), searchable = FALSE))),
+            rownames = FALSE
+          ) %>%
+            formatStyle(names(dt_csp_display), lineHeight = "80%")
         }
       })
 
       # --- Display reference profiles --- #
 
-      output$dt_ref <- render_gt({
+      output$dt_ref <- renderDataTable({
         dt_ref <- rv_input$dt_ref
 
         if(!is.null(dt_ref)){
-          dt_ref_new <- NULL
+          dt_ref_display <- NULL
           samples <- unique(dt_ref$SampleName)
           n_sample <- length(samples)
           for(i in 1:n_sample){
             dt_tmp <- dt_ref[dt_ref$SampleName == samples[i]]
 
+            gts <- rep(NA, nrow(dt_tmp))
+            for(j in 1:nrow(dt_tmp)){
+              gt1 <- c(dt_tmp$Allele1[j], dt_tmp$Allele2[j])
+              gt1 <- gt1[!is.na(gt1)]
+              gts[j] <- paste0(gt1, collapse = ", ")
+            }
+
+            dt_tmp2 <- data.table(Marker = dt_tmp$Marker,
+                                  Gt = gts)
+            names(dt_tmp2) <- c("Marker", samples[i])
+
             if(i == 1){
-              dt_ref_new <- dt_tmp[, .(Marker, Allele1, Allele2)]
+              dt_ref_display <- dt_tmp2
             }else{
-              dt_tmp2 <- dt_tmp[, .(Allele1, Allele2)]
-              names(dt_tmp2) <- paste0("Allele", c(2 * i - 1, 2 * i))
-              dt_ref_new <- cbind(dt_ref_new, dt_tmp2)
+              dt_ref_display <- full_join(dt_ref_display, dt_tmp2, by = c("Marker"))
             }
           }
 
-          gt_table <- gt(dt_ref_new)
-          for(i in 1:n_sample){
-            col_target <- names(dt_ref_new)[c(2 * i, 2 * i + 1)]
+          dt_ref_display$Marker <- factor(dt_ref_display$Marker, levels = unique(dt_ref_display$Marker), labels = unique(dt_ref_display$Marker))
 
-            gt_table <- gt_table %>%
-              tab_spanner(
-                label = samples[i],
-                columns = col_target
-              ) %>%
-              cols_label(
-                !!!setNames(c("Allele1", "Allele2"), col_target)
-              )
-          }
-          gt_table %>%
-            sub_missing(
-              columns = 1:ncol(dt_ref_new),
-              missing_text = ""
-            ) %>%
-            tab_options(
-              table.font.size = px(14),
-              data_row.padding = px(5),
-              data_row.padding.horizontal = px(7.5),
-              column_labels.padding.horizontal = px(7.5)
-            ) %>%
-            tab_style(
-              style = cell_text(whitespace = "nowrap"), # No string wrapping
-              locations = cells_body()
-            )
+          datatable(
+            dt_ref_display,
+            filter = "top",
+            selection = "none",
+            extensions = c("FixedColumns", "FixedHeader"),
+            options = list(dom = "t", iDisplayLength = nrow(dt_ref_display), ordering = FALSE, autoWidth = FALSE, scrollX = TRUE, scrollY = "calc(100vh - 200px)",
+                           fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0),
+                           columnDefs = list(list(targets = 1:(ncol(dt_ref_display) - 1), searchable = FALSE))),
+            rownames = FALSE
+          ) %>%
+            formatStyle(names(dt_ref_display), lineHeight = "80%")
         }
       })
 
@@ -228,7 +192,7 @@ file_server <- function(id, session_top, bool_load_proj){
             dt_af,
             selection = "none",
             extensions = c("FixedColumns", "FixedHeader"),
-            options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = TRUE, scrollX = TRUE, scrollY = "calc(100vh - 150px)",
+            options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = FALSE, scrollX = TRUE, scrollY = "calc(100vh - 150px)",
                            fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0)),
             rownames = FALSE
             ) %>%
