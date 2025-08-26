@@ -412,8 +412,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // calc_gts_prob
-double calc_gts_prob(std::vector<double> gts, std::vector<double> pop_al, std::vector<double> pop_prob, double theta, std::vector<double> prof_ref_99, std::vector<int> hyp_id, std::vector<int> n_obs, std::vector<double> obs_al, int n_dropout);
-RcppExport SEXP _KongohPlus_calc_gts_prob(SEXP gtsSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP thetaSEXP, SEXP prof_ref_99SEXP, SEXP hyp_idSEXP, SEXP n_obsSEXP, SEXP obs_alSEXP, SEXP n_dropoutSEXP) {
+double calc_gts_prob(std::vector<double> gts, std::vector<double> pop_al, std::vector<double> pop_prob, double theta, std::vector<double> prof_ref_99, std::vector<int> hyp_id, std::vector<int> n_obs, std::vector<double> obs_al, std::vector<int> index_dropout_cpp);
+RcppExport SEXP _KongohPlus_calc_gts_prob(SEXP gtsSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP thetaSEXP, SEXP prof_ref_99SEXP, SEXP hyp_idSEXP, SEXP n_obsSEXP, SEXP obs_alSEXP, SEXP index_dropout_cppSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -425,14 +425,14 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<int> >::type hyp_id(hyp_idSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type n_obs(n_obsSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type obs_al(obs_alSEXP);
-    Rcpp::traits::input_parameter< int >::type n_dropout(n_dropoutSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_gts_prob(gts, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al, n_dropout));
+    Rcpp::traits::input_parameter< std::vector<int> >::type index_dropout_cpp(index_dropout_cppSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_gts_prob(gts, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al, index_dropout_cpp));
     return rcpp_result_gen;
 END_RCPP
 }
 // calc_gts_prob_mk
-std::vector<double> calc_gts_prob_mk(std::vector<std::vector<double>> gts_mk, std::vector<double> pop_al, std::vector<double> pop_prob, double theta, std::vector<double> prof_ref_99, std::vector<int> hyp_id, std::vector<int> n_obs, std::vector<double> obs_al, int n_dropout);
-RcppExport SEXP _KongohPlus_calc_gts_prob_mk(SEXP gts_mkSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP thetaSEXP, SEXP prof_ref_99SEXP, SEXP hyp_idSEXP, SEXP n_obsSEXP, SEXP obs_alSEXP, SEXP n_dropoutSEXP) {
+std::vector<double> calc_gts_prob_mk(std::vector<std::vector<double>> gts_mk, std::vector<double> pop_al, std::vector<double> pop_prob, double theta, std::vector<double> prof_ref_99, std::vector<int> hyp_id, std::vector<int> n_obs, std::vector<double> obs_al, std::vector<int> index_dropout_cpp);
+RcppExport SEXP _KongohPlus_calc_gts_prob_mk(SEXP gts_mkSEXP, SEXP pop_alSEXP, SEXP pop_probSEXP, SEXP thetaSEXP, SEXP prof_ref_99SEXP, SEXP hyp_idSEXP, SEXP n_obsSEXP, SEXP obs_alSEXP, SEXP index_dropout_cppSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -444,8 +444,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<int> >::type hyp_id(hyp_idSEXP);
     Rcpp::traits::input_parameter< std::vector<int> >::type n_obs(n_obsSEXP);
     Rcpp::traits::input_parameter< std::vector<double> >::type obs_al(obs_alSEXP);
-    Rcpp::traits::input_parameter< int >::type n_dropout(n_dropoutSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_gts_prob_mk(gts_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al, n_dropout));
+    Rcpp::traits::input_parameter< std::vector<int> >::type index_dropout_cpp(index_dropout_cppSEXP);
+    rcpp_result_gen = Rcpp::wrap(calc_gts_prob_mk(gts_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al, index_dropout_cpp));
     return rcpp_result_gen;
 END_RCPP
 }

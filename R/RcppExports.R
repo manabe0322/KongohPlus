@@ -117,12 +117,12 @@ extract_gts_adopt <- function(cand_gt, index_gts_adopt_cpp) {
     .Call(`_KongohPlus_extract_gts_adopt`, cand_gt, index_gts_adopt_cpp)
 }
 
-calc_gts_prob <- function(gts, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al, n_dropout) {
-    .Call(`_KongohPlus_calc_gts_prob`, gts, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al, n_dropout)
+calc_gts_prob <- function(gts, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al, index_dropout_cpp) {
+    .Call(`_KongohPlus_calc_gts_prob`, gts, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al, index_dropout_cpp)
 }
 
-calc_gts_prob_mk <- function(gts_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al, n_dropout) {
-    .Call(`_KongohPlus_calc_gts_prob_mk`, gts_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al, n_dropout)
+calc_gts_prob_mk <- function(gts_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al, index_dropout_cpp) {
+    .Call(`_KongohPlus_calc_gts_prob_mk`, gts_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id, n_obs, obs_al, index_dropout_cpp)
 }
 
 calc_rph_dedup1_cpp <- function(mp, deg, hnc, rph_base_use_mk1, index_dedup1, deg_size) {

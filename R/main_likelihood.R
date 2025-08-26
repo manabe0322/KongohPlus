@@ -178,12 +178,13 @@ calc_gtc_logprob_all_hyp <- function(mk, hyp_id_all, prof_ref_all, prof_ref_99_a
     pop_prob <- pop_prob_list[[mk]]
     dt_pg <- dt_pg_list[[mk]]
 
-    # Number of drop-out
-    n_dropout <- length(which(!is.element(prof_ref[index_ref_contrib], peaks)))
-
-    # Calculate genotype probabilities
-    n_obs <- make_n_obs(pop_al, prof_ref[prof_ref != -1])
+    # Create observed allele lists
+    n_obs <- make_n_obs(pop_al, prof_ref[index_ref_contrib])
     obs_al <- as.numeric(names(n_obs))
+
+    # Indices of drop-out alleles
+    dropout_alleles <- setdiff(prof_ref[index_ref_contrib], peaks)
+    index_dropout_cpp <- which(is.element(obs_al, dropout_alleles)) - 1
 
     # Make a list of genotype combinations for C++ format
     gtc_mk <- as.matrix(dt_pg[, grep("Allele", names(dt_pg), value = TRUE), with = FALSE])
@@ -191,7 +192,7 @@ calc_gtc_logprob_all_hyp <- function(mk, hyp_id_all, prof_ref_all, prof_ref_99_a
 
     # Calculate genotype probabilities
     for(i in 1:n_hyp){
-      gtc_prob_mk <- calc_gts_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id_all[i, ], n_obs, obs_al, n_dropout)
+      gtc_prob_mk <- calc_gts_prob_mk(gtc_mk, pop_al, pop_prob, theta, prof_ref_99, hyp_id_all[i, ], n_obs, obs_al, index_dropout_cpp)
       gtc_logprob_all_hyp[[i]] <- log(gtc_prob_mk)
     }
   }
