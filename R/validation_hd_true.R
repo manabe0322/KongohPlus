@@ -79,16 +79,18 @@ perform_hd_true <- function(hnc, n_simu, data_deconvo, importance_sampling = FAL
   error_message_h1 <- data_h1$error_message
 
   if(is.null(error_message_h1)){
-    dt_pg_list_h1 <- data_h1$dt_pg_list
 
     # --- Generate random genotypes --- #
+
+    dt_pg_list_h1 <- data_h1$dt_pg_list
 
     if(importance_sampling){
       tmp <- generate_importance_gt(n_simu, dt_pg_list_h1, pop_al_list, pop_prob_list)
       randgt <- tmp$importance_gt
       bias <- tmp$bias
     }else{
-      randgt <- t(generate_rand_gt(n_simu, pop_al_list, pop_prob_list))
+      tmp <- set_al_prob_randgt(markers_use, data_deconvo$dt_af)
+      randgt <- t(generate_rand_gt(n_simu, tmp$pop_al_list, tmp$pop_prob_list))
     }
 
     # --- Create order of contributors in Hp and Hd --- #
