@@ -82,7 +82,7 @@ hd_true_random_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true_rand
         output$fn_csp <- renderText({paste0(data_deconvo$fn_csp)})
         output$title_af <- renderUI({h4("Allele frequency")})
         output$fn_af <- renderText({paste0(data_deconvo$fn_af)})
-        output$title_gt_non_contrib <- renderUI({h4("Genotypes of Non-contributor")})
+        output$title_gt_non_contrib <- renderUI({h4("Genotypes of non-contributor")})
 
         output$noc <- renderUI({
           selectInput(session$ns("noc"), label = h4("Number of contributors"), choices = hnc_all, selected = hnc_all[1], selectize = FALSE)
@@ -97,7 +97,7 @@ hd_true_random_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true_rand
         })
 
         output$ui_n_simu <- renderUI({
-          disabled(numericInput(session$ns("n_simu"), label = h4("Number of random genotypes"), value = 100))
+          disabled(numericInput(session$ns("n_simu"), label = "Number of random genotypes", value = 100))
         })
 
         output$act_analyze_hd_true <- renderUI({
@@ -158,21 +158,38 @@ hd_true_random_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true_rand
         })
 
         observeEvent(input$act_analyze_hd_true, {
+
           waiter_show(html = spin_3k(), color = "white")
 
-          hnc <- as.numeric(input$noc)
-          n_simu <- input$n_simu
-          tmp <- perform_hd_true(hnc, n_simu, data_deconvo, importance_sampling = FALSE)
-          rv_hd_true_random$lr_rand <- lr_rand <- tmp$lr_rand
+          # --- Check input genotypes for non-contributors --- #
 
-          if(any(is.na(lr_rand))){
-            data_hnc_list <- data_deconvo$data_hnc_list
-            data_h1 <- data_hnc_list[[which(hnc_all == hnc)]]
-            error_message_h1 <- data_h1$error_message
-            waiter_hide()
-            showModal(modalDialog(title = "Error", HTML(error_message_h1), easyClose = TRUE, footer = NULL))
+          if(!input$check_random){
+            dt_gt_non_contrib <- rv_hd_true_random$dt_gt_non_contrib
+            error_message <- check_gt_non_contrib(dt_gt_non_contrib, data_deconvo$markers_use)
+            n_simu <- length(unique(dt_gt_non_contrib[, SampleName]))
           }else{
+            dt_gt_non_contrib <- NULL
+            error_message <- ""
+            n_simu <- input$n_simu
+          }
+
+          if(error_message != ""){
             waiter_hide()
+            showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
+          }else{
+            hnc <- as.numeric(input$noc)
+            tmp <- perform_hd_true(hnc, data_deconvo, n_simu, dt_gt_non_contrib, importance_sampling = FALSE)
+            rv_hd_true_random$lr_rand <- lr_rand <- tmp$lr_rand
+
+            if(any(is.na(lr_rand))){
+              data_hnc_list <- data_deconvo$data_hnc_list
+              data_h1 <- data_hnc_list[[which(hnc_all == hnc)]]
+              error_message_h1 <- data_h1$error_message
+              waiter_hide()
+              showModal(modalDialog(title = "Error", HTML(error_message_h1), easyClose = TRUE, footer = NULL))
+            }else{
+              waiter_hide()
+            }
           }
         })
 

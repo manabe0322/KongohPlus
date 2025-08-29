@@ -108,7 +108,7 @@ hd_true_importance_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true_
 
           hnc <- as.numeric(input$noc)
           n_simu <- input$n_simu
-          tmp <- perform_hd_true(hnc, n_simu, data_deconvo, importance_sampling = TRUE)
+          tmp <- perform_hd_true(hnc, data_deconvo, n_simu, dt_gt_non_contrib = NULL, importance_sampling = TRUE)
           rv_hd_true_importance$lr_importance <- lr_importance <- tmp$lr_rand
           rv_hd_true_importance$bias <- bias <- tmp$bias
 

@@ -1,3 +1,28 @@
+#' check_gt_non_contrib
+#'
+#' @description The function to check the loaded genotypes for non-contributors
+#' @param dt_gt_non_contrib The data.table of the genotypes for non-contributors
+#' @param markers_use A vector of the autosomal markers used
+check_gt_non_contrib <- function(dt_gt_non_contrib, markers_use){
+  error_message <- ""
+
+  setindex(dt_gt_non_contrib, SampleName)
+  sn_all_non_contrib <- unique(dt_gt_non_contrib[, SampleName])
+  for(i in 1:length(sn_all_non_contrib)){
+    sn1 <- sn_all_non_contrib[i]
+    dt_gt_non_contrib_sn1 <- dt_gt_non_contrib[SampleName == sn1]
+    if(!all(is.element(markers_use, dt_gt_non_contrib_sn1[, Marker]))){
+      if(error_message == ""){
+        error_message <- paste0("The following non-contributors lacks genotype information for the markers used in the deconvolution: <br>- ", sn1, "<br>")
+      }else{
+        error_message <- paste0(error_message, "- ", sn1, "<br>")
+      }
+    }
+  }
+
+  return(error_message)
+}
+
 #' generate_rand_gt
 #'
 #' @description The function to generate random genotypes
@@ -6,6 +31,26 @@
 #' @param pop_prob_list A list of the allele probabilities in population database
 generate_rand_gt <- function(np, pop_al_list, pop_prob_list){
   mapply(sample, sapply(pop_al_list, as.numeric), 2 * np, prob = pop_prob_list, replace = TRUE)
+}
+
+#' create_dt_rand_gt
+#'
+#' @description The function to create the data.table for random genotypes
+#' @param rand_gt The output object of the function 'generate_rand_gt'
+#' @param markers_use A vector of the autosomal markers used
+create_dt_rand_gt <- function(rand_gt, markers_use){
+  n_simu <- ncol(rand_gt) / 2
+
+  alleles1 <- as.vector(rand_gt[, seq(1, ncol(rand_gt), 2), drop = FALSE])
+  alleles2 <- as.vector(rand_gt[, seq(2, ncol(rand_gt), 2), drop = FALSE])
+  mat_alleles <- cbind(alleles1, alleles2)
+  mat_alleles <- t(apply(mat_alleles, 1, sort))
+
+  dt_rand_gt <- data.table(SampleName = as.vector(sapply(paste0("Rand", 1:n_simu), rep, length(markers_use))),
+                           Marker = rep(markers_use, n_simu),
+                           Allele1 = mat_alleles[, 1],
+                           Allele2 = mat_alleles[, 2])
+  return(dt_rand_gt)
 }
 
 #' generate_importance_gt
@@ -57,10 +102,11 @@ generate_importance_gt <- function(np, dt_pg_list_h1, pop_al_list, pop_prob_list
 #'
 #' @description The function to perform Hd-true test
 #' @param hnc The targeted number of contributors
-#' @param n_simu The number of simulations
 #' @param data_deconvo A list of the deconvolution results
+#' @param n_simu The number of simulations
+#' @param dt_gt_non_contrib The data.table of the genotypes for non-contributors
 #' @param importance_sampling Whether importance sampling will be performed or not
-perform_hd_true <- function(hnc, n_simu, data_deconvo, importance_sampling = FALSE){
+perform_hd_true <- function(hnc, data_deconvo, n_simu, dt_gt_non_contrib = NULL, importance_sampling = FALSE){
 
   lr_rand <- rep(NA, n_simu)
   bias <- rep(NA, n_simu)
@@ -86,36 +132,36 @@ perform_hd_true <- function(hnc, n_simu, data_deconvo, importance_sampling = FAL
 
     if(importance_sampling){
       tmp <- generate_importance_gt(n_simu, dt_pg_list_h1, pop_al_list, pop_prob_list)
-      randgt <- tmp$importance_gt
+      dt_gt_non_contrib <- create_dt_rand_gt(tmp$importance_gt, markers_use)
       bias <- tmp$bias
     }else{
-      tmp <- set_al_prob_randgt(markers_use, data_deconvo$dt_af)
-      randgt <- t(generate_rand_gt(n_simu, tmp$pop_al_list, tmp$pop_prob_list))
+      if(is.null(dt_gt_non_contrib)){
+        tmp <- set_al_prob_randgt(markers_use, data_deconvo$dt_af)
+        rand_gt <- t(generate_rand_gt(n_simu, tmp$pop_al_list, tmp$pop_prob_list))
+        dt_gt_non_contrib <- create_dt_rand_gt(rand_gt, markers_use)
+      }else{
+        dt_gt_non_contrib <- dt_gt_non_contrib[is.element(dt_gt_non_contrib$Marker, markers_use)]
+      }
     }
 
     # --- Create order of contributors in Hp and Hd --- #
 
+    # Hp
+    hyp_id_all_hp <- make_hyp_id_all(hnc, "Ref", "Ref")
+
     # Hd
     hyp_id_all_hd <- make_hyp_id_all(hnc, NULL, "Ref")
-
-    # Hp
-    hyp_id_all_hp <- hyp_id_all_hd
-    hyp_id_all_hp[length(hyp_id_all_hp)] <- 1 # Assuming 'Ref' as the minor contributor
 
     # References' IDs included in any hypotheses
     ref_id_lr <- 1
 
+    setindex(dt_gt_non_contrib, SampleName)
+    sn_all_non_contrib <- unique(dt_gt_non_contrib[, SampleName])
     for(i in 1:n_simu){
 
       # --- Extract a reference profile --- #
 
-      ref1 <- randgt[, c(2 * i - 1, 2 * i)]
-      ref1 <- t(apply(ref1, 1, sort))
-      refs <- paste0("Ref", i)
-      dt_ref_rand <- data.table(SampleName = rep(refs, length(markers_use)),
-                                Marker = markers_use,
-                                Allele1 = ref1[, 1],
-                                Allele2 = ref1[, 2])
+      dt_ref_rand <- dt_gt_non_contrib[SampleName == sn_all_non_contrib[i]]
 
       # --- Calculate log10 likelihood for Hp --- #
 
@@ -135,5 +181,5 @@ perform_hd_true <- function(hnc, n_simu, data_deconvo, importance_sampling = FAL
     }
   }
 
-  return(list(lr_rand = lr_rand, bias = bias))
+  return(list(lr_rand = lr_rand, bias = bias, dt_gt_non_contrib = dt_gt_non_contrib))
 }

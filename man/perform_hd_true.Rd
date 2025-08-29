@@ -4,14 +4,22 @@
 \alias{perform_hd_true}
 \title{perform_hd_true}
 \usage{
-perform_hd_true(hnc, n_simu, data_deconvo, importance_sampling = FALSE)
+perform_hd_true(
+  hnc,
+  data_deconvo,
+  n_simu,
+  dt_gt_non_contrib = NULL,
+  importance_sampling = FALSE
+)
 }
 \arguments{
 \item{hnc}{The targeted number of contributors}
 
+\item{data_deconvo}{A list of the deconvolution results}
+
 \item{n_simu}{The number of simulations}
 
-\item{data_deconvo}{A list of the deconvolution results}
+\item{dt_gt_non_contrib}{The data.table of the genotypes for non-contributors}
 
 \item{importance_sampling}{Whether importance sampling will be performed or not}
 }
