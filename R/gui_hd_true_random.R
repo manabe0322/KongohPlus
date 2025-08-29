@@ -18,19 +18,22 @@ hd_true_random_ui_sub <- function(id){
            fluidRow(
              column(3,
                     wellPanel(
-                      h4("Crime stain profile"),
+                      uiOutput(ns("title_csp")),
                       textOutput(ns("fn_csp")),
                       br(),
-                      h4("Allele frequency"),
+                      uiOutput(ns("title_af")),
                       textOutput(ns("fn_af"))
                     ),
                     wellPanel(
                       uiOutput(ns("noc")),
                       br(),
-                      numericInput(ns("n_simu"), label = h4("Number of simulations"), value = 100),
+                      uiOutput(ns("title_gt_non_contrib")),
+                      uiOutput(ns("check_random")),
+                      uiOutput(ns("file_gt_non_contrib")),
+                      uiOutput(ns("ui_n_simu")),
                       br(),
                       br(),
-                      actionButton(ns("act_analyze_hd_true"), label = "Analyze", class = "btn btn-primary btn-lg")
+                      uiOutput(ns("act_analyze_hd_true"))
                     )
              ),
              column(9,
@@ -48,6 +51,8 @@ hd_true_random_server <- function(id, path_pack, rv_deconvo){
     id,
     function(input, output, session){
       rv_hd_true_random <- reactiveValues()
+      rv_hd_true_random$dt_gt_non_contrib <- NULL
+      rv_hd_true_random$bool_n_simu <- TRUE
       rv_hd_true_random$lr_rand <- NULL
 
       observe({
@@ -70,18 +75,86 @@ hd_true_random_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true_rand
     function(input, output, session){
       data_deconvo <- rv_deconvo$data_deconvo
 
-      if(is.null(data_deconvo)){
-        disable("act_analyze_hd_true")
-      }else{
+      if(!is.null(data_deconvo)){
         hnc_all <- data_deconvo$hnc_all
 
-        enable("act_analyze_hd_true")
-
+        output$title_csp <- renderUI({h4("Crime stain profile")})
         output$fn_csp <- renderText({paste0(data_deconvo$fn_csp)})
+        output$title_af <- renderUI({h4("Allele frequency")})
         output$fn_af <- renderText({paste0(data_deconvo$fn_af)})
+        output$title_gt_non_contrib <- renderUI({h4("Genotypes of Non-contributor")})
 
         output$noc <- renderUI({
-          selectInput(session$ns("noc"), label = "Number of contributors", choices = hnc_all, selected = hnc_all[1], selectize = FALSE)
+          selectInput(session$ns("noc"), label = h4("Number of contributors"), choices = hnc_all, selected = hnc_all[1], selectize = FALSE)
+        })
+
+        output$check_random <- renderUI({
+          checkboxInput(session$ns("check_random"), label = "Generate randomly", value = FALSE)
+        })
+
+        output$file_gt_non_contrib <- renderUI({
+          fileInput(session$ns("file_gt_non_contrib"), label = "", accept = ".csv", buttonLabel = "Load")
+        })
+
+        output$ui_n_simu <- renderUI({
+          disabled(numericInput(session$ns("n_simu"), label = h4("Number of random genotypes"), value = 100))
+        })
+
+        output$act_analyze_hd_true <- renderUI({
+          disabled(actionButton(session$ns("act_analyze_hd_true"), label = "Analyze", class = "btn btn-primary btn-lg"))
+        })
+
+        observeEvent(input$check_random, {
+          if(input$check_random){
+            disable("file_gt_non_contrib")
+            enable("n_simu")
+
+            if(rv_hd_true_random$bool_n_simu){
+              enable("act_analyze_hd_true")
+            }else{
+              disable("act_analyze_hd_true")
+            }
+          }else{
+            enable("file_gt_non_contrib")
+            disable("n_simu")
+
+            if(!is.null(rv_hd_true_random$dt_gt_non_contrib)){
+              enable("act_analyze_hd_true")
+            }else{
+              disable("act_analyze_hd_true")
+            }
+          }
+        })
+
+        observeEvent(input$file_gt_non_contrib, {
+          file_input <- input$file_gt_non_contrib
+          if(!is.null(file_input)){
+            dt_gt_non_contrib <- fread(file_input$datapath)
+            dt_gt_non_contrib <- change_data_type_ref(dt_gt_non_contrib)
+            rv_hd_true_random$dt_gt_non_contrib <- dt_gt_non_contrib
+          }else{
+            rv_hd_true_random$dt_gt_non_contrib <- NULL
+          }
+
+          if(!is.null(rv_hd_true_random$dt_gt_non_contrib) && !input$check_random){
+            enable("act_analyze_hd_true")
+          }
+        })
+
+        observeEvent(input$n_simu, {
+          n_simu <- input$n_simu
+
+          if(!is.integer(n_simu) || n_simu <= 0){
+            showFeedbackDanger(inputId = "n_simu", text = "The value must be a positive integer.")
+            rv_hd_true_random$bool_n_simu <- FALSE
+          }else{
+            hideFeedback("n_simu")
+            rv_hd_true_random$bool_n_simu <- TRUE
+          }
+
+          if(rv_hd_true_random$bool_n_simu && input$check_random){
+            enable("act_analyze_hd_true")
+          }
         })
 
         observeEvent(input$act_analyze_hd_true, {
