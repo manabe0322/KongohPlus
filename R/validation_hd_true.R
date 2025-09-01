@@ -46,7 +46,7 @@ create_dt_rand_gt <- function(rand_gt, markers_use){
   mat_alleles <- cbind(alleles1, alleles2)
   mat_alleles <- t(apply(mat_alleles, 1, sort))
 
-  dt_rand_gt <- data.table(SampleName = as.vector(sapply(paste0("Rand", 1:n_simu), rep, length(markers_use))),
+  dt_rand_gt <- data.table(SampleName = as.vector(sapply(paste0("Sample", 1:n_simu), rep, length(markers_use))),
                            Marker = rep(markers_use, n_simu),
                            Allele1 = mat_alleles[, 1],
                            Allele2 = mat_alleles[, 2])
@@ -108,9 +108,6 @@ generate_importance_gt <- function(np, dt_pg_list_h1, pop_al_list, pop_prob_list
 #' @param importance_sampling Whether importance sampling will be performed or not
 perform_hd_true <- function(hnc, data_deconvo, n_simu, dt_gt_non_contrib = NULL, importance_sampling = FALSE){
 
-  lr_rand <- rep(NA, n_simu)
-  bias <- rep(NA, n_simu)
-
   # --- Extract data from data_deconvo --- #
 
   hnc_all <- data_deconvo$hnc_all
@@ -125,6 +122,9 @@ perform_hd_true <- function(hnc, data_deconvo, n_simu, dt_gt_non_contrib = NULL,
   error_message_h1 <- data_h1$error_message
 
   if(is.null(error_message_h1)){
+
+    lr_rand <- matrix(NA, length(markers_use) + 1, n_simu)
+    bias <- rep(NA, n_simu)
 
     # --- Generate random genotypes --- #
 
@@ -167,19 +167,29 @@ perform_hd_true <- function(hnc, data_deconvo, n_simu, dt_gt_non_contrib = NULL,
 
       loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_h1, dt_ref_rand, hyp_id_all_hp, ref_id_lr)
       tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hp)
-      subsub_log10like_hp <- sum(tmp$subsub_log10like_all_mk)
+      subsub_log10like_all_mk_hp <- tmp$subsub_log10like_all_mk
+      subsub_log10like_hp <- c(subsub_log10like_all_mk_hp, sum(subsub_log10like_all_mk_hp))
 
       # --- Calculate log10 likelihood for Hd --- #
 
       loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_h1, dt_ref_rand, hyp_id_all_hd, ref_id_lr)
       tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hd)
-      subsub_log10like_hd <- sum(tmp$subsub_log10like_all_mk)
+      subsub_log10like_all_mk_hd <- tmp$subsub_log10like_all_mk
+      subsub_log10like_hd <- c(subsub_log10like_all_mk_hd, sum(subsub_log10like_all_mk_hd))
 
       # --- Calculate LR --- #
 
-      lr_rand[i] <- 10^(subsub_log10like_hp - subsub_log10like_hd)
+      lr_rand[, i] <- 10^(subsub_log10like_hp - subsub_log10like_hd)
     }
+
+    lr_rand <- cbind(c(markers_use, "LR"), lr_rand)
+    dt_lr_rand <- as.data.table(lr_rand)
+    names(dt_lr_rand) <- c("Marker", sn_all_non_contrib)
+  }else{
+    dt_lr_rand <- NULL
+    bias <- NULL
+    dt_gt_non_contrib <- NULL
   }
 
-  return(list(lr_rand = lr_rand, bias = bias, dt_gt_non_contrib = dt_gt_non_contrib))
+  return(list(dt_lr_rand = dt_lr_rand, bias = bias, dt_gt_non_contrib = dt_gt_non_contrib))
 }

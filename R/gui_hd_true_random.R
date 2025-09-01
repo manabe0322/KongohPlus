@@ -36,7 +36,15 @@ hd_true_random_ui_sub <- function(id){
                       uiOutput(ns("act_analyze_hd_true"))
                     )
              ),
-             column(9,
+             column(2,
+                    dataTableOutput(ns("dt_summary_lr_rand")),
+                    br(),
+                    br(),
+                    uiOutput(ns("ui_download_dt_lr_rand")),
+                    br(),
+                    uiOutput(ns("ui_download_dt_gt_non_contrib"))
+             ),
+             column(7,
                     plotOutput(ns("hist_lr_rand"), height = "600px")
              )
            )
@@ -51,9 +59,10 @@ hd_true_random_server <- function(id, path_pack, rv_deconvo){
     id,
     function(input, output, session){
       rv_hd_true_random <- reactiveValues()
-      rv_hd_true_random$dt_gt_non_contrib <- NULL
       rv_hd_true_random$bool_n_simu <- TRUE
       rv_hd_true_random$lr_rand <- NULL
+      rv_hd_true_random$dt_lr_rand <- NULL
+      rv_hd_true_random$dt_gt_non_contrib <- NULL
 
       observe({
         req(rv_deconvo)
@@ -179,25 +188,70 @@ hd_true_random_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true_rand
           }else{
             hnc <- as.numeric(input$noc)
             tmp <- perform_hd_true(hnc, data_deconvo, n_simu, dt_gt_non_contrib, importance_sampling = FALSE)
-            rv_hd_true_random$lr_rand <- lr_rand <- tmp$lr_rand
+            rv_hd_true_random$dt_lr_rand <- dt_lr_rand <- tmp$dt_lr_rand
 
-            if(any(is.na(lr_rand))){
+            if(is.null(dt_lr_rand)){
               data_hnc_list <- data_deconvo$data_hnc_list
               data_h1 <- data_hnc_list[[which(hnc_all == hnc)]]
               error_message_h1 <- data_h1$error_message
               waiter_hide()
               showModal(modalDialog(title = "Error", HTML(error_message_h1), easyClose = TRUE, footer = NULL))
             }else{
+              rv_hd_true_random$lr_rand <- as.numeric(dt_lr_rand[nrow(dt_lr_rand), .SD, .SDcols = !c("Marker")])
+              rv_hd_true_random$dt_gt_non_contrib <- tmp$dt_gt_non_contrib
               waiter_hide()
             }
           }
         })
 
+        output$dt_summary_lr_rand <- renderDataTable({
+          lr_rand <- rv_hd_true_random$lr_rand
+
+          if(!is.null(lr_rand)){
+            dt_summary_lr_rand <- data.table(Quantile = c("Maximum", "75%", "Median", "25%", "Minimum"),
+                                             Value = c(max(lr_rand), quantile(lr_rand, 0.75), median(lr_rand), quantile(lr_rand, 0.25), min(lr_rand)))
+
+            datatable(
+              dt_summary_lr_rand,
+              selection = "none",
+              options = list(dom = "t", iDisplayLength = nrow(dt_summary_lr_rand), ordering = FALSE, autowidth = TRUE),
+              rownames = FALSE
+            ) %>%
+              formatSignif(columns = c("Value"), digits = 3)
+          }
+        })
+
+        output$ui_download_dt_lr_rand <- renderUI({
+          if(!is.null(rv_hd_true_random$dt_lr_rand)){
+            downloadButton(session$ns("download_dt_lr_rand"), "Download LRs")
+          }
+        })
+
+        output$download_dt_lr_rand <- downloadHandler(
+          filename = paste0(gsub(" ", "_", format(as.POSIXct(Sys.time()), "%Y-%m-%d %H%M%S")), "_Hd-true_LR.csv"),
+          content = function(file){
+            write.csv(rv_hd_true_random$dt_lr_rand, file, row.names = FALSE)
+          }
+        )
+
+        output$ui_download_dt_gt_non_contrib <- renderUI({
+          if(!is.null(rv_hd_true_random$dt_lr_rand)){
+            downloadButton(session$ns("download_dt_gt_non_contrib"), "Download genotypes")
+          }
+        })
+
+        output$download_dt_gt_non_contrib <- downloadHandler(
+          filename = paste0(gsub(" ", "_", format(as.POSIXct(Sys.time()), "%Y-%m-%d %H%M%S")), "_Hd-true_genotypes.csv"),
+          content = function(file){
+            write.csv(rv_hd_true_random$dt_gt_non_contrib, file, row.names = FALSE)
+          }
+        )
+
         output$hist_lr_rand <- renderPlot({
           lr_rand <- rv_hd_true_random$lr_rand
           if(!is.null(lr_rand)){
             log10_lr_rand <- log10(lr_rand)
-            log10_lr_rand[log10_lr_rand < -100] <- -100
+            log10_lr_rand[log10_lr_rand < -300] <- -300
             hist(log10_lr_rand)
           }
         })
