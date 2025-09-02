@@ -1,4 +1,4 @@
-test_that("judge_gtc pattern 1 (no drop-in)", {
+test_that("judge_gt_comb pattern 1 (no drop-in)", {
   # Condition
   gtc <- c(26.2, 28.2, 21, 31.2)
   peaks <- c(20, 20.2, 21, 26.2, 27.2, 28.2, 30.2, 31.2, 32.2, 99)
@@ -17,9 +17,9 @@ test_that("judge_gtc pattern 1 (no drop-in)", {
   h_dropin_fltr <- 150
 
   # Run
-  bool_gtc_di <- judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99,
-                           bsrs, fsrs, dsrs, m2srs,
-                           bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+  bool_gtc_di <- judge_gt_comb(gtc, peaks, heights, peaks_rm99, heights_rm99,
+                               bsrs, fsrs, dsrs, m2srs,
+                               bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
 
   # Test
   expect_equal(length(bool_gtc_di), length(peaks) + 1)
@@ -27,7 +27,7 @@ test_that("judge_gtc pattern 1 (no drop-in)", {
   expect_equal(any(bool_gtc_di[2:length(bool_gtc_di)]), FALSE)
 })
 
-test_that("judge_gtc pattern 2 (one drop-in other than stutter positions)", {
+test_that("judge_gt_comb pattern 2 (one drop-in other than stutter positions)", {
   # Condition
   gtc <- c(26.2, 28.2, 21, 31.2)
   peaks <- c(20, 20.2, 21, 26.2, 27.2, 28.2, 30.2, 31.2, 32.2, 35, 99)
@@ -46,9 +46,9 @@ test_that("judge_gtc pattern 2 (one drop-in other than stutter positions)", {
   h_dropin_fltr <- 150
 
   # Run
-  bool_gtc_di <- judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99,
-                           bsrs, fsrs, dsrs, m2srs,
-                           bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+  bool_gtc_di <- judge_gt_comb(gtc, peaks, heights, peaks_rm99, heights_rm99,
+                               bsrs, fsrs, dsrs, m2srs,
+                               bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
 
   # Test
   expect_equal(length(bool_gtc_di), length(peaks) + 1)
@@ -58,7 +58,7 @@ test_that("judge_gtc pattern 2 (one drop-in other than stutter positions)", {
   expect_equal(bool_gtc_di[12], FALSE)
 })
 
-test_that("judge_gtc pattern 3 (two drop-ins other than stutter positions)", {
+test_that("judge_gt_comb pattern 3 (two drop-ins other than stutter positions)", {
   # Condition
   gtc <- c(26.2, 28.2, 21, 31.2)
   peaks <- c(20, 20.2, 21, 26.2, 27.2, 28.2, 30.2, 31.2, 32.2, 35, 40, 99)
@@ -77,9 +77,9 @@ test_that("judge_gtc pattern 3 (two drop-ins other than stutter positions)", {
   h_dropin_fltr <- 150
 
   # Run
-  bool_gtc_di <- judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99,
-                           bsrs, fsrs, dsrs, m2srs,
-                           bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+  bool_gtc_di <- judge_gt_comb(gtc, peaks, heights, peaks_rm99, heights_rm99,
+                               bsrs, fsrs, dsrs, m2srs,
+                               bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
 
   # Test
   expect_equal(length(bool_gtc_di), length(peaks) + 1)
@@ -90,7 +90,7 @@ test_that("judge_gtc pattern 3 (two drop-ins other than stutter positions)", {
   expect_equal(bool_gtc_di[13], FALSE)
 })
 
-test_that("judge_gtc pattern 4 (one drop-in at the stutter position of allele 28.2, over_bsr & over_fsr = TRUE of peak 27.2)", {
+test_that("judge_gt_comb pattern 4 (one drop-in at the stutter position of allele 28.2, over_bsr & over_fsr = TRUE of peak 27.2)", {
   # Condition
   gtc <- c(26.2, 28.2, 21, 31.2)
   peaks <- c(20, 20.2, 21, 26.2, 27.2, 28.2, 30.2, 31.2, 32.2, 99)
@@ -109,9 +109,9 @@ test_that("judge_gtc pattern 4 (one drop-in at the stutter position of allele 28
   h_dropin_fltr <- 150
 
   # Run
-  bool_gtc_di <- judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99,
-                           bsrs, fsrs, dsrs, m2srs,
-                           bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+  bool_gtc_di <- judge_gt_comb(gtc, peaks, heights, peaks_rm99, heights_rm99,
+                               bsrs, fsrs, dsrs, m2srs,
+                               bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
 
   # Test
   expect_equal(length(bool_gtc_di), length(peaks) + 1)
@@ -121,7 +121,7 @@ test_that("judge_gtc pattern 4 (one drop-in at the stutter position of allele 28
   expect_equal(any(bool_gtc_di[7:length(bool_gtc_di)]), FALSE)
 })
 
-test_that("judge_gtc pattern 5 (pattern 2 + pattern 4)", {
+test_that("judge_gt_comb pattern 5 (pattern 2 + pattern 4)", {
   # Condition
   gtc <- c(26.2, 28.2, 21, 31.2)
   peaks <- c(20, 20.2, 21, 26.2, 27.2, 28.2, 30.2, 31.2, 32.2, 35, 99)
@@ -140,9 +140,9 @@ test_that("judge_gtc pattern 5 (pattern 2 + pattern 4)", {
   h_dropin_fltr <- 150
 
   # Run
-  bool_gtc_di <- judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99,
-                           bsrs, fsrs, dsrs, m2srs,
-                           bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+  bool_gtc_di <- judge_gt_comb(gtc, peaks, heights, peaks_rm99, heights_rm99,
+                               bsrs, fsrs, dsrs, m2srs,
+                               bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
 
   # Test
   expect_equal(length(bool_gtc_di), length(peaks) + 1)
@@ -154,7 +154,7 @@ test_that("judge_gtc pattern 5 (pattern 2 + pattern 4)", {
   expect_equal(bool_gtc_di[12], FALSE)
 })
 
-test_that("judge_gtc pattern 5 (pattern 3 + pattern 4)", {
+test_that("judge_gt_comb pattern 5 (pattern 3 + pattern 4)", {
   # Condition
   gtc <- c(26.2, 28.2, 21, 31.2)
   peaks <- c(20, 20.2, 21, 26.2, 27.2, 28.2, 30.2, 31.2, 32.2, 35, 40, 99)
@@ -173,9 +173,9 @@ test_that("judge_gtc pattern 5 (pattern 3 + pattern 4)", {
   h_dropin_fltr <- 150
 
   # Run
-  bool_gtc_di <- judge_gtc(gtc, peaks, heights, peaks_rm99, heights_rm99,
-                           bsrs, fsrs, dsrs, m2srs,
-                           bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
+  bool_gtc_di <- judge_gt_comb(gtc, peaks, heights, peaks_rm99, heights_rm99,
+                               bsrs, fsrs, dsrs, m2srs,
+                               bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr)
 
   # Test
   expect_equal(length(bool_gtc_di), length(peaks) + 1)
