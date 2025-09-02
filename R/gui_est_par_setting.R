@@ -153,8 +153,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
 
       observeEvent(input$act_advance_par, {
         showModal(modalDialog(
-          title = "Advanced setting",
-          h4("MLE conditions"),
+          title = "MLE conditions",
           fluidRow(
             column(6,
                    numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_par$stop_iter),

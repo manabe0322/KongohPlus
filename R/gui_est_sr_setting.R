@@ -152,8 +152,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
 
       observeEvent(input$act_advance_sr, {
         showModal(modalDialog(
-          title = "Advanced setting",
-          h4("MLE conditions"),
+          title = "MLE conditions",
           fluidRow(
             column(6,
                    numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_sr$stop_iter),

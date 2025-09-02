@@ -98,8 +98,7 @@ est_dropin_server <- function(id, path_pack){
 
       observeEvent(input$act_advance_dropin, {
         showModal(modalDialog(
-          title = "Advanced setting",
-          h4("MLE conditions"),
+          title = "MLE conditions",
           fluidRow(
             column(6,
                    numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_dropin$stop_iter),

@@ -256,8 +256,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
 
       observeEvent(input$act_advance_deconvo, {
         showModal(modalDialog(
-          title = "Advanced setting",
-          h4("MLE conditions"),
+          title = "MLE conditions",
           fluidRow(
             column(6,
                    numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_deconvo_setting$stop_iter),
