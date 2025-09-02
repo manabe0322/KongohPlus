@@ -30,23 +30,41 @@ double calc_gts_prob(std::vector<double> gts,
       double gt_prob = 1;
       int sum_n_obs = accumulate(n_obs.begin(), n_obs.end(), 0);
 
-      for(int j = 0; j < 2; ++j){
-        double al = gt[j];
-        int index_pop_al = find_index_double(al, pop_al);
-        double al_prob = pop_prob[index_pop_al];
-        int index_obs_al = find_index_double(al, obs_al);
-        int n_al = n_obs[index_obs_al];
+      if(index_dropout_cpp.empty()){
+        for(int j = 0; j < 2; ++j){
+          double al = gt[j];
+          int index_pop_al = find_index_double(al, pop_al);
+          double al_prob = pop_prob[index_pop_al];
+          int index_obs_al = find_index_double(al, obs_al);
+          int n_al = n_obs[index_obs_al];
 
-        if(!index_dropout_cpp.empty()){
-          int n_dropout_al = index_dropout_cpp.size();
-          for(int k = 0; k < n_dropout_al; ++k){
-            n_al += n_obs[index_dropout_cpp[k]];
-          }
+          gt_prob *= (n_al * theta + al_prob * (1 - theta)) / (1 + (sum_n_obs - 1) * theta);
+          n_obs[index_obs_al] += 1;
+          sum_n_obs += 1;
         }
+      }
 
-        gt_prob *= (n_al * theta + al_prob * (1 - theta)) / (1 + (sum_n_obs - 1) * theta);
-        n_obs[index_obs_al] += 1;
-        sum_n_obs += 1;
+      else{
+        int n_dropout_al = index_dropout_cpp.size();
+
+        for(int j = 0; j < 2; ++j){
+          double al = gt[j];
+          int index_pop_al = find_index_double(al, pop_al);
+          double al_prob = pop_prob[index_pop_al];
+          int index_obs_al = find_index_double(al, obs_al);
+          int n_al = n_obs[index_obs_al];
+
+          int n_al_correct = n_al;
+          if(al == 99){
+            for(int k = 0; k < n_dropout_al; ++k){
+              n_al_correct += n_obs[index_dropout_cpp[k]];
+            }
+          }
+
+          gt_prob *= (n_al_correct * theta + al_prob * (1 - theta)) / (1 + (sum_n_obs - 1) * theta);
+          n_obs[index_obs_al] += 1;
+          sum_n_obs += 1;
+        }
       }
 
       if(gt[0] != gt[1]){
