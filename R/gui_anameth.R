@@ -92,11 +92,15 @@ anameth_server <- function(id, path_pack){
   moduleServer(
     id,
     function(input, output, session){
-      # Define the initial reactive values
+
+      # --- Define the initial reactive values --- #
+
       rv_anameth <- reactiveValues()
       rv_anameth$dt_info_anameth <- create_dt_info_anameth(path_pack)
+      rv_anameth$dt_anameth_edit <- NULL
 
-      # Define a new analysis method
+      # --- Define a new analysis method --- #
+
       observeEvent(input$act_anameth_new, {
         kit_all <- list.files(paste0(path_pack, "/extdata/kit"))
         kit_all <- gsub(".{4}$", "", kit_all)
@@ -174,7 +178,66 @@ anameth_server <- function(id, path_pack){
         removeModal()
       })
 
-      # Copy an analysis method
+      # --- Edit an analysis method --- #
+
+      observeEvent(input$act_anameth_edit, {
+        index_select <- input$display_info_amameth_rows_selected
+        if(isTruthy(index_select)){
+
+          # Load the selected analysis method
+          dt_info_anameth <- rv_anameth$dt_info_anameth
+          rv_anameth$dt_anameth_edit <- fread(paste0(path_pack, "/extdata/anameth/", dt_info_anameth[["Analysis method"]][index_select], ".csv"))
+
+          # Create UI
+          showModal(modalDialog(
+            title = "Edit the analysis method",
+            tabsetPanel(
+              id = session$ns("tabset_edit_anameth"),
+              type = "tabs",
+              tabPanel(
+                "General"
+              ),
+              tabPanel(
+                "AT",
+                br(),
+                rHandsontableOutput(session$ns("dt_edit_ae"))
+              ),
+              tabPanel(
+                "Genotype filter"
+              ),
+              tabPanel(
+                "LSAE"
+              ),
+              tabPanel(
+                "Peak height"
+              ),
+              tabPanel(
+                "Drop-in"
+              )
+            )
+          ))
+        }else{
+          showModal(modalDialog(title = "Error", "Select an analysis method!", easyClose = TRUE, footer = NULL))
+        }
+      })
+
+      # UI for editing AT
+      output$dt_edit_ae <- renderRHandsontable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_at <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "AT"],
+                                   AT = dt_anameth_edit$Value[dt_anameth_edit$Category == "AT"])
+
+          rhandsontable(dt_edit_at, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Marker", type = "text", readOnly = TRUE, width = 100) %>%
+            hot_col("AT", type = "numeric", format = "0", width = 100)
+        }
+      })
+
+      # --- Copy an analysis method --- #
+
       observeEvent(input$act_anameth_copy, {
         index_select <- input$display_info_amameth_rows_selected
         if(isTruthy(index_select)){
@@ -195,7 +258,8 @@ anameth_server <- function(id, path_pack){
         }
       })
 
-      # Delete an analysis method
+      # --- Delete an analysis method --- #
+
       observeEvent(input$act_anameth_delete, {
         index_select <- input$display_info_amameth_rows_selected
         if(isTruthy(index_select)){
@@ -207,7 +271,8 @@ anameth_server <- function(id, path_pack){
         }
       })
 
-      # Display information on the analysis method
+      # --- Display information on the analysis method --- #
+
       output$display_info_amameth <- renderDataTable({
         dt_info_anameth <- rv_anameth$dt_info_anameth
         datatable(
