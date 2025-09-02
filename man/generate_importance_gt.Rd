@@ -4,16 +4,33 @@
 \alias{generate_importance_gt}
 \title{generate_importance_gt}
 \usage{
-generate_importance_gt(np, dt_pg_list_h1, pop_al_list, pop_prob_list)
+generate_importance_gt(
+  n_simu,
+  markers_use,
+  dt_pg_list_h1,
+  pop_al_list,
+  pop_prob_list,
+  pop_al_rand_list,
+  pop_prob_rand_list,
+  peaks_list
+)
 }
 \arguments{
-\item{np}{The number of persons generated}
+\item{n_simu}{The number of persons generated}
+
+\item{markers_use}{A vector of the autosomal markers used}
 
 \item{dt_pg_list_h1}{A list of data.tables for probabilistic genotyping results in each marker}
 
 \item{pop_al_list}{A list of the alleles in population database}
 
 \item{pop_prob_list}{A list of the allele probabilities in population database}
+
+\item{pop_al_rand_list}{A list of the alleles for generating random genotypes}
+
+\item{pop_prob_rand_list}{A list of the allele probabilities for generating random genotypes}
+
+\item{peaks_list}{A list of the peaks}
 }
 \description{
 The function to generate genotypes using importance sampling

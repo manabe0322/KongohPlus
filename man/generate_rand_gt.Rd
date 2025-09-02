@@ -4,10 +4,10 @@
 \alias{generate_rand_gt}
 \title{generate_rand_gt}
 \usage{
-generate_rand_gt(np, pop_al_list, pop_prob_list)
+generate_rand_gt(n_simu, pop_al_list, pop_prob_list)
 }
 \arguments{
-\item{np}{The number of persons generated}
+\item{n_simu}{The number of persons generated}
 
 \item{pop_al_list}{A list of the alleles in population database}
 

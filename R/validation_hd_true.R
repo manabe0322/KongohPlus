@@ -57,10 +57,14 @@ create_dt_rand_gt <- function(rand_gt, markers_use){
 #'
 #' @description The function to generate genotypes using importance sampling
 #' @param n_simu The number of persons generated
+#' @param markers_use A vector of the autosomal markers used
 #' @param dt_pg_list_h1 A list of data.tables for probabilistic genotyping results in each marker
 #' @param pop_al_list A list of the alleles in population database
 #' @param pop_prob_list A list of the allele probabilities in population database
-generate_importance_gt <- function(n_simu, dt_pg_list_h1, pop_al_list, pop_prob_list){
+#' @param pop_al_rand_list A list of the alleles for generating random genotypes
+#' @param pop_prob_rand_list A list of the allele probabilities for generating random genotypes
+#' @param peaks_list A list of the peaks
+generate_importance_gt <- function(n_simu, markers_use, dt_pg_list_h1, pop_al_list, pop_prob_list, pop_al_rand_list, pop_prob_rand_list, peaks_list){
   n_mk <- length(dt_pg_list_h1)
   hnc <- length(grep("Allele", names(dt_pg_list_h1[[1]]))) / 2
   importance_gt <- matrix(NA, n_mk, 2 * n_simu)
@@ -68,9 +72,11 @@ generate_importance_gt <- function(n_simu, dt_pg_list_h1, pop_al_list, pop_prob_
 
   for(i in 1:n_mk){
 
+    mk <- markers_use[i]
+
     # --- Change the format of the pg table from per combination to a minor contributor --- #
 
-    dt_pg <- dt_pg_list_h1[[i]]
+    dt_pg <- dt_pg_list_h1[[mk]]
     dt_pg_per_contrib <- aggregate_pg_contrib(dt_pg, paste0("U", hnc))
 
     # --- Calculate genotype probabilities --- #
@@ -78,8 +84,8 @@ generate_importance_gt <- function(n_simu, dt_pg_list_h1, pop_al_list, pop_prob_
     tmp_gt <- gsub("Q", "99", dt_pg_per_contrib[[paste0("U", hnc)]])
     tmp_gt <- strsplit(tmp_gt, ", ")
     gt_mk <- lapply(tmp_gt, as.numeric)
-    pop_al <- pop_al_list[[i]]
-    pop_prob <- pop_prob_list[[i]]
+    pop_al <- pop_al_list[[mk]]
+    pop_prob <- pop_prob_list[[mk]]
     n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
     obs_al <- as.numeric(names(n_obs))
     gt_prob <- calc_gts_prob_mk(gt_mk, pop_al, pop_prob, theta = 0, prof_ref_99 = numeric(0), hyp_id = 0, n_obs, obs_al, index_dropout_cpp = integer(0))
@@ -88,7 +94,20 @@ generate_importance_gt <- function(n_simu, dt_pg_list_h1, pop_al_list, pop_prob_
 
     prob_sampling <- dt_pg_per_contrib$Probability
     index_extract <- sample(1:length(prob_sampling), n_simu, prob = prob_sampling, replace = TRUE)
-    importance_gt[i, ] <- unlist(gt_mk[index_extract])
+
+    # --- Assign a specific allele to 99 --- #
+
+    alleles_selected <- unlist(gt_mk[index_extract])
+    index_99 <- which(alleles_selected == 99)
+    if(length(index_99) != 0){
+      peaks_rm99 <- setdiff(peaks_list[[mk]], 99)
+      pop_al_rand <- pop_al_rand_list[[mk]]
+      pop_prob_rand <- pop_prob_rand_list[[mk]]
+      pop_al_rand_dropout <- pop_al_rand[!is.element(pop_al_rand, peaks_rm99)]
+      pop_prob_rand_dropout <- pop_prob_rand[!is.element(pop_al_rand, peaks_rm99)]
+      alleles_selected[index_99] <- sample(pop_al_rand_dropout, length(index_99), prob = pop_prob_rand_dropout, replace = TRUE)
+    }
+    importance_gt[i, ] <- alleles_selected
 
     # --- Calculate bias --- #
 
@@ -126,18 +145,23 @@ perform_hd_true <- function(hnc, data_deconvo, n_simu, dt_gt_non_contrib = NULL,
     lr_rand <- matrix(NA, length(markers_use) + 1, n_simu)
     bias <- rep(NA, n_simu)
 
+    # --- Allele probabilities for generating random genotypes --- #
+
+    tmp <- set_al_prob_randgt(markers_use, data_deconvo$dt_af)
+    pop_al_rand_list <- tmp$pop_al_list
+    pop_prob_rand_list <- tmp$pop_prob_list
+
     # --- Generate random genotypes --- #
 
     dt_pg_list_h1 <- data_h1$dt_pg_list
 
     if(importance_sampling){
-      tmp <- generate_importance_gt(n_simu, dt_pg_list_h1, pop_al_list, pop_prob_list)
+      tmp <- generate_importance_gt(n_simu, markers_use, dt_pg_list_h1, pop_al_list, pop_prob_list, pop_al_rand_list, pop_prob_rand_list, peaks_list)
       dt_gt_non_contrib <- create_dt_rand_gt(tmp$importance_gt, markers_use)
       bias <- tmp$bias
     }else{
       if(is.null(dt_gt_non_contrib)){
-        tmp <- set_al_prob_randgt(markers_use, data_deconvo$dt_af)
-        rand_gt <- t(generate_rand_gt(n_simu, tmp$pop_al_list, tmp$pop_prob_list))
+        rand_gt <- t(generate_rand_gt(n_simu, pop_al_rand_list, pop_prob_rand_list))
         dt_gt_non_contrib <- create_dt_rand_gt(rand_gt, markers_use)
       }else{
         dt_gt_non_contrib <- dt_gt_non_contrib[is.element(dt_gt_non_contrib$Marker, markers_use)]
