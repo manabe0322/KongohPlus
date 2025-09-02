@@ -26,11 +26,11 @@ check_gt_non_contrib <- function(dt_gt_non_contrib, markers_use){
 #' generate_rand_gt
 #'
 #' @description The function to generate random genotypes
-#' @param np The number of persons generated
+#' @param n_simu The number of persons generated
 #' @param pop_al_list A list of the alleles in population database
 #' @param pop_prob_list A list of the allele probabilities in population database
-generate_rand_gt <- function(np, pop_al_list, pop_prob_list){
-  mapply(sample, sapply(pop_al_list, as.numeric), 2 * np, prob = pop_prob_list, replace = TRUE)
+generate_rand_gt <- function(n_simu, pop_al_list, pop_prob_list){
+  mapply(sample, sapply(pop_al_list, as.numeric), 2 * n_simu, prob = pop_prob_list, replace = TRUE)
 }
 
 #' create_dt_rand_gt
@@ -56,15 +56,15 @@ create_dt_rand_gt <- function(rand_gt, markers_use){
 #' generate_importance_gt
 #'
 #' @description The function to generate genotypes using importance sampling
-#' @param np The number of persons generated
+#' @param n_simu The number of persons generated
 #' @param dt_pg_list_h1 A list of data.tables for probabilistic genotyping results in each marker
 #' @param pop_al_list A list of the alleles in population database
 #' @param pop_prob_list A list of the allele probabilities in population database
-generate_importance_gt <- function(np, dt_pg_list_h1, pop_al_list, pop_prob_list){
+generate_importance_gt <- function(n_simu, dt_pg_list_h1, pop_al_list, pop_prob_list){
   n_mk <- length(dt_pg_list_h1)
   hnc <- length(grep("Allele", names(dt_pg_list_h1[[1]]))) / 2
-  importance_gt <- matrix(NA, n_mk, 2 * np)
-  bias_all_mk <- matrix(NA, n_mk, np)
+  importance_gt <- matrix(NA, n_mk, 2 * n_simu)
+  bias_all_mk <- matrix(NA, n_mk, n_simu)
 
   for(i in 1:n_mk){
 
@@ -87,7 +87,7 @@ generate_importance_gt <- function(np, dt_pg_list_h1, pop_al_list, pop_prob_list
     # --- Randomly select genotype combinations based on 'Probability' --- #
 
     prob_sampling <- dt_pg_per_contrib$Probability
-    index_extract <- sample(1:length(prob_sampling), np, prob = prob_sampling, replace = TRUE)
+    index_extract <- sample(1:length(prob_sampling), n_simu, prob = prob_sampling, replace = TRUE)
     importance_gt[i, ] <- unlist(gt_mk[index_extract])
 
     # --- Calculate bias --- #
