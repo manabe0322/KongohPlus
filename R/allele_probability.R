@@ -4,15 +4,18 @@
 #' @param pop_al A vector of the alleles in the population database
 #' @param pop_freq A vector of the allele frequencies in the population database
 #' @param unobs_al A vector of the unobserved alleles in the population database
-correct_af_dirichlet <- function(pop_al, pop_freq, unobs_al = numeric(0)){
+#' @param add_unobs Whether unobserved alleles are added to the allele list or not
+correct_af_dirichlet <- function(pop_al, pop_freq, unobs_al = numeric(0), add_unobs = TRUE){
   n_unobs <- length(unobs_al)
 
-  if(n_unobs == 0){
-    pop_al <- c(pop_al, 0) # Add a dimension for an unobserved allele named allele '0'
-    pop_freq <- c(pop_freq, 0)
-  }else{
-    pop_al <- c(pop_al, unobs_al)
-    pop_freq <- c(pop_freq, rep(0, n_unobs))
+  if(add_unobs){
+    if(n_unobs == 0){
+      pop_al <- c(pop_al, 0) # Add a dimension for an unobserved allele named allele '0'
+      pop_freq <- c(pop_freq, 0)
+    }else{
+      pop_al <- c(pop_al, unobs_al)
+      pop_freq <- c(pop_freq, rep(0, n_unobs))
+    }
   }
 
   pop_prob <- (pop_freq + 1) / (sum(pop_freq) + length(pop_al))
@@ -98,7 +101,7 @@ set_al_prob_randgt <- function(markers_use, dt_af){
     pop_freq <- pop_freq[!is.na(pop_freq)]
 
     # Calculate the expected allele probabilities based on the Dirichlet distribution
-    tmp <- correct_af_dirichlet(pop_al, pop_freq)
+    tmp <- correct_af_dirichlet(pop_al, pop_freq, unobs_al = numeric(0), add_unobs = FALSE)
     pop_al_list[[i]] <- tmp$pop_al
     pop_prob_list[[i]] <- tmp$pop_prob
   }
