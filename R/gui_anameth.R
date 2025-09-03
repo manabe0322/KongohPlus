@@ -8,8 +8,8 @@ anameth_ui <- function(id){
            titlePanel("7. Set the analysis method"),
            br(),
            actionButton(ns("act_anameth_new"), "New"),
-           actionButton(ns("act_anameth_edit"), "Edit"),
            actionButton(ns("act_anameth_copy"), "Copy"),
+           actionButton(ns("act_anameth_edit"), "Edit"),
            actionButton(ns("act_anameth_delete"), "Delete"),
            br(),
            br(),
@@ -98,6 +98,7 @@ anameth_server <- function(id, path_pack){
       rv_anameth <- reactiveValues()
       rv_anameth$dt_info_anameth <- create_dt_info_anameth(path_pack)
       rv_anameth$dt_anameth_edit <- NULL
+      rv_anameth$anameth_edit <- NULL
 
       # --- Define a new analysis method --- #
 
@@ -178,6 +179,64 @@ anameth_server <- function(id, path_pack){
         removeModal()
       })
 
+      # --- Copy an analysis method --- #
+
+      observeEvent(input$act_anameth_copy, {
+        index_select <- input$display_info_amameth_rows_selected
+        if(isTruthy(index_select)){
+          dt_info_anameth <- rv_anameth$dt_info_anameth
+          anameth_copy <- paste0(dt_info_anameth[["Analysis method"]][index_select], "_copy")
+
+          showModal(modalDialog(
+            title = "Copy the analysis method",
+            textInput(session$ns("name_copy_anameth"), label = "Enter the name of the analysis method", value = anameth_copy),
+            footer = tagList(
+              actionButton(session$ns("act_anameth_copy_save"), "Save"),
+              modalButton("Cancel")
+            )
+          ))
+        }else{
+          showModal(modalDialog(title = "Error", "Select an analysis method!", easyClose = TRUE, footer = NULL))
+        }
+      })
+
+      # Check the name of the analysis method
+      observeEvent(input$name_copy_anameth, {
+        name_copy_anameth <- input$name_copy_anameth
+        dt_info_anameth <- rv_anameth$dt_info_anameth
+
+        if(name_copy_anameth == ""){
+          showFeedbackDanger(inputId = "name_copy_anameth", text = "This field cannot be empty.")
+          disable("act_anameth_copy_save")
+        }else if(is.element(name_copy_anameth, dt_info_anameth[["Analysis method"]])){
+          showFeedbackDanger(inputId = "name_copy_anameth", text = "This name is already registered.")
+          disable("act_anameth_copy_save")
+        }else{
+          hideFeedback("name_copy_anameth")
+          enable("act_anameth_copy_save")
+        }
+      })
+
+      observeEvent(input$act_anameth_copy_save, {
+        index_select <- input$display_info_amameth_rows_selected
+        name_copy_anameth <- input$name_copy_anameth
+        dt_info_anameth <- rv_anameth$dt_info_anameth
+
+        # Update the data.table for information on the analysis method
+        dt_info_anameth_copy <- copy(dt_info_anameth)
+        dt_info_anameth_copy <- dt_info_anameth_copy[index_select, ]
+        anameth_select <- dt_info_anameth_copy[["Analysis method"]]
+        dt_info_anameth_copy[["Analysis method"]] <- name_copy_anameth
+        dt_info_anameth <- rbind(dt_info_anameth, dt_info_anameth_copy)
+        rv_anameth$dt_info_anameth <- dt_info_anameth
+
+        # Make a copy of the selected analysis method
+        dt_anameth_copy <- fread(paste0(path_pack, "/extdata/anameth/", anameth_select, ".csv"))
+        write.csv(dt_anameth_copy, paste0(path_pack, "/extdata/anameth/", name_copy_anameth, ".csv"), row.names = FALSE)
+
+        removeModal()
+      })
+
       # --- Edit an analysis method --- #
 
       observeEvent(input$act_anameth_edit, {
@@ -186,7 +245,11 @@ anameth_server <- function(id, path_pack){
 
           # Load the selected analysis method
           dt_info_anameth <- rv_anameth$dt_info_anameth
-          rv_anameth$dt_anameth_edit <- fread(paste0(path_pack, "/extdata/anameth/", dt_info_anameth[["Analysis method"]][index_select], ".csv"))
+          rv_anameth$anameth_edit <- anameth_edit <- dt_info_anameth[["Analysis method"]][index_select]
+          rv_anameth$dt_anameth_edit <- dt_anameth_edit <- fread(paste0(path_pack, "/extdata/anameth/", anameth_edit, ".csv"))
+
+          load(paste0(path_pack, "/extdata/stutter/", dt_anameth_edit$Name[dt_anameth_edit$Category == "Stutter data"], ".RData"))
+          markers_auto <- names(list_dt_average_sr)
 
           # Create UI
           showModal(modalDialog(
@@ -195,25 +258,46 @@ anameth_server <- function(id, path_pack){
               id = session$ns("tabset_edit_anameth"),
               type = "tabs",
               tabPanel(
-                "General"
+                "General",
+                br(),
+                dataTableOutput(session$ns("dt_edit_general"))
               ),
               tabPanel(
                 "AT",
                 br(),
-                rHandsontableOutput(session$ns("dt_edit_ae"))
+                rHandsontableOutput(session$ns("dt_edit_at"))
               ),
               tabPanel(
-                "Genotype filter"
+                "Genotype filter",
+                br(),
+                rHandsontableOutput(session$ns("dt_edit_gtfltr"))
               ),
               tabPanel(
-                "LSAE"
+                "SR",
+                br(),
+                selectInput(session$ns("select_mk"), label = "Marker", choices = markers_auto, selected = markers_auto[1], selectize = FALSE),
+                br(),
+                rHandsontableOutput(session$ns("dt_edit_sr"))
               ),
               tabPanel(
-                "Peak height"
+                "LSAE",
+                br(),
+                rHandsontableOutput(session$ns("dt_edit_lsae"))
               ),
               tabPanel(
-                "Drop-in"
+                "Peak height",
+                br(),
+                rHandsontableOutput(session$ns("dt_edit_gamma"))
+              ),
+              tabPanel(
+                "Drop-in",
+                br(),
+                rHandsontableOutput(session$ns("dt_edit_dropin"))
               )
+            ),
+            footer = tagList(
+              actionButton(session$ns("act_anameth_edit_save"), "Save"),
+              modalButton("Cancel")
             )
           ))
         }else{
@@ -221,8 +305,33 @@ anameth_server <- function(id, path_pack){
         }
       })
 
+      # UI for general information
+      output$dt_edit_general <- renderDataTable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+        anameth_edit <- rv_anameth$anameth_edit
+
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_general <- data.table(Category = c("Analysis method", "Kit", "Stutter data", "Parameter data", "Drop-in data"),
+                                        Name = c(anameth_edit,
+                                                 dt_anameth_edit$Name[dt_anameth_edit$Category == "Kit"],
+                                                 dt_anameth_edit$Name[dt_anameth_edit$Category == "Stutter data"],
+                                                 dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"],
+                                                 dt_anameth_edit$Name[dt_anameth_edit$Category == "Drop-in data"]
+                                                 ))
+
+          datatable(
+            dt_edit_general,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_edit_general), ordering = FALSE, autowidth = TRUE),
+            rownames = FALSE,
+            colnames = NULL,
+            escape = FALSE
+          )
+        }
+      })
+
       # UI for editing AT
-      output$dt_edit_ae <- renderRHandsontable({
+      output$dt_edit_at <- renderRHandsontable({
         dt_anameth_edit <- rv_anameth$dt_anameth_edit
 
         if(!is.null(dt_anameth_edit)){
@@ -231,31 +340,147 @@ anameth_server <- function(id, path_pack){
 
           rhandsontable(dt_edit_at, rowHeaders = FALSE) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-            hot_col("Marker", type = "text", readOnly = TRUE, width = 100) %>%
-            hot_col("AT", type = "numeric", format = "0", width = 100)
+            hot_col("Marker", type = "text", readOnly = TRUE, width = 150) %>%
+            hot_col("AT", type = "numeric", format = "0", width = 150)
         }
       })
 
-      # --- Copy an analysis method --- #
+      # UI for editing genotype filter
+      output$dt_edit_gtfltr <- renderRHandsontable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
 
-      observeEvent(input$act_anameth_copy, {
-        index_select <- input$display_info_amameth_rows_selected
-        if(isTruthy(index_select)){
-          # Update information on the analysis method
-          dt_info_anameth <- rv_anameth$dt_info_anameth
-          dt_info_anameth_copy <- copy(dt_info_anameth)
-          dt_info_anameth_copy <- dt_info_anameth_copy[index_select, ]
-          anameth_select <- dt_info_anameth_copy[["Analysis method"]]
-          dt_info_anameth_copy[["Analysis method"]] <- paste0(anameth_select, "_copy")
-          dt_info_anameth <- rbind(dt_info_anameth, dt_info_anameth_copy)
-          rv_anameth$dt_info_anameth <- dt_info_anameth
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_gtfltr <- data.table(Filter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Genotype filter"],
+                                       Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Genotype filter"])
 
-          # Make a copy of the selected analysis method
-          dt_anameth_copy <- fread(paste0(path_pack, "/extdata/anameth/", anameth_select, ".csv"))
-          write.csv(dt_anameth_copy, paste0(path_pack, "/extdata/anameth/", dt_info_anameth_copy[["Analysis method"]], ".csv"), row.names = FALSE)
-        }else{
-          showModal(modalDialog(title = "Error", "Select an analysis method!", easyClose = TRUE, footer = NULL))
+          rhandsontable(dt_edit_gtfltr, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Filter", type = "text", readOnly = TRUE, width = 250) %>%
+            hot_col("Value", type = "numeric", format = "0.00", width = 150)
         }
+      })
+
+      # UI for editing SR
+      output$dt_edit_sr <- aa
+
+      # UI for editing LSAE
+      output$dt_edit_lsae <- renderRHandsontable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_lsae <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "LSAE"],
+                                     LSAE = dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"])
+
+          rhandsontable(dt_edit_lsae, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Marker", type = "text", readOnly = TRUE, width = 150) %>%
+            hot_col("LSAE", type = "numeric", format = "0.000000", width = 150)
+        }
+      })
+
+      # UI for editing gamma parameters
+      output$dt_edit_gamma <- renderRHandsontable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_gamma <- data.table(Parameter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Peak height"],
+                                      Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"])
+
+          rhandsontable(dt_edit_gamma, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Parameter", type = "text", readOnly = TRUE, width = 150) %>%
+            hot_col("Value", type = "numeric", format = "0.000000", width = 150)
+        }
+      })
+
+      # UI for editing drop-in parameters
+      output$dt_edit_dropin <- renderRHandsontable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_dropin <- data.table(Parameter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Drop-in"],
+                                       Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"])
+
+          rhandsontable(dt_edit_dropin, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Parameter", type = "text", readOnly = TRUE, width = 150) %>%
+            hot_col("Value", type = "numeric", format = "0.000000", width = 150)
+        }
+      })
+
+      # UI for saving edited anameth
+      observeEvent(input$act_anameth_edit_save, {
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+        anameth_edit <- rv_anameth$anameth_edit
+        index_select <- input$display_info_amameth_rows_selected
+        dt_info_anameth <- rv_anameth$dt_info_anameth
+
+        if(!is.null(input$dt_edit_at)){
+          dt_edit_at <- hot_to_r(input$dt_edit_at)
+          dt_anameth_edit$Value[dt_anameth_edit$Category == "AT"] <- dt_edit_at$AT
+        }
+
+        if(!is.null(input$dt_edit_gtfltr)){
+          dt_edit_gtfltr <- hot_to_r(input$dt_edit_gtfltr)
+          dt_anameth_edit$Value[dt_anameth_edit$Category == "Genotype filter"] <- dt_edit_gtfltr$Value
+        }
+
+        if(!is.null(input$dt_edit_lsae)){
+          dt_edit_lsae <- hot_to_r(input$dt_edit_lsae)
+
+          # Mark as edited when the LSAE parameters or gamma parameters are changed.
+          if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"], 6) != round(dt_edit_lsae$LSAE, 6))){
+            name_param <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"]
+
+            if(substring(name_param, nchar(name_param) - 8) != " (edited)"){
+              dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"] <- paste0(name_param, " (edited)")
+              dt_info_anameth[["Parameter data"]][index_select] <- paste0(name_param, " (edited)")
+            }
+          }
+
+          dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"] <- dt_edit_lsae$LSAE
+        }
+
+        if(!is.null(input$dt_edit_gamma)){
+          dt_edit_gamma <- hot_to_r(input$dt_edit_gamma)
+
+          # Mark as edited when the LSAE parameters or gamma parameters are changed.
+          if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"], 6) != round(dt_edit_gamma$Value, 6))){
+            name_param <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"]
+
+            if(substring(name_param, nchar(name_param) - 8) != " (edited)"){
+              dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"] <- paste0(name_param, " (edited)")
+              dt_info_anameth[["Parameter data"]][index_select] <- paste0(name_param, " (edited)")
+            }
+          }
+
+          dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"] <- dt_edit_gamma$Value
+        }
+
+        if(!is.null(input$dt_edit_dropin)){
+          dt_edit_dropin <- hot_to_r(input$dt_edit_dropin)
+
+          # Mark as edited when the drop-in parameters are changed.
+          if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"], 6) != round(dt_edit_dropin$Value, 6))){
+            name_dropin <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Drop-in data"]
+
+            if(substring(name_dropin, nchar(name_dropin) - 8) != " (edited)"){
+              dt_anameth_edit$Name[dt_anameth_edit$Category == "Drop-in data"] <- paste0(name_dropin, " (edited)")
+              dt_info_anameth[["Drop-in data"]][index_select] <- paste0(name_dropin, " (edited)")
+            }
+          }
+
+          dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"] <- dt_edit_dropin$Value
+        }
+
+        write.csv(dt_anameth_edit, paste0(path_pack, "/extdata/anameth/", anameth_edit, ".csv"), row.names = FALSE)
+        rv_anameth$dt_info_anameth <- dt_info_anameth
+
+        # Reset reactive values for editing the analysis method
+        rv_anameth$dt_anameth_edit <- NULL
+        rv_anameth$anameth_edit <- NULL
+
+        removeModal()
       })
 
       # --- Delete an analysis method --- #
