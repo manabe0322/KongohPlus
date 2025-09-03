@@ -111,7 +111,7 @@ calc_ave_het_ph_all_data <- function(height_list){
 #' run_mle_ae
 #'
 #' @description The function to perform MLE for the locus-specific amplification efficiency
-#' @param prop_ae_data_use A matrix of the proportion of the amplification efficiencies (only data used for MCMC)
+#' @param prop_ae_data_use A matrix of the proportion of the amplification efficiencies (only data used for MLE)
 #' @param min_alpha The minimum alpha
 #' @param max_alpha The maximum alpha
 #' @param stop_iter Number of iterations without improvement before stopping one MLE run
@@ -584,7 +584,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   prop_ae_data <- matrix(dt_ae_data$PropAE, nrow = n_mk_auto)
   prop_ae_data_use <- prop_ae_data[, which(apply(prop_ae_data, 2, prod) > 0), drop = FALSE]
 
-  # Perform MCMC for AE
+  # Perform MLE for AE
   tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs)
   alpha <- tmp$est_param
   init_list_ae <- tmp$init_list
@@ -608,7 +608,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     ophs_gamma <- tmp$ophs_gamma
     ats_gamma <- tmp$ats_gamma
 
-    # Perform MCMC for gamma distribution
+    # Perform MLE for gamma distribution
     tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, stop_iter, max_iter, num_converged, max_mle_runs)
     est_param <- tmp$est_param
     cv_allele <- est_param["cv_allele"]
