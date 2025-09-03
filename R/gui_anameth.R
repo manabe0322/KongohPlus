@@ -392,6 +392,7 @@ anameth_server <- function(id, path_pack){
             list_dt_average_sr[[i]] <- dt_average_sr
           }
           rv_anameth$list_dt_average_sr_origin <- rv_anameth$list_dt_average_sr <- list_dt_average_sr
+          rv_anameth$dt_average_sr <- list_dt_average_sr[[1]]
 
           # Create UI
           showModal(modalDialog(
@@ -480,125 +481,6 @@ anameth_server <- function(id, path_pack){
             )
           ) %>% tagAppendAttributes(class = "edit-modal")
           )
-
-          # UI for general information
-          output$dt_edit_general <- renderDataTable({
-            dt_anameth_edit <- rv_anameth$dt_anameth_edit
-            anameth_edit <- rv_anameth$anameth_edit
-
-            if(!is.null(dt_anameth_edit)){
-              dt_edit_general <- data.table(Category = c("Analysis method", "Kit", "Stutter data", "Parameter data", "Drop-in data"),
-                                            Name = c(anameth_edit,
-                                                     dt_anameth_edit$Name[dt_anameth_edit$Category == "Kit"],
-                                                     dt_anameth_edit$Name[dt_anameth_edit$Category == "Stutter data"],
-                                                     dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"],
-                                                     dt_anameth_edit$Name[dt_anameth_edit$Category == "Drop-in data"]
-                                            ))
-
-              datatable(
-                dt_edit_general,
-                selection = "none",
-                options = list(dom = "t", iDisplayLength = nrow(dt_edit_general), ordering = FALSE, autowidth = TRUE),
-                rownames = FALSE,
-                colnames = NULL,
-                escape = FALSE
-              )
-            }
-          })
-
-          # UI for editing AT
-          output$dt_edit_at <- renderRHandsontable({
-            dt_anameth_edit <- rv_anameth$dt_anameth_edit
-
-            if(!is.null(dt_anameth_edit)){
-              dt_edit_at <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "AT"],
-                                       AT = dt_anameth_edit$Value[dt_anameth_edit$Category == "AT"])
-
-              rhandsontable(dt_edit_at, rowHeaders = FALSE, height = 550) %>%
-                hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-                hot_col("Marker", type = "text", readOnly = TRUE, width = 150) %>%
-                hot_col("AT", type = "numeric", format = "0", width = 150)
-            }
-          })
-
-          # UI for editing genotype filter
-          output$dt_edit_gtfltr <- renderRHandsontable({
-            dt_anameth_edit <- rv_anameth$dt_anameth_edit
-
-            if(!is.null(dt_anameth_edit)){
-              dt_edit_gtfltr <- data.table(Filter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Genotype filter"],
-                                           Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Genotype filter"])
-
-              rhandsontable(dt_edit_gtfltr, rowHeaders = FALSE) %>%
-                hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-                hot_col("Filter", type = "text", readOnly = TRUE, width = 250) %>%
-                hot_col("Value", type = "numeric", format = "0.00", width = 150)
-            }
-          })
-
-          # UI for editing LSAE
-          output$dt_edit_lsae <- renderRHandsontable({
-            dt_anameth_edit <- rv_anameth$dt_anameth_edit
-
-            if(!is.null(dt_anameth_edit)){
-              dt_edit_lsae <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "LSAE"],
-                                         LSAE = dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"])
-
-              rhandsontable(dt_edit_lsae, rowHeaders = FALSE, height = 550) %>%
-                hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-                hot_col("Marker", type = "text", readOnly = TRUE, width = 150) %>%
-                hot_col("LSAE", type = "numeric", format = "0.000000", width = 150)
-            }
-          })
-
-          # UI for editing gamma parameters
-          output$dt_edit_gamma <- renderRHandsontable({
-            dt_anameth_edit <- rv_anameth$dt_anameth_edit
-
-            if(!is.null(dt_anameth_edit)){
-              dt_edit_gamma <- data.table(Parameter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Peak height"],
-                                          Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"])
-
-              rhandsontable(dt_edit_gamma, rowHeaders = FALSE) %>%
-                hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-                hot_col("Parameter", type = "text", readOnly = TRUE, width = 150) %>%
-                hot_col("Value", type = "numeric", format = "0.000000", width = 150)
-            }
-          })
-
-          # UI for editing drop-in parameters
-          output$dt_edit_dropin <- renderRHandsontable({
-            dt_anameth_edit <- rv_anameth$dt_anameth_edit
-
-            if(!is.null(dt_anameth_edit)){
-              dt_edit_dropin <- data.table(Parameter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Drop-in"],
-                                           Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"])
-
-              rhandsontable(dt_edit_dropin, rowHeaders = FALSE) %>%
-                hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-                hot_col("Parameter", type = "text", readOnly = TRUE, width = 150) %>%
-                hot_col("Value", type = "numeric", format = "0.000000", width = 150)
-            }
-          })
-
-          # UI for editing SRs
-          output$select_del_al <- renderUI({
-            current_alleles <- rv_anameth$dt_average_sr$Allele
-            selectInput(session$ns("del_al"), label = "Delete an allele", choices = current_alleles, selected = current_alleles[1], selectize = FALSE)
-          })
-
-          output$dt_edit_sr <- renderRHandsontable({
-            dt_average_sr <- rv_anameth$dt_average_sr
-
-            if(!is.null(dt_average_sr)){
-              rhandsontable(dt_average_sr, rowHeaders = FALSE, height = 500) %>%
-                hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-                hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
-                hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 175) %>%
-                hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
-            }
-          })
-
         }else{
           showModal(modalDialog(title = "Error", "Select an analysis method!", easyClose = TRUE, footer = NULL))
         }
@@ -616,16 +498,130 @@ anameth_server <- function(id, path_pack){
         removeModal()
       })
 
+      # UI for general information
+      output$dt_edit_general <- renderDataTable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+        anameth_edit <- rv_anameth$anameth_edit
+
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_general <- data.table(Category = c("Analysis method", "Kit", "Stutter data", "Parameter data", "Drop-in data"),
+                                        Name = c(anameth_edit,
+                                                 dt_anameth_edit$Name[dt_anameth_edit$Category == "Kit"],
+                                                 dt_anameth_edit$Name[dt_anameth_edit$Category == "Stutter data"],
+                                                 dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"],
+                                                 dt_anameth_edit$Name[dt_anameth_edit$Category == "Drop-in data"]
+                                        ))
+
+          datatable(
+            dt_edit_general,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_edit_general), ordering = FALSE, autowidth = TRUE),
+            rownames = FALSE,
+            colnames = NULL,
+            escape = FALSE
+          )
+        }
+      })
+
+      # UI for editing AT
+      output$dt_edit_at <- renderRHandsontable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_at <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "AT"],
+                                   AT = dt_anameth_edit$Value[dt_anameth_edit$Category == "AT"])
+
+          rhandsontable(dt_edit_at, rowHeaders = FALSE, height = 550) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Marker", type = "text", readOnly = TRUE, width = 150) %>%
+            hot_col("AT", type = "numeric", format = "0", width = 150)
+        }
+      })
+
+      # UI for editing genotype filter
+      output$dt_edit_gtfltr <- renderRHandsontable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_gtfltr <- data.table(Filter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Genotype filter"],
+                                       Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Genotype filter"])
+
+          rhandsontable(dt_edit_gtfltr, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Filter", type = "text", readOnly = TRUE, width = 250) %>%
+            hot_col("Value", type = "numeric", format = "0.00", width = 150)
+        }
+      })
+
+      # UI for editing LSAE
+      output$dt_edit_lsae <- renderRHandsontable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_lsae <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "LSAE"],
+                                     LSAE = dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"])
+
+          rhandsontable(dt_edit_lsae, rowHeaders = FALSE, height = 550) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Marker", type = "text", readOnly = TRUE, width = 150) %>%
+            hot_col("LSAE", type = "numeric", format = "0.000000", width = 150)
+        }
+      })
+
+      # UI for editing gamma parameters
+      output$dt_edit_gamma <- renderRHandsontable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_gamma <- data.table(Parameter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Peak height"],
+                                      Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"])
+
+          rhandsontable(dt_edit_gamma, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Parameter", type = "text", readOnly = TRUE, width = 150) %>%
+            hot_col("Value", type = "numeric", format = "0.000000", width = 150)
+        }
+      })
+
+      # UI for editing drop-in parameters
+      output$dt_edit_dropin <- renderRHandsontable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_dropin <- data.table(Parameter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Drop-in"],
+                                       Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"])
+
+          rhandsontable(dt_edit_dropin, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Parameter", type = "text", readOnly = TRUE, width = 150) %>%
+            hot_col("Value", type = "numeric", format = "0.000000", width = 150)
+        }
+      })
+
+      # UI for editing SRs
+      output$select_del_al <- renderUI({
+        current_alleles <- rv_anameth$dt_average_sr$Allele
+        selectInput(session$ns("del_al"), label = "Delete an allele", choices = current_alleles, selected = current_alleles[1], selectize = FALSE)
+      })
+
+      output$dt_edit_sr <- renderRHandsontable({
+        dt_average_sr <- rv_anameth$dt_average_sr
+
+        if(!is.null(dt_average_sr)){
+          rhandsontable(dt_average_sr, rowHeaders = FALSE, height = 500) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
+            hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 175) %>%
+            hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
+        }
+      })
+
       observeEvent(input$select_mk, {
         select_mk <- input$select_mk
         current_mk <- rv_anameth$current_mk
 
-        if(is.null(current_mk)){
-          current_mk <- select_mk
-        }
-
         # Update edited information
-        if(!is.null(input$dt_edit_sr) && select_mk != current_mk){
+        if(!is.null(input$dt_edit_sr) && !is.null(select_mk) && !is.null(current_mk) && select_mk != rv_anameth$current_mk){
           dt_edit_sr <- hot_to_r(input$dt_edit_sr)
 
           # Change BSR = NA to BSR = 0
@@ -649,10 +645,10 @@ anameth_server <- function(id, path_pack){
           dt_edit_sr[["Average M2SR"]] <- tmp_m2sr
 
           rv_anameth$list_dt_average_sr[[current_mk]] <- dt_edit_sr
-        }
 
-        rv_anameth$current_mk <- select_mk
-        rv_anameth$dt_average_sr <- rv_anameth$list_dt_average_sr[[select_mk]]
+          rv_anameth$current_mk <- select_mk
+          rv_anameth$dt_average_sr <- rv_anameth$list_dt_average_sr[[select_mk]]
+        }
       })
 
       observeEvent(input$act_add_al, {
