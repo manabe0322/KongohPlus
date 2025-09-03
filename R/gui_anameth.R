@@ -5,6 +5,18 @@ anameth_ui <- function(id){
   ns <- NS(id)
 
   tabPanel("7. Set the analysis method",
+
+           tags$style("
+             .modal-dialog {
+               width: 90% !important;   /* Expand up to 90% of the screen width */
+               max-width: 2000px;       /* Set maximum width */
+             }
+             .modal-body {
+               max-height: 80vh;        /* Limit height to 80% of the viewport */
+               overflow-y: auto;        /* Enable vertical scrolling if needed */
+             }
+           "),
+
            titlePanel("7. Set the analysis method"),
            br(),
            actionButton(ns("act_anameth_new"), "New"),
@@ -99,6 +111,9 @@ anameth_server <- function(id, path_pack){
       rv_anameth$dt_info_anameth <- create_dt_info_anameth(path_pack)
       rv_anameth$dt_anameth_edit <- NULL
       rv_anameth$anameth_edit <- NULL
+      rv_anameth$list_dt_average_sr <- NULL
+      rv_anameth$dt_average_sr <- NULL
+      rv_anameth$current_mk <- NULL
 
       # --- Define a new analysis method --- #
 
@@ -250,6 +265,8 @@ anameth_server <- function(id, path_pack){
 
           load(paste0(path_pack, "/extdata/stutter/", dt_anameth_edit$Name[dt_anameth_edit$Category == "Stutter data"], ".RData"))
           markers_auto <- names(list_dt_average_sr)
+          rv_anameth$current_mk <- markers_auto[1]
+          rv_anameth$list_dt_average_sr <- list_dt_average_sr
 
           # Create UI
           showModal(modalDialog(
@@ -275,8 +292,45 @@ anameth_server <- function(id, path_pack){
               tabPanel(
                 "SR",
                 br(),
-                selectInput(session$ns("select_mk"), label = "Marker", choices = markers_auto, selected = markers_auto[1], selectize = FALSE),
+                splitLayout(
+                  cellWidths = c("300px", "400px", "400px"),
+                  wellPanel(
+                    selectInput(session$ns("select_mk"), label = "Marker", choices = markers_auto, selected = markers_auto[1], selectize = FALSE)
+                  ),
+                  wellPanel(
+                    fluidRow(
+                      column(
+                        9,
+                        numericInput(session$ns("add_al"), label = "Add an allele", value = NULL)
+                      ),
+                      column(
+                        3,
+                        br(),
+                        actionButton(session$ns("act_add_al"), label = "Add")
+                      )
+                    )
+                  ),
+                  wellPanel(
+                    fluidRow(
+                      column(
+                        9,
+                        uiOutput(session$ns("select_del_al"))
+                      ),
+                      column(
+                        3,
+                        br(),
+                        actionButton(session$ns("act_del_al"), label = "Delete")
+                      )
+                    )
+                  )
+                ),
                 br(),
+                tags$style(HTML("
+                         .handsontable .htCore td {
+                           vertical-align: middle !important;
+                           text-align: center !important;
+                         }"
+                )),
                 rHandsontableOutput(session$ns("dt_edit_sr"))
               ),
               tabPanel(
@@ -338,7 +392,7 @@ anameth_server <- function(id, path_pack){
           dt_edit_at <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "AT"],
                                    AT = dt_anameth_edit$Value[dt_anameth_edit$Category == "AT"])
 
-          rhandsontable(dt_edit_at, rowHeaders = FALSE) %>%
+          rhandsontable(dt_edit_at, rowHeaders = FALSE, height = 550) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
             hot_col("Marker", type = "text", readOnly = TRUE, width = 150) %>%
             hot_col("AT", type = "numeric", format = "0", width = 150)
@@ -361,7 +415,54 @@ anameth_server <- function(id, path_pack){
       })
 
       # UI for editing SR
-      output$dt_edit_sr <- aa
+      observeEvent(input$select_mk, {
+
+        # Update edited information
+        if(!is.null(input$dt_edit_sr)){
+          rv_anameth$list_dt_average_sr[[rv_anameth$current_mk]] <- hot_to_r(input$dt_edit_sr)
+        }
+
+        select_mk <- input$select_mk
+        rv_anameth$current_mk <- select_mk
+        rv_anameth$dt_average_sr <- rv_anameth$list_dt_average_sr[[select_mk]]
+      })
+
+      observeEvent(input$act_add_al, {
+        add_al <- input$add_al
+        if(!is.na(add_al)){
+          dt_average_sr <- rv_anameth$dt_average_sr
+          dt_average_sr <- rbind(dt_average_sr, list(as.character(add_al), NA, 0, NA, 0, NA, 0, NA, 0))
+
+          # Sort allele
+          tmp_al <- as.numeric(dt_average_sr$Allele)
+          tmp_al_sort <- sort(tmp_al)
+          dt_average_sr <- dt_average_sr[match(tmp_al_sort, tmp_al)]
+
+          rv_anameth$dt_average_sr <- dt_average_sr
+        }
+      })
+
+      output$select_del_al <- renderUI({
+        current_alleles <- rv_anameth$dt_average_sr$Allele
+        selectInput(session$ns("del_al"), label = "Delete an allele", choices = current_alleles, selected = current_alleles[1], selectize = FALSE)
+      })
+
+      observeEvent(input$act_del_al, {
+        del_al <- input$del_al
+        dt_average_sr <- rv_anameth$dt_average_sr
+        current_alleles <- dt_average_sr$Allele
+        rv_anameth$dt_average_sr <- dt_average_sr[- which(current_alleles == del_al)]
+      })
+
+      output$dt_edit_sr <- renderRHandsontable({
+        dt_average_sr <- rv_anameth$dt_average_sr
+
+        rhandsontable(dt_average_sr, rowHeaders = FALSE, height = 500) %>%
+          hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+          hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
+          hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 175) %>%
+          hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
+      })
 
       # UI for editing LSAE
       output$dt_edit_lsae <- renderRHandsontable({
@@ -371,7 +472,7 @@ anameth_server <- function(id, path_pack){
           dt_edit_lsae <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "LSAE"],
                                      LSAE = dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"])
 
-          rhandsontable(dt_edit_lsae, rowHeaders = FALSE) %>%
+          rhandsontable(dt_edit_lsae, rowHeaders = FALSE, height = 550) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
             hot_col("Marker", type = "text", readOnly = TRUE, width = 150) %>%
             hot_col("LSAE", type = "numeric", format = "0.000000", width = 150)
@@ -479,6 +580,9 @@ anameth_server <- function(id, path_pack){
         # Reset reactive values for editing the analysis method
         rv_anameth$dt_anameth_edit <- NULL
         rv_anameth$anameth_edit <- NULL
+        rv_anameth$list_dt_average_sr <- NULL
+        rv_anameth$dt_average_sr <- NULL
+        rv_anameth$current_mk <- NULL
 
         removeModal()
       })
