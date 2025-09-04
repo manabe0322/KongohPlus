@@ -57,7 +57,6 @@ KongohPlus <- function(num_threads = NULL){
                                         kit_ui("kit"),
                                         info_al_ui("info_al"),
                                         est_sr_ui("est_sr"),
-                                        edit_sr_ui("edit_sr"),
                                         est_par_ui("est_par"),
                                         est_dropin_ui("est_dropin"),
                                         anameth_ui("anameth")
@@ -92,7 +91,6 @@ KongohPlus <- function(num_threads = NULL){
     kit_server("kit", path_pack)
     info_al_server("info_al", path_pack)
     rv_est_sr <- est_sr_server("est_sr", path_pack)
-    edit_sr_server("edit_sr", path_pack)
     est_par_server("est_par", path_pack)
     est_dropin_server("est_dropin", path_pack)
     anameth_server("anameth", path_pack)

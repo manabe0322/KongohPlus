@@ -4,7 +4,7 @@
 anameth_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("7. Set the analysis method",
+  tabPanel("6. Set the analysis method",
 
            tags$style("
              .edit-modal .modal-dialog {
@@ -16,7 +16,7 @@ anameth_ui <- function(id){
                overflow-y: auto;        /* Enable vertical scrolling if needed */
              }
            "),
-           titlePanel("7. Set the analysis method"),
+           titlePanel("6. Set the analysis method"),
            br(),
            actionButton(ns("act_anameth_new"), "New"),
            actionButton(ns("act_anameth_copy"), "Copy"),
@@ -77,7 +77,7 @@ create_dt_anameth_sr <- function(list_dt_average_sr, markers_auto){
   sr_m2sr <- rep("", nrow_sr_all)
 
   index_sr_start <- 1
-  for(i in 1:n_mk){
+  for(i in 1:length(markers_auto)){
     mk <- markers_auto[i]
     dt_average_sr <- list_dt_average_sr[[mk]]
 
@@ -799,12 +799,26 @@ anameth_server <- function(id, path_pack){
       observeEvent(input$act_anameth_delete, {
         index_select <- input$display_info_amameth_rows_selected
         if(isTruthy(index_select)){
-          dt_info_anameth <- rv_anameth$dt_info_anameth
-          file.remove(paste0(path_pack, "/extdata/anameth/", dt_info_anameth[["Analysis method"]][index_select], ".csv"))
-          rv_anameth$dt_info_anameth <- dt_info_anameth[-index_select, ]
+          showModal(modalDialog(
+            title = "Message",
+            "Are you sure you want to delete this method?",
+            footer = tagList(
+              actionButton(session$ns("act_anameth_delete_done"), "Yes"),
+              modalButton("No")
+            )
+          ))
         }else{
           showModal(modalDialog(title = "Error", "Select an analysis method!", easyClose = TRUE, footer = NULL))
         }
+      })
+
+      observeEvent(input$act_anameth_delete_done, {
+        index_select <- input$display_info_amameth_rows_selected
+        dt_info_anameth <- rv_anameth$dt_info_anameth
+        file.remove(paste0(path_pack, "/extdata/anameth/", dt_info_anameth[["Analysis method"]][index_select], ".csv"))
+        rv_anameth$dt_info_anameth <- dt_info_anameth[-index_select, ]
+
+        removeModal()
       })
 
       # --- Display information on the analysis method --- #

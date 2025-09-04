@@ -4,8 +4,8 @@
 est_dropin_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("6. Estimate drop-in parameters",
-           titlePanel("6. Estimate drop-in parameters"),
+  tabPanel("5. Estimate drop-in parameters",
+           titlePanel("5. Estimate drop-in parameters"),
            br(),
            fluidRow(
              column(3,
