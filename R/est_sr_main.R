@@ -747,6 +747,46 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
               "opt_list_all_mk" = opt_list_all_mk))
 }
 
+#' full_join_average_sr
+#'
+#' @description The function to combine data.tables of average stutter ratios in each stutter type into one data.table (per marker)
+#' @param list_dt_average_bsr A list of data.tables of average back stutter ratios in each marker
+#' @param list_dt_average_fsr A list of data.tables of average forward stutter ratios in each marker
+#' @param list_dt_average_dsr A list of data.tables of average double-back stutter ratios in each marker
+#' @param list_dt_average_m2sr A list of data.tables of average minus 2-nt stutter ratios in each marker
+full_join_average_sr <- function(list_dt_average_bsr, list_dt_average_fsr, list_dt_average_dsr, list_dt_average_m2sr){
+  markers_auto <- names(list_dt_average_bsr)
+  n_mk <- length(markers_auto)
+  list_dt_average_sr <- vector(mode = "list", length = n_mk)
+  names(list_dt_average_sr) <- markers_auto
+
+  for(i in 1:n_mk){
+    mk <- markers_auto[i]
+    dt_ave_bsr <- list_dt_average_bsr[[mk]]
+    names(dt_ave_bsr) <- c("Allele", "Corrected allele (BSR)", "Average BSR")
+    dt_ave_fsr <- list_dt_average_fsr[[mk]]
+    names(dt_ave_fsr) <- c("Allele", "Corrected allele (FSR)", "Average FSR")
+    dt_ave_dsr <- list_dt_average_dsr[[mk]]
+    names(dt_ave_dsr) <- c("Allele", "Corrected allele (DSR)", "Average DSR")
+    dt_ave_m2sr <- list_dt_average_m2sr[[mk]]
+    names(dt_ave_m2sr) <- c("Allele", "Corrected allele (M2SR)", "Average M2SR")
+
+    dt_ave_sr <- copy(dt_ave_bsr)
+    dt_ave_sr <- full_join(dt_ave_sr, dt_ave_fsr, by = c("Allele"))
+    dt_ave_sr <- full_join(dt_ave_sr, dt_ave_dsr, by = c("Allele"))
+    dt_ave_sr <- full_join(dt_ave_sr, dt_ave_m2sr, by = c("Allele"))
+
+    dt_ave_sr[["Average BSR"]][is.na(dt_ave_sr[["Average BSR"]])] <- 0
+    dt_ave_sr[["Average FSR"]][is.na(dt_ave_sr[["Average FSR"]])] <- 0
+    dt_ave_sr[["Average DSR"]][is.na(dt_ave_sr[["Average DSR"]])] <- 0
+    dt_ave_sr[["Average M2SR"]][is.na(dt_ave_sr[["Average M2SR"]])] <- 0
+
+    list_dt_average_sr[[i]] <- dt_ave_sr
+  }
+
+  return(list_dt_average_sr)
+}
+
 #' estimate_average_sr
 #'
 #' @description The function to estimate average stutter ratios
@@ -829,20 +869,19 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   init_list_all_mk_m2sr <- tmp$init_list_all_mk
   opt_list_all_mk_m2sr <- tmp$opt_list_all_mk
 
-  return(list("dt_result_est_bsr" = dt_result_est_bsr,
-              "list_dt_average_bsr" = list_dt_average_bsr,
+  list_dt_average_sr <- full_join_average_sr(list_dt_average_bsr, list_dt_average_fsr, list_dt_average_dsr, list_dt_average_m2sr)
+
+  return(list("list_dt_average_sr" = list_dt_average_sr,
+              "dt_result_est_bsr" = dt_result_est_bsr,
               "init_list_all_mk_bsr" = init_list_all_mk_bsr,
               "opt_list_all_mk_bsr" = opt_list_all_mk_bsr,
               "dt_result_est_fsr" = dt_result_est_fsr,
-              "list_dt_average_fsr" = list_dt_average_fsr,
               "init_list_all_mk_fsr" = init_list_all_mk_fsr,
               "opt_list_all_mk_fsr" = opt_list_all_mk_fsr,
               "dt_result_est_dsr" = dt_result_est_dsr,
-              "list_dt_average_dsr" = list_dt_average_dsr,
               "init_list_all_mk_dsr" = init_list_all_mk_dsr,
               "opt_list_all_mk_dsr" = opt_list_all_mk_dsr,
               "dt_result_est_m2sr" = dt_result_est_m2sr,
-              "list_dt_average_m2sr" = list_dt_average_m2sr,
               "init_list_all_mk_m2sr" = init_list_all_mk_m2sr,
               "opt_list_all_mk_m2sr" = opt_list_all_mk_m2sr))
 }
