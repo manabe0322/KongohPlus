@@ -72,12 +72,11 @@ view_sr_server <- function(id, path_pack){
 
           load(path_stutter_data)
 
-          #### data_est_sr$list_dt_average_sr
-          rv_view_sr$markers_auto <- names(list_dt_average_sr)
-          rv_view_sr$list_dt_average_sr <- list_dt_average_sr
-          rv_view_sr$dt_setting_est_sr <- dt_setting_est_sr
-          rv_view_sr$dt_sr_data <- fread("C:/Users/manab/Desktop/dt_sr_data.csv")
-          rv_view_sr$name_kit_stutter <- name_kit_stutter
+          rv_view_sr$markers_auto <- names(data_est_sr$list_dt_average_sr)
+          rv_view_sr$list_dt_average_sr <- data_est_sr$list_dt_average_sr
+          rv_view_sr$dt_setting_est_sr <- data_est_sr$dt_setting_est_sr
+          rv_view_sr$dt_sr_data <- data_est_sr$dt_sr_data
+          rv_view_sr$name_kit_stutter <- data_est_sr$name_kit_stutter
         }
       })
 

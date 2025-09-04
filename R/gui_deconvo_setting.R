@@ -469,7 +469,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           # Check registration of the stutter ratio
-          load(paste0(path_pack, "/extdata/stutter/", dt_anameth$Name[dt_anameth$Category == "Stutter data"], ".RData"))
+          list_dt_average_sr <- create_list_dt_average_sr(dt_anameth, markers_auto)
           message_sr <- check_csp_sr(dt_csp, dt_ignore_mk, dt_anameth, list_dt_average_sr)
 
           if(message_sr == "error"){

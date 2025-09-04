@@ -160,7 +160,7 @@ create_default_dt_anameth <- function(path_pack, kit_name, stutter_name, param_n
                                    "Corrected allele (M2SR)" = rep(NA, 2 * n_mk + 15),
                                    "Average M2SR" = rep(NA, 2 * n_mk + 15))
 
-  default_dt_anameth_sr <- create_dt_anameth_sr(list_dt_average_sr, markers_auto)
+  default_dt_anameth_sr <- create_dt_anameth_sr(data_est_sr$list_dt_average_sr, markers_auto)
 
   default_dt_anameth <- rbind(default_dt_anameth, default_dt_anameth_sr)
 
@@ -200,6 +200,34 @@ compare_list_dt_average_sr <- function(list_dt_average_sr_origin, list_dt_averag
   }
 
   return(bool_edited)
+}
+
+#' create_list_dt_average_sr
+#'
+#' @description The function to create the object 'list_dt_average_sr'
+#' @param dt_anameth A data.table for the analysis method
+#' @param markers_auto A vector of the autosomal markers
+create_list_dt_average_sr <- function(dt_anameth, markers_auto){
+  n_mk <- length(markers_auto)
+  list_dt_average_sr <- vector(mode = "list", length = n_mk)
+  names(list_dt_average_sr) <- markers_auto
+  for(i in 1:n_mk){
+    mk <- markers_auto[i]
+    index_target <- sort(intersect(which(dt_anameth$Category == "SR"), which(dt_anameth$Subcategory == mk)))
+
+    dt_average_sr <- data.table("Allele" = dt_anameth[["Allele"]][index_target],
+                                "Corrected allele (BSR)" = dt_anameth[["Corrected allele (BSR)"]][index_target],
+                                "Average BSR" = dt_anameth[["Average BSR"]][index_target],
+                                "Corrected allele (FSR)" = dt_anameth[["Corrected allele (FSR)"]][index_target],
+                                "Average FSR" = dt_anameth[["Average FSR"]][index_target],
+                                "Corrected allele (DSR)" = dt_anameth[["Corrected allele (DSR)"]][index_target],
+                                "Average DSR" = dt_anameth[["Average DSR"]][index_target],
+                                "Corrected allele (M2SR)" = dt_anameth[["Corrected allele (M2SR)"]][index_target],
+                                "Average M2SR" = dt_anameth[["Average M2SR"]][index_target])
+    list_dt_average_sr[[i]] <- dt_average_sr
+  }
+
+  return(list_dt_average_sr)
 }
 
 #' anameth_server
@@ -283,7 +311,7 @@ anameth_server <- function(id, path_pack){
           load(paste0(path_pack, "/extdata/param/", param_name, ".RData"))
           load(paste0(path_pack, "/extdata/dropin/", dropin_name, ".RData"))
 
-          if(kit_name == name_kit_stutter && kit_name == name_kit_param && kit_name == name_kit_dropin){
+          if(kit_name == data_est_sr$name_kit_stutter && kit_name == name_kit_param && kit_name == name_kit_dropin){
             dt_tmp <- data.table("Analysis method" = anameth_name,
                                  "Kit" = kit_name,
                                  "Stutter data" = stutter_name,
@@ -373,24 +401,7 @@ anameth_server <- function(id, path_pack){
 
           markers_auto <- unique(dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "SR"])
           rv_anameth$current_mk <- markers_auto[1]
-          n_mk <- length(markers_auto)
-          list_dt_average_sr <- vector(mode = "list", length = n_mk)
-          names(list_dt_average_sr) <- markers_auto
-          for(i in 1:n_mk){
-            mk <- markers_auto[i]
-            index_target <- sort(intersect(which(dt_anameth_edit$Category == "SR"), which(dt_anameth_edit$Subcategory == mk)))
-
-            dt_average_sr <- data.table("Allele" = dt_anameth_edit[["Allele"]][index_target],
-                                        "Corrected allele (BSR)" = dt_anameth_edit[["Corrected allele (BSR)"]][index_target],
-                                        "Average BSR" = dt_anameth_edit[["Average BSR"]][index_target],
-                                        "Corrected allele (FSR)" = dt_anameth_edit[["Corrected allele (FSR)"]][index_target],
-                                        "Average FSR" = dt_anameth_edit[["Average FSR"]][index_target],
-                                        "Corrected allele (DSR)" = dt_anameth_edit[["Corrected allele (DSR)"]][index_target],
-                                        "Average DSR" = dt_anameth_edit[["Average DSR"]][index_target],
-                                        "Corrected allele (M2SR)" = dt_anameth_edit[["Corrected allele (M2SR)"]][index_target],
-                                        "Average M2SR" = dt_anameth_edit[["Average M2SR"]][index_target])
-            list_dt_average_sr[[i]] <- dt_average_sr
-          }
+          list_dt_average_sr <- create_list_dt_average_sr(dt_anameth_edit, markers_auto)
           rv_anameth$list_dt_average_sr_origin <- rv_anameth$list_dt_average_sr <- list_dt_average_sr
           rv_anameth$dt_average_sr <- list_dt_average_sr[[1]]
 

@@ -118,8 +118,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         path_sr <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/stutter")), input$load_sr)$datapath
         if(length(path_sr) > 0){
           load(path_sr)
-          rv_est_par$list_dt_average_sr <- list_dt_average_sr
-          rv_est_par$name_kit_param <- name_kit_stutter
+          rv_est_par$list_dt_average_sr <- data_est_sr$list_dt_average_sr
+          rv_est_par$name_kit_param <- data_est_sr$name_kit_stutter
           rv_est_par$name_sr <- str_replace(basename(path_sr), ".{6}$", "")
         }
       })
