@@ -5,7 +5,7 @@
 #' @importFrom dplyr arrange desc full_join group_by_at summarise
 #' @importFrom DT datatable dataTableOutput formatRound formatSignif formatStyle JS renderDataTable
 #' @importFrom GenSA GenSA
-#' @importFrom ggplot2 aes element_text geom_col ggplot labs margin scale_x_continuous theme theme_minimal
+#' @importFrom ggplot2 aes element_text geom_col geom_point ggplot labs margin scale_color_manual scale_x_continuous theme theme_minimal
 #' @importFrom gridExtra grid.arrange
 #' @importFrom gtools combinations ddirichlet permutations rdirichlet
 #' @importFrom magrittr %>%
