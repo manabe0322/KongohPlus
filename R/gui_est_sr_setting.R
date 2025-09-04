@@ -82,32 +82,34 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
   moduleServer(
     id,
     function(input, output, session){
+      rv_est_sr_setting <- reactiveValues()
+      rv_est_sr_setting$dt_exp_sr <- NULL
+      rv_est_sr_setting$fn_exp_sr <- NULL
+      rv_est_sr_setting$dt_gt_sr <- NULL
+      rv_est_sr_setting$fn_gt_sr <- NULL
+      rv_est_sr_setting$dt_kit <- NULL
+      rv_est_sr_setting$dt_setting_est_sr <- NULL
+      rv_est_sr_setting$name_kit_stutter <- NULL
+      rv_est_sr_setting$min_slope <- 0
+      rv_est_sr_setting$max_slope <- 1
+      rv_est_sr_setting$min_intercept <- -1
+      rv_est_sr_setting$max_intercept <- 1
+      rv_est_sr_setting$min_myu <- 0.001
+      rv_est_sr_setting$max_myu <- 1
+      rv_est_sr_setting$min_sigma <- 1
+      rv_est_sr_setting$max_sigma <- 10000
+      rv_est_sr_setting$stop_iter <- 500
+      rv_est_sr_setting$max_iter <- 5000
+      rv_est_sr_setting$num_converged <- 3
+      rv_est_sr_setting$max_mle_runs <- 10
+      rv_est_sr_setting$bool_correct_mle_slope <- TRUE
+      rv_est_sr_setting$bool_correct_mle_intercept <- TRUE
+      rv_est_sr_setting$bool_correct_mle_myu <- TRUE
+      rv_est_sr_setting$bool_correct_mle_sigma <- TRUE
+      rv_est_sr_setting$bool_correct_advanced_1 <- TRUE
+      rv_est_sr_setting$bool_correct_advanced_2 <- TRUE
+
       rv_est_sr <- reactiveValues()
-      rv_est_sr$dt_exp_sr <- NULL
-      rv_est_sr$fn_exp_sr <- NULL
-      rv_est_sr$dt_gt_sr <- NULL
-      rv_est_sr$fn_gt_sr <- NULL
-      rv_est_sr$dt_kit <- NULL
-      rv_est_sr$dt_setting_est_sr <- NULL
-      rv_est_sr$name_kit_stutter <- NULL
-      rv_est_sr$min_slope <- 0
-      rv_est_sr$max_slope <- 1
-      rv_est_sr$min_intercept <- -1
-      rv_est_sr$max_intercept <- 1
-      rv_est_sr$min_myu <- 0.001
-      rv_est_sr$max_myu <- 1
-      rv_est_sr$min_sigma <- 1
-      rv_est_sr$max_sigma <- 10000
-      rv_est_sr$stop_iter <- 500
-      rv_est_sr$max_iter <- 5000
-      rv_est_sr$num_converged <- 3
-      rv_est_sr$max_mle_runs <- 10
-      rv_est_sr$bool_correct_mle_slope <- TRUE
-      rv_est_sr$bool_correct_mle_intercept <- TRUE
-      rv_est_sr$bool_correct_mle_myu <- TRUE
-      rv_est_sr$bool_correct_mle_sigma <- TRUE
-      rv_est_sr$bool_correct_advanced_1 <- TRUE
-      rv_est_sr$bool_correct_advanced_2 <- TRUE
       rv_est_sr$data_est_sr <- NULL
 
       # Load experimental data
@@ -116,8 +118,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         if(!is.null(file_input)){
           dt_exp_sr <- fread(file_input$datapath)
           dt_exp_sr <- change_data_type_exp(dt_exp_sr)
-          rv_est_sr$dt_exp_sr <- dt_exp_sr
-          rv_est_sr$fn_exp_sr <- file_input$name
+          rv_est_sr_setting$dt_exp_sr <- dt_exp_sr
+          rv_est_sr_setting$fn_exp_sr <- file_input$name
         }
       })
 
@@ -127,8 +129,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         if(!is.null(file_input)){
           dt_gt_sr <- fread(file_input$datapath)
           dt_gt_sr <- change_data_type_gt(dt_gt_sr)
-          rv_est_sr$dt_gt_sr <- dt_gt_sr
-          rv_est_sr$fn_gt_sr <- file_input$name
+          rv_est_sr_setting$dt_gt_sr <- dt_gt_sr
+          rv_est_sr_setting$fn_gt_sr <- file_input$name
         }
       })
 
@@ -140,14 +142,14 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         path_kit <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/kit")), input$load_kit)$datapath
         if(length(path_kit) > 0){
           dt_kit <- fread(path_kit)
-          rv_est_sr$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
-          rv_est_sr$dt_setting_est_sr <- create_init_dt_setting_est_sr(dt_kit)
-          rv_est_sr$name_kit_stutter <- str_replace(basename(path_kit), ".{4}$", "")
+          rv_est_sr_setting$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
+          rv_est_sr_setting$dt_setting_est_sr <- create_init_dt_setting_est_sr(dt_kit)
+          rv_est_sr_setting$name_kit_stutter <- str_replace(basename(path_kit), ".{4}$", "")
         }
       })
 
       output$name_kit_stutter <- renderUI({
-        disabled(textInput(session$ns("name_kit_stutter"), label = "", value = rv_est_sr$name_kit_stutter))
+        disabled(textInput(session$ns("name_kit_stutter"), label = "", value = rv_est_sr_setting$name_kit_stutter))
       })
 
       observeEvent(input$act_advance_sr, {
@@ -155,20 +157,20 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           title = "MLE conditions",
           fluidRow(
             column(6,
-                   numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_sr$stop_iter),
-                   numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_est_sr$num_converged),
-                   numericInput(session$ns("min_slope"), label = "Minimum slope", value = rv_est_sr$min_slope),
-                   numericInput(session$ns("min_intercept"), label = "Minimum intercept", value = rv_est_sr$min_intercept),
-                   numericInput(session$ns("min_myu"), label = "Minimum myu", value = rv_est_sr$min_myu),
-                   numericInput(session$ns("min_sigma"), label = "Minimum sigma", value = rv_est_sr$min_sigma),
+                   numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_sr_setting$stop_iter),
+                   numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_est_sr_setting$num_converged),
+                   numericInput(session$ns("min_slope"), label = "Minimum slope", value = rv_est_sr_setting$min_slope),
+                   numericInput(session$ns("min_intercept"), label = "Minimum intercept", value = rv_est_sr_setting$min_intercept),
+                   numericInput(session$ns("min_myu"), label = "Minimum myu", value = rv_est_sr_setting$min_myu),
+                   numericInput(session$ns("min_sigma"), label = "Minimum sigma", value = rv_est_sr_setting$min_sigma),
             ),
             column(6,
-                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_sr$max_iter),
-                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_sr$max_mle_runs),
-                   numericInput(session$ns("max_slope"), label = "Maximum slope", value = rv_est_sr$max_slope),
-                   numericInput(session$ns("max_intercept"), label = "Maximum intercept", value = rv_est_sr$max_intercept),
-                   numericInput(session$ns("max_myu"), label = "Maximum myu", value = rv_est_sr$max_myu),
-                   numericInput(session$ns("max_sigma"), label = "Maximum sigma", value = rv_est_sr$max_sigma)
+                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_sr_setting$max_iter),
+                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_sr_setting$max_mle_runs),
+                   numericInput(session$ns("max_slope"), label = "Maximum slope", value = rv_est_sr_setting$max_slope),
+                   numericInput(session$ns("max_intercept"), label = "Maximum intercept", value = rv_est_sr_setting$max_intercept),
+                   numericInput(session$ns("max_myu"), label = "Maximum myu", value = rv_est_sr_setting$max_myu),
+                   numericInput(session$ns("max_sigma"), label = "Maximum sigma", value = rv_est_sr_setting$max_sigma)
             )
           ),
           footer = tagList(
@@ -185,22 +187,22 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
 
         hideFeedback("min_slope")
         hideFeedback("max_slope")
-        rv_est_sr$bool_correct_mle_slope <- TRUE
+        rv_est_sr_setting$bool_correct_mle_slope <- TRUE
 
         if(!is.numeric(min_slope) || min_slope < 0){
           showFeedbackDanger(inputId = "min_slope", text = "Value must be non-negative.")
-          rv_est_sr$bool_correct_mle_slope <- FALSE
+          rv_est_sr_setting$bool_correct_mle_slope <- FALSE
         }
 
         if(!is.numeric(max_slope) || max_slope < 0){
           showFeedbackDanger(inputId = "max_slope", text = "Value must be non-negative.")
-          rv_est_sr$bool_correct_mle_slope <- FALSE
+          rv_est_sr_setting$bool_correct_mle_slope <- FALSE
         }
 
         if(is.numeric(min_slope) && is.numeric(max_slope) && max_slope < min_slope){
           showFeedbackDanger(inputId = "min_slope", text = "Minimum value cannot be greater than maximum value.")
           showFeedbackDanger(inputId = "max_slope", text = "Minimum value cannot be greater than maximum value.")
-          rv_est_sr$bool_correct_mle_slope <- FALSE
+          rv_est_sr_setting$bool_correct_mle_slope <- FALSE
         }
       })
 
@@ -210,22 +212,22 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
 
         hideFeedback("min_intercept")
         hideFeedback("max_intercept")
-        rv_est_sr$bool_correct_mle_intercept <- TRUE
+        rv_est_sr_setting$bool_correct_mle_intercept <- TRUE
 
         if(!is.numeric(min_intercept)){
           showFeedbackDanger(inputId = "min_intercept", text = "Only numeric values are allowed.")
-          rv_est_sr$bool_correct_mle_intercept <- FALSE
+          rv_est_sr_setting$bool_correct_mle_intercept <- FALSE
         }
 
         if(!is.numeric(max_intercept)){
           showFeedbackDanger(inputId = "max_intercept", text = "Only numeric values are allowed.")
-          rv_est_sr$bool_correct_mle_intercept <- FALSE
+          rv_est_sr_setting$bool_correct_mle_intercept <- FALSE
         }
 
         if(is.numeric(min_intercept) && is.numeric(max_intercept) && max_intercept < min_intercept){
           showFeedbackDanger(inputId = "min_intercept", text = "Minimum value cannot be greater than maximum value.")
           showFeedbackDanger(inputId = "max_intercept", text = "Minimum value cannot be greater than maximum value.")
-          rv_est_sr$bool_correct_mle_intercept <- FALSE
+          rv_est_sr_setting$bool_correct_mle_intercept <- FALSE
         }
       })
 
@@ -235,22 +237,22 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
 
         hideFeedback("min_myu")
         hideFeedback("max_myu")
-        rv_est_sr$bool_correct_mle_myu <- TRUE
+        rv_est_sr_setting$bool_correct_mle_myu <- TRUE
 
         if(!is.numeric(min_myu) || min_myu <= 0){
           showFeedbackDanger(inputId = "min_myu", text = "Value must be positive.")
-          rv_est_sr$bool_correct_mle_myu <- FALSE
+          rv_est_sr_setting$bool_correct_mle_myu <- FALSE
         }
 
         if(!is.numeric(max_myu) || max_myu <= 0){
           showFeedbackDanger(inputId = "max_myu", text = "Value must be positive.")
-          rv_est_sr$bool_correct_mle_myu <- FALSE
+          rv_est_sr_setting$bool_correct_mle_myu <- FALSE
         }
 
         if(is.numeric(min_myu) && is.numeric(max_myu) && max_myu < min_myu){
           showFeedbackDanger(inputId = "min_myu", text = "Minimum value cannot be greater than maximum value.")
           showFeedbackDanger(inputId = "max_myu", text = "Minimum value cannot be greater than maximum value.")
-          rv_est_sr$bool_correct_mle_myu <- FALSE
+          rv_est_sr_setting$bool_correct_mle_myu <- FALSE
         }
       })
 
@@ -260,22 +262,22 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
 
         hideFeedback("min_sigma")
         hideFeedback("max_sigma")
-        rv_est_sr$bool_correct_mle_sigma <- TRUE
+        rv_est_sr_setting$bool_correct_mle_sigma <- TRUE
 
         if(!is.numeric(min_sigma) || min_sigma <= 0){
           showFeedbackDanger(inputId = "min_sigma", text = "Value must be positive.")
-          rv_est_sr$bool_correct_mle_sigma <- FALSE
+          rv_est_sr_setting$bool_correct_mle_sigma <- FALSE
         }
 
         if(!is.numeric(max_sigma) || max_sigma <= 0){
           showFeedbackDanger(inputId = "max_sigma", text = "Value must be positive.")
-          rv_est_sr$bool_correct_mle_sigma <- FALSE
+          rv_est_sr_setting$bool_correct_mle_sigma <- FALSE
         }
 
         if(is.numeric(min_sigma) && is.numeric(max_sigma) && max_sigma < min_sigma){
           showFeedbackDanger(inputId = "min_sigma", text = "Minimum value cannot be greater than maximum value.")
           showFeedbackDanger(inputId = "max_sigma", text = "Minimum value cannot be greater than maximum value.")
-          rv_est_sr$bool_correct_mle_sigma <- FALSE
+          rv_est_sr_setting$bool_correct_mle_sigma <- FALSE
         }
       })
 
@@ -303,7 +305,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           bool_correct_advanced_1 <- FALSE
         }
 
-        rv_est_sr$bool_correct_advanced_1 <- bool_correct_advanced_1
+        rv_est_sr_setting$bool_correct_advanced_1 <- bool_correct_advanced_1
       })
 
       observeEvent(input$num_converged | input$max_mle_runs, {
@@ -330,18 +332,18 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           bool_correct_advanced_2 <- FALSE
         }
 
-        rv_est_sr$bool_correct_advanced_2 <- bool_correct_advanced_2
+        rv_est_sr_setting$bool_correct_advanced_2 <- bool_correct_advanced_2
       })
 
       observe({
-        req(rv_est_sr)
+        req(rv_est_sr_setting)
 
-        if(all(rv_est_sr$bool_correct_mle_slope,
-               rv_est_sr$bool_correct_mle_intercept,
-               rv_est_sr$bool_correct_mle_myu,
-               rv_est_sr$bool_correct_mle_sigma,
-               rv_est_sr$bool_correct_advanced_1,
-               rv_est_sr$bool_correct_advanced_2)){
+        if(all(rv_est_sr_setting$bool_correct_mle_slope,
+               rv_est_sr_setting$bool_correct_mle_intercept,
+               rv_est_sr_setting$bool_correct_mle_myu,
+               rv_est_sr_setting$bool_correct_mle_sigma,
+               rv_est_sr_setting$bool_correct_advanced_1,
+               rv_est_sr_setting$bool_correct_advanced_2)){
           enable("act_advance_sr_save")
         }else{
           disable("act_advance_sr_save")
@@ -349,25 +351,25 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       })
 
       observeEvent(input$act_advance_sr_save, {
-        rv_est_sr$min_slope <- input$min_slope
-        rv_est_sr$max_slope <- input$max_slope
-        rv_est_sr$min_intercept <- input$min_intercept
-        rv_est_sr$max_intercept <- input$max_intercept
-        rv_est_sr$min_myu <- input$min_myu
-        rv_est_sr$max_myu <- input$max_myu
-        rv_est_sr$min_sigma <- input$min_sigma
-        rv_est_sr$max_sigma <- input$max_sigma
-        rv_est_sr$stop_iter <- input$stop_iter
-        rv_est_sr$max_iter <- input$max_iter
-        rv_est_sr$num_converged <- input$num_converged
-        rv_est_sr$max_mle_runs <- input$max_mle_runs
+        rv_est_sr_setting$min_slope <- input$min_slope
+        rv_est_sr_setting$max_slope <- input$max_slope
+        rv_est_sr_setting$min_intercept <- input$min_intercept
+        rv_est_sr_setting$max_intercept <- input$max_intercept
+        rv_est_sr_setting$min_myu <- input$min_myu
+        rv_est_sr_setting$max_myu <- input$max_myu
+        rv_est_sr_setting$min_sigma <- input$min_sigma
+        rv_est_sr_setting$max_sigma <- input$max_sigma
+        rv_est_sr_setting$stop_iter <- input$stop_iter
+        rv_est_sr_setting$max_iter <- input$max_iter
+        rv_est_sr_setting$num_converged <- input$num_converged
+        rv_est_sr_setting$max_mle_runs <- input$max_mle_runs
         removeModal()
       })
 
       output$act_analyze_est_sr <- renderUI({
-        dt_exp_sr <- rv_est_sr$dt_exp_sr
-        dt_gt_sr <- rv_est_sr$dt_gt_sr
-        dt_kit <- rv_est_sr$dt_kit
+        dt_exp_sr <- rv_est_sr_setting$dt_exp_sr
+        dt_gt_sr <- rv_est_sr_setting$dt_gt_sr
+        dt_kit <- rv_est_sr_setting$dt_kit
         if(any(is.null(dt_exp_sr), is.null(dt_gt_sr), is.null(dt_kit))){
           disabled(actionButton(session$ns("act_analyze_est_sr"), label = "Analyze", class = "btn btn-primary btn-lg"))
         }else{
@@ -377,40 +379,59 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
 
       # Start estimating average stutter ratios
       observeEvent(input$act_analyze_est_sr, {
-        dt_exp_sr <- rv_est_sr$dt_exp_sr
-        dt_gt_sr <- rv_est_sr$dt_gt_sr
-        dt_kit <- rv_est_sr$dt_kit
-        name_kit_stutter <- rv_est_sr$name_kit_stutter
-        rv_est_sr$dt_setting_est_sr <- dt_setting_est_sr <- hot_to_r(input$dt_setting_est_sr)
-        min_slope <- rv_est_sr$min_slope
-        max_slope <- rv_est_sr$max_slope
-        min_intercept <- rv_est_sr$min_intercept
-        max_intercept <- rv_est_sr$max_intercept
-        min_myu <- rv_est_sr$min_myu
-        max_myu <- rv_est_sr$max_myu
-        min_sigma <- rv_est_sr$min_sigma
-        max_sigma <- rv_est_sr$max_sigma
-        stop_iter <- rv_est_sr$stop_iter
-        max_iter <- rv_est_sr$max_iter
-        num_converged <- rv_est_sr$num_converged
-        max_mle_runs <- rv_est_sr$max_mle_runs
+        fn_exp_sr <- rv_est_sr_setting$fn_exp_sr
+        dt_exp_sr <- rv_est_sr_setting$dt_exp_sr
+        fn_gt_sr <- rv_est_sr_setting$fn_gt_sr
+        dt_gt_sr <- rv_est_sr_setting$dt_gt_sr
+        dt_kit <- rv_est_sr_setting$dt_kit
+        dt_setting_est_sr <- hot_to_r(input$dt_setting_est_sr)
+        name_kit_stutter <- rv_est_sr_setting$name_kit_stutter
+        min_slope <- rv_est_sr_setting$min_slope
+        max_slope <- rv_est_sr_setting$max_slope
+        min_intercept <- rv_est_sr_setting$min_intercept
+        max_intercept <- rv_est_sr_setting$max_intercept
+        min_myu <- rv_est_sr_setting$min_myu
+        max_myu <- rv_est_sr_setting$max_myu
+        min_sigma <- rv_est_sr_setting$min_sigma
+        max_sigma <- rv_est_sr_setting$max_sigma
+        stop_iter <- rv_est_sr_setting$stop_iter
+        max_iter <- rv_est_sr_setting$max_iter
+        num_converged <- rv_est_sr_setting$num_converged
+        max_mle_runs <- rv_est_sr_setting$max_mle_runs
 
         error_message <- check_est_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr)
         if(error_message != ""){
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          rv_est_sr$data_est_sr <- estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr,
-                                                       min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
-                                                       stop_iter, max_iter, num_converged, max_mle_runs)
+          data_est_sr <- estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr,
+                                             min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
+                                             stop_iter, max_iter, num_converged, max_mle_runs)
+          data_est_sr$fn_exp_sr <- fn_exp_sr
+          data_est_sr$fn_gt_sr <- fn_gt_sr
+          data_est_sr$dt_setting_est_sr <- dt_setting_est_sr
+          data_est_sr$name_kit_stutter <- name_kit_stutter
+          data_est_sr$min_slope <- min_slope
+          data_est_sr$max_slope <- max_slope
+          data_est_sr$min_intercept <- min_intercept
+          data_est_sr$max_intercept <- max_intercept
+          data_est_sr$min_myu <- min_myu
+          data_est_sr$max_myu <- max_myu
+          data_est_sr$min_sigma <- min_sigma
+          data_est_sr$max_sigma <- max_sigma
+          data_est_sr$stop_iter <- stop_iter
+          data_est_sr$max_iter <- max_iter
+          data_est_sr$num_converged <- num_converged
+          data_est_sr$max_mle_runs <- max_mle_runs
+          rv_est_sr$data_est_sr <- data_est_sr
 
           updateTabsetPanel(session = session_est_sr_top, inputId = "tabset_est_sr", selected = "Result")
         }
       })
 
       output$dt_setting_est_sr <- renderRHandsontable({
-        dt_setting_est_sr <- rv_est_sr$dt_setting_est_sr
+        dt_setting_est_sr <- rv_est_sr_setting$dt_setting_est_sr
         if(!is.null(dt_setting_est_sr)){
-          rhandsontable(rv_est_sr$dt_setting_est_sr, rowHeaders = FALSE, overflow = "visible") %>%
+          rhandsontable(dt_setting_est_sr, rowHeaders = FALSE, overflow = "visible") %>%
             hot_table(fillHandle = FALSE, stretchH = "all", rowHeights = 30) %>%
             hot_col(c("Marker"), type = "text", readOnly = TRUE) %>%
             hot_col(c("AT"), type = "numeric", format = "0") %>%
