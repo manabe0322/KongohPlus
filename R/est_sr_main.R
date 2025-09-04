@@ -620,7 +620,6 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
       dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_AlleleDropout]
       dt_st_mk <- dt_st_mk[dt_st_mk$Bool_InfoAllele]
 
-      st_alleles <- dt_st_mk$Allele
       y_sr <- dt_st_mk$SR
       tap <- dt_st_mk$TAP
 
@@ -883,5 +882,6 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
               "opt_list_all_mk_dsr" = opt_list_all_mk_dsr,
               "dt_result_est_m2sr" = dt_result_est_m2sr,
               "init_list_all_mk_m2sr" = init_list_all_mk_m2sr,
-              "opt_list_all_mk_m2sr" = opt_list_all_mk_m2sr))
+              "opt_list_all_mk_m2sr" = opt_list_all_mk_m2sr,
+              "dt_sr_data"))
 }
