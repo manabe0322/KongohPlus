@@ -306,7 +306,7 @@ anameth_server <- function(id, path_pack){
 
       observeEvent(input$act_anameth_copy, {
         index_select <- input$display_info_amameth_rows_selected
-        if(isTruthy(index_select)){
+        if(length(index_select) == 1){
           dt_info_anameth <- rv_anameth$dt_info_anameth
           anameth_copy <- paste0(dt_info_anameth[["Analysis method"]][index_select], "_copy")
 
@@ -364,7 +364,7 @@ anameth_server <- function(id, path_pack){
 
       observeEvent(input$act_anameth_edit, {
         index_select <- input$display_info_amameth_rows_selected
-        if(isTruthy(index_select)){
+        if(length(index_select) == 1){
 
           # Load the selected analysis method
           dt_info_anameth <- rv_anameth$dt_info_anameth
@@ -798,7 +798,7 @@ anameth_server <- function(id, path_pack){
 
       observeEvent(input$act_anameth_delete, {
         index_select <- input$display_info_amameth_rows_selected
-        if(isTruthy(index_select)){
+        if(length(index_select) == 1){
           showModal(modalDialog(
             title = "Message",
             "Are you sure you want to delete this method?",
