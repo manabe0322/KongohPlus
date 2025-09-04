@@ -694,6 +694,10 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
           alname <- as.character(alcor)
           tmp_alname_multi_mk[[i]] <- alname
           tmp_alcor_multi_mk[[i]] <- alcor
+        }else{
+          dt_average_sr_all_mk[[i]] <- data.table(Allele = character(0),
+                                                  AlCor = numeric(0),
+                                                  AveSR = numeric(0))
         }
       }
     }else{
