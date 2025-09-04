@@ -15,7 +15,7 @@ run_mle_ae(
 )
 }
 \arguments{
-\item{prop_ae_data_use}{A matrix of the proportion of the amplification efficiencies (only data used for MCMC)}
+\item{prop_ae_data_use}{A matrix of the proportion of the amplification efficiencies (only data used for MLE)}
 
 \item{min_alpha}{The minimum alpha}
 
