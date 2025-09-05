@@ -64,8 +64,8 @@ KongohPlus <- function(num_threads = NULL){
 
                              navbarMenu("Tools",
                                         tabPanel("Example files"),
-                                        view_sr_ui("view_est_sr"),
-                                        tabPanel("View LSAE & peak height parameters"),
+                                        view_sr_ui("view_sr"),
+                                        view_par_ui("view_par"),
                                         tabPanel("View drop-in parameters"),
                                         hd_true_random_ui("hd_true_random"),
                                         hd_true_importance_ui("hd_true_importance")
@@ -85,7 +85,8 @@ KongohPlus <- function(num_threads = NULL){
 
     # --- Tools --- #
 
-    view_sr_server("view_est_sr", path_pack)
+    view_sr_server("view_sr", path_pack)
+    view_par_server("view_par", path_pack)
     rv_hd_true_random <- hd_true_random_server("hd_true_random", path_pack, rv_deconvo)
     rv_hd_true_importance <- hd_true_importance_server("hd_true_importance", path_pack, rv_deconvo)
 
