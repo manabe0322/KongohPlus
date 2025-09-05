@@ -314,7 +314,9 @@ view_sr_server <- function(id, path_pack){
           datatable(
             dt_sr_data_display,
             selection = list(mode = "single", target = "row"),
-            options = list(dom = "t", iDisplayLength = nrow(dt_sr_data_display), autoWidth = TRUE, scrollY = "300px", fixedHeader = TRUE),
+            extensions = "FixedColumns",
+            options = list(dom = "t", iDisplayLength = nrow(dt_sr_data_display), autoWidth = TRUE, scrollX = TRUE, scrollY = "300px",
+                           fixedHeader = TRUE, fixedColumns = list(leftColumns = 1)),
             rownames = FALSE
           ) %>%
             formatSignif(columns = c("SR"), digits = 4) %>%
