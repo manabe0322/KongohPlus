@@ -582,7 +582,14 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   # Prepare data for AE
   dt_ae_data <- create_dt_ae_data(peak_list, height_list)
   prop_ae_data <- matrix(dt_ae_data$PropAE, nrow = n_mk_auto)
-  prop_ae_data_use <- prop_ae_data[, which(apply(prop_ae_data, 2, prod) > 0), drop = FALSE]
+  index_use <- which(apply(prop_ae_data, 2, prod) > 0)
+  prop_ae_data_use <- prop_ae_data[, index_use, drop = FALSE]
+
+  # Output data for AE
+  sn_all <- unique(dt_ae_data$SampleName)
+  dt_prop_ae_data_use <- data.table(SampleName = sn_all[index_use])
+  dt_prop_ae_data_use <- cbind(dt_prop_ae_data_use, as.data.table(t(prop_ae_data_use * n_mk_auto)))
+  names(dt_prop_ae_data_use) <- c("SampleName", markers_auto)
 
   # Perform MLE for AE
   tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs)
