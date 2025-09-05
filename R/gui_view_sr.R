@@ -179,7 +179,7 @@ view_sr_server <- function(id, path_pack){
           datatable(
             dt_average_sr_display,
             selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_average_sr_display), ordering = FALSE, autoWidth = TRUE, scrollY = "600px", fixedHeader = TRUE),
+            options = list(dom = "t", iDisplayLength = nrow(dt_average_sr_display), ordering = FALSE, autoWidth = FALSE, scrollY = "600px", fixedHeader = TRUE),
             rownames = FALSE
           ) %>%
             formatSignif(columns = c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), digits = 4) %>%
@@ -315,7 +315,7 @@ view_sr_server <- function(id, path_pack){
             dt_sr_data_display,
             selection = list(mode = "single", target = "row"),
             extensions = "FixedColumns",
-            options = list(dom = "t", iDisplayLength = nrow(dt_sr_data_display), autoWidth = TRUE, scrollX = TRUE, scrollY = "300px",
+            options = list(dom = "t", iDisplayLength = nrow(dt_sr_data_display), autoWidth = FALSE, scrollX = TRUE, scrollY = "300px",
                            fixedHeader = TRUE, fixedColumns = list(leftColumns = 1)),
             rownames = FALSE
           ) %>%

@@ -65,7 +65,8 @@ KongohPlus <- function(num_threads = NULL){
                              navbarMenu("Tools",
                                         tabPanel("Example files"),
                                         view_sr_ui("view_sr"),
-                                        view_par_ui("view_par"),
+                                        view_lsae_ui("view_lsae"),
+                                        view_gamma_ui("view_gamma"),
                                         tabPanel("View drop-in parameters"),
                                         hd_true_random_ui("hd_true_random"),
                                         hd_true_importance_ui("hd_true_importance")
@@ -86,7 +87,8 @@ KongohPlus <- function(num_threads = NULL){
     # --- Tools --- #
 
     view_sr_server("view_sr", path_pack)
-    view_par_server("view_par", path_pack)
+    view_lsae_server("view_lsae", path_pack)
+    view_gamma_server("view_gamma", path_pack)
     rv_hd_true_random <- hd_true_random_server("hd_true_random", path_pack, rv_deconvo)
     rv_hd_true_importance <- hd_true_importance_server("hd_true_importance", path_pack, rv_deconvo)
 

@@ -285,7 +285,8 @@ calc_relative_ph <- function(cand_peaks, gt, ae, allele_sr, bsr_average, fsr_ave
 #' @param sr_consider_auto Information on consideration of back, forward, double-back, and minus 2-nt stutters in autosomal markers
 #' @param at_auto A vector of ATs in each autosomal marker
 prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, expect_ae, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto){
-  n_sample <- length(gt_list)
+  samples <- names(gt_list)
+  n_sample <- length(samples)
   n_mk <- length(markers_auto)
 
   sum_peaks_all <- length(unlist(peak_list))
@@ -293,6 +294,9 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
   tphs_gamma_list <- vector(mode = "list", length = n_sample)
   ophs_gamma_list <- vector(mode = "list", length = n_sample)
   ats_gamma_list <- vector(mode = "list", length = n_sample)
+  samples_gamma_list <- vector(mode = "list", length = n_sample)
+  peaks_gamma_list <- vector(mode = "list", length = n_sample)
+  markers_gamma_list <- vector(mode = "list", length = n_sample)
   n_adopt_all <- rep(0, n_sample * n_mk)
 
   count <- 0
@@ -310,6 +314,12 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
     names(ophs_gamma_list_s1) <- markers_auto
     ats_gamma_list_s1 <- vector(mode = "list", length = n_mk)
     names(ats_gamma_list_s1) <- markers_auto
+    samples_gamma_list_s1 <- vector(mode = "list", length = n_mk)
+    names(samples_gamma_list_s1) <- markers_auto
+    markers_gamma_list_s1 <- vector(mode = "list", length = n_mk)
+    names(markers_gamma_list_s1) <- markers_auto
+    peaks_gamma_list_s1 <- vector(mode = "list", length = n_mk)
+    names(peaks_gamma_list_s1) <- markers_auto
 
     for(j in 1:n_mk){
       count <- count + 1
@@ -343,6 +353,9 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
           tphs_gamma_list_s1[[j]] <- numeric(0)
           ophs_gamma_list_s1[[j]] <- numeric(0)
           ats_gamma_list_s1[[j]] <- numeric(0)
+          samples_gamma_list_s1[[j]] <- character(0)
+          markers_gamma_list_s1[[j]] <- character(0)
+          peaks_gamma_list_s1[[j]] <- numeric(0)
         }else{
           rphs_per_component <- rphs_per_component[, index_rph, drop = FALSE]
           rphs <- rphs[index_rph]
@@ -358,6 +371,9 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
             tphs_gamma_list_s1[[j]] <- numeric(0)
             ophs_gamma_list_s1[[j]] <- numeric(0)
             ats_gamma_list_s1[[j]] <- numeric(0)
+            samples_gamma_list_s1[[j]] <- character(0)
+            markers_gamma_list_s1[[j]] <- character(0)
+            peaks_gamma_list_s1[[j]] <- numeric(0)
           }else{
             if(all(rphs_per_component[, index_adopt, drop = FALSE] == 0)){
               print(paste0("Sample: ", i, ", Marker: ", j))
@@ -377,6 +393,9 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
             ophs_gamma_list_s1[[j]] <- ophs
 
             ats_gamma_list_s1[[j]] <- rep(at, n_adopt)
+            samples_gamma_list_s1[[j]] <- rep(samples[i], n_adopt)
+            markers_gamma_list_s1[[j]] <- rep(mk, n_adopt)
+            peaks_gamma_list_s1[[j]] <- cand_peaks_adopt
 
             n_adopt_all[count] <- n_adopt
           }
@@ -386,12 +405,18 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
         tphs_gamma_list_s1[[j]] <- numeric(0)
         ophs_gamma_list_s1[[j]] <- numeric(0)
         ats_gamma_list_s1[[j]] <- numeric(0)
+        samples_gamma_list_s1[[j]] <- character(0)
+        markers_gamma_list_s1[[j]] <- character(0)
+        peaks_gamma_list_s1[[j]] <- numeric(0)
       }
     }
     rphs_gamma_list[[i]] <- rphs_gamma_list_s1
     tphs_gamma_list[[i]] <- tphs_gamma_list_s1
     ophs_gamma_list[[i]] <- ophs_gamma_list_s1
     ats_gamma_list[[i]] <- ats_gamma_list_s1
+    samples_gamma_list[[i]] <- samples_gamma_list_s1
+    markers_gamma_list[[i]] <- markers_gamma_list_s1
+    peaks_gamma_list[[i]] <- peaks_gamma_list_s1
   }
 
   # Bind rphs
@@ -410,11 +435,17 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
   tphs_gamma <- unlist(tphs_gamma_list)
   ophs_gamma <- unlist(ophs_gamma_list)
   ats_gamma <- unlist(ats_gamma_list)
+  samples_gamma <- unlist(samples_gamma_list)
+  markers_gamma <- unlist(markers_gamma_list)
+  peaks_gamma <- unlist(peaks_gamma_list)
 
   return(list("rphs_gamma" = rphs_gamma,
               "tphs_gamma" = tphs_gamma,
               "ophs_gamma" = ophs_gamma,
-              "ats_gamma" = ats_gamma))
+              "ats_gamma" = ats_gamma,
+              "samples_gamma" = samples_gamma,
+              "markers_gamma" = markers_gamma,
+              "peaks_gamma" = peaks_gamma))
 }
 
 #' run_mle_gamma
@@ -533,6 +564,70 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
   return(list(est_param = est_param, init_list = init_list, opt_list = opt_list))
 }
 
+#' create_dt_gamma_data
+#'
+#' @description The function to create the data.table for gamma data
+#' @param cv_allele The coefficient of variation for allelels
+#' @param cv_stutter The coefficient of variation for stutters
+#' @param samples_gamma A vector of the sample names for gamma data
+#' @param markers_gamma A vector of the markers for gamma data
+#' @param peaks_gamma A vector of the peaks for gamma data
+#' @param rphs_gamma A matrix of the relative peak heights for gamma data
+#' @param tphs_gamma A vector of the total peak heights for gamma data
+#' @param ophs_gamma A vector of the observed peak heights for gamma data
+#' @param ats_gamma A vector of the ATs for gamma data
+create_dt_gamma_data <- function(cv_allele, cv_stutter, samples_gamma, markers_gamma, peaks_gamma, rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma){
+  cv_square_base <- c(rep(cv_allele^2, 2), rep(cv_stutter^2, 8))
+  index_cpp <- 0:9
+  n_data <- length(samples_gamma)
+  gamma_shape <- gamma_scale <- quantile95 <- quantile5 <- rep(NA, n_data)
+  peak_type <- rep("", n_data)
+  for(i in 1:n_data){
+    rphs <- rphs_gamma[, i]
+
+    # Categorize peak type
+    if(rphs[1] == 0 && rphs[2] == 0){
+      peak_type[i] <- "stutter"
+    }else if(any(rphs[3:10] != 0)){
+      peak_type[i] <- "mix"
+    }else{
+      peak_type[i] <- "allele"
+    }
+
+    # Calculate gamma parameters
+    gamma_param <- calc_gamma_param_cpp(rphs, cv_square_base, index_cpp, tphs_gamma[i])
+    gamma_shape[i] <- gamma_param[1]
+    gamma_scale[i] <- gamma_param[2]
+
+    # Calculate 95% and 5% quantiles
+    quantile95[i] <- qgamma(0.95, shape = gamma_param[1], scale = gamma_param[2])
+    quantile5[i] <- qgamma(0.05, shape = gamma_param[1], scale = gamma_param[2])
+  }
+
+  # Calculate relative peak heights
+  rphs_gamma_sum <- apply(rphs_gamma, 2, sum)
+
+  # Calculate expected peak heights
+  ephs_gamma <- rphs_gamma_sum * tphs_gamma
+
+  # Create data.table
+  dt_gamma_data <- data.table("SampleName" = samples_gamma,
+                              "Marker" = markers_gamma,
+                              "Peak" = peaks_gamma,
+                              "Observed peak height" = ophs_gamma,
+                              "Expected peak height" = ephs_gamma,
+                              "Relative peak height" = rphs_gamma_sum,
+                              "Total peak height" = tphs_gamma,
+                              "AT" = ats_gamma,
+                              "Shape" = gamma_shape,
+                              "Scale" = gamma_scale,
+                              "95% quantile" = quantile95,
+                              "5% quantile" = quantile5,
+                              "Peak type" = peak_type)
+
+  return(dt_gamma_data)
+}
+
 #' estimate_parameters
 #'
 #' @description The function to estimate parameters of the locus-specific amplification efficiencies and the gamma distribution
@@ -598,8 +693,11 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   opt_list_ae <- tmp$opt_list
 
   if(any(is.na(alpha))){
-    cv_allele <- cv_stutter <- NA
-
+    cv_allele <- NA
+    cv_stutter <- NA
+    init_list_gamma <- NULL
+    opt_list_gamma <- NULL
+    dt_gamma_data <- NULL
   }else{
     # Calculate expected LSAE
     expect_ae <- n_mk_auto * (alpha + 1) / (sum(alpha) + n_mk_auto)
@@ -614,6 +712,9 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     tphs_gamma <- tmp$tphs_gamma
     ophs_gamma <- tmp$ophs_gamma
     ats_gamma <- tmp$ats_gamma
+    samples_gamma <- tmp$samples_gamma
+    markers_gamma <- tmp$markers_gamma
+    peaks_gamma <- tmp$peaks_gamma
 
     # Perform MLE for gamma distribution
     tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, stop_iter, max_iter, num_converged, max_mle_runs)
@@ -622,14 +723,19 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     cv_stutter <- est_param["cv_stutter"]
     init_list_gamma <- tmp$init_list
     opt_list_gamma <- tmp$opt_list
+
+    # Create the data.table for the gamma data
+    dt_gamma_data <- create_dt_gamma_data(cv_allele, cv_stutter, samples_gamma, markers_gamma, peaks_gamma, rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma)
   }
 
   return(list("alpha" = alpha,
               "expect_ae" = expect_ae,
               "init_list_ae" = init_list_ae,
               "opt_list_ae" = opt_list_ae,
+              "dt_prop_ae_data_use" = dt_prop_ae_data_use,
               "cv_allele" = cv_allele,
               "cv_stutter" = cv_stutter,
               "init_list_gamma" = init_list_gamma,
-              "opt_list_gamma" = opt_list_gamma))
+              "opt_list_gamma" = opt_list_gamma,
+              "dt_gamma_data" = dt_gamma_data))
 }
