@@ -122,10 +122,9 @@ view_gamma_server <- function(id, path_pack){
 
           index_sort <- order(ephs)
 
-          df_data <- data.frame(Expected = log10(ephs[index_sort]), Observed = log10(ophs[index_sort]))
-          df_data <- df_data[is.finite(df_data$Observed), ]
-          df_95 <- data.frame(Expected = log10(ephs[index_sort]), Observed = log10(quantile95[index_sort]))
-          df_5 <- data.frame(Expected = log10(ephs[index_sort]), Observed = log10(quantile5[index_sort]))
+          df_data <- data.frame(Expected = ephs[index_sort], Observed = ophs[index_sort])
+          df_95 <- data.frame(Expected = ephs[index_sort], Observed = quantile95[index_sort])
+          df_5 <- data.frame(Expected = ephs[index_sort], Observed = quantile5[index_sort])
           df_select_gamma_allele <- rv_view_gamma$df_select_gamma_allele
 
           color_values <- c("Data" = "#c0c0c0", "5% and 95% quantile" = "#00BFC4")
@@ -143,10 +142,19 @@ view_gamma_server <- function(id, path_pack){
           }
 
           base_plot +
-            xlim(min(df_data$Expected), max(df_data$Expected)) +
-            ylim(min(df_data$Observed), max(df_data$Observed)) +
-            labs(color = NULL, title = "Allele") +
-            scale_color_manual(values = color_values)
+            scale_x_log10(limits = c(min(df_data$Expected[df_data$Expected != 0]), max(df_data$Expected[df_data$Expected != 0]))) +
+            scale_y_log10(limits = c(min(df_data$Observed[df_data$Observed != 0]), max(df_data$Observed[df_data$Observed != 0]))) +
+            labs(color = NULL, x = "Expected peak height", y = "Observed peak height", title = "Allele") +
+            scale_color_manual(values = color_values) +
+            theme(
+              plot.title = element_text(size = 14),
+              legend.text = element_text(size = 12),
+              legend.position = "top",
+              axis.title.x = element_text(size = 12),
+              axis.title.y = element_text(size = 12),
+              axis.text.x = element_text(size = 12),
+              axis.text.y = element_text(size = 12)
+            )
         }
       })
 
@@ -172,10 +180,9 @@ view_gamma_server <- function(id, path_pack){
 
           index_sort <- order(ephs)
 
-          df_data <- data.frame(Expected = log10(ephs[index_sort]), Observed = log10(ophs[index_sort]))
-          df_data <- df_data[is.finite(df_data$Observed), ]
-          df_95 <- data.frame(Expected = log10(ephs[index_sort]), Observed = log10(quantile95[index_sort]))
-          df_5 <- data.frame(Expected = log10(ephs[index_sort]), Observed = log10(quantile5[index_sort]))
+          df_data <- data.frame(Expected = ephs[index_sort], Observed = ophs[index_sort])
+          df_95 <- data.frame(Expected = ephs[index_sort], Observed = quantile95[index_sort])
+          df_5 <- data.frame(Expected = ephs[index_sort], Observed = quantile5[index_sort])
           df_select_gamma_stutter <- rv_view_gamma$df_select_gamma_stutter
 
           color_values <- c("Data" = "#c0c0c0", "5% and 95% quantile" = "#00BFC4")
@@ -193,10 +200,19 @@ view_gamma_server <- function(id, path_pack){
           }
 
           base_plot +
-            xlim(min(df_data$Expected), max(df_data$Expected)) +
-            ylim(min(df_data$Observed), max(df_data$Observed)) +
-            labs(color = NULL, title = "Stutter") +
-            scale_color_manual(values = color_values)
+            scale_x_log10(limits = c(min(df_data$Expected[df_data$Expected != 0]), max(df_data$Expected[df_data$Expected != 0]))) +
+            scale_y_log10(limits = c(min(df_data$Observed[df_data$Observed != 0]), max(df_data$Observed[df_data$Observed != 0]))) +
+            labs(color = NULL, x = "Expected peak height", y = "Observed peak height", title = "Stutter") +
+            scale_color_manual(values = color_values) +
+            theme(
+              plot.title = element_text(size = 14),
+              legend.text = element_text(size = 12),
+              legend.position = "top",
+              axis.title.x = element_text(size = 12),
+              axis.title.y = element_text(size = 12),
+              axis.text.x = element_text(size = 12),
+              axis.text.y = element_text(size = 12)
+            )
         }
       })
 
@@ -222,10 +238,9 @@ view_gamma_server <- function(id, path_pack){
 
           index_sort <- order(ephs)
 
-          df_data <- data.frame(Expected = log10(ephs[index_sort]), Observed = log10(ophs[index_sort]))
-          df_data <- df_data[is.finite(df_data$Observed), ]
-          df_95 <- data.frame(Expected = log10(ephs[index_sort]), Observed = log10(quantile95[index_sort]))
-          df_5 <- data.frame(Expected = log10(ephs[index_sort]), Observed = log10(quantile5[index_sort]))
+          df_data <- data.frame(Expected = ephs[index_sort], Observed = ophs[index_sort])
+          df_95 <- data.frame(Expected = ephs[index_sort], Observed = quantile95[index_sort])
+          df_5 <- data.frame(Expected = ephs[index_sort], Observed = quantile5[index_sort])
           df_select_gamma_mix <- rv_view_gamma$df_select_gamma_mix
 
           color_values <- c("Data" = "#c0c0c0", "5% and 95% quantile" = "#00BFC4")
@@ -243,10 +258,19 @@ view_gamma_server <- function(id, path_pack){
           }
 
           base_plot +
-            xlim(min(df_data$Expected), max(df_data$Expected)) +
-            ylim(min(df_data$Observed), max(df_data$Observed)) +
+            scale_x_log10(limits = c(min(df_data$Expected[df_data$Expected != 0]), max(df_data$Expected[df_data$Expected != 0]))) +
+            scale_y_log10(limits = c(min(df_data$Observed[df_data$Observed != 0]), max(df_data$Observed[df_data$Observed != 0]))) +
             labs(color = NULL, x = "Expected peak height", y = "Observed peak height", title = "Allele + Stutter") +
-            scale_color_manual(values = color_values)
+            scale_color_manual(values = color_values) +
+            theme(
+              plot.title = element_text(size = 14),
+              legend.text = element_text(size = 12),
+              legend.position = "top",
+              axis.title.x = element_text(size = 12),
+              axis.title.y = element_text(size = 12),
+              axis.text.x = element_text(size = 12),
+              axis.text.y = element_text(size = 12)
+            )
         }
       })
 
@@ -272,11 +296,11 @@ view_gamma_server <- function(id, path_pack){
               columnDefs = list(
                 list(
                   targets = 0,
-                  width = '300px'
+                  width = '250px'
                 ),
                 list(
                   targets = c(1, 5),
-                  width = '150px'
+                  width = '125px'
                 ),
                 list(
                   targets = c(2, 3, 4),
@@ -297,17 +321,17 @@ view_gamma_server <- function(id, path_pack){
           dt_gamma_data <- rv_view_gamma$dt_gamma_data
 
           if(dt_gamma_data[["Peak type"]][index_select] == "Allele"){
-            rv_view_gamma$df_select_gamma_allele <- data.frame(Expected = log10(dt_gamma_data[["Expected peak height"]][index_select]), Observed = log10(dt_gamma_data[["Observed peak height"]][index_select]))
+            rv_view_gamma$df_select_gamma_allele <- data.frame(Expected = dt_gamma_data[["Expected peak height"]][index_select], Observed = dt_gamma_data[["Observed peak height"]][index_select])
             rv_view_gamma$df_select_gamma_stutter <- NULL
             rv_view_gamma$df_select_gamma_mix <- NULL
           }else if(dt_gamma_data[["Peak type"]][index_select] == "Stutter"){
             rv_view_gamma$df_select_gamma_allele <- NULL
-            rv_view_gamma$df_select_gamma_stutter <- data.frame(Expected = log10(dt_gamma_data[["Expected peak height"]][index_select]), Observed = log10(dt_gamma_data[["Observed peak height"]][index_select]))
+            rv_view_gamma$df_select_gamma_stutter <- data.frame(Expected = dt_gamma_data[["Expected peak height"]][index_select], Observed = dt_gamma_data[["Observed peak height"]][index_select])
             rv_view_gamma$df_select_gamma_mix <- NULL
           }else if(dt_gamma_data[["Peak type"]][index_select] == "Allele + Stutter"){
             rv_view_gamma$df_select_gamma_allele <- NULL
             rv_view_gamma$df_select_gamma_stutter <- NULL
-            rv_view_gamma$df_select_gamma_mix <- data.frame(Expected = log10(dt_gamma_data[["Expected peak height"]][index_select]), Observed = log10(dt_gamma_data[["Observed peak height"]][index_select]))
+            rv_view_gamma$df_select_gamma_mix <- data.frame(Expected = dt_gamma_data[["Expected peak height"]][index_select], Observed = dt_gamma_data[["Observed peak height"]][index_select])
           }
         }
       })

@@ -309,14 +309,33 @@ view_sr_server <- function(id, path_pack){
         dt_st_mk <- rv_view_sr$dt_st_mk
 
         if(!is.null(dt_st_mk)){
-          rv_view_sr$dt_sr_data_display <- dt_sr_data_display <- dt_st_mk[, c("SampleName", "Allele", "SR", "Peak height (stutter)", "Peak height (allele)"), with = FALSE]
+          dt_sr_data_display <- dt_st_mk[, c("SampleName", "Allele", "SR", "Peak height (stutter)", "Peak height (allele)"), with = FALSE]
+          dt_sr_data_display[["SampleName"]] <- factor(dt_sr_data_display[["SampleName"]], levels = unique(dt_sr_data_display[["SampleName"]]), labels = unique(dt_sr_data_display[["SampleName"]]))
+          dt_sr_data_display[["Allele"]] <- factor(dt_sr_data_display[["Allele"]], levels = unique(dt_sr_data_display[["Allele"]]), labels = unique(dt_sr_data_display[["Allele"]]))
+          rv_view_sr$dt_sr_data_display <- dt_sr_data_display
 
           datatable(
             dt_sr_data_display,
+            filter = "top",
             selection = list(mode = "single", target = "row"),
-            extensions = "FixedColumns",
-            options = list(dom = "t", iDisplayLength = nrow(dt_sr_data_display), autoWidth = FALSE, scrollX = TRUE, scrollY = "300px",
-                           fixedHeader = TRUE, fixedColumns = list(leftColumns = 1)),
+            options = list(
+              iDisplayLength = 10,
+              autoWidth = FALSE,
+              columnDefs = list(
+                list(
+                  targets = 0,
+                  width = '250px'
+                ),
+                list(
+                  targets = 0,
+                  width = '75px'
+                ),
+                list(
+                  targets = c(2, 3, 4),
+                  searchable = FALSE
+                )
+              )
+            ),
             rownames = FALSE
           ) %>%
             formatSignif(columns = c("SR"), digits = 4) %>%

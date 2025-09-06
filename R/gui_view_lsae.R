@@ -8,31 +8,27 @@ view_lsae_ui <- function(id){
     "View LSAE",
     titlePanel("View LSAE"),
     br(),
-    splitLayout(
-      cellWidths = c("500px"),
-      wellPanel(
-        fluidRow(
-          column(3, br(), shinyFilesButton(ns("load_param_data"), label = "Load", title = "Select a file", multiple = FALSE)),
-          column(9, uiOutput(ns("fn_param_data")))
-        )
-      )
-    ),
     fluidRow(
       column(
-        2,
+        3,
+        wellPanel(
+          fluidRow(
+            column(3, br(), shinyFilesButton(ns("load_param_data"), label = "Load", title = "Select a file", multiple = FALSE)),
+            column(9, uiOutput(ns("fn_param_data")))
+          )
+        ),
         wellPanel(
           h4("Expected LSAE"),
           dataTableOutput(ns("dt_expect_ae"))
         )
       ),
       column(
-        10,
+        9,
         wellPanel(
           h4("Experimental LSAE data"),
-          fluidRow(
-            column(6, uiOutput(ns("ui_plot_lsae"))),
-            column(6, dataTableOutput(ns("dt_lsae_data")))
-          )
+          uiOutput(ns("ui_plot_lsae")),
+          br(),
+          dataTableOutput(ns("dt_lsae_data"))
         )
       )
     )
@@ -82,10 +78,7 @@ view_lsae_server <- function(id, path_pack){
           datatable(
             dt_expect_ae,
             selection = "none",
-            extensions = "FixedColumns",
-            options = list(dom = "t", iDisplayLength = nrow(dt_expect_ae), ordering = FALSE, autoWidth = FALSE, scrollX = TRUE, scrollY = "600px",
-                           fixedHeader = TRUE, fixedColumns = list(leftColumns = 1)
-            ),
+            options = list(dom = "t", iDisplayLength = nrow(dt_expect_ae), ordering = FALSE, autoWidth = FALSE),
             rownames = FALSE
           ) %>%
             formatSignif(columns = c("Alpha", "LSAE"), digits = 4) %>%
@@ -97,7 +90,7 @@ view_lsae_server <- function(id, path_pack){
         dt_prop_ae_data_use <- rv_view_lsae$dt_prop_ae_data_use
 
         if(!is.null(dt_prop_ae_data_use)){
-          plotOutput(session$ns("plot_lsae"), width = "100%", height = "400px")
+          plotOutput(session$ns("plot_lsae"), width = "100%", height = "300px")
         }
       })
 
@@ -130,12 +123,12 @@ view_lsae_server <- function(id, path_pack){
 
           base_plot +
             theme(
-              plot.title = element_text(size = 16),
-              legend.text = element_text(size = 14),
-              axis.title.x = element_text(size = 14, margin = margin(t = 20)),
-              axis.title.y = element_text(size = 14, margin = margin(r = 20)),
-              axis.text.x = element_text(size = 14, angle = 90, hjust = 1, vjust = 0.5),
-              axis.text.y = element_text(size = 14)
+              plot.title = element_text(size = 14),
+              legend.text = element_text(size = 12),
+              axis.title.x = element_text(size = 12),
+              axis.title.y = element_text(size = 12),
+              axis.text.x = element_text(size = 12, angle = 90, hjust = 1, vjust = 0.5),
+              axis.text.y = element_text(size = 12)
             )
         }
       })
@@ -149,9 +142,16 @@ view_lsae_server <- function(id, path_pack){
           datatable(
             dt_prop_ae_data_use,
             selection = list(mode = "single", target = "row"),
-            extensions = "FixedColumns",
-            options = list(dom = "t", iDisplayLength = nrow(dt_prop_ae_data_use), autoWidth = FALSE, scrollX = TRUE, scrollY = "600px",
-                           fixedHeader = TRUE, fixedColumns = list(leftColumns = 1)
+            options = list(
+              iDisplayLength = 10,
+              autoWidth = FALSE,
+              scrollX = TRUE,
+              columnDefs = list(
+                list(
+                  targets = 0,
+                  width = '300px' # Do not work because of too many columns
+                )
+              )
             ),
             rownames = FALSE
           ) %>%
