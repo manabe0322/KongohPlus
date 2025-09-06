@@ -587,11 +587,11 @@ create_dt_gamma_data <- function(cv_allele, cv_stutter, samples_gamma, markers_g
 
     # Categorize peak type
     if(rphs[1] == 0 && rphs[2] == 0){
-      peak_type[i] <- "stutter"
+      peak_type[i] <- "Stutter"
     }else if(any(rphs[3:10] != 0)){
-      peak_type[i] <- "mix"
+      peak_type[i] <- "Allele + Stutter"
     }else{
-      peak_type[i] <- "allele"
+      peak_type[i] <- "Allele"
     }
 
     # Calculate gamma parameters
