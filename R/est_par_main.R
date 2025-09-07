@@ -693,6 +693,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   opt_list_ae <- tmp$opt_list
 
   if(any(is.na(alpha))){
+    expect_ae <- rep(NA, n_mk_auto)
     cv_allele <- NA
     cv_stutter <- NA
     init_list_gamma <- NULL
@@ -728,13 +729,15 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     dt_gamma_data <- create_dt_gamma_data(cv_allele, cv_stutter, samples_gamma, markers_gamma, peaks_gamma, rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma)
   }
 
-  return(list("alpha" = alpha,
-              "expect_ae" = expect_ae,
+  # Create the data.table for estimated parameters
+  dt_expect_ae <- data.table(Marker = markers_auto, Alpha = alpha, LSAE = expect_ae)
+  dt_est_gamma <- data.table(Parameter = c("CV for allele", "CV for stutter"), Value = c(cv_allele, cv_stutter))
+
+  return(list("dt_expect_ae" = dt_expect_ae,
               "init_list_ae" = init_list_ae,
               "opt_list_ae" = opt_list_ae,
               "dt_prop_ae_data_use" = dt_prop_ae_data_use,
-              "cv_allele" = cv_allele,
-              "cv_stutter" = cv_stutter,
+              "dt_est_gamma" = dt_est_gamma,
               "init_list_gamma" = init_list_gamma,
               "opt_list_gamma" = opt_list_gamma,
               "dt_gamma_data" = dt_gamma_data))

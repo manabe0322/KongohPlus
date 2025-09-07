@@ -32,7 +32,7 @@ est_dropin_ui <- function(id){
              ),
              column(5,
                     wellPanel(
-                      dataTableOutput(ns("dt_dropin"))
+                      dataTableOutput(ns("dt_est_dropin"))
                     )
              ),
              column(4)
@@ -47,24 +47,24 @@ est_dropin_server <- function(id, path_pack){
   moduleServer(
     id,
     function(input, output, session){
-      rv_est_dropin <- reactiveValues()
-      rv_est_dropin$dt_ntc <- NULL
-      rv_est_dropin$fn_ntc <- NULL
-      rv_est_dropin$dt_kit <- NULL
-      rv_est_dropin$name_kit_dropin <- NULL
-      rv_est_dropin$min_shape_di <- 0.01
-      rv_est_dropin$max_shape_di <- 20
-      rv_est_dropin$min_rate_di <- 0.01
-      rv_est_dropin$max_rate_di <- 20
-      rv_est_dropin$stop_iter <- 500
-      rv_est_dropin$max_iter <- 5000
-      rv_est_dropin$num_converged <- 3
-      rv_est_dropin$max_mle_runs <- 10
-      rv_est_dropin$bool_correct_mle_shape_di <- TRUE
-      rv_est_dropin$bool_correct_mle_rate_di <- TRUE
-      rv_est_dropin$bool_correct_advanced_1 <- TRUE
-      rv_est_dropin$bool_correct_advanced_2 <- TRUE
-      rv_est_dropin$data_est_dropin <- NULL
+      rv_est_dropin_setting <- reactiveValues()
+      rv_est_dropin_setting$dt_ntc <- NULL
+      rv_est_dropin_setting$fn_ntc <- NULL
+      rv_est_dropin_setting$dt_kit <- NULL
+      rv_est_dropin_setting$name_kit_dropin <- NULL
+      rv_est_dropin_setting$min_shape_di <- 0.01
+      rv_est_dropin_setting$max_shape_di <- 20
+      rv_est_dropin_setting$min_rate_di <- 0.01
+      rv_est_dropin_setting$max_rate_di <- 20
+      rv_est_dropin_setting$stop_iter <- 500
+      rv_est_dropin_setting$max_iter <- 5000
+      rv_est_dropin_setting$num_converged <- 3
+      rv_est_dropin_setting$max_mle_runs <- 10
+      rv_est_dropin_setting$bool_correct_mle_shape_di <- TRUE
+      rv_est_dropin_setting$bool_correct_mle_rate_di <- TRUE
+      rv_est_dropin_setting$bool_correct_advanced_1 <- TRUE
+      rv_est_dropin_setting$bool_correct_advanced_2 <- TRUE
+      rv_est_dropin_setting$data_est_dropin <- NULL
 
       # Load non template control data
       observeEvent(input$ntc_data, {
@@ -72,8 +72,8 @@ est_dropin_server <- function(id, path_pack){
         if(!is.null(file_input)){
           dt_ntc <- fread(file_input$datapath)
           dt_ntc <- change_data_type_exp(dt_ntc)
-          rv_est_dropin$dt_ntc <- dt_ntc
-          rv_est_dropin$fn_ntc <- file_input$name
+          rv_est_dropin_setting$dt_ntc <- dt_ntc
+          rv_est_dropin_setting$fn_ntc <- file_input$name
         }
       })
 
@@ -85,13 +85,13 @@ est_dropin_server <- function(id, path_pack){
         path_kit <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/kit")), input$load_kit)$datapath
         if(length(path_kit) > 0){
           dt_kit <- fread(path_kit)
-          rv_est_dropin$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
-          rv_est_dropin$name_kit_dropin <- str_replace(basename(path_kit), ".{4}$", "")
+          rv_est_dropin_setting$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
+          rv_est_dropin_setting$name_kit_dropin <- str_replace(basename(path_kit), ".{4}$", "")
         }
       })
 
       output$name_kit_dropin <- renderUI({
-        disabled(textInput(session$ns("name_kit_dropin"), label = "", value = rv_est_dropin$name_kit_dropin))
+        disabled(textInput(session$ns("name_kit_dropin"), label = "", value = rv_est_dropin_setting$name_kit_dropin))
       })
 
       #### Advanced setting ####
@@ -101,16 +101,16 @@ est_dropin_server <- function(id, path_pack){
           title = "MLE conditions",
           fluidRow(
             column(6,
-                   numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_dropin$stop_iter),
-                   numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", rv_est_dropin$num_converged),
-                   numericInput(session$ns("min_shape_di"), label = "Minimum shape parameter", value = rv_est_dropin$min_shape_di),
-                   numericInput(session$ns("min_rate_di"), label = "Minimum rate parameter", value = rv_est_dropin$min_rate_di)
+                   numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_dropin_setting$stop_iter),
+                   numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", rv_est_dropin_setting$num_converged),
+                   numericInput(session$ns("min_shape_di"), label = "Minimum shape parameter", value = rv_est_dropin_setting$min_shape_di),
+                   numericInput(session$ns("min_rate_di"), label = "Minimum rate parameter", value = rv_est_dropin_setting$min_rate_di)
             ),
             column(6,
-                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_dropin$max_iter),
-                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_dropin$max_mle_runs),
-                   numericInput(session$ns("max_shape_di"), label = "Maximum shape parameter", value = rv_est_dropin$max_shape_di),
-                   numericInput(session$ns("max_rate_di"), label = "Maximum rate parameter", value = rv_est_dropin$max_rate_di)
+                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_dropin_setting$max_iter),
+                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_dropin_setting$max_mle_runs),
+                   numericInput(session$ns("max_shape_di"), label = "Maximum shape parameter", value = rv_est_dropin_setting$max_shape_di),
+                   numericInput(session$ns("max_rate_di"), label = "Maximum rate parameter", value = rv_est_dropin_setting$max_rate_di)
             )
           ),
           footer = tagList(
@@ -127,22 +127,22 @@ est_dropin_server <- function(id, path_pack){
 
         hideFeedback("min_shape_di")
         hideFeedback("max_shape_di")
-        rv_est_dropin$bool_correct_mle_shape_di <- TRUE
+        rv_est_dropin_setting$bool_correct_mle_shape_di <- TRUE
 
         if(!is.numeric(min_shape_di) || min_shape_di <= 0){
           showFeedbackDanger(inputId = "min_shape_di", text = "Value must be positive.")
-          rv_est_dropin$bool_correct_mle_shape_di <- FALSE
+          rv_est_dropin_setting$bool_correct_mle_shape_di <- FALSE
         }
 
         if(!is.numeric(max_shape_di) || max_shape_di <= 0){
           showFeedbackDanger(inputId = "max_shape_di", text = "Value must be positive.")
-          rv_est_dropin$bool_correct_mle_shape_di <- FALSE
+          rv_est_dropin_setting$bool_correct_mle_shape_di <- FALSE
         }
 
         if(is.numeric(min_shape_di) && is.numeric(max_shape_di) && max_shape_di < min_shape_di){
           showFeedbackDanger(inputId = "min_shape_di", text = "Minimum value cannot be greater than maximum value.")
           showFeedbackDanger(inputId = "max_shape_di", text = "Minimum value cannot be greater than maximum value.")
-          rv_est_dropin$bool_correct_mle_shape_di <- FALSE
+          rv_est_dropin_setting$bool_correct_mle_shape_di <- FALSE
         }
       })
 
@@ -152,22 +152,22 @@ est_dropin_server <- function(id, path_pack){
 
         hideFeedback("min_rate_di")
         hideFeedback("max_rate_di")
-        rv_est_dropin$bool_correct_mle_rate_di <- TRUE
+        rv_est_dropin_setting$bool_correct_mle_rate_di <- TRUE
 
         if(!is.numeric(min_rate_di) || min_rate_di <= 0){
           showFeedbackDanger(inputId = "min_rate_di", text = "Value must be positive.")
-          rv_est_dropin$bool_correct_mle_rate_di <- FALSE
+          rv_est_dropin_setting$bool_correct_mle_rate_di <- FALSE
         }
 
         if(!is.numeric(max_rate_di) || max_rate_di <= 0){
           showFeedbackDanger(inputId = "max_rate_di", text = "Value must be positive.")
-          rv_est_dropin$bool_correct_mle_rate_di <- FALSE
+          rv_est_dropin_setting$bool_correct_mle_rate_di <- FALSE
         }
 
         if(is.numeric(min_rate_di) && is.numeric(max_rate_di) && max_rate_di < min_rate_di){
           showFeedbackDanger(inputId = "min_rate_di", text = "Minimum value cannot be greater than maximum value.")
           showFeedbackDanger(inputId = "max_rate_di", text = "Minimum value cannot be greater than maximum value.")
-          rv_est_dropin$bool_correct_mle_rate_di <- FALSE
+          rv_est_dropin_setting$bool_correct_mle_rate_di <- FALSE
         }
       })
 
@@ -195,7 +195,7 @@ est_dropin_server <- function(id, path_pack){
           bool_correct_advanced_1 <- FALSE
         }
 
-        rv_est_dropin$bool_correct_advanced_1 <- bool_correct_advanced_1
+        rv_est_dropin_setting$bool_correct_advanced_1 <- bool_correct_advanced_1
       })
 
       observeEvent(input$num_converged | input$max_mle_runs, {
@@ -222,16 +222,16 @@ est_dropin_server <- function(id, path_pack){
           bool_correct_advanced_2 <- FALSE
         }
 
-        rv_est_dropin$bool_correct_advanced_2 <- bool_correct_advanced_2
+        rv_est_dropin_setting$bool_correct_advanced_2 <- bool_correct_advanced_2
       })
 
       observe({
         req(rv_est_dropin)
 
-        if(all(rv_est_dropin$bool_correct_mle_shape_di,
-               rv_est_dropin$bool_correct_mle_rate_di,
-               rv_est_dropin$bool_correct_advanced_1,
-               rv_est_dropin$bool_correct_advanced_2)){
+        if(all(rv_est_dropin_setting$bool_correct_mle_shape_di,
+               rv_est_dropin_setting$bool_correct_mle_rate_di,
+               rv_est_dropin_setting$bool_correct_advanced_1,
+               rv_est_dropin_setting$bool_correct_advanced_2)){
           enable("act_advance_dropin_save")
         }else{
           disable("act_advance_dropin_save")
@@ -239,33 +239,33 @@ est_dropin_server <- function(id, path_pack){
       })
 
       observeEvent(input$act_advance_dropin_save, {
-        rv_est_dropin$min_shape_di <- input$min_shape_di
-        rv_est_dropin$max_shape_di <- input$max_shape_di
-        rv_est_dropin$min_rate_di <- input$min_rate_di
-        rv_est_dropin$max_rate_di <- input$max_rate_di
-        rv_est_dropin$stop_iter <- input$stop_iter
-        rv_est_dropin$max_iter <- input$max_iter
-        rv_est_dropin$num_converged <- input$num_converged
-        rv_est_dropin$max_mle_runs <- input$max_mle_runs
+        rv_est_dropin_setting$min_shape_di <- input$min_shape_di
+        rv_est_dropin_setting$max_shape_di <- input$max_shape_di
+        rv_est_dropin_setting$min_rate_di <- input$min_rate_di
+        rv_est_dropin_setting$max_rate_di <- input$max_rate_di
+        rv_est_dropin_setting$stop_iter <- input$stop_iter
+        rv_est_dropin_setting$max_iter <- input$max_iter
+        rv_est_dropin_setting$num_converged <- input$num_converged
+        rv_est_dropin_setting$max_mle_runs <- input$max_mle_runs
         removeModal()
       })
 
       # Start estimating dropin parameters
       observeEvent(input$act_analyze_est_dropin, {
         # Fix data
-        dt_ntc <- rv_est_dropin$dt_ntc
-        fn_ntc <- rv_est_dropin$fn_ntc
-        name_kit_dropin <- rv_est_dropin$name_kit_dropin
+        dt_ntc <- rv_est_dropin_setting$dt_ntc
+        fn_ntc <- rv_est_dropin_setting$fn_ntc
+        name_kit_dropin <- rv_est_dropin_setting$name_kit_dropin
         at_dropin <- input$at_dropin
-        min_shape_di <- rv_est_dropin$min_shape_di
-        max_shape_di <- rv_est_dropin$max_shape_di
-        min_rate_di <- rv_est_dropin$min_rate_di
-        max_rate_di <- rv_est_dropin$max_rate_di
-        stop_iter <- rv_est_dropin$stop_iter
-        max_iter <- rv_est_dropin$max_iter
-        num_converged <- rv_est_dropin$num_converged
-        max_mle_runs <- rv_est_dropin$max_mle_runs
-        dt_kit <- rv_est_dropin$dt_kit
+        min_shape_di <- rv_est_dropin_setting$min_shape_di
+        max_shape_di <- rv_est_dropin_setting$max_shape_di
+        min_rate_di <- rv_est_dropin_setting$min_rate_di
+        max_rate_di <- rv_est_dropin_setting$max_rate_di
+        stop_iter <- rv_est_dropin_setting$stop_iter
+        max_iter <- rv_est_dropin_setting$max_iter
+        num_converged <- rv_est_dropin_setting$num_converged
+        max_mle_runs <- rv_est_dropin_setting$max_mle_runs
+        dt_kit <- rv_est_dropin_setting$dt_kit
 
         # Check input files and setting
         error_message <- check_est_dropin(dt_ntc, dt_kit)
@@ -284,43 +284,23 @@ est_dropin_server <- function(id, path_pack){
           data_est_dropin$max_iter <- max_iter
           data_est_dropin$num_converged <- num_converged
           data_est_dropin$max_mle_runs <- max_mle_runs
-          rv_est_dropin$data_est_dropin <- data_est_dropin
+          rv_est_dropin_setting$data_est_dropin <- data_est_dropin
         }
       })
 
       observe({
         req(rv_est_dropin)
-        data_est_dropin <- rv_est_dropin$data_est_dropin
+        data_est_dropin <- rv_est_dropin_setting$data_est_dropin
         if(!is.null(data_est_dropin)){
-          fn_ntc <- data_est_dropin$fn_ntc
-          name_kit_dropin <- data_est_dropin$name_kit_dropin
-          at_dropin <- data_est_dropin$at_dropin
-          min_shape_di <- data_est_dropin$min_shape_di
-          max_shape_di <- data_est_dropin$max_shape_di
-          min_rate_di <- data_est_dropin$min_rate_di
-          max_rate_di <- data_est_dropin$max_rate_di
-          stop_iter <- data_est_dropin$stop_iter
-          max_iter <- data_est_dropin$max_iter
-          num_converged <- data_est_dropin$num_converged
-          max_mle_runs <- data_est_dropin$max_mle_runs
-          n_sample_di <- data_est_dropin$n_sample
-          n_mk_di <- data_est_dropin$n_mk
-          n_dropin <- data_est_dropin$n_dropin
-          freq_dropin <- data_est_dropin$freq_dropin
-          shape_di <- data_est_dropin$shape_di
-          rate_di <- data_est_dropin$rate_di
-          init_list_di <- data_est_dropin$init_list_di
-          opt_list_di <- data_est_dropin$opt_list_di
           enable("act_saveas_est_dropin_1")
 
-          dt_dropin <- data.table(Parameter = c("Number of samples", "Number of markers", "Number of drop-in peaks", "Frequency", "Shape parameter", "Rate parameter"),
-                                  Value = c(n_sample_di, n_mk_di, n_dropin, freq_dropin, shape_di, rate_di))
+          dt_est_dropin <- data_est_dropin$dt_est_dropin
 
-          output$dt_dropin <- renderDataTable({
+          output$dt_est_dropin <- renderDataTable({
             datatable(
-              dt_dropin,
+              dt_est_dropin,
               selection = "none",
-              options = list(dom = "t", iDisplayLength = nrow(dt_dropin), ordering = FALSE, autowidth = TRUE),
+              options = list(dom = "t", iDisplayLength = nrow(dt_est_dropin), ordering = FALSE, autowidth = TRUE),
               rownames = FALSE
             )
           })
@@ -354,8 +334,7 @@ est_dropin_server <- function(id, path_pack){
           observeEvent(input$act_saveas_est_dropin_2, {
             fn_est_dropin <- input$fn_est_dropin
 
-            save(list = c("fn_ntc", "name_kit_dropin", "at_dropin", "min_shape_di", "max_shape_di", "min_rate_di", "max_rate_di", "stop_iter", "max_iter", "num_converged", "max_mle_runs",
-                          "n_sample_di", "n_mk_di", "n_dropin", "freq_dropin", "shape_di", "rate_di", "init_list_di", "opt_list_di"),
+            save(list = c("data_est_dropin"),
                  file = paste0(path_pack, "/extdata/dropin/", fn_est_dropin, ".RData"))
 
             removeModal()

@@ -10,7 +10,8 @@ est_par_ui <- function(id){
            tabsetPanel(id = ns("tabset_est_par"),
                        type = "tabs",
                        est_par_setting_ui(ns("est_par_setting")),
-                       est_par_result_ui(ns("est_par_result"))
+                       est_par_result_lsae_ui(ns("est_par_result_lsae")),
+                       est_par_result_gamma_ui(ns("est_par_result_gamma"))
            )
   )
 }
@@ -26,7 +27,8 @@ est_par_server <- function(id, path_pack){
 
       observe({
         req(rv_est_par)
-        est_par_result_server("est_par_result", path_pack, rv_est_par)
+        est_par_result_lsae_server("est_par_result_lsae", path_pack, rv_est_par)
+        est_par_result_gamma_server("est_par_result_gamma", path_pack, rv_est_par)
       })
     }
   )

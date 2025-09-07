@@ -22,25 +22,6 @@ check_est_dropin <- function(dt_ntc, dt_kit){
   return(error_message)
 }
 
-#' generate_init_sobol_dropin
-#'
-#' @description The function to generate initial values based on Sobol sequence for the drop-in model
-#' @param x Sobol point
-#' @param min_shape_di The minimum shape
-#' @param max_shape_di The maximum shape
-#' @param min_rate_di The minimum rate
-#' @param max_rate_di The maximum rate
-generate_init_sobol_dropin <- function(x, min_shape_di, max_shape_di, min_rate_di, max_rate_di){
-  # Get only one Sobol point (x-th)
-  sobol_vec <- sobol(n = x, d = 2, randomize = "digital.shift")[x, ]
-
-  # Index partitioning and scaling
-  shape_di <- sobol_vec[1] * (max_shape_di - min_shape_di) + min_shape_di
-  rate_di <- sobol_vec[2] * (max_rate_di - min_rate_di) + min_rate_di
-
-  return(list(list(shape_di = shape_di, rate_di = rate_di)))
-}
-
 #' run_mle_dropin
 #'
 #' @description The function to perform MLE for the drop-in model
@@ -143,21 +124,38 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_ra
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, stop_iter, max_iter, num_converged, max_mle_runs){
-  # Extract autosomal markers
+
+    # --- Extract data for autosomal markers --- #
+
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers_auto <- unique(dt_kit_auto[, Marker])
-  n_mk <- length(markers_auto)
-
-  # Extract drop-in data
+  n_mk_di <- length(markers_auto)
   dt_ntc_auto <- dt_ntc[which(is.element(dt_ntc$Marker, markers_auto)), ]
-  col_ntc <- names(dt_ntc_auto)
-  heights <- as.numeric(unlist(dt_ntc_auto[, grep("Height", col_ntc), with = FALSE]))
-  heights <- heights[!is.na(heights)]
-  heights <- heights[heights >= at_dropin]
-  n_dropin <- length(heights)
-  n_sample <- length(unique(dt_ntc$SampleName))
 
-  # Perform MLE
+  # --- Create the data.table for experimental drop-in data --- #
+
+  mat_alleles <- as.matrix(dt_ntc_auto[, grep("Allele", names(dt_ntc_auto)), with = FALSE])
+  mat_heights <- as.matrix(dt_ntc_auto[, grep("Height", names(dt_ntc_auto)), with = FALSE])
+  index_tmp <- which(!is.na(mat_heights), arr.ind = TRUE)
+  sn_tmp <- dt_ntc_auto$SampleName[index_tmp[, 1]]
+  al_tmp <- mat_alleles[index_tmp]
+  ph_tmp <- mat_heights[index_tmp]
+
+  # Extract data above AT
+  index_tmp <- which(ph_tmp >= at_dropin)
+  sn_tmp <- sn_tmp[index_tmp]
+  al_tmp <- al_tmp[index_tmp]
+  ph_tmp <- ph_tmp[index_tmp]
+
+  dt_dropin_data <- data.table(SampleName = sn_tmp,
+                               Allele = al_tmp,
+                               Height = ph_tmp)
+
+  # --- Perform MLE --- #
+
+  heights <- dt_dropin_data$Heights
+  n_dropin <- length(heights)
+
   tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_rate_di, max_rate_di, stop_iter, max_iter, num_converged, max_mle_runs)
   est_param <- tmp$est_param
   shape_di <- est_param["shape_di"]
@@ -165,13 +163,15 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
   init_list_di <- tmp$init_list
   opt_list_di <- tmp$opt_list
 
-  return(list("heights" = heights,
-              "n_sample" = n_sample,
-              "n_mk" = n_mk,
-              "n_dropin" = n_dropin,
-              "freq_dropin" = n_dropin / (n_sample * n_mk),
-              "shape_di" = shape_di,
-              "rate_di" = rate_di,
+  # --- Create the data.table for estimated parameters --- #
+
+  n_sample_di <- length(unique(dt_ntc$SampleName))
+  freq_dropin <- n_dropin / (n_sample * n_mk)
+  dt_est_dropin <- data.table(Parameter = c("Number of samples", "Number of markers", "Number of drop-in peaks", "Frequency", "Shape parameter", "Rate parameter"),
+                          Value = c(n_sample_di, n_mk_di, n_dropin, freq_dropin, shape_di, rate_di))
+
+  return(list("dt_dropin_data" = dt_dropin_data,
+              "dt_est_dropin" = dt_dropin,
               "init_list_di" = init_list_di,
               "opt_list_di" = opt_list_di))
 }
