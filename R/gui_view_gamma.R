@@ -74,10 +74,8 @@ view_gamma_server <- function(id, path_pack){
 
           load(path_param_data)
 
-          rv_view_gamma$dt_gamma_data <- fread("C:/Users/manab/Desktop/dt_gamma_data.csv")
-
-          rv_view_gamma$dt_est_gamma <- data.table(Parameter = c("CV for allele", "CV for stutter"),
-                                                   Value = c(cv_allele, cv_stutter))
+          rv_view_gamma$dt_gamma_data <- data_est_par$dt_gamma_data
+          rv_view_gamma$dt_est_gamma <- data_est_par$dt_est_gamma
         }
       })
 

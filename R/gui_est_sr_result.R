@@ -304,12 +304,35 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           dt_st_mk <- rv_est_sr_result$dt_st_mk
 
           if(!is.null(dt_st_mk)){
-            rv_est_sr_result$dt_sr_data_display <- dt_sr_data_display <- dt_st_mk[, c("SampleName", "Allele", "SR", "Peak height (stutter)", "Peak height (allele)"), with = FALSE]
+            dt_sr_data_display <- dt_st_mk[, c("SampleName", "Allele", "SR", "Peak height (stutter)", "Peak height (allele)"), with = FALSE]
+            dt_sr_data_display[["SampleName"]] <- factor(dt_sr_data_display[["SampleName"]], levels = unique(dt_sr_data_display[["SampleName"]]), labels = unique(dt_sr_data_display[["SampleName"]]))
+            tmp_alleles <- as.character(sort(as.numeric(unique(dt_sr_data_display[["Allele"]]))))
+            dt_sr_data_display[["Allele"]] <- factor(dt_sr_data_display[["Allele"]], levels = tmp_alleles, labels = tmp_alleles)
+            rv_view_sr$dt_sr_data_display <- dt_sr_data_display
 
             datatable(
               dt_sr_data_display,
+              filter = "top",
               selection = list(mode = "single", target = "row"),
-              options = list(dom = "t", iDisplayLength = nrow(dt_sr_data_display), autoWidth = TRUE, scrollY = "300px", fixedHeader = TRUE),
+              options = list(
+                iDisplayLength = 10,
+                autoWidth = FALSE,
+                scrollX = TRUE,
+                columnDefs = list(
+                  list(
+                    targets = 0,
+                    width = '250px'
+                  ),
+                  list(
+                    targets = 1,
+                    width = '75px'
+                  ),
+                  list(
+                    targets = c(2, 3, 4),
+                    searchable = FALSE
+                  )
+                )
+              ),
               rownames = FALSE
             ) %>%
               formatSignif(columns = c("SR"), digits = 4) %>%
@@ -321,7 +344,7 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           index_select <- input$dt_sr_data_display_rows_selected
           if(length(index_select) == 1){
             dt_sr_data_display <- rv_est_sr_result$dt_sr_data_display
-            al <- dt_sr_data_display[["Allele"]][index_select]
+            al <- as.character(dt_sr_data_display[["Allele"]][index_select])
             sr <- dt_sr_data_display[["SR"]][index_select]
 
             meth <- rv_est_sr_result$meth

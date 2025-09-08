@@ -130,6 +130,10 @@ create_default_dt_anameth <- function(path_pack, kit_name, stutter_name, param_n
   load(paste0(path_pack, "/extdata/param/", param_name, ".RData"))
   load(paste0(path_pack, "/extdata/dropin/", dropin_name, ".RData"))
 
+  dt_expect_ae <- data_est_par$dt_expect_ae
+  dt_est_gamma <- data_est_par$dt_est_gamma
+  dt_est_dropin <- data_est_dropin$dt_est_dropin
+
   default_dt_anameth <- data.table(Category = c("Kit", "Stutter data", "Parameter data", "Drop-in data",
                                                 rep("AT", n_mk),
                                                 rep("Genotype filter", 6),
@@ -139,16 +143,18 @@ create_default_dt_anameth <- function(path_pack, kit_name, stutter_name, param_n
                                    Subcategory = c(rep("", 4),
                                                    markers_auto,
                                                    "Maximum BSR", "Maximum FSR", "Maximum DSR", "Maximum M2SR", "Maximum number of drop-in", "Maximum height of drop-in",
-                                                   names(expect_ae),
+                                                   dt_expect_ae$Marker,
                                                    "CV for allele", "CV for stutter",
                                                    "Frequency", "Shape parameter", "Rate parameter"),
                                    Name = c(kit_name, stutter_name, param_name, dropin_name, rep("", 2 * n_mk + 11)),
                                    Value = c(rep(NA, 4),
                                              rep(100, n_mk),
                                              0.3, 0.2, 0.05, 0.1, 2, 150,
-                                             expect_ae,
-                                             cv_allele, cv_stutter,
-                                             freq_dropin, shape_di, rate_di
+                                             dt_expect_ae$LSAE,
+                                             dt_est_gamma$Value,
+                                             dt_est_dropin$Value[dt_est_dropin$Parameter == "Frequency"],
+                                             dt_est_dropin$Value[dt_est_dropin$Parameter == "Shape parameter"],
+                                             dt_est_dropin$Value[dt_est_dropin$Parameter == "Rate parameter"]
                                              ),
                                    Allele = rep(NA, 2 * n_mk + 15),
                                    "Corrected allele (BSR)" = rep(NA, 2 * n_mk + 15),
@@ -311,7 +317,7 @@ anameth_server <- function(id, path_pack){
           load(paste0(path_pack, "/extdata/param/", param_name, ".RData"))
           load(paste0(path_pack, "/extdata/dropin/", dropin_name, ".RData"))
 
-          if(kit_name == data_est_sr$name_kit_stutter && kit_name == name_kit_param && kit_name == name_kit_dropin){
+          if(kit_name == data_est_sr$name_kit_stutter && kit_name == data_est_par$name_kit_param && kit_name == data_est_dropin$name_kit_dropin){
             dt_tmp <- data.table("Analysis method" = anameth_name,
                                  "Kit" = kit_name,
                                  "Stutter data" = stutter_name,

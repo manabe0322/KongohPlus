@@ -113,7 +113,6 @@ view_sr_server <- function(id, path_pack){
         rv_view_sr$dt_st_type <- NULL
         rv_view_sr$meth_all_mk <- NULL
         rv_view_sr$meth <- NULL
-        rv_view_sr$dt_st_mk <- NULL
         rv_view_sr$dt_kit_mk <- NULL
         rv_view_sr$df_select_sr <- NULL
 
@@ -311,7 +310,8 @@ view_sr_server <- function(id, path_pack){
         if(!is.null(dt_st_mk)){
           dt_sr_data_display <- dt_st_mk[, c("SampleName", "Allele", "SR", "Peak height (stutter)", "Peak height (allele)"), with = FALSE]
           dt_sr_data_display[["SampleName"]] <- factor(dt_sr_data_display[["SampleName"]], levels = unique(dt_sr_data_display[["SampleName"]]), labels = unique(dt_sr_data_display[["SampleName"]]))
-          dt_sr_data_display[["Allele"]] <- factor(dt_sr_data_display[["Allele"]], levels = unique(dt_sr_data_display[["Allele"]]), labels = unique(dt_sr_data_display[["Allele"]]))
+          tmp_alleles <- as.character(sort(as.numeric(unique(dt_sr_data_display[["Allele"]]))))
+          dt_sr_data_display[["Allele"]] <- factor(dt_sr_data_display[["Allele"]], levels = tmp_alleles, labels = tmp_alleles)
           rv_view_sr$dt_sr_data_display <- dt_sr_data_display
 
           datatable(
@@ -321,13 +321,14 @@ view_sr_server <- function(id, path_pack){
             options = list(
               iDisplayLength = 10,
               autoWidth = FALSE,
+              scrollX = TRUE,
               columnDefs = list(
                 list(
                   targets = 0,
                   width = '250px'
                 ),
                 list(
-                  targets = 0,
+                  targets = 1,
                   width = '75px'
                 ),
                 list(
@@ -347,7 +348,7 @@ view_sr_server <- function(id, path_pack){
         index_select <- input$dt_sr_data_display_rows_selected
         if(length(index_select) == 1){
           dt_sr_data_display <- rv_view_sr$dt_sr_data_display
-          al <- dt_sr_data_display[["Allele"]][index_select]
+          al <- as.character(dt_sr_data_display[["Allele"]][index_select])
           sr <- dt_sr_data_display[["SR"]][index_select]
 
           meth <- rv_view_sr$meth

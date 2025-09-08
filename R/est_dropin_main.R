@@ -153,7 +153,7 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
 
   # --- Perform MLE --- #
 
-  heights <- dt_dropin_data$Heights
+  heights <- dt_dropin_data$Height
   n_dropin <- length(heights)
 
   tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_rate_di, max_rate_di, stop_iter, max_iter, num_converged, max_mle_runs)
@@ -166,12 +166,12 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
   # --- Create the data.table for estimated parameters --- #
 
   n_sample_di <- length(unique(dt_ntc$SampleName))
-  freq_dropin <- n_dropin / (n_sample * n_mk)
+  freq_dropin <- n_dropin / (n_sample_di * n_mk_di)
   dt_est_dropin <- data.table(Parameter = c("Number of samples", "Number of markers", "Number of drop-in peaks", "Frequency", "Shape parameter", "Rate parameter"),
                           Value = c(n_sample_di, n_mk_di, n_dropin, freq_dropin, shape_di, rate_di))
 
   return(list("dt_dropin_data" = dt_dropin_data,
-              "dt_est_dropin" = dt_dropin,
+              "dt_est_dropin" = dt_est_dropin,
               "init_list_di" = init_list_di,
               "opt_list_di" = opt_list_di))
 }

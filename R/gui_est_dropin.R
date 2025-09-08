@@ -8,34 +8,45 @@ est_dropin_ui <- function(id){
            titlePanel("5. Estimate drop-in parameters"),
            br(),
            fluidRow(
-             column(3,
-                    wellPanel(
-                      fileInput(ns("ntc_data"), label = h4("Non template control data"), accept = ".csv", buttonLabel = "Load"),
-                      br(),
-                      h4("Kit"),
-                      fluidRow(
-                        column(3, br(), shinyFilesButton(ns("load_kit"), label = "Load", title = "Kit", multiple = FALSE)),
-                        column(9, uiOutput(ns("name_kit_dropin")))
-                      ),
-                      br(),
-                      numericInput(ns("at_dropin"), label = h4("Analytical threshold"), value = 35),
-                      br(),
-                      actionButton(ns("act_advance_dropin"), "Advanced setting"),
-                      br(),
-                      br(),
-                      br(),
-                      actionButton(ns("act_analyze_est_dropin"), label = "Analyze", class = "btn btn-primary btn-lg"),
-                      br(),
-                      br(),
-                      disabled(actionButton(ns("act_saveas_est_dropin_1"), label = "Save as", class = "btn btn-primary btn-lg"))
-                    )
+             column(
+               3,
+               wellPanel(
+                 fileInput(ns("ntc_data"), label = h4("Non template control data"), accept = ".csv", buttonLabel = "Load"),
+                 br(),
+                 h4("Kit"),
+                 fluidRow(
+                   column(3, br(), shinyFilesButton(ns("load_kit"), label = "Load", title = "Kit", multiple = FALSE)),
+                   column(9, uiOutput(ns("name_kit_dropin")))
+                 ),
+                 br(),
+                 numericInput(ns("at_dropin"), label = h4("Analytical threshold"), value = 35),
+                 br(),
+                 actionButton(ns("act_advance_dropin"), "Advanced setting"),
+                 br(),
+                 br(),
+                 br(),
+                 actionButton(ns("act_analyze_est_dropin"), label = "Analyze", class = "btn btn-primary btn-lg"),
+                 br(),
+                 br(),
+                 disabled(actionButton(ns("act_saveas_est_dropin_1"), label = "Save as", class = "btn btn-primary btn-lg"))
+               )
              ),
-             column(5,
-                    wellPanel(
-                      dataTableOutput(ns("dt_est_dropin"))
-                    )
+             column(
+               4,
+               wellPanel(
+                 h4("Estimated parameters"),
+                 dataTableOutput(ns("dt_est_dropin"))
+               )
              ),
-             column(4)
+             column(
+               5,
+               wellPanel(
+                 h4("Experimental drop-in data"),
+                 uiOutput(ns("ui_plot_dropin")),
+                 br(),
+                 dataTableOutput(ns("dt_dropin_data"))
+               )
+             )
            )
   )
 }
@@ -226,7 +237,7 @@ est_dropin_server <- function(id, path_pack){
       })
 
       observe({
-        req(rv_est_dropin)
+        req(rv_est_dropin_setting)
 
         if(all(rv_est_dropin_setting$bool_correct_mle_shape_di,
                rv_est_dropin_setting$bool_correct_mle_rate_di,
@@ -289,21 +300,13 @@ est_dropin_server <- function(id, path_pack){
       })
 
       observe({
-        req(rv_est_dropin)
+        req(rv_est_dropin_setting)
         data_est_dropin <- rv_est_dropin_setting$data_est_dropin
         if(!is.null(data_est_dropin)){
           enable("act_saveas_est_dropin_1")
 
           dt_est_dropin <- data_est_dropin$dt_est_dropin
-
-          output$dt_est_dropin <- renderDataTable({
-            datatable(
-              dt_est_dropin,
-              selection = "none",
-              options = list(dom = "t", iDisplayLength = nrow(dt_est_dropin), ordering = FALSE, autowidth = TRUE),
-              rownames = FALSE
-            )
-          })
+          dt_dropin_data <- data_est_dropin$dt_dropin_data
 
           observeEvent(input$act_saveas_est_dropin_1, {
             showModal(modalDialog(
@@ -339,6 +342,65 @@ est_dropin_server <- function(id, path_pack){
 
             removeModal()
           })
+
+          output$dt_est_dropin <- renderDataTable({
+            datatable(
+              dt_est_dropin,
+              selection = "none",
+              options = list(dom = "t", iDisplayLength = nrow(dt_est_dropin), ordering = FALSE, autowidth = FALSE),
+              rownames = FALSE
+            )
+          })
+
+          output$ui_plot_dropin <- renderUI({
+            if(nrow(dt_dropin_data) != 0){
+              plotOutput(session$ns("plot_dropin"), width = "100%", height = "300px")
+            }
+          })
+
+          output$plot_dropin <- renderPlot({
+            heights <- dt_dropin_data$Height
+            shape_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Shape parameter"]
+            rate_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Rate parameter"]
+
+            tb_ph <- table(heights)
+            x_val <- 0:round(max(heights) * 1.5, 0)
+            y_val <- rep(0, length(x_val))
+            y_val[match(as.numeric(names(tb_ph)), x_val)] <- tb_ph
+
+            ggplot() +
+              geom_line(data = data.frame(X = x_val, Y = y_val, P = y_val * 0.01), aes(X, P, color = "Observed"), linewidth = 1) +
+              stat_function(fun = dgamma, args = list(shape = shape_di, rate = rate_di), aes(color = "Estimated"), linewidth = 1) +
+              xlim(0, max(x_val)) +
+              labs(color = NULL, x = "Peak height (RFU)") +
+              scale_y_continuous(
+                name = "Probability density",
+                sec.axis = sec_axis(~ . * 100, name = "Count")
+              ) +
+              scale_color_manual(values = c("Observed" = "#4169e1", "Estimated" = "#c71585")) +
+              theme(
+                plot.title = element_text(size = 14),
+                legend.text = element_text(size = 12),
+                axis.title.x = element_text(size = 12),
+                axis.title.y = element_text(size = 12),
+                axis.text.x = element_text(size = 12),
+                axis.text.y = element_text(size = 12)
+              )
+          })
+
+          output$dt_dropin_data <- renderDataTable({
+            datatable(
+              dt_dropin_data,
+              selection = "none",
+              options = list(
+                iDisplayLength = 10,
+                autoWidth = FALSE
+              ),
+              rownames = FALSE
+            ) %>%
+              formatStyle(names(dt_dropin_data), lineHeight = "80%")
+          })
+
         }else{
           disable("act_saveas_est_dropin_1")
         }

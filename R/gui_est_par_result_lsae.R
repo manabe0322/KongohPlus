@@ -191,36 +191,6 @@ est_par_result_lsae_server <- function(id, path_pack, rv_est_par){
             rv_est_par_result_lsae$df_select_lsae <- NULL
           }
         })
-
-
-
-        fn_exp_param <- rv_est_par$fn_exp_param
-        fn_gt_param <- rv_est_par$fn_gt_param
-        dt_setting_est_par <- rv_est_par$dt_setting_est_par
-        list_dt_average_sr <- rv_est_par$list_dt_average_sr
-        name_kit_param <- rv_est_par$name_kit_param
-        name_sr <- rv_est_par$name_sr
-        min_alpha <- rv_est_par$min_alpha
-        max_alpha <- rv_est_par$max_alpha
-        min_cv_allele <- rv_est_par$min_cv_allele
-        max_cv_allele <- rv_est_par$max_cv_allele
-        min_cv_stutter <- rv_est_par$min_cv_stutter
-        max_cv_stutter <- rv_est_par$max_cv_stutter
-        stop_iter <- rv_est_par$stop_iter
-        max_iter <- rv_est_par$max_iter
-        num_converged <- rv_est_par$num_converged
-        max_mle_runs <- rv_est_par$max_mle_runs
-
-        alpha <- data_est_par$alpha
-        expect_ae <- data_est_par$expect_ae
-        init_list_ae <- data_est_par$init_list_ae
-        opt_list_ae <- data_est_par$opt_list_ae
-        cv_allele <- data_est_par$cv_allele
-        cv_stutter <- data_est_par$cv_stutter
-        init_list_gamma <- data_est_par$init_list_gamma
-        opt_list_gamma <- data_est_par$opt_list_gamma
-
-
       }
     }
   )

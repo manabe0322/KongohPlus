@@ -59,11 +59,8 @@ view_lsae_server <- function(id, path_pack){
 
           load(path_param_data)
 
-          rv_view_lsae$dt_prop_ae_data_use <- fread("C:/Users/manab/Desktop/dt_prop_ae_data_use.csv")
-
-          rv_view_lsae$dt_expect_ae <- data.table(Marker = names(expect_ae),
-                                                 Alpha = alpha,
-                                                 LSAE = expect_ae)
+          rv_view_lsae$dt_prop_ae_data_use <- data_est_par$dt_prop_ae_data_use
+          rv_view_lsae$dt_expect_ae <- data_est_par$dt_expect_ae
         }
       })
 
