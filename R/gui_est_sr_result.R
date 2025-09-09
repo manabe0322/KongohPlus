@@ -47,9 +47,9 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         rv_est_sr_result$markers_auto <- names(data_est_sr$list_dt_average_sr)
         rv_est_sr_result$list_dt_average_sr <- data_est_sr$list_dt_average_sr
         rv_est_sr_result$dt_average_sr <- NULL
-        rv_est_sr_result$dt_setting_est_sr <- data_est_sr$dt_setting_est_sr
-        rv_est_sr_result$dt_sr_data <- data_est_sr$dt_sr_data
-        rv_est_sr_result$name_kit_stutter <- data_est_sr$name_kit_stutter
+        dt_setting_est_sr <- data_est_sr$dt_setting_est_sr
+        dt_sr_data <- data_est_sr$dt_sr_data
+        name_kit_stutter <- data_est_sr$name_kit_stutter
         rv_est_sr_result$dt_st_type <- NULL
         rv_est_sr_result$meth_all_mk <- NULL
         rv_est_sr_result$meth <- NULL
@@ -104,7 +104,6 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           select_st_type <- input$select_st_type
 
           rv_est_sr_result$dt_average_sr <- NULL
-          rv_est_sr_result$dt_st_mk <- NULL
           rv_est_sr_result$dt_st_type <- NULL
           rv_est_sr_result$meth_all_mk <- NULL
           rv_est_sr_result$meth <- NULL
@@ -116,10 +115,6 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
             if(!is.null(rv_est_sr_result$list_dt_average_sr)){
               rv_est_sr_result$dt_average_sr <- rv_est_sr_result$list_dt_average_sr[[select_mk]]
             }
-
-            dt_setting_est_sr <- rv_est_sr_result$dt_setting_est_sr
-            dt_sr_data <- rv_est_sr_result$dt_sr_data
-            name_kit_stutter <- rv_est_sr_result$name_kit_stutter
 
             if(!is.null(dt_setting_est_sr) && !is.null(dt_sr_data) && !is.null(name_kit_stutter)){
 
@@ -308,7 +303,7 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
             dt_sr_data_display[["SampleName"]] <- factor(dt_sr_data_display[["SampleName"]], levels = unique(dt_sr_data_display[["SampleName"]]), labels = unique(dt_sr_data_display[["SampleName"]]))
             tmp_alleles <- as.character(sort(as.numeric(unique(dt_sr_data_display[["Allele"]]))))
             dt_sr_data_display[["Allele"]] <- factor(dt_sr_data_display[["Allele"]], levels = tmp_alleles, labels = tmp_alleles)
-            rv_view_sr$dt_sr_data_display <- dt_sr_data_display
+            rv_est_sr_result$dt_sr_data_display <- dt_sr_data_display
 
             datatable(
               dt_sr_data_display,
