@@ -5,7 +5,7 @@ Version: 0.21.4
 Author: Sho Manabe <manabe.sho@kmu.ac.jp>
 Maintainer: Sho Manabe <manabe.sho@kmu.ac.jp>
 Description: Probabilistic genotyping software based on a quantitative continuous model.
-License: What license is it under?
+License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Depends:
