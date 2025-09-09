@@ -109,10 +109,10 @@ view_sr_server <- function(id, path_pack){
         select_st_type <- input$select_st_type
 
         rv_view_sr$dt_average_sr <- NULL
-        rv_view_sr$dt_st_mk <- NULL
         rv_view_sr$dt_st_type <- NULL
         rv_view_sr$meth_all_mk <- NULL
         rv_view_sr$meth <- NULL
+        rv_view_sr$dt_st_mk <- NULL
         rv_view_sr$dt_kit_mk <- NULL
         rv_view_sr$df_select_sr <- NULL
 
