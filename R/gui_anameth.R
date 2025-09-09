@@ -582,8 +582,8 @@ anameth_server <- function(id, path_pack){
         dt_anameth_edit <- rv_anameth$dt_anameth_edit
 
         if(!is.null(dt_anameth_edit)){
-          rv_anameth$dt_edit_lsae <- dt_edit_lsae <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "LSAE"],
-                                                                LSAE = as.character(dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"]))
+          dt_edit_lsae <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "LSAE"],
+                                     LSAE = as.character(dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"]))
 
           rhandsontable(dt_edit_lsae, rowHeaders = FALSE, height = 550) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
@@ -764,13 +764,6 @@ anameth_server <- function(id, path_pack){
           dt_edit_gtfltr <- hot_to_r(input$dt_edit_gtfltr)
           dt_anameth_edit$Value[dt_anameth_edit$Category == "Genotype filter"] <- dt_edit_gtfltr$Value
         }
-
-        if(is.null(input$dt_edit_lsae)){
-          dt_edit_lsae <- rv_anameth$dt_edit_lsae
-        }else{
-          rv_anameth$dt_edit_lsae <- dt_edit_lsae <- hot_to_r(input$dt_edit_lsae)
-        }
-
 
         if(!is.null(input$dt_edit_lsae)){
           dt_edit_lsae <- hot_to_r(input$dt_edit_lsae)
