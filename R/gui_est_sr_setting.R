@@ -379,6 +379,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
 
       # Start estimating average stutter ratios
       observeEvent(input$act_analyze_est_sr, {
+        waiter_show(html = spin_3k(), color = "white")
+
         fn_exp_sr <- rv_est_sr_setting$fn_exp_sr
         dt_exp_sr <- rv_est_sr_setting$dt_exp_sr
         fn_gt_sr <- rv_est_sr_setting$fn_gt_sr
@@ -401,6 +403,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
 
         error_message <- check_est_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr)
         if(error_message != ""){
+          waiter_hide()
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           data_est_sr <- estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr,
@@ -423,6 +426,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           data_est_sr$num_converged <- num_converged
           data_est_sr$max_mle_runs <- max_mle_runs
           rv_est_sr$data_est_sr <- data_est_sr
+
+          waiter_hide()
 
           updateTabsetPanel(session = session_est_sr_top, inputId = "tabset_est_sr", selected = "Result")
         }

@@ -263,6 +263,8 @@ est_dropin_server <- function(id, path_pack){
 
       # Start estimating dropin parameters
       observeEvent(input$act_analyze_est_dropin, {
+        waiter_show(html = spin_3k(), color = "white")
+
         # Fix data
         dt_ntc <- rv_est_dropin_setting$dt_ntc
         fn_ntc <- rv_est_dropin_setting$fn_ntc
@@ -281,6 +283,7 @@ est_dropin_server <- function(id, path_pack){
         # Check input files and setting
         error_message <- check_est_dropin(dt_ntc, dt_kit)
         if(error_message != ""){
+          waiter_hide()
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           data_est_dropin <- estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, stop_iter, max_iter, num_converged, max_mle_runs)
@@ -296,6 +299,8 @@ est_dropin_server <- function(id, path_pack){
           data_est_dropin$num_converged <- num_converged
           data_est_dropin$max_mle_runs <- max_mle_runs
           rv_est_dropin_setting$data_est_dropin <- data_est_dropin
+
+          waiter_hide()
         }
       })
 

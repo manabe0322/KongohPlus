@@ -339,6 +339,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
 
       # Start estimating parameters
       observeEvent(input$act_analyze_est_par, {
+        waiter_show(html = spin_3k(), color = "white")
+
         # Fix data
         fn_exp_param <- rv_est_par_setting$fn_exp_param
         dt_exp_param <- rv_est_par_setting$dt_exp_param
@@ -362,6 +364,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         # Check input files and setting
         error_message <- check_est_par(dt_exp_param, dt_gt_param, dt_setting_est_par)
         if(error_message != ""){
+          waiter_hide()
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           data_est_par <- estimate_parameters(dt_exp_param, dt_gt_param, list_dt_average_sr, dt_setting_est_par,
@@ -388,7 +391,9 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
 
           rv_est_par$data_est_par <- data_est_par
 
-          updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result")
+          waiter_hide()
+
+          updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result (LSAE)")
         }
       })
 
