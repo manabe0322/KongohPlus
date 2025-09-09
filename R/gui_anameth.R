@@ -254,6 +254,7 @@ anameth_server <- function(id, path_pack){
       rv_anameth$list_dt_average_sr <- NULL
       rv_anameth$dt_average_sr <- NULL
       rv_anameth$current_mk <- NULL
+      rv_anameth$alart_anameth_edit <- character(0)
 
       # --- Define a new analysis method --- #
 
@@ -414,6 +415,7 @@ anameth_server <- function(id, path_pack){
           # Create UI
           showModal(modalDialog(
             title = "Edit the analysis method",
+            uiOutput(session$ns("alart_edit_anameth")),
             tabsetPanel(
               id = session$ns("tabset_edit_anameth"),
               type = "tabs",
@@ -515,6 +517,11 @@ anameth_server <- function(id, path_pack){
         removeModal()
       })
 
+      # UI for alart message
+      output$alart_edit_anameth <- renderUI({
+        HTML(paste0('<span style="color: red;">', rv_anameth$alart_anameth_edit, '</span>'))
+      })
+
       # UI for general information
       output$dt_edit_general <- renderDataTable({
         dt_anameth_edit <- rv_anameth$dt_anameth_edit
@@ -575,13 +582,23 @@ anameth_server <- function(id, path_pack){
         dt_anameth_edit <- rv_anameth$dt_anameth_edit
 
         if(!is.null(dt_anameth_edit)){
-          dt_edit_lsae <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "LSAE"],
-                                     LSAE = dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"])
+          rv_anameth$dt_edit_lsae <- dt_edit_lsae <- data.table(Marker = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "LSAE"],
+                                                                LSAE = as.character(dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"]))
 
           rhandsontable(dt_edit_lsae, rowHeaders = FALSE, height = 550) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
             hot_col("Marker", type = "text", readOnly = TRUE, width = 150) %>%
-            hot_col("LSAE", type = "numeric", format = "0.000000", width = 150)
+            hot_col("LSAE", type = "text", width = 150,
+                    renderer = "
+                    function (instance, td, row, col, prop, value, cellProperties) {
+                      Handsontable.renderers.TextRenderer.apply(this, arguments);
+                      if(isNaN(parseFloat(value))) {
+                        td.style.background = '#fdd';
+                      } else {
+                        td.style.background = '';
+                      }
+                    }
+                  ")
         }
       })
 
@@ -591,12 +608,22 @@ anameth_server <- function(id, path_pack){
 
         if(!is.null(dt_anameth_edit)){
           dt_edit_gamma <- data.table(Parameter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Peak height"],
-                                      Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"])
+                                      Value = as.character(dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"]))
 
           rhandsontable(dt_edit_gamma, rowHeaders = FALSE) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
             hot_col("Parameter", type = "text", readOnly = TRUE, width = 150) %>%
-            hot_col("Value", type = "numeric", format = "0.000000", width = 150)
+            hot_col("Value", type = "text", width = 150,
+                    renderer = "
+                    function (instance, td, row, col, prop, value, cellProperties) {
+                      Handsontable.renderers.TextRenderer.apply(this, arguments);
+                      if(isNaN(parseFloat(value))) {
+                        td.style.background = '#fdd';
+                      } else {
+                        td.style.background = '';
+                      }
+                    }
+                  ")
         }
       })
 
@@ -606,12 +633,22 @@ anameth_server <- function(id, path_pack){
 
         if(!is.null(dt_anameth_edit)){
           dt_edit_dropin <- data.table(Parameter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Drop-in"],
-                                       Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"])
+                                       Value = as.character(dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"]))
 
           rhandsontable(dt_edit_dropin, rowHeaders = FALSE) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
             hot_col("Parameter", type = "text", readOnly = TRUE, width = 150) %>%
-            hot_col("Value", type = "numeric", format = "0.000000", width = 150)
+            hot_col("Value", type = "text", width = 150,
+                    renderer = "
+                    function (instance, td, row, col, prop, value, cellProperties) {
+                      Handsontable.renderers.TextRenderer.apply(this, arguments);
+                      if(isNaN(parseFloat(value))) {
+                        td.style.background = '#fdd';
+                      } else {
+                        td.style.background = '';
+                      }
+                    }
+                  ")
         }
       })
 
@@ -625,11 +662,26 @@ anameth_server <- function(id, path_pack){
         dt_average_sr <- rv_anameth$dt_average_sr
 
         if(!is.null(dt_average_sr)){
+          dt_average_sr[["Average BSR"]] <- as.character(dt_average_sr[["Average BSR"]])
+          dt_average_sr[["Average FSR"]] <- as.character(dt_average_sr[["Average FSR"]])
+          dt_average_sr[["Average DSR"]] <- as.character(dt_average_sr[["Average DSR"]])
+          dt_average_sr[["Average M2SR"]] <- as.character(dt_average_sr[["Average M2SR"]])
+
           rhandsontable(dt_average_sr, rowHeaders = FALSE, height = 500) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
             hot_col(c("Allele"), type = "text", readOnly = TRUE, width = 50) %>%
             hot_col(c("Corrected allele (BSR)", "Corrected allele (FSR)", "Corrected allele (DSR)", "Corrected allele (M2SR)"), type = "numeric", format = "0.000", readOnly = TRUE, width = 175) %>%
-            hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "numeric", format = "0.0000", width = 120)
+            hot_col(c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), type = "text", width = 120,
+                    renderer = "
+                    function (instance, td, row, col, prop, value, cellProperties) {
+                      Handsontable.renderers.TextRenderer.apply(this, arguments);
+                      if(isNaN(parseFloat(value))) {
+                        td.style.background = '#fdd';
+                      } else {
+                        td.style.background = '';
+                      }
+                    }
+                  ")
         }
       })
 
@@ -640,6 +692,12 @@ anameth_server <- function(id, path_pack){
         # Update edited information
         if(!is.null(input$dt_edit_sr) && !is.null(select_mk) && !is.null(current_mk) && select_mk != rv_anameth$current_mk){
           dt_edit_sr <- hot_to_r(input$dt_edit_sr)
+          options(warn = -1)
+          dt_edit_sr[["Average BSR"]] <- as.numeric(dt_edit_sr[["Average BSR"]])
+          dt_edit_sr[["Average FSR"]] <- as.numeric(dt_edit_sr[["Average FSR"]])
+          dt_edit_sr[["Average DSR"]] <- as.numeric(dt_edit_sr[["Average DSR"]])
+          dt_edit_sr[["Average M2SR"]] <- as.numeric(dt_edit_sr[["Average M2SR"]])
+          options(warn = 0)
 
           # Change BSR = NA to BSR = 0
           tmp_bsr <- dt_edit_sr[["Average BSR"]]
@@ -695,6 +753,7 @@ anameth_server <- function(id, path_pack){
         anameth_edit <- rv_anameth$anameth_edit
         index_select <- input$display_info_amameth_rows_selected
         dt_info_anameth <- rv_anameth$dt_info_anameth
+        alart_anameth_edit <- rv_anameth$alart_anameth_edit
 
         if(!is.null(input$dt_edit_at)){
           dt_edit_at <- hot_to_r(input$dt_edit_at)
@@ -706,56 +765,96 @@ anameth_server <- function(id, path_pack){
           dt_anameth_edit$Value[dt_anameth_edit$Category == "Genotype filter"] <- dt_edit_gtfltr$Value
         }
 
+        if(is.null(input$dt_edit_lsae)){
+          dt_edit_lsae <- rv_anameth$dt_edit_lsae
+        }else{
+          rv_anameth$dt_edit_lsae <- dt_edit_lsae <- hot_to_r(input$dt_edit_lsae)
+        }
+
+
         if(!is.null(input$dt_edit_lsae)){
           dt_edit_lsae <- hot_to_r(input$dt_edit_lsae)
+          options(warn = -1)
+          dt_edit_lsae$LSAE <- as.numeric(dt_edit_lsae$LSAE)
+          options(warn = 0)
 
-          # Mark as edited when the LSAE parameters or gamma parameters are changed.
-          if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"], 6) != round(dt_edit_lsae$LSAE, 6))){
-            name_param <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"]
+          if(any(is.na(dt_edit_lsae$LSAE))){
+            alart_anameth_edit <- "Error: Some cells are not numeric!"
+          }else{
+            alart_anameth_edit <- character(0)
 
-            if(substring(name_param, nchar(name_param) - 8) != " (edited)"){
-              dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"] <- paste0(name_param, " (edited)")
-              dt_info_anameth[["Parameter data"]][index_select] <- paste0(name_param, " (edited)")
+            # Mark as edited when the LSAE parameters or gamma parameters are changed.
+            if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"], 6) != round(dt_edit_lsae$LSAE, 6))){
+              name_param <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"]
+
+              if(substring(name_param, nchar(name_param) - 8) != " (edited)"){
+                dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"] <- paste0(name_param, " (edited)")
+                dt_info_anameth[["Parameter data"]][index_select] <- paste0(name_param, " (edited)")
+              }
             }
-          }
 
-          dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"] <- dt_edit_lsae$LSAE
+            dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"] <- dt_edit_lsae$LSAE
+          }
         }
 
         if(!is.null(input$dt_edit_gamma)){
           dt_edit_gamma <- hot_to_r(input$dt_edit_gamma)
+          options(warn = -1)
+          dt_edit_gamma$Value <- as.numeric(dt_edit_gamma$Value)
+          options(warn = 0)
 
-          # Mark as edited when the LSAE parameters or gamma parameters are changed.
-          if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"], 6) != round(dt_edit_gamma$Value, 6))){
-            name_param <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"]
+          if(any(is.na(dt_edit_gamma$Value))){
+            alart_anameth_edit <- "Error: Some cells are not numeric!"
+          }else{
+            alart_anameth_edit <- character(0)
 
-            if(substring(name_param, nchar(name_param) - 8) != " (edited)"){
-              dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"] <- paste0(name_param, " (edited)")
-              dt_info_anameth[["Parameter data"]][index_select] <- paste0(name_param, " (edited)")
+            # Mark as edited when the LSAE parameters or gamma parameters are changed.
+            if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"], 6) != round(dt_edit_gamma$Value, 6))){
+              name_param <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"]
+
+              if(substring(name_param, nchar(name_param) - 8) != " (edited)"){
+                dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"] <- paste0(name_param, " (edited)")
+                dt_info_anameth[["Parameter data"]][index_select] <- paste0(name_param, " (edited)")
+              }
             }
-          }
 
-          dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"] <- dt_edit_gamma$Value
+            dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"] <- dt_edit_gamma$Value
+          }
         }
 
         if(!is.null(input$dt_edit_dropin)){
           dt_edit_dropin <- hot_to_r(input$dt_edit_dropin)
+          options(warn = -1)
+          dt_edit_dropin$Value <- as.numeric(dt_edit_dropin$Value)
+          options(warn = 0)
 
-          # Mark as edited when the drop-in parameters are changed.
-          if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"], 6) != round(dt_edit_dropin$Value, 6))){
-            name_dropin <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Drop-in data"]
+          if(any(is.na(dt_edit_dropin$Value))){
+            alart_anameth_edit <- "Error: Some cells are not numeric!"
+          }else{
+            alart_anameth_edit <- character(0)
 
-            if(substring(name_dropin, nchar(name_dropin) - 8) != " (edited)"){
-              dt_anameth_edit$Name[dt_anameth_edit$Category == "Drop-in data"] <- paste0(name_dropin, " (edited)")
-              dt_info_anameth[["Drop-in data"]][index_select] <- paste0(name_dropin, " (edited)")
+            # Mark as edited when the drop-in parameters are changed.
+            if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"], 6) != round(dt_edit_dropin$Value, 6))){
+              name_dropin <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Drop-in data"]
+
+              if(substring(name_dropin, nchar(name_dropin) - 8) != " (edited)"){
+                dt_anameth_edit$Name[dt_anameth_edit$Category == "Drop-in data"] <- paste0(name_dropin, " (edited)")
+                dt_info_anameth[["Drop-in data"]][index_select] <- paste0(name_dropin, " (edited)")
+              }
             }
-          }
 
-          dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"] <- dt_edit_dropin$Value
+            dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"] <- dt_edit_dropin$Value
+          }
         }
 
         if(!is.null(input$dt_edit_sr)){
           dt_edit_sr <- hot_to_r(input$dt_edit_sr)
+          options(warn = -1)
+          dt_edit_sr[["Average BSR"]] <- as.numeric(dt_edit_sr[["Average BSR"]])
+          dt_edit_sr[["Average FSR"]] <- as.numeric(dt_edit_sr[["Average FSR"]])
+          dt_edit_sr[["Average DSR"]] <- as.numeric(dt_edit_sr[["Average DSR"]])
+          dt_edit_sr[["Average M2SR"]] <- as.numeric(dt_edit_sr[["Average M2SR"]])
+          options(warn = 0)
 
           # Change BSR = NA to BSR = 0
           tmp_bsr <- dt_edit_sr[["Average BSR"]]
@@ -797,18 +896,22 @@ anameth_server <- function(id, path_pack){
           dt_anameth_edit <- rbind(dt_anameth_edit[!is.element(dt_anameth_edit$Category, "SR")], dt_anameth_sr)
         }
 
-        write.csv(dt_anameth_edit, paste0(path_pack, "/extdata/anameth/", anameth_edit, ".csv"), row.names = FALSE)
-        rv_anameth$dt_info_anameth <- dt_info_anameth
+        rv_anameth$alart_anameth_edit <- alart_anameth_edit
 
-        # Reset reactive values for editing the analysis method
-        rv_anameth$dt_anameth_edit <- NULL
-        rv_anameth$anameth_edit <- NULL
-        rv_anameth$list_dt_average_sr_origin <- NULL
-        rv_anameth$list_dt_average_sr <- NULL
-        rv_anameth$dt_average_sr <- NULL
-        rv_anameth$current_mk <- NULL
+        if(length(alart_anameth_edit) == 0){
+          write.csv(dt_anameth_edit, paste0(path_pack, "/extdata/anameth/", anameth_edit, ".csv"), row.names = FALSE)
+          rv_anameth$dt_info_anameth <- dt_info_anameth
 
-        removeModal()
+          # Reset reactive values for editing the analysis method
+          rv_anameth$dt_anameth_edit <- NULL
+          rv_anameth$anameth_edit <- NULL
+          rv_anameth$list_dt_average_sr_origin <- NULL
+          rv_anameth$list_dt_average_sr <- NULL
+          rv_anameth$dt_average_sr <- NULL
+          rv_anameth$current_mk <- NULL
+
+          removeModal()
+        }
       })
 
       # --- Delete an analysis method --- #
