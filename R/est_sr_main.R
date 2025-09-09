@@ -887,5 +887,5 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
               "dt_result_est_m2sr" = dt_result_est_m2sr,
               "init_list_all_mk_m2sr" = init_list_all_mk_m2sr,
               "opt_list_all_mk_m2sr" = opt_list_all_mk_m2sr,
-              "dt_sr_data"))
+              "dt_sr_data" = dt_sr_data))
 }
