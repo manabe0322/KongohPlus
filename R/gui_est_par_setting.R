@@ -347,6 +347,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         dt_setting_est_par <- hot_to_r(input$dt_setting_est_par)
         list_dt_average_sr <- rv_est_par_setting$list_dt_average_sr
         name_kit_param <- rv_est_par_setting$name_kit_param
+        name_sr <- rv_est_par_setting$name_sr
         min_alpha <- rv_est_par_setting$min_alpha
         max_alpha <- rv_est_par_setting$max_alpha
         min_cv_allele <- rv_est_par_setting$min_cv_allele
