@@ -513,6 +513,7 @@ anameth_server <- function(id, path_pack){
         rv_anameth$list_dt_average_sr <- NULL
         rv_anameth$dt_average_sr <- NULL
         rv_anameth$current_mk <- NULL
+        rv_anameth$alart_anameth_edit <- character(0)
 
         removeModal()
       })
@@ -753,6 +754,7 @@ anameth_server <- function(id, path_pack){
         anameth_edit <- rv_anameth$anameth_edit
         index_select <- input$display_info_amameth_rows_selected
         dt_info_anameth <- rv_anameth$dt_info_anameth
+        bool_alart_anameth <- FALSE
         alart_anameth_edit <- rv_anameth$alart_anameth_edit
 
         if(!is.null(input$dt_edit_at)){
@@ -772,10 +774,8 @@ anameth_server <- function(id, path_pack){
           options(warn = 0)
 
           if(any(is.na(dt_edit_lsae$LSAE))){
-            alart_anameth_edit <- "Error: Some cells are not numeric!"
+            bool_alart_anameth <- TRUE
           }else{
-            alart_anameth_edit <- character(0)
-
             # Mark as edited when the LSAE parameters or gamma parameters are changed.
             if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"], 6) != round(dt_edit_lsae$LSAE, 6))){
               name_param <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"]
@@ -797,10 +797,8 @@ anameth_server <- function(id, path_pack){
           options(warn = 0)
 
           if(any(is.na(dt_edit_gamma$Value))){
-            alart_anameth_edit <- "Error: Some cells are not numeric!"
+            bool_alart_anameth <- TRUE
           }else{
-            alart_anameth_edit <- character(0)
-
             # Mark as edited when the LSAE parameters or gamma parameters are changed.
             if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"], 6) != round(dt_edit_gamma$Value, 6))){
               name_param <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"]
@@ -822,10 +820,8 @@ anameth_server <- function(id, path_pack){
           options(warn = 0)
 
           if(any(is.na(dt_edit_dropin$Value))){
-            alart_anameth_edit <- "Error: Some cells are not numeric!"
+            bool_alart_anameth <- TRUE
           }else{
-            alart_anameth_edit <- character(0)
-
             # Mark as edited when the drop-in parameters are changed.
             if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"], 6) != round(dt_edit_dropin$Value, 6))){
               name_dropin <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Drop-in data"]
@@ -891,7 +887,9 @@ anameth_server <- function(id, path_pack){
 
         rv_anameth$alart_anameth_edit <- alart_anameth_edit
 
-        if(length(alart_anameth_edit) == 0){
+        if(bool_alart_anameth){
+          rv_anameth$alart_anameth_edit <- "Error: Some cells are not numeric!"
+        }else{
           write.csv(dt_anameth_edit, paste0(path_pack, "/extdata/anameth/", anameth_edit, ".csv"), row.names = FALSE)
           rv_anameth$dt_info_anameth <- dt_info_anameth
 
@@ -902,6 +900,7 @@ anameth_server <- function(id, path_pack){
           rv_anameth$list_dt_average_sr <- NULL
           rv_anameth$dt_average_sr <- NULL
           rv_anameth$current_mk <- NULL
+          rv_anameth$alart_anameth_edit <- character(0)
 
           removeModal()
         }
