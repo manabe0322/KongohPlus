@@ -73,7 +73,7 @@ info_al_server <- function(id, path_pack){
           for(i in 1:n_mk){
             dt_kit_mk <- dt_kit[Marker == markers[i]]
             alleles <- dt_kit_mk[["Allele"]]
-            if(length(alleles) == 1 && alleles == ""){
+            if(length(alleles) == 1 && is.na(alleles)){
               list_dt_info_al[[i]] <- data.table("Allele" = character(0),
                                                  "Corrected Allele" = numeric(0),
                                                  "Size" = numeric(0))
@@ -121,6 +121,7 @@ info_al_server <- function(id, path_pack){
       observeEvent(input$allele_add, {
         if(rv_info_al$name_kit != ""){
           allele_add <- input$allele_add
+          select_marker <- input$select_marker
           select_chr <- rv_info_al$select_chr
           list_dt_info_al <- rv_info_al$list_dt_info_al
           dt_info_al <- list_dt_info_al[[select_marker]]
