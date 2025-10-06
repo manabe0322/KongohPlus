@@ -3,7 +3,7 @@ title: "Report"
 date: "`r Sys.Date()`"
 output: 
   pdf_document:
-    latex_engine: pdflatex
+    latex_engine: xelatex
     includes: null
     toc: false
     number_sections: false
@@ -16,16 +16,50 @@ params:
 
 ```{r setup, include = FALSE}
 library(knitr)
+library(kableExtra)
+library(dplyr) # for mutate
 
 dt_csp <- params$dt_csp
 ```
 
 ---
 
-## Summary
+# Summary
 
-### Crime stain profile
+## General Information
 
-```{r echo = FALSE, results='asis'}
-kable(dt_csp, format = "latex", booktabs = TRUE, caption = "Crime stain profile")
+```{r summary_general_info, echo = FALSE, results='asis'}
+df1 <- data.frame(a = c("Case Name", "User", "Date", "KongohPlus version"), 
+                  b = c("251006_test", "Sho Manabe", "2025-10-06", "0.21.6"))
+
+df1_short <- df1 %>%
+  mutate(b_display = ifelse(nchar(b) > 25, 
+                            paste0(substr(b, 1, 10), "...", substr(b, nchar(b) - 9, nchar(b))),
+                            b)) %>%
+  dplyr::select(a, b = b_display)
+
+k1 <- kable(df1_short, "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL,
+            escape = TRUE) %>%
+  kable_styling(latex_options = c("striped"), full_width = TRUE)
+
+k1
+```
+
+## Files
+
+```{r summary_file_info, echo = FALSE, results='asis'}
+df2 <- data.frame(a = c("Crime Stain Profile", "Reference Profile", "Allele frequency"), 
+                  b = c("cccccccccccccccccccccccccccccccccccccccccccccc_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.csv", "rrrrrrrrrrrrrrrrrrr.csv", "af.csv"))
+
+df2_short <- df2 %>%
+  mutate(b_display = ifelse(nchar(b) > 25, 
+                            paste0(substr(b, 1, 10), "...", substr(b, nchar(b) - 9, nchar(b))),
+                            b)) %>%
+  dplyr::select(a, b = b_display)
+
+k2 <- kable(df2_short, "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL,
+            escape = TRUE) %>%
+  kable_styling(latex_options = c("striped"), full_width = TRUE)
+
+k2
 ```
