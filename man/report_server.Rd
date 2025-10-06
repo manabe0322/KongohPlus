@@ -4,7 +4,7 @@
 \alias{report_server}
 \title{report_server}
 \usage{
-report_server(id, path_pack, rv_deconvo)
+report_server(id, path_pack, rv_deconvo, rv_lr)
 }
 \description{
 The function to create the server module for generating a report

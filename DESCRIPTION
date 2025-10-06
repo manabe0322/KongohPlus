@@ -1,7 +1,7 @@
 Package: KongohPlus
 Type: Package
 Title: Probabilistic genotyping software based on a quantitative continuous model
-Version: 0.21.5
+Version: 0.21.6
 Author: Sho Manabe <manabe.sho@kmu.ac.jp>
 Maintainer: Sho Manabe <manabe.sho@kmu.ac.jp>
 Description: Probabilistic genotyping software based on a quantitative continuous model.
@@ -20,10 +20,12 @@ Imports:
     ggplot2, 
     gridExtra, 
     gtools, 
+    knitr, 
     magrittr, 
     parallel, 
     Rcpp, 
     rhandsontable, 
+    rmarkdown, 
     shinyFeedback,
     shinyFiles, 
     shinyjs, 
