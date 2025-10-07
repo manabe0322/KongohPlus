@@ -1,6 +1,4 @@
 ---
-title: "Report"
-date: "`r Sys.Date()`"
 output: 
   pdf_document:
     latex_engine: xelatex
@@ -10,8 +8,23 @@ output:
     df_print: default
     keep_tex: true
     extra_dependencies: ["booktabs"]
+geometry: top=25mm,bottom=25mm,left=25mm,right=25mm
+documentclass: report
+fontsize: 12pt
+header-includes:
+  - \usepackage{fontspec}
+  - \setmainfont{Noto Sans}
+  - \setsansfont{Noto Sans}
+  - \setmonofont{Noto Sans}
+  - \usepackage[hidelinks]{hyperref}
+  - \setlength{\tabcolsep}{2mm}  # 表の列間のスペース
 params:
   dt_csp: NA
+  fn_csp: NA
+  dt_af: NA
+  fn_af: NA
+  data_hnc_list: NA
+  hnc_all: NA
 ---
 
 ```{r setup, include = FALSE}
@@ -20,13 +33,26 @@ library(kableExtra)
 library(dplyr) # for mutate
 
 dt_csp <- params$dt_csp
+fn_csp = params$fn_csp
+dt_af = params$dt_af
+fn_af = params$fn_af
+data_hnc_list = params$data_hnc_list
+hnc_all = params$hnc_all
 ```
 
----
+\begin{center}
+{\LARGE \textbf{Report}}
+\end{center}
 
-# Summary
+\vspace{1em}
 
-## General Information
+\hrule
+
+\vspace{1em}
+
+\section*{Summary}
+
+\subsection*{General Information}
 
 ```{r summary_general_info, echo = FALSE, results='asis'}
 df1 <- data.frame(a = c("Case Name", "User", "Date", "KongohPlus version"), 
@@ -38,28 +64,140 @@ df1_short <- df1 %>%
                             b)) %>%
   dplyr::select(a, b = b_display)
 
-k1 <- kable(df1_short, "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL,
-            escape = TRUE) %>%
-  kable_styling(latex_options = c("striped"), full_width = TRUE)
+k1 <- kable(
+  df1_short, 
+  format = "latex", 
+  booktabs = TRUE, 
+  row.names = FALSE, 
+  col.names = NULL,
+  escape = TRUE
+) %>%
+  kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
+  column_spec(1, width = "4.8cm") %>%
+  column_spec(2, width = "11cm")
 
 k1
 ```
 
-## Files
+\subsection*{Files}
 
 ```{r summary_file_info, echo = FALSE, results='asis'}
 df2 <- data.frame(a = c("Crime Stain Profile", "Reference Profile", "Allele frequency"), 
-                  b = c("cccccccccccccccccccccccccccccccccccccccccccccc_aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa.csv", "rrrrrrrrrrrrrrrrrrr.csv", "af.csv"))
+                  b = c(fn_csp, "rrrrrrrrrrrrrrrrrrr.csv", fn_af))
 
 df2_short <- df2 %>%
-  mutate(b_display = ifelse(nchar(b) > 25, 
+  mutate(b_display = ifelse(nchar(b) > 50, 
                             paste0(substr(b, 1, 10), "...", substr(b, nchar(b) - 9, nchar(b))),
                             b)) %>%
   dplyr::select(a, b = b_display)
 
-k2 <- kable(df2_short, "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL,
-            escape = TRUE) %>%
-  kable_styling(latex_options = c("striped"), full_width = TRUE)
+k2 <- kable(
+  df2_short, 
+  format = "latex", 
+  booktabs = TRUE, 
+  row.names = FALSE, 
+  col.names = NULL,
+  escape = TRUE, 
+  float = FALSE
+) %>%
+  kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
+  column_spec(1, width = "4.8cm") %>%
+  column_spec(2, width = "11cm")
 
 k2
+```
+
+\subsection*{Deconvolution}
+
+```{r summary_deconvo, echo = FALSE, results='asis'}
+
+for(i in 1:length(hnc_all)){
+  hnc <- hnc_all[i]
+  data_hnc <- data_hnc_list[[i]]
+  dt_param <- data_hnc$dt_param
+  dt_log10like <- data_hnc$dt_log10like
+  opt_list <- data_hnc$opt_list
+  
+  vec_temp <- rep(NA, 4)
+  vec_temp[1:hnc] <- round(dt_param[["Estimated value"]][dt_param[["Parameter"]] == "Template amount"], 2)
+  
+  vec_mp <- rep(NA, 4)
+  vec_mp[1:hnc] <- round(vec_temp[1:hnc] / sum(vec_temp[1:hnc]), 4)
+  
+  vec_deg <- rep(NA, 4)
+  vec_deg[1:hnc] <- round(dt_param[["Estimated value"]][dt_param[["Parameter"]] == "Degradation"], 4)
+  
+  vec_temp[is.na(vec_temp)] <- "-"
+  vec_mp[is.na(vec_mp)] <- "-"
+  vec_deg[is.na(vec_deg)] <- "-"
+  
+  df_param_display <- as.data.frame(cbind(c("Template amount", "Mixture proportion", "Degradation"), rbind(vec_temp, vec_mp, vec_deg)))
+  names(df_param_display) <- c("", "U1", "U2", "U3", "U4")
+  
+  
+  vec_rep <- round(dt_param[["Estimated value"]][dt_param[["Parameter"]] == "Replicate amplification efficiency"], 2)
+  df_rep_display <- data.frame(a = paste0("Replicate amplification efficiency ", 1:length(vec_rep)), 
+                               b = vec_rep)
+  
+  num_attempt <- length(opt_list)
+  if(length(opt_list) == 1){
+    count_solution <- 1
+  }else{
+    current_score <- round(opt_list[[1]]$value, 3)
+    count_solution <- 1
+    for(i in 2:length(opt_list)){
+      new_score <- round(opt_list[[i]]$value, 3)
+      
+      if(new_score < current_score){
+        current_score <- new_score
+        count_solution <- 1
+      }else if(new_score == current_score){
+        count_solution <- count_solution + 1
+      }
+    }
+  }
+  
+  log10like <- as.character(round(dt_log10like[["Log10_Likelihood"]][dt_log10like[["Marker"]] == "Overall"], 2))
+  num_attempt <- as.character(num_attempt)
+  count_solution <- as.character(count_solution)
+  
+  df_convergence_display <- data.frame(a = c("log10(likelihood)", "No. MLE attempts", "No. acceptances"), 
+                                       b = c(log10like, num_attempt, count_solution))
+  
+  cat(sprintf("\\subsubsection*{Number of contributors: %s}\n", hnc))
+  
+  print(
+    kable(df_param_display, format = "latex", booktabs = TRUE, row.names = FALSE) %>%
+      kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
+      column_spec(1, width = "4.8cm") %>%
+      column_spec(2, width = "2.4cm") %>%
+      column_spec(3, width = "2.4cm") %>%
+      column_spec(4, width = "2.4cm") %>%
+      column_spec(5, width = "2.4cm")
+  )
+
+  cat("\n\n") # space between tables
+  
+  cat(c("\\begin{table}[!htb]
+    \\begin{minipage}[t]{.6\\linewidth}
+      \\centering
+      \\vspace{0pt}",
+        kable(df_rep_display, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL) %>%
+          kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
+          column_spec(1, width = "6.6cm") %>%
+          column_spec(2, width = "1.8cm"),
+    "\\end{minipage}%
+    \\begin{minipage}[t]{.4\\linewidth}
+      \\centering
+      \\vspace{0pt}",
+        kable(df_convergence_display, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL) %>%
+          kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
+          column_spec(1, width = "4.4cm") %>%
+          column_spec(2, width = "1.8cm"),
+    "\\end{minipage} 
+  \\end{table}"
+  ))
+  
+  cat("\n\n") # space between tables
+}
 ```
