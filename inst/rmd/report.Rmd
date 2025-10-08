@@ -38,6 +38,7 @@ dt_af = params$dt_af
 fn_af = params$fn_af
 data_hnc_list = params$data_hnc_list
 hnc_all = params$hnc_all
+dt_lr_calc_record = params$dt_lr_calc_record
 ```
 
 \begin{center}
@@ -201,3 +202,19 @@ for(i in 1:length(hnc_all)){
   cat("\n\n") # space between tables
 }
 ```
+
+\subsection*{LR}
+
+```{r summary_lr, echo = FALSE, results='asis'}
+
+if(!is.null(lr_list)){
+  cat("\\subsection*{LR}")
+  
+  kable(dt_lr_calc_record, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL) %>%
+          kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
+          column_spec(1, width = "5.3cm") %>%
+          column_spec(2, width = "5.3cm") %>%
+          column_spec(3, width = "3.6cm")
+}
+```
+
