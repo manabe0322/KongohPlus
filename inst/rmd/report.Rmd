@@ -10,7 +10,7 @@ output:
     extra_dependencies: ["booktabs"]
 geometry: top=25mm,bottom=25mm,left=25mm,right=25mm
 documentclass: report
-fontsize: 12pt
+fontsize: 10pt
 header-includes:
   - \usepackage{fontspec}
   - \setmainfont{Noto Sans}
@@ -23,8 +23,13 @@ params:
   fn_csp: NA
   dt_af: NA
   fn_af: NA
+  fn_anameth: NA
   data_hnc_list: NA
+  dt_ignore_mk: NA
   hnc_all: NA
+  theta: NA
+  dt_lr_calc_record: NA
+  lr_list: NA
 ---
 
 ```{r setup, include = FALSE}
@@ -36,9 +41,13 @@ dt_csp <- params$dt_csp
 fn_csp = params$fn_csp
 dt_af = params$dt_af
 fn_af = params$fn_af
+fn_anameth = params$fn_anameth
 data_hnc_list = params$data_hnc_list
+dt_ignore_mk = params$dt_ignore_mk
 hnc_all = params$hnc_all
+theta = params$theta
 dt_lr_calc_record = params$dt_lr_calc_record
+lr_list = params$lr_list
 ```
 
 \begin{center}
@@ -106,6 +115,65 @@ k2 <- kable(
   column_spec(2, width = "11cm")
 
 k2
+```
+
+\subsection*{Setting}
+
+```{r summary_setting, echo = FALSE, results='asis'}
+
+# ---- Create text data for ignored markers ---- #
+
+ignored_mk_display_list <- list()
+ignored_markers <- dt_ignore_mk$Marker[dt_ignore_mk$Ignore]
+if(length(ignored_markers) == 0){
+  ignored_mk_display_list[[1]] <- "-"
+}else{
+  ignored_mk_display <- paste0(ignored_markers, collapse = ", ")
+  if(nchar(ignored_mk_display) > 50){
+    txt_tmp <- ""
+    count <- 1
+    bool_remain <- FALSE
+    for(i in 1:length(ignored_markers)){
+      txt_tmp_new <- paste0(txt_tmp, ignored_markers[i], ", ")
+      if(nchar(txt_tmp_new) > 50){
+        ignored_mk_display_list[[count]] <- txt_tmp
+        txt_tmp <- paste0(ignored_markers[i], ", ")
+        count <- count + 1
+        bool_remain <- FALSE
+      }else{
+        txt_tmp <- txt_tmp_new
+        bool_remain <- TRUE
+      }
+    }
+    if(bool_remain){
+      ignored_mk_display_list[[count]] <- substr(txt_tmp_new, 1, nchar(txt_tmp_new) - 2)
+    }else{
+      ignored_mk_display_list[[count - 1]] <- substr(ignored_mk_display_list[[count - 1]], 1, nchar(ignored_mk_display_list[[count - 1]]) - 2)
+    }
+  }else{
+    ignored_mk_display_list[[1]] <- ignored_mk_display
+  }
+}
+
+# ---- Create displayed data.frame ---- #
+
+n_row_ignored_mk <- length(ignored_mk_display_list)
+mat_setting <- matrix("", 2 + n_row_ignored_mk, 2)
+mat_setting[, 1] <- c("Analysis method", "Theta", rep("Ignored markers", n_row_ignored_mk))
+mat_setting[1, 2] <- fn_anameth
+mat_setting[2, 2] <- theta
+for(i in 1:n_row_ignored_mk){
+  mat_setting[2 + i, 2] <- ignored_mk_display_list[[i]]
+}
+df_setting <- as.data.frame(mat_setting)
+
+# ---- Display data.table ---- #
+
+print(kable(df_setting, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE) %>%
+        kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
+        column_spec(1, width = "4.8cm") %>%
+        column_spec(2, width = "11cm")
+      )
 ```
 
 \subsection*{Deconvolution}
@@ -176,25 +244,23 @@ for(i in 1:length(hnc_all)){
       column_spec(4, width = "2.4cm") %>%
       column_spec(5, width = "2.4cm")
   )
-
-  cat("\n\n") # space between tables
   
   cat(c("\\begin{table}[!htb]
-    \\begin{minipage}[t]{.6\\linewidth}
+    \\begin{minipage}[t]{.5\\linewidth}
       \\centering
       \\vspace{0pt}",
         kable(df_rep_display, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL) %>%
           kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
-          column_spec(1, width = "6.6cm") %>%
-          column_spec(2, width = "1.8cm"),
+          column_spec(1, width = "5.8cm") %>%
+          column_spec(2, width = "1.6cm"),
     "\\end{minipage}%
-    \\begin{minipage}[t]{.4\\linewidth}
+    \\begin{minipage}[t]{.5\\linewidth}
       \\centering
       \\vspace{0pt}",
         kable(df_convergence_display, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL) %>%
           kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
-          column_spec(1, width = "4.4cm") %>%
-          column_spec(2, width = "1.8cm"),
+          column_spec(1, width = "5.8cm") %>%
+          column_spec(2, width = "1.6cm"),
     "\\end{minipage} 
   \\end{table}"
   ))

@@ -151,7 +151,6 @@ KongohPlus <- function(num_threads = NULL){
       req(rv_hd_true_random)
       req(rv_hd_true_importance)
       save_proj_server("save_proj", rv_deconvo, rv_lr, rv_hd_true_random, rv_hd_true_importance)
-      report_server("report", path_pack, rv_deconvo)
     })
   }
 

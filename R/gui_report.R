@@ -21,9 +21,13 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
       rv_report$fn_csp <- NULL
       rv_report$dt_af <- NULL
       rv_report$fn_af <- NULL
+      rv_report$fn_anameth <- NULL
       rv_report$data_hnc_list <- NULL
+      rv_report$dt_ignore_mk <- NULL
       rv_report$hnc_all <- NULL
+      rv_report$theta <- NULL
       rv_report$dt_lr_calc_record <- NULL
+      rv_report$lr_list <- NULL
 
       observe({
         req(rv_deconvo)
@@ -34,17 +38,19 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
           rv_report$fn_csp <- data_deconvo$fn_csp
           rv_report$dt_af <- data_deconvo$dt_af
           rv_report$fn_af <- data_deconvo$fn_af
+          rv_report$fn_anameth <- data_deconvo$fn_anameth
           rv_report$data_hnc_list <- data_deconvo$data_hnc_list
+          rv_report$dt_ignore_mk <- data_deconvo$dt_ignore_mk
           rv_report$hnc_all <- data_deconvo$hnc_all
+          rv_report$theta <- data_deconvo$theta
         }
       })
 
       observe({
         req(rv_lr)
 
-        if(!is.null(data_lr)){
-          rv_report$dt_lr_calc_record <- rv_lr$dt_lr_calc_record
-        }
+        rv_report$dt_lr_calc_record <- rv_lr$dt_lr_calc_record
+        rv_report$lr_list <- rv_lr$lr_list
       })
 
       output$download_report <- downloadHandler(
@@ -62,9 +68,13 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
               fn_csp = rv_report$fn_csp,
               dt_af = rv_report$dt_af,
               fn_af = rv_report$fn_af,
+              fn_anameth = rv_report$fn_anameth,
               data_hnc_list = rv_report$data_hnc_list,
+              dt_ignore_mk = rv_report$dt_ignore_mk,
               hnc_all = rv_report$hnc_all,
-              dt_lr_calc_record = rv_report$dt_lr_calc_record
+              theta = rv_report$theta,
+              dt_lr_calc_record = rv_report$dt_lr_calc_record,
+              lr_list = rv_report$lr_list
             ),
             envir = new.env(parent = globalenv())
           )
