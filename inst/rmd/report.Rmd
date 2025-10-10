@@ -122,11 +122,10 @@ names(df_info) <- c("a", "b")
 
 # ---- Display the created data.table ---- #
 
-print(kable(df_info, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE) %>%
-        kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
-        column_spec(1, width = "4.8cm") %>%
-        column_spec(2, width = "11cm")
-      )
+kable(df_info, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "") %>%
+  kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
+  column_spec(1, width = "4.8cm") %>%
+  column_spec(2, width = "11cm")
 ```
 
 \subsection*{Deconvolution}
@@ -188,21 +187,22 @@ for(i in 1:length(hnc_all)){
   
   cat(sprintf("\\subsubsection*{Number of contributors: %s}\n", hnc))
   
-  print(
-    kable(df_param_display, format = "latex", booktabs = TRUE, row.names = FALSE) %>%
-      kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
-      column_spec(1, width = "4.8cm") %>%
-      column_spec(2, width = "2.4cm") %>%
-      column_spec(3, width = "2.4cm") %>%
-      column_spec(4, width = "2.4cm") %>%
-      column_spec(5, width = "2.4cm")
+  print(kable(df_param_display, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
+          kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
+          column_spec(1, width = "4.8cm") %>%
+          column_spec(2, width = "2.4cm") %>%
+          column_spec(3, width = "2.4cm") %>%
+          column_spec(4, width = "2.4cm") %>%
+          column_spec(5, width = "2.4cm")
   )
+  
+  cat("\\vspace{-3em}\n")
   
   cat(c("\\begin{table}[!htb]
     \\begin{minipage}[t]{.5\\linewidth}
       \\centering
       \\vspace{0pt}",
-        kable(df_rep_display, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL) %>%
+        kable(df_rep_display, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "") %>%
           kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
           column_spec(1, width = "5.8cm") %>%
           column_spec(2, width = "1.6cm"),
@@ -210,7 +210,7 @@ for(i in 1:length(hnc_all)){
     \\begin{minipage}[t]{.5\\linewidth}
       \\centering
       \\vspace{0pt}",
-        kable(df_convergence_display, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL) %>%
+        kable(df_convergence_display, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "") %>%
           kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
           column_spec(1, width = "5.8cm") %>%
           column_spec(2, width = "1.6cm"),
