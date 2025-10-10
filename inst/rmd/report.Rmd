@@ -62,64 +62,7 @@ lr_list = params$lr_list
 
 \section*{Summary}
 
-\subsection*{General Information}
-
-```{r summary_general_info, echo = FALSE, results='asis'}
-df1 <- data.frame(a = c("Case Name", "User", "Date", "KongohPlus version"), 
-                  b = c("251006_test", "Sho Manabe", "2025-10-06", "0.21.6"))
-
-df1_short <- df1 %>%
-  mutate(b_display = ifelse(nchar(b) > 25, 
-                            paste0(substr(b, 1, 10), "...", substr(b, nchar(b) - 9, nchar(b))),
-                            b)) %>%
-  dplyr::select(a, b = b_display)
-
-k1 <- kable(
-  df1_short, 
-  format = "latex", 
-  booktabs = TRUE, 
-  row.names = FALSE, 
-  col.names = NULL,
-  escape = TRUE
-) %>%
-  kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
-  column_spec(1, width = "4.8cm") %>%
-  column_spec(2, width = "11cm")
-
-k1
-```
-
-\subsection*{Files}
-
-```{r summary_file_info, echo = FALSE, results='asis'}
-df2 <- data.frame(a = c("Crime Stain Profile", "Reference Profile", "Allele frequency"), 
-                  b = c(fn_csp, "rrrrrrrrrrrrrrrrrrr.csv", fn_af))
-
-df2_short <- df2 %>%
-  mutate(b_display = ifelse(nchar(b) > 50, 
-                            paste0(substr(b, 1, 10), "...", substr(b, nchar(b) - 9, nchar(b))),
-                            b)) %>%
-  dplyr::select(a, b = b_display)
-
-k2 <- kable(
-  df2_short, 
-  format = "latex", 
-  booktabs = TRUE, 
-  row.names = FALSE, 
-  col.names = NULL,
-  escape = TRUE, 
-  float = FALSE
-) %>%
-  kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
-  column_spec(1, width = "4.8cm") %>%
-  column_spec(2, width = "11cm")
-
-k2
-```
-
-\subsection*{Setting}
-
-```{r summary_setting, echo = FALSE, results='asis'}
+```{r summary_top, echo = FALSE, results='asis'}
 
 # ---- Create text data for ignored markers ---- #
 
@@ -155,21 +98,31 @@ if(length(ignored_markers) == 0){
   }
 }
 
-# ---- Create displayed data.frame ---- #
+# ---- Create the data.frame for general information and settings ---- #
 
 n_row_ignored_mk <- length(ignored_mk_display_list)
-mat_setting <- matrix("", 2 + n_row_ignored_mk, 2)
-mat_setting[, 1] <- c("Analysis method", "Theta", rep("Ignored markers", n_row_ignored_mk))
-mat_setting[1, 2] <- fn_anameth
-mat_setting[2, 2] <- theta
+mat_info <- matrix("", 9 + n_row_ignored_mk, 2)
+mat_info[, 1] <- c("Case Name", "User", "Date", "KongohPlus version", 
+                      "Crime Stain Profile", "Reference Profile", "Allele frequency", 
+                      "Analysis method", "Theta", rep("Ignored markers", n_row_ignored_mk))
+mat_info[1, 2] <- "251006_test"
+mat_info[2, 2] <- "Sho Manabe"
+mat_info[3, 2] <- "2025-10-06"
+mat_info[4, 2] <- "0.21.6"
+mat_info[5, 2] <- fn_csp
+mat_info[6, 2] <- "rrrrrrrrrrrrrrrrrrr.csv"
+mat_info[7, 2] <- fn_af
+mat_info[8, 2] <- fn_anameth
+mat_info[9, 2] <- theta
 for(i in 1:n_row_ignored_mk){
-  mat_setting[2 + i, 2] <- ignored_mk_display_list[[i]]
+  mat_info[9 + i, 2] <- ignored_mk_display_list[[i]]
 }
-df_setting <- as.data.frame(mat_setting)
+df_info <- as.data.frame(mat_info)
+names(df_info) <- c("a", "b")
 
-# ---- Display data.table ---- #
+# ---- Display the created data.table ---- #
 
-print(kable(df_setting, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE) %>%
+print(kable(df_info, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE) %>%
         kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
         column_spec(1, width = "4.8cm") %>%
         column_spec(2, width = "11cm")
