@@ -103,7 +103,7 @@ if(length(ignored_markers) == 0){
 n_row_ignored_mk <- length(ignored_mk_display_list)
 mat_info <- matrix("", 9 + n_row_ignored_mk, 2)
 mat_info[, 1] <- c("Case Name", "User", "Date", "KongohPlus version", 
-                      "Crime Stain Profile", "Reference Profile", "Allele frequency", 
+                      "Crime stain profile", "Reference profile", "Allele frequency", 
                       "Analysis method", "Theta", rep("Ignored markers", n_row_ignored_mk))
 mat_info[1, 2] <- "251006_test"
 mat_info[2, 2] <- "Sho Manabe"
@@ -157,8 +157,9 @@ for(i in 1:length(hnc_all)){
   
   
   vec_rep <- round(dt_param[["Estimated value"]][dt_param[["Parameter"]] == "Replicate amplification efficiency"], 2)
-  df_rep_display <- data.frame(a = paste0("Replicate amplification efficiency ", 1:length(vec_rep)), 
-                               b = vec_rep)
+  df_rep_display <- data.frame("Replicate" = as.character(1:length(vec_rep)), 
+                               "Amplification efficiency" = as.character(vec_rep), 
+                               check.names = FALSE)
   
   num_attempt <- length(opt_list)
   if(length(opt_list) == 1){
@@ -196,23 +197,23 @@ for(i in 1:length(hnc_all)){
           column_spec(5, width = "2.4cm")
   )
   
-  cat("\\vspace{-3em}\n")
+  cat("\\vspace{-2em}\n")
   
   cat(c("\\begin{table}[!htb]
     \\begin{minipage}[t]{.5\\linewidth}
       \\centering
       \\vspace{0pt}",
-        kable(df_rep_display, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "") %>%
+        kable(df_rep_display, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
           kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
-          column_spec(1, width = "5.8cm") %>%
-          column_spec(2, width = "1.6cm"),
+          column_spec(1, width = "3.1cm") %>%
+          column_spec(2, width = "4.1cm"), 
     "\\end{minipage}%
     \\begin{minipage}[t]{.5\\linewidth}
       \\centering
       \\vspace{0pt}",
         kable(df_convergence_display, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "") %>%
           kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
-          column_spec(1, width = "5.8cm") %>%
+          column_spec(1, width = "5.6cm") %>%
           column_spec(2, width = "1.6cm"),
     "\\end{minipage} 
   \\end{table}"
@@ -222,14 +223,12 @@ for(i in 1:length(hnc_all)){
 }
 ```
 
-\subsection*{LR}
-
 ```{r summary_lr, echo = FALSE, results='asis'}
 
 if(!is.null(lr_list)){
   cat("\\subsection*{LR}")
   
-  kable(dt_lr_calc_record, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL) %>%
+  kable(dt_lr_calc_record, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
           kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
           column_spec(1, width = "5.3cm") %>%
           column_spec(2, width = "5.3cm") %>%
@@ -237,3 +236,20 @@ if(!is.null(lr_list)){
 }
 ```
 
+\clearpage
+
+```{r pg, echo = FALSE, results='asis'}
+
+```
+
+```{r csp, echo = FALSE, results='asis'}
+
+```
+
+```{r ref, echo = FALSE, results='asis'}
+
+```
+
+```{r af, echo = FALSE, results='asis'}
+
+```
