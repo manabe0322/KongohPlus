@@ -5,6 +5,28 @@ report_ui <- function(id){
   ns <- NS(id)
 
   tabPanel("Report",
+           useWaiter(),
+           fluidRow(
+             column(
+               4,
+               textInput(ns("case_name"), label = h4("Case name")),
+               textInput(ns("user_name"), label = h4("User name"))
+             ),
+             column(
+               4,
+               h4("Probabilistic genotyping"),
+               br(),
+               radioButtons(ns("radio_gt"), label = "Candidate genotypes to be listed per marker",
+                            choices = c("Top X genotypes" = "radio_gt_top",
+                                        "Probability greater than Y" = "radio_gt_prob",
+                                        "All" = "radio_gt_all")),
+               numericInput(ns("gt_x"), label = "X", value = 20),
+               numericInput(ns("gt_y"), label = "Y", value = 0.01)
+             ),
+             column(
+               4
+             )
+           ),
            downloadButton(ns("download_report"), "Report")
   )
 }
@@ -64,6 +86,8 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
             input = report_tmp,
             output_file = file,
             params = list(
+              case_name = input$case_name,
+              user_name = input$user_name,
               dt_csp = rv_report$dt_csp,
               fn_csp = rv_report$fn_csp,
               dt_af = rv_report$dt_af,

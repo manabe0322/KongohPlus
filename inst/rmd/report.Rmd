@@ -19,6 +19,8 @@ header-includes:
   - \usepackage[hidelinks]{hyperref}
   - \setlength{\tabcolsep}{2mm}  # 表の列間のスペース
 params:
+  case_name: NA
+  user_name: NA
   dt_csp: NA
   fn_csp: NA
   dt_af: NA
@@ -37,17 +39,19 @@ library(knitr)
 library(kableExtra)
 library(dplyr) # for mutate
 
+case_name <- params$case_name
+user_name <- params$user_name
 dt_csp <- params$dt_csp
-fn_csp = params$fn_csp
-dt_af = params$dt_af
-fn_af = params$fn_af
-fn_anameth = params$fn_anameth
-data_hnc_list = params$data_hnc_list
-dt_ignore_mk = params$dt_ignore_mk
-hnc_all = params$hnc_all
-theta = params$theta
-dt_lr_calc_record = params$dt_lr_calc_record
-lr_list = params$lr_list
+fn_csp <- params$fn_csp
+dt_af <- params$dt_af
+fn_af <- params$fn_af
+fn_anameth <- params$fn_anameth
+data_hnc_list <- params$data_hnc_list
+dt_ignore_mk <- params$dt_ignore_mk
+hnc_all <- params$hnc_all
+theta <- params$theta
+dt_lr_calc_record <- params$dt_lr_calc_record
+lr_list <- params$lr_list
 ```
 
 \begin{center}
@@ -105,8 +109,8 @@ mat_info <- matrix("", 9 + n_row_ignored_mk, 2)
 mat_info[, 1] <- c("Case Name", "User", "Date", "KongohPlus version", 
                       "Crime stain profile", "Reference profile", "Allele frequency", 
                       "Analysis method", "Theta", rep("Ignored markers", n_row_ignored_mk))
-mat_info[1, 2] <- "251006_test"
-mat_info[2, 2] <- "Sho Manabe"
+mat_info[1, 2] <- case_name
+mat_info[2, 2] <- user_name
 mat_info[3, 2] <- "2025-10-06"
 mat_info[4, 2] <- "0.21.6"
 mat_info[5, 2] <- fn_csp
