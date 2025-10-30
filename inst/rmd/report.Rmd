@@ -26,12 +26,17 @@ params:
   dt_af: NA
   fn_af: NA
   fn_anameth: NA
+  markers_use: NA
   data_hnc_list: NA
   dt_ignore_mk: NA
   hnc_all: NA
   theta: NA
+  dt_ref: NA
   dt_lr_calc_record: NA
   lr_list: NA
+  radio_gt: NA
+  gt_x: NA
+  gt_y: NA
 ---
 
 ```{r setup, include = FALSE}
@@ -46,12 +51,17 @@ fn_csp <- params$fn_csp
 dt_af <- params$dt_af
 fn_af <- params$fn_af
 fn_anameth <- params$fn_anameth
+markers_use <- params$markers_use
 data_hnc_list <- params$data_hnc_list
 dt_ignore_mk <- params$dt_ignore_mk
 hnc_all <- params$hnc_all
 theta <- params$theta
+dt_ref <- params$dt_ref
 dt_lr_calc_record <- params$dt_lr_calc_record
 lr_list <- params$lr_list
+radio_gt <- params$radio_gt
+gt_x <- params$gt_x
+gt_y <- params$gt_y
 ```
 
 \begin{center}
@@ -242,18 +252,195 @@ if(!is.null(lr_list)){
 
 \clearpage
 
-```{r pg, echo = FALSE, results='asis'}
+\section*{Probabilistic genotyping (per combination)}
 
+```{r pg_per_comb, echo = FALSE, results='asis'}
+
+n_mk_use <- length(markers_use)
+
+for(i in 1:length(hnc_all)){
+  hnc <- hnc_all[i]
+  data_hnc <- data_hnc_list[[i]]
+  dt_pg_list <- data_hnc$dt_pg_list
+  
+  cat(sprintf("\\subsection*{Number of contributors: %s}\n", hnc))
+  
+  for(j in 1:n_mk_use){
+    mk <- markers_use[j]
+    dt_pg_per_comb <- dt_pg_list[[mk]]
+    
+    if(radio_gt == "radio_gt_top"){
+      if(nrow(dt_pg_per_comb) > gt_x){
+        dt_pg_per_comb <- dt_pg_per_comb[1:gt_x,]
+      }
+    }
+    
+    else if(radio_gt == "radio_gt_prob"){
+      dt_pg_per_comb <- dt_pg_per_comb[dt_pg_per_comb$Probability >= gt_y]
+    }
+    
+    dt_pg_per_comb <- dt_pg_per_comb[, which(is.element(names(dt_pg_per_comb), c(paste0("U", 1:hnc), "Probability"))), with = FALSE]
+    
+    cat(sprintf("\\subsubsection*{%s}\n", mk))
+    
+    kable(dt_pg_per_comb, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
+      kable_styling(latex_options = c("HOLD_position"), full_width = FALSE)
+  }
+}
 ```
+
+\clearpage
+
+\section*{Probabilistic genotyping (per contributor)}
+
+```{r pg_per_contrib, echo = FALSE, results='asis'}
+
+aggregate_pg_contrib <- function(dt_pg, contrib){
+  aggregated_data <- dt_pg %>%
+    group_by_at(which(names(dt_pg) == contrib)) %>%
+    summarise(Probability = sum(Probability))
+  aggregated_data <- aggregated_data %>%
+    arrange(desc(Probability))
+  return(aggregated_data)
+}
+
+n_mk_use <- length(markers_use)
+
+for(i in 1:length(hnc_all)){
+  hnc <- hnc_all[i]
+  data_hnc <- data_hnc_list[[i]]
+  dt_pg_list <- data_hnc$dt_pg_list
+  
+  for(j in 1:hnc){
+    
+    dt_pg_per_contrib_all <- NULL
+    
+    for(k in 1:n_mk_use){
+      mk <- markers_use[j]
+      dt_pg_per_contrib <- aggregate_pg_contrib(dt_pg_list[[mk]], paste0("U", j))
+      
+      if(radio_gt == "radio_gt_top"){
+        if(nrow(dt_pg_per_contrib) > gt_x){
+          dt_pg_per_contrib <- dt_pg_per_contrib[1:gt_x]
+        }
+      }
+      
+      else if(radio_gt == "radio_gt_prob"){
+        dt_pg_per_contrib <- dt_pg_per_contrib[dt_pg_per_contrib$Probability >= gt_y]
+      }
+      
+      col_mk <- rep("", nrow(dt_pg_per_contrib))
+      col_mk[1] <- mk
+      
+      dt_pg_per_contrib <- cbind(col_mk, dt_pg_per_contrib)
+      names(dt_pg_per_contrib)[1] <- "Marker"
+    }
+  }
+}
+```
+
+\clearpage
+
+\section*{Crime stain profile}
 
 ```{r csp, echo = FALSE, results='asis'}
 
+# --- Create output table for csp --- #
+name_dt_csp <- names(dt_csp)
+mat_alleles <- as.matrix(dt_csp[, grep("Allele", name_dt_csp), with = FALSE])
+mat_heights <- as.matrix(dt_csp[, grep("Height", name_dt_csp), with = FALSE])
+n_row <- nrow(mat_alleles)
+paste_alleles <- rep(NA, n_row)
+paste_heights <- rep(NA, n_row)
+for(i in 1:n_row){
+  alleles_mk <- mat_alleles[i, ]
+  alleles_mk <- alleles_mk[!is.na(alleles_mk)]
+  if(length(alleles_mk) != 0){
+    paste_alleles[i] <- paste0(alleles_mk, collapse = ", ")
+  }
+
+  heights_mk <- mat_heights[i, ]
+  heights_mk <- heights_mk[!is.na(heights_mk)]
+  if(length(heights_mk) != 0){
+    paste_heights[i] <- paste0(heights_mk, collapse = ", ")
+  }
+}
+
+dt_csp_display <- data.table(SampleName = factor(dt_csp$SampleName, levels = unique(dt_csp$SampleName), labels = unique(dt_csp$SampleName)),
+                             Marker = factor(dt_csp$Marker, levels = unique(dt_csp$Marker), labels = unique(dt_csp$Marker)),
+                             Allele = paste_alleles,
+                             Height = paste_heights)
+
+kable(dt_csp_display, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
+  kable_styling(latex_options = c("HOLD_position"), full_width = FALSE)
 ```
 
 ```{r ref, echo = FALSE, results='asis'}
 
+if(!is.null(dt_ref)){
+  dt_ref_display <- NULL
+  samples <- unique(dt_ref$SampleName)
+  n_sample <- length(samples)
+  for(i in 1:n_sample){
+    dt_tmp <- dt_ref[dt_ref$SampleName == samples[i]]
+
+    gts <- rep(NA, nrow(dt_tmp))
+    for(j in 1:nrow(dt_tmp)){
+      gt1 <- c(dt_tmp$Allele1[j], dt_tmp$Allele2[j])
+      gt1 <- gt1[!is.na(gt1)]
+      gts[j] <- paste0(gt1, collapse = ", ")
+    }
+
+    dt_tmp2 <- data.table(Marker = dt_tmp$Marker,
+                          Gt = gts)
+    names(dt_tmp2) <- c("Marker", samples[i])
+
+    if(i == 1){
+      dt_ref_display <- dt_tmp2
+    }else{
+      dt_ref_display <- full_join(dt_ref_display, dt_tmp2, by = c("Marker"))
+    }
+  }
+  
+  cat("\\section*{Reference profile}")
+  
+  kable(dt_ref_display, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
+    kable_styling(latex_options = c("HOLD_position"), full_width = FALSE)
+}
 ```
 
 ```{r af, echo = FALSE, results='asis'}
+
+```
+
+```{r test, echo = FALSE, results='asis'}
+
+# データ例
+df <- data.frame(
+  Marker = c(rep("D3S1358", 3), rep("vWA", 2), rep("FGA", 4)),
+  Genotype = c("15,16", "14,16", "15,17", "16,18", "15,17", "21,22", "20,23", "21,23", "22,23"),
+  Probability = c(0.45, 0.35, 0.20, 0.60, 0.40, 0.30, 0.25, 0.25, 0.20)
+)
+
+# Markerごとに行数を特定
+marker_groups <- df %>%
+  mutate(row = row_number()) %>%
+  group_by(Marker) %>%
+  summarise(start = min(row), end = max(row))
+
+# kable作成
+k <- kable(df %>% select(-Marker), "latex", booktabs = TRUE, longtable = FALSE, align = "lcc")
+
+# group_rows()で区切り線を追加
+for (i in seq_len(nrow(marker_groups))) {
+  k <- k %>%
+    group_rows(
+      group_label = marker_groups$Marker[i],
+      start_row = marker_groups$start[i],
+      end_row = marker_groups$end[i]
+    )
+}
+
+k %>% kable_styling(full_width = FALSE, position = "center")
 
 ```
