@@ -87,52 +87,39 @@ file_server <- function(id, session_top, bool_load_proj){
 
       # --- Display crime stain profiles --- #
 
-      output$dt_csp <- renderDataTable({
+      output$dt_csp <- renderDT({
         dt_csp <- rv_input$dt_csp
 
         if(!is.null(dt_csp)){
-          name_dt_csp <- names(dt_csp)
-
-          mat_alleles <- as.matrix(dt_csp[, grep("Allele", name_dt_csp), with = FALSE])
-          mat_heights <- as.matrix(dt_csp[, grep("Height", name_dt_csp), with = FALSE])
-          n_row <- nrow(mat_alleles)
-          paste_alleles <- rep(NA, n_row)
-          paste_heights <- rep(NA, n_row)
-          for(i in 1:n_row){
-            alleles_mk <- mat_alleles[i, ]
-            alleles_mk <- alleles_mk[!is.na(alleles_mk)]
-            if(length(alleles_mk) != 0){
-              paste_alleles[i] <- paste0(alleles_mk, collapse = ", ")
-            }
-
-            heights_mk <- mat_heights[i, ]
-            heights_mk <- heights_mk[!is.na(heights_mk)]
-            if(length(heights_mk) != 0){
-              paste_heights[i] <- paste0(heights_mk, collapse = ", ")
-            }
-          }
-
-          dt_csp_display <- data.table(SampleName = factor(dt_csp$SampleName, levels = unique(dt_csp$SampleName), labels = unique(dt_csp$SampleName)),
-                                       Marker = factor(dt_csp$Marker, levels = unique(dt_csp$Marker), labels = unique(dt_csp$Marker)),
-                                       Allele = paste_alleles,
-                                       Height = paste_heights)
-
-
-          index_sn <- which(name_dt_csp == "SampleName") - 1
-          index_mk <- which(name_dt_csp == "Marker") - 1
-          index_num <- setdiff(0:(ncol(dt_csp) - 1), c(index_sn, index_mk))
+          dt_display_csp <- create_dt_display_csp(dt_csp)
+          sn_csp_all <- unique(dt_csp[, SampleName])
+          n_rep <- length(sn_csp_all)
+          group_names <- paste0("Replicate", 1:n_rep, ": ", sn_csp_all)
+          groups <- define_rep_groups(group_names)
+          sketch <- create_sketch_csp(dt_display_csp, groups)
 
           datatable(
-            dt_csp_display,
-            filter = "top",
+            dt_display_csp,
+            container = sketch,
             selection = "none",
-            extensions = c("FixedColumns", "FixedHeader"),
-            options = list(dom = "t", iDisplayLength = nrow(dt_csp_display), ordering = FALSE, autoWidth = FALSE, scrollX = TRUE, scrollY = "calc(100vh - 200px)",
-                           fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0),
-                           columnDefs = list(list(targets = c(2, 3), searchable = FALSE))),
-            rownames = FALSE
+            rownames = FALSE,
+            extensions = c("FixedColumns", "FixedHeader", "Scroller"),
+            options = list(
+              ordering = FALSE,
+              autoWidth = FALSE,
+              paging = FALSE,
+              scrollX = TRUE,
+              scrollY = "650px",
+              fixedHeader = FALSE,
+              fixedColumns = list(leftColumns = 2),
+              columnDefs = list(
+                list(className = "dt-right", targets = 1),
+                list(width = '100px', targets = 0),
+                list(width = '100px', targets = 1)
+              )
+            )
           ) %>%
-            formatStyle(names(dt_csp_display), lineHeight = "80%")
+            formatStyle(names(dt_display_csp), lineHeight = "80%")
         }
       })
 
@@ -166,15 +153,12 @@ file_server <- function(id, session_top, bool_load_proj){
             }
           }
 
-          dt_ref_display$Marker <- factor(dt_ref_display$Marker, levels = unique(dt_ref_display$Marker), labels = unique(dt_ref_display$Marker))
-
           datatable(
             dt_ref_display,
-            filter = "top",
             selection = "none",
             extensions = c("FixedColumns", "FixedHeader"),
             options = list(dom = "t", iDisplayLength = nrow(dt_ref_display), ordering = FALSE, autoWidth = FALSE, scrollX = TRUE, scrollY = "calc(100vh - 200px)",
-                           fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0),
+                           fixedHeader = FALSE, fixedColumns = list(leftColumns = 1, rightColumns = 0),
                            columnDefs = list(list(targets = 1:(ncol(dt_ref_display) - 1), searchable = FALSE))),
             rownames = FALSE
           ) %>%
@@ -193,7 +177,7 @@ file_server <- function(id, session_top, bool_load_proj){
             selection = "none",
             extensions = c("FixedColumns", "FixedHeader"),
             options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = FALSE, scrollX = TRUE, scrollY = "calc(100vh - 150px)",
-                           fixedHeader = TRUE, fixedColumns = list(leftColumns = 1, rightColumns = 0)),
+                           fixedHeader = FALSE, fixedColumns = list(leftColumns = 1, rightColumns = 0)),
             rownames = FALSE
             ) %>%
               formatStyle(names(dt_af), lineHeight = "80%")

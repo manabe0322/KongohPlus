@@ -42,7 +42,9 @@ params:
 ```{r setup, include = FALSE}
 library(knitr)
 library(kableExtra)
-library(dplyr) # for mutate
+library(dplyr) # for mutate, full_join
+library(data.table)
+library(KongohPlus)
 
 case_name <- params$case_name
 user_name <- params$user_name
@@ -345,34 +347,43 @@ for(i in 1:length(hnc_all)){
 
 ```{r csp, echo = FALSE, results='asis'}
 
-# --- Create output table for csp --- #
-name_dt_csp <- names(dt_csp)
-mat_alleles <- as.matrix(dt_csp[, grep("Allele", name_dt_csp), with = FALSE])
-mat_heights <- as.matrix(dt_csp[, grep("Height", name_dt_csp), with = FALSE])
-n_row <- nrow(mat_alleles)
-paste_alleles <- rep(NA, n_row)
-paste_heights <- rep(NA, n_row)
-for(i in 1:n_row){
-  alleles_mk <- mat_alleles[i, ]
-  alleles_mk <- alleles_mk[!is.na(alleles_mk)]
-  if(length(alleles_mk) != 0){
-    paste_alleles[i] <- paste0(alleles_mk, collapse = ", ")
-  }
+sn_csp_all <- unique(dt_csp[, SampleName])
+n_rep <- length(sn_csp_all)
+df_csp_rep <- data.frame("Replicate" = as.character(1:n_rep), 
+                         "Sample Name" = sn_csp_all, 
+                         check.names = FALSE)
 
-  heights_mk <- mat_heights[i, ]
-  heights_mk <- heights_mk[!is.na(heights_mk)]
-  if(length(heights_mk) != 0){
-    paste_heights[i] <- paste0(heights_mk, collapse = ", ")
-  }
-}
+kable(df_csp_rep, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
+      kable_styling(latex_options = c("HOLD_position"), full_width = FALSE)
 
-dt_csp_display <- data.table(SampleName = factor(dt_csp$SampleName, levels = unique(dt_csp$SampleName), labels = unique(dt_csp$SampleName)),
-                             Marker = factor(dt_csp$Marker, levels = unique(dt_csp$Marker), labels = unique(dt_csp$Marker)),
-                             Allele = paste_alleles,
-                             Height = paste_heights)
+dt_display_csp <- create_dt_display_csp(dt_csp)
 
-kable(dt_csp_display, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
-  kable_styling(latex_options = c("HOLD_position"), full_width = FALSE)
+dt_display_csp[, g := cumsum(!is.na(Marker))]
+
+tmp_markers <- dt_display_csp$Marker
+tmp_markers[is.na(tmp_markers)] <- ""
+dt_display_csp$Marker <- tmp_markers
+
+ends <- dt_display_csp[g > 0, .(end = .I[.N]), by = g]$end
+cut_positions <- if (length(ends) > 1) ends[-length(ends)] else integer(0)
+
+kable(
+  dt_display_csp[, 1:(ncol(dt_display_csp) - 1), with = FALSE], 
+  format = "latex", 
+  booktabs = TRUE, 
+  longtable = TRUE, 
+  row.names = FALSE, 
+  align = c("l", rep("r", n_rep + 1)), 
+  escape = TRUE, 
+  float = FALSE, 
+  linesep = ""
+) %>%
+  kable_styling(
+    latex_options = c("HOLD_position", "repeat_header"), 
+    position = "left", 
+    full_width = FALSE
+  ) %>%
+  row_spec(cut_positions, extra_latex_after = "\\midrule")
 ```
 
 ```{r ref, echo = FALSE, results='asis'}
@@ -410,37 +421,5 @@ if(!is.null(dt_ref)){
 ```
 
 ```{r af, echo = FALSE, results='asis'}
-
-```
-
-```{r test, echo = FALSE, results='asis'}
-
-# データ例
-df <- data.frame(
-  Marker = c(rep("D3S1358", 3), rep("vWA", 2), rep("FGA", 4)),
-  Genotype = c("15,16", "14,16", "15,17", "16,18", "15,17", "21,22", "20,23", "21,23", "22,23"),
-  Probability = c(0.45, 0.35, 0.20, 0.60, 0.40, 0.30, 0.25, 0.25, 0.20)
-)
-
-# Markerごとに行数を特定
-marker_groups <- df %>%
-  mutate(row = row_number()) %>%
-  group_by(Marker) %>%
-  summarise(start = min(row), end = max(row))
-
-# kable作成
-k <- kable(df %>% select(-Marker), "latex", booktabs = TRUE, longtable = FALSE, align = "lcc")
-
-# group_rows()で区切り線を追加
-for (i in seq_len(nrow(marker_groups))) {
-  k <- k %>%
-    group_rows(
-      group_label = marker_groups$Marker[i],
-      start_row = marker_groups$start[i],
-      end_row = marker_groups$end[i]
-    )
-}
-
-k %>% kable_styling(full_width = FALSE, position = "center")
 
 ```
