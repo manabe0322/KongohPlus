@@ -23,8 +23,8 @@ params:
   user_name: NA
   dt_csp: NA
   fn_csp: NA
-  dt_af: NA
   fn_af: NA
+  dt_anameth: NA
   fn_anameth: NA
   markers_use: NA
   data_hnc_list: NA
@@ -49,8 +49,8 @@ case_name <- params$case_name
 user_name <- params$user_name
 dt_csp <- params$dt_csp
 fn_csp <- params$fn_csp
-dt_af <- params$dt_af
 fn_af <- params$fn_af
+dt_anameth <- params$dt_anameth
 fn_anameth <- params$fn_anameth
 markers_use <- params$markers_use
 data_hnc_list <- params$data_hnc_list
@@ -552,4 +552,113 @@ if(!is.null(dt_ref)){
     cat("\n\n")
   }
 }
+```
+
+```{r anameth, echo = FALSE, results='asis'}
+if(!is.null(dt_anameth)){
+  cat("\\clearpage")
+  cat("\\section*{Analysis method}")
+  
+  cat("\\subsection*{General}")
+  
+  dt_general <- data.table(A = c("Method", "Kit", "Stutter data", "Parameter data", "Drop-in data"), 
+                           B = c(fn_anameth, 
+                                 dt_anameth$Name[dt_anameth$Category == "Kit"], 
+                                 dt_anameth$Name[dt_anameth$Category == "Stutter data"], 
+                                 dt_anameth$Name[dt_anameth$Category == "Parameter data"], 
+                                 dt_anameth$Name[dt_anameth$Category == "Drop-in data"]))
+  
+  tb <- kable(dt_general, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
+  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
+  tb <- column_spec(tb, 1, width = "4.8cm")
+  tb <- column_spec(tb, 2, width = "11cm")
+  print(tb)
+  cat("\n\n")
+  
+  cat("\\subsection*{Analytical threshold}")
+  
+  dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"], 
+                      AT = dt_anameth$Value[dt_anameth$Category == "AT"])
+  
+  tb <- kable(dt_at, format = "latex", booktabs = TRUE, longtable = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
+  tb <- kable_styling(tb, latex_options = c("HOLD_position", "repeat_header"), position = "left", full_width = FALSE)
+  tb <- column_spec(tb, 1, width = "4.8cm")
+  tb <- column_spec(tb, 2, width = "11cm")
+  print(tb)
+  cat("\n\n")
+  
+  cat("\\subsection*{Genotype filter}")
+  
+  dt_gtfltr <- data.table(A = dt_anameth$Subcategory[dt_anameth$Category == "Genotype filter"], 
+                          B = dt_anameth$Value[dt_anameth$Category == "Genotype filter"])
+  
+  tb <- kable(dt_gtfltr, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
+  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
+  tb <- column_spec(tb, 1, width = "4.8cm")
+  tb <- column_spec(tb, 2, width = "11cm")
+  print(tb)
+  cat("\n\n")
+  
+  cat("\\subsection*{Locus specific amplification efficiency}")
+  
+  dt_lsae <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "LSAE"], 
+                        LSAE = dt_anameth$Value[dt_anameth$Category == "LSAE"])
+  
+  tb <- kable(dt_lsae, format = "latex", booktabs = TRUE, longtable = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
+  tb <- kable_styling(tb, latex_options = c("HOLD_position", "repeat_header"), position = "left", full_width = FALSE)
+  tb <- column_spec(tb, 1, width = "4.8cm")
+  tb <- column_spec(tb, 2, width = "11cm")
+  print(tb)
+  cat("\n\n")
+  
+  cat("\\subsection*{Peak height parameter}")
+  
+  dt_gamma <- data.table(A = dt_anameth$Subcategory[dt_anameth$Category == "Peak height"], 
+                         B = dt_anameth$Value[dt_anameth$Category == "Peak height"])
+  
+  tb <- kable(dt_gamma, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
+  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
+  tb <- column_spec(tb, 1, width = "4.8cm")
+  tb <- column_spec(tb, 2, width = "11cm")
+  print(tb)
+  cat("\n\n")
+  
+  cat("\\subsection*{Drop-in parameter}")
+  
+  dt_dropin <- data.table(A = dt_anameth$Subcategory[dt_anameth$Category == "Drop-in"], 
+                          B = dt_anameth$Value[dt_anameth$Category == "Drop-in"])
+  
+  tb <- kable(dt_dropin, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
+  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
+  tb <- column_spec(tb, 1, width = "4.8cm")
+  tb <- column_spec(tb, 2, width = "11cm")
+  print(tb)
+  cat("\n\n")
+  
+  cat("\\subsection*{Stutter ratio}")
+  
+  dt_sr <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "SR"], 
+                      Allele = dt_anameth$Allele[dt_anameth$Category == "SR"], 
+                      BSR = dt_anameth[["Average BSR"]][dt_anameth$Category == "SR"], 
+                      FSR = dt_anameth[["Average FSR"]][dt_anameth$Category == "SR"], 
+                      DSR = dt_anameth[["Average DSR"]][dt_anameth$Category == "SR"], 
+                      M2SR = dt_anameth[["Average M2SR"]][dt_anameth$Category == "SR"])
+  markers_sr <- unique(dt_sr$Marker)
+  for(i in 1:length(markers_sr)){
+    cat(sprintf("\\subsubsection*{%s}\n", markers_sr[i]))
+    
+    dt_sr_mk <- dt_sr[dt_sr$Marker == markers_sr[i]]
+    dt_sr_mk[, c("Marker") := NULL]
+    
+    tb <- kable(dt_sr_mk, format = "latex", booktabs = TRUE, longtable = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
+    tb <- kable_styling(tb, latex_options = c("HOLD_position", "repeat_header"), position = "left", full_width = FALSE)
+    tb <- column_spec(tb, 1:5, width = "2.4cm")
+    print(tb)
+    cat("\n\n")
+  }
+}
+```
+
+```{r advanced, echo = FALSE, results='asis'}
+
 ```

@@ -22,8 +22,8 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
       rv_report <- reactiveValues()
       rv_report$dt_csp <- NULL
       rv_report$fn_csp <- NULL
-      rv_report$dt_af <- NULL
       rv_report$fn_af <- NULL
+      rv_report$dt_anameth <- NULL
       rv_report$fn_anameth <- NULL
       rv_report$markers_use <- NULL
       rv_report$data_hnc_list <- NULL
@@ -43,8 +43,8 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
         if(!is.null(data_deconvo)){
           rv_report$dt_csp <- data_deconvo$dt_csp
           rv_report$fn_csp <- data_deconvo$fn_csp
-          rv_report$dt_af <- data_deconvo$dt_af
           rv_report$fn_af <- data_deconvo$fn_af
+          rv_report$dt_anameth <- data_deconvo$dt_anameth
           rv_report$fn_anameth <- data_deconvo$fn_anameth
           rv_report$markers_use <- data_deconvo$markers_use
           rv_report$data_hnc_list <- data_deconvo$data_hnc_list
@@ -81,8 +81,8 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
               user_name = input$user_name,
               dt_csp = rv_report$dt_csp,
               fn_csp = rv_report$fn_csp,
-              dt_af = rv_report$dt_af,
               fn_af = rv_report$fn_af,
+              dt_anameth = rv_report$dt_anameth,
               fn_anameth = rv_report$fn_anameth,
               markers_use = rv_report$markers_use,
               data_hnc_list = rv_report$data_hnc_list,
