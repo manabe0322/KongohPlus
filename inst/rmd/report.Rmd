@@ -264,9 +264,9 @@ if(!is.null(lr_list)){
   cat("\\subsection*{LR}")
   
   kable(dt_lr_calc_record, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
-          kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
-          column_spec(1, width = "5.3cm") %>%
-          column_spec(2, width = "5.3cm") %>%
+          kable_styling(latex_options = c("HOLD_position"), position = "left", full_width = FALSE) %>%
+          column_spec(1, width = "5.8cm") %>%
+          column_spec(2, width = "5.8cm") %>%
           column_spec(3, width = "3.6cm")
 }
 ```
@@ -336,22 +336,62 @@ if(!is.null(data_hnc_list)){
     hnc <- hnc_all[i]
     data_hnc <- data_hnc_list[[i]]
     dt_pg_list <- data_hnc$dt_pg_list
+    
+    cat(sprintf("\\subsection*{Number of contributors: %s}\n", hnc))
   
     for(j in 1:hnc){
     
       dt_pg_per_contrib_all <- NULL
+      cut_positions <- rep(NA, n_mk_use)
+      
+      cat(sprintf("\\subsubsection*{Contributor %s (U%s)}\n", j, j))
     
       for(k in 1:n_mk_use){
       
-        #mk <- markers_use[j]
-        #dt_pg_per_contrib <- aggregate_pg_contrib(dt_pg_list[[mk]], paste0("U", j))
+        mk <- markers_use[k]
+        dt_pg_per_contrib <- aggregate_pg_contrib(dt_pg_list[[mk]], paste0("U", j))
+        
+        # --- Extract up to the point where the total probability exceeds 'gt_prob_sum' --- #
+    
+        cumprob <- cumsum(dt_pg_per_contrib$Probability)
+        
+        # Get the first row number where the total exceeds 'gt_prob_sum'
+        cutoff_index <- which.max(cumprob > gt_prob_sum)
+    
+        # If there are no values exceeding 'gt_prob_sum', use all rows.
+        if(cutoff_index == 0){
+          cutoff_index <- nrow(dt_pg_per_contrib$Probability)
+        }
+    
+        # Extract
+        dt_pg_per_contrib <- dt_pg_per_contrib[1:cutoff_index, ]
+
+        # --- Add a column for the marker --- #
+        
+        col_mk <- rep("", nrow(dt_pg_per_contrib))
+        col_mk[1] <- mk
       
-        #col_mk <- rep("", nrow(dt_pg_per_contrib))
-        #col_mk[1] <- mk
-      
-        #dt_pg_per_contrib <- cbind(col_mk, dt_pg_per_contrib)
-        #names(dt_pg_per_contrib)[1] <- "Marker"
+        dt_pg_per_contrib <- cbind(col_mk, dt_pg_per_contrib)
+        names(dt_pg_per_contrib)[1] <- "Marker"
+        
+        dt_pg_per_contrib_all <- rbind(dt_pg_per_contrib_all, dt_pg_per_contrib)
+        
+        cut_positions[k] <- nrow(dt_pg_per_contrib_all)
       }
+      
+      names(dt_pg_per_contrib_all) <- c("Marker", "Genotype", "Probability")
+      
+      cut_positions <- cut_positions[-n_mk_use]
+      
+      # --- Display the table --- #  
+    
+      tb <- kable(dt_pg_per_contrib_all, format = "latex", booktabs = TRUE, longtable = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
+      tb <- kable_styling(tb, latex_options = c("HOLD_position", "repeat_header"), position = "left", full_width = FALSE)
+      tb <- column_spec(tb, 1:ncol(dt_pg_per_contrib_all), width = "2.4cm")
+      tb <- row_spec(tb, cut_positions, extra_latex_after = "\\midrule")
+      print(tb)
+    
+      cat("\n\n")
     }
   }
 }
