@@ -68,14 +68,6 @@ gt_prob_sum <- params$gt_prob_sum
 {\LARGE \textbf{Report}}
 \end{center}
 
-\vspace{1em}
-
-\hrule
-
-\vspace{1em}
-
-\section*{Summary}
-
 ```{r summary_top, echo = FALSE, results='asis'}
 
 # ---- Create text data for ignored markers ---- #
@@ -164,7 +156,7 @@ kable(df_info, format = "latex", booktabs = TRUE, row.names = FALSE, col.names =
 ```{r summary_deconvo, echo = FALSE, results='asis'}
 
 if(!is.null(data_hnc_list)){
-  cat("\\subsection*{Deconvolution}")
+  cat("\\section*{Deconvolution}")
   
   for(i in 1:length(hnc_all)){
     hnc <- hnc_all[i]
@@ -220,7 +212,7 @@ if(!is.null(data_hnc_list)){
     df_convergence_display <- data.frame(a = c("log10(likelihood)", "No. MLE attempts", "No. acceptances"), 
                                          b = c(log10like, num_attempt, count_solution))
   
-    cat(sprintf("\\subsubsection*{Number of contributors: %s}\n", hnc))
+    cat(sprintf("\\subsection*{Number of contributors: %s}\n", hnc))
     
     tb <- kable(df_param_display, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
     tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
@@ -261,13 +253,44 @@ if(!is.null(data_hnc_list)){
 ```{r summary_lr, echo = FALSE, results='asis'}
 
 if(!is.null(lr_list)){
-  cat("\\subsection*{LR}")
+  cat("\\section*{Summary of LR}")
   
   kable(dt_lr_calc_record, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
           kable_styling(latex_options = c("HOLD_position"), position = "left", full_width = FALSE) %>%
           column_spec(1, width = "5.8cm") %>%
           column_spec(2, width = "5.8cm") %>%
           column_spec(3, width = "3.6cm")
+}
+```
+
+```{r lr_per_mk, echo = FALSE, results='asis'}
+
+if(!is.null(lr_list)){
+  cat("\\clearpage")
+  cat("\\section*{LR per marker}")
+  
+  for(i in 1:length(lr_list)){
+    cat(sprintf("\\subsubsection*{Calculation %s}\n", i))
+    
+    lr_data <- lr_list[[i]]
+    dt_hyp <- data.table(Hp = lr_data$hp, Hd = lr_data$hd)
+    tb <- kable(dt_hyp, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
+    tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
+    tb <- column_spec(tb, c(1, 2), width = "7.2cm")
+    print(tb)
+    
+    cat("\n\n")
+    
+    dt_lr <- lr_data$dt_lr
+    tb <- kable(dt_lr, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
+    tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
+    tb <- column_spec(tb, 1:4, width = "3.6cm")
+    print(tb)
+    
+    if(i != length(lr_list)){
+      cat("\\clearpage")
+    }
+  }
 }
 ```
 
@@ -529,8 +552,4 @@ if(!is.null(dt_ref)){
     cat("\n\n")
   }
 }
-```
-
-```{r af, echo = FALSE, results='asis'}
-
 ```
