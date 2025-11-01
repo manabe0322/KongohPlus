@@ -6,28 +6,8 @@ report_ui <- function(id){
 
   tabPanel("Report",
            useWaiter(),
-           fluidRow(
-             column(
-               4,
-               textInput(ns("case_name"), label = h4("Case name")),
-               textInput(ns("user_name"), label = h4("User name"))
-             ),
-             column(
-               4,
-               h4("Probabilistic genotyping"),
-               br(),
-               radioButtons(ns("radio_gt"), label = "Candidate genotypes to be listed per marker",
-                            choices = c("Top X genotypes" = "radio_gt_top",
-                                        "Probability greater than Y" = "radio_gt_prob",
-                                        "All" = "radio_gt_all"),
-                            selected = "radio_gt_top"),
-               numericInput(ns("gt_x"), label = "X", value = 20),
-               numericInput(ns("gt_y"), label = "Y", value = 0.01)
-             ),
-             column(
-               4
-             )
-           ),
+           textInput(ns("case_name"), label = h4("Case name")),
+           textInput(ns("user_name"), label = h4("User name")),
            disabled(downloadButton(ns("download_report"), "Report"))
   )
 }
@@ -51,11 +31,10 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
       rv_report$hnc_all <- NULL
       rv_report$theta <- NULL
       rv_report$dt_ref <- NULL
+      rv_report$fn_ref <- NULL
       rv_report$dt_lr_calc_record <- NULL
       rv_report$lr_list <- NULL
-
-      rv_report$bool_gt_x <- TRUE
-      rv_report$bool_gt_y <- TRUE
+      rv_report$gt_prob_sum <- 0.99
 
       observe({
         req(rv_deconvo)
@@ -80,63 +59,9 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
       observe({
         req(rv_lr)
         rv_report$dt_ref <- rv_lr$dt_ref
+        rv_report$fn_ref <- rv_lr$fn_ref
         rv_report$dt_lr_calc_record <- rv_lr$dt_lr_calc_record
         rv_report$lr_list <- rv_lr$lr_list
-      })
-
-      observeEvent(input$radio_gt, {
-        radio_gt <- input$radio_gt
-
-        if(radio_gt == "radio_gt_top"){
-          enable("gt_x")
-          disable("gt_y")
-        }
-
-        else if(radio_gt == "radio_gt_prob"){
-          disable("gt_x")
-          enable("gt_y")
-        }
-
-        else{
-          disable("gt_x")
-          disable("gt_y")
-        }
-      })
-
-      observeEvent(input$gt_x, {
-        gt_x <- input$gt_x
-
-        if(!is.integer(gt_x) || gt_x <= 0){
-          showFeedbackDanger(inputId = "gt_x", text = "Value must be an integer greater than zero.")
-          rv_report$bool_gt_x <- FALSE
-        }else{
-          hideFeedback("gt_x")
-          rv_report$bool_gt_x <- TRUE
-        }
-
-        if(rv_report$bool_gt_x && rv_report$bool_gt_y){
-          enable("download_report")
-        }else{
-          disable("download_report")
-        }
-      })
-
-      observeEvent(input$gt_y, {
-        gt_y <- input$gt_y
-
-        if(!is.numeric(gt_y) || gt_y < 0 || gt_y > 1){
-          showFeedbackDanger(inputId = "gt_y", text = "Value must be between 0 and 1.")
-          rv_report$bool_gt_y <- FALSE
-        }else{
-          hideFeedback("gt_y")
-          rv_report$bool_gt_y <- TRUE
-        }
-
-        if(rv_report$bool_gt_x && rv_report$bool_gt_y){
-          enable("download_report")
-        }else{
-          disable("download_report")
-        }
       })
 
       output$download_report <- downloadHandler(
@@ -165,11 +90,10 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
               hnc_all = rv_report$hnc_all,
               theta = rv_report$theta,
               dt_ref = rv_report$dt_ref,
+              fn_ref = rv_report$fn_ref,
               dt_lr_calc_record = rv_report$dt_lr_calc_record,
               lr_list = rv_report$lr_list,
-              radio_gt = input$radio_gt,
-              gt_x = input$gt_x,
-              gt_y = input$gt_y
+              gt_prob_sum = rv_report$gt_prob_sum
             ),
             envir = new.env(parent = globalenv())
           )

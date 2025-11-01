@@ -17,7 +17,7 @@ header-includes:
   - \setsansfont{Noto Sans}
   - \setmonofont{Noto Sans}
   - \usepackage[hidelinks]{hyperref}
-  - \setlength{\tabcolsep}{2mm}  # 表の列間のスペース
+  - \setlength{\tabcolsep}{2mm}  # Space between columns
 params:
   case_name: NA
   user_name: NA
@@ -32,11 +32,10 @@ params:
   hnc_all: NA
   theta: NA
   dt_ref: NA
+  fn_ref: NA
   dt_lr_calc_record: NA
   lr_list: NA
-  radio_gt: NA
-  gt_x: NA
-  gt_y: NA
+  gt_prob_sum: NA
 ---
 
 ```{r setup, include = FALSE}
@@ -59,11 +58,10 @@ dt_ignore_mk <- params$dt_ignore_mk
 hnc_all <- params$hnc_all
 theta <- params$theta
 dt_ref <- params$dt_ref
+fn_ref <- params$fn_ref
 dt_lr_calc_record <- params$dt_lr_calc_record
 lr_list <- params$lr_list
-radio_gt <- params$radio_gt
-gt_x <- params$gt_x
-gt_y <- params$gt_y
+gt_prob_sum <- params$gt_prob_sum
 ```
 
 \begin{center}
@@ -83,35 +81,39 @@ gt_y <- params$gt_y
 # ---- Create text data for ignored markers ---- #
 
 ignored_mk_display_list <- list()
-ignored_markers <- dt_ignore_mk$Marker[dt_ignore_mk$Ignore]
-if(length(ignored_markers) == 0){
-  ignored_mk_display_list[[1]] <- "-"
-}else{
-  ignored_mk_display <- paste0(ignored_markers, collapse = ", ")
-  if(nchar(ignored_mk_display) > 50){
-    txt_tmp <- ""
-    count <- 1
-    bool_remain <- FALSE
-    for(i in 1:length(ignored_markers)){
-      txt_tmp_new <- paste0(txt_tmp, ignored_markers[i], ", ")
-      if(nchar(txt_tmp_new) > 50){
-        ignored_mk_display_list[[count]] <- txt_tmp
-        txt_tmp <- paste0(ignored_markers[i], ", ")
-        count <- count + 1
-        bool_remain <- FALSE
-      }else{
-        txt_tmp <- txt_tmp_new
-        bool_remain <- TRUE
-      }
-    }
-    if(bool_remain){
-      ignored_mk_display_list[[count]] <- substr(txt_tmp_new, 1, nchar(txt_tmp_new) - 2)
-    }else{
-      ignored_mk_display_list[[count - 1]] <- substr(ignored_mk_display_list[[count - 1]], 1, nchar(ignored_mk_display_list[[count - 1]]) - 2)
-    }
+if(!is.null(dt_ignore_mk)){
+  ignored_markers <- dt_ignore_mk$Marker[dt_ignore_mk$Ignore]
+  if(length(ignored_markers) == 0){
+    ignored_mk_display_list[[1]] <- "-"
   }else{
-    ignored_mk_display_list[[1]] <- ignored_mk_display
+    ignored_mk_display <- paste0(ignored_markers, collapse = ", ")
+    if(nchar(ignored_mk_display) > 50){
+      txt_tmp <- ""
+      count <- 1
+      bool_remain <- FALSE
+      for(i in 1:length(ignored_markers)){
+        txt_tmp_new <- paste0(txt_tmp, ignored_markers[i], ", ")
+        if(nchar(txt_tmp_new) > 50){
+          ignored_mk_display_list[[count]] <- txt_tmp
+          txt_tmp <- paste0(ignored_markers[i], ", ")
+          count <- count + 1
+          bool_remain <- FALSE
+        }else{
+          txt_tmp <- txt_tmp_new
+          bool_remain <- TRUE
+        }
+      }
+      if(bool_remain){
+        ignored_mk_display_list[[count]] <- substr(txt_tmp_new, 1, nchar(txt_tmp_new) - 2)
+      }else{
+        ignored_mk_display_list[[count - 1]] <- substr(ignored_mk_display_list[[count - 1]], 1, nchar(ignored_mk_display_list[[count - 1]]) - 2)
+      }
+    }else{
+      ignored_mk_display_list[[1]] <- ignored_mk_display
+    }
   }
+}else{
+  ignored_mk_display_list[[1]] <- "-"
 }
 
 # ---- Create the data.frame for general information and settings ---- #
@@ -119,123 +121,140 @@ if(length(ignored_markers) == 0){
 n_row_ignored_mk <- length(ignored_mk_display_list)
 mat_info <- matrix("", 9 + n_row_ignored_mk, 2)
 mat_info[, 1] <- c("Case Name", "User", "Date", "KongohPlus version", 
-                      "Crime stain profile", "Reference profile", "Allele frequency", 
-                      "Analysis method", "Theta", rep("Ignored markers", n_row_ignored_mk))
-mat_info[1, 2] <- case_name
-mat_info[2, 2] <- user_name
-mat_info[3, 2] <- "2025-10-06"
-mat_info[4, 2] <- "0.21.6"
-mat_info[5, 2] <- fn_csp
-mat_info[6, 2] <- "rrrrrrrrrrrrrrrrrrr.csv"
-mat_info[7, 2] <- fn_af
-mat_info[8, 2] <- fn_anameth
-mat_info[9, 2] <- theta
+                   "Crime stain profile", "Reference profile", "Allele frequency", 
+                   "Analysis method", "Theta", rep("Ignored markers", n_row_ignored_mk))
+if(!is.null(case_name)){
+  mat_info[1, 2] <- case_name
+}
+if(!is.null(user_name)){
+  mat_info[2, 2] <- user_name
+}
+mat_info[3, 2] <- format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z")
+mat_info[4, 2] <- as.character(packageVersion("KongohPlus"))
+if(!is.null(fn_csp)){
+  mat_info[5, 2] <- fn_csp
+}
+if(!is.null(fn_ref)){
+  mat_info[6, 2] <- fn_ref
+}
+if(!is.null(fn_af)){
+  mat_info[7, 2] <- fn_af
+}
+if(!is.null(fn_anameth)){
+  mat_info[8, 2] <- fn_anameth
+}
+if(!is.null(theta)){
+  mat_info[9, 2] <- theta
+}
 for(i in 1:n_row_ignored_mk){
   mat_info[9 + i, 2] <- ignored_mk_display_list[[i]]
 }
+
 df_info <- as.data.frame(mat_info)
 names(df_info) <- c("a", "b")
 
 # ---- Display the created data.table ---- #
 
 kable(df_info, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "") %>%
-  kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
+  kable_styling(latex_options = c("HOLD_position"), position = "left", full_width = FALSE) %>%
   column_spec(1, width = "4.8cm") %>%
   column_spec(2, width = "11cm")
 ```
 
-\subsection*{Deconvolution}
-
 ```{r summary_deconvo, echo = FALSE, results='asis'}
 
-for(i in 1:length(hnc_all)){
-  hnc <- hnc_all[i]
-  data_hnc <- data_hnc_list[[i]]
-  dt_param <- data_hnc$dt_param
-  dt_log10like <- data_hnc$dt_log10like
-  opt_list <- data_hnc$opt_list
+if(!is.null(data_hnc_list)){
+  cat("\\subsection*{Deconvolution}")
   
-  vec_temp <- rep(NA, 4)
-  vec_temp[1:hnc] <- round(dt_param[["Estimated value"]][dt_param[["Parameter"]] == "Template amount"], 2)
+  for(i in 1:length(hnc_all)){
+    hnc <- hnc_all[i]
+    data_hnc <- data_hnc_list[[i]]
+    dt_param <- data_hnc$dt_param
+    dt_log10like <- data_hnc$dt_log10like
+    opt_list <- data_hnc$opt_list
   
-  vec_mp <- rep(NA, 4)
-  vec_mp[1:hnc] <- round(vec_temp[1:hnc] / sum(vec_temp[1:hnc]), 4)
+    vec_temp <- rep(NA, 4)
+    vec_temp[1:hnc] <- round(dt_param[["Estimated value"]][dt_param[["Parameter"]] == "Template amount"], 2)
   
-  vec_deg <- rep(NA, 4)
-  vec_deg[1:hnc] <- round(dt_param[["Estimated value"]][dt_param[["Parameter"]] == "Degradation"], 4)
+    vec_mp <- rep(NA, 4)
+    vec_mp[1:hnc] <- round(vec_temp[1:hnc] / sum(vec_temp[1:hnc]), 4)
   
-  vec_temp[is.na(vec_temp)] <- "-"
-  vec_mp[is.na(vec_mp)] <- "-"
-  vec_deg[is.na(vec_deg)] <- "-"
+    vec_deg <- rep(NA, 4)
+    vec_deg[1:hnc] <- round(dt_param[["Estimated value"]][dt_param[["Parameter"]] == "Degradation"], 4)
   
-  df_param_display <- as.data.frame(cbind(c("Template amount", "Mixture proportion", "Degradation"), rbind(vec_temp, vec_mp, vec_deg)))
-  names(df_param_display) <- c("", "U1", "U2", "U3", "U4")
+    vec_temp[is.na(vec_temp)] <- "-"
+    vec_mp[is.na(vec_mp)] <- "-"
+    vec_deg[is.na(vec_deg)] <- "-"
+  
+    df_param_display <- as.data.frame(cbind(c("Template amount", "Mixture proportion", "Degradation"), rbind(vec_temp, vec_mp, vec_deg)))
+    names(df_param_display) <- c("", "U1", "U2", "U3", "U4")
   
   
-  vec_rep <- round(dt_param[["Estimated value"]][dt_param[["Parameter"]] == "Replicate amplification efficiency"], 2)
-  df_rep_display <- data.frame("Replicate" = as.character(1:length(vec_rep)), 
-                               "Amplification efficiency" = as.character(vec_rep), 
-                               check.names = FALSE)
+    vec_rep <- round(dt_param[["Estimated value"]][dt_param[["Parameter"]] == "Replicate amplification efficiency"], 2)
+    df_rep_display <- data.frame("Replicate" = as.character(1:length(vec_rep)), 
+                                 "Amplification efficiency" = as.character(vec_rep), 
+                                 check.names = FALSE)
   
-  num_attempt <- length(opt_list)
-  if(length(opt_list) == 1){
-    count_solution <- 1
-  }else{
-    current_score <- round(opt_list[[1]]$value, 3)
-    count_solution <- 1
-    for(i in 2:length(opt_list)){
-      new_score <- round(opt_list[[i]]$value, 3)
+    num_attempt <- length(opt_list)
+    if(length(opt_list) == 1){
+      count_solution <- 1
+    }else{
+      current_score <- round(opt_list[[1]]$value, 3)
+      count_solution <- 1
+      for(i in 2:length(opt_list)){
+        new_score <- round(opt_list[[i]]$value, 3)
       
-      if(new_score < current_score){
-        current_score <- new_score
-        count_solution <- 1
-      }else if(new_score == current_score){
-        count_solution <- count_solution + 1
+        if(new_score < current_score){
+          current_score <- new_score
+          count_solution <- 1
+        }else if(new_score == current_score){
+          count_solution <- count_solution + 1
+        }
       }
     }
+  
+    log10like <- as.character(round(dt_log10like[["Log10_Likelihood"]][dt_log10like[["Marker"]] == "Overall"], 2))
+    num_attempt <- as.character(num_attempt)
+    count_solution <- as.character(count_solution)
+  
+    df_convergence_display <- data.frame(a = c("log10(likelihood)", "No. MLE attempts", "No. acceptances"), 
+                                         b = c(log10like, num_attempt, count_solution))
+  
+    cat(sprintf("\\subsubsection*{Number of contributors: %s}\n", hnc))
+    
+    tb <- kable(df_param_display, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
+    tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
+    tb <- column_spec(tb, 1, width = "4.8cm")
+    tb <- column_spec(tb, 2, width = "2.4cm")
+    tb <- column_spec(tb, 3, width = "2.4cm")
+    tb <- column_spec(tb, 4, width = "2.4cm")
+    tb <- column_spec(tb, 5, width = "2.4cm")
+    print(tb)
+  
+    cat("\\vspace{-2em}\n")
+  
+    cat(c("\\begin{table}[!htb]
+      \\begin{minipage}[t]{.5\\linewidth}
+        \\centering
+        \\vspace{0pt}",
+          kable(df_rep_display, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
+            kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
+            column_spec(1, width = "3.1cm") %>%
+            column_spec(2, width = "4.1cm"), 
+      "\\end{minipage}%
+      \\begin{minipage}[t]{.5\\linewidth}
+        \\centering
+        \\vspace{0pt}",
+          kable(df_convergence_display, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "") %>%
+            kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
+            column_spec(1, width = "5.6cm") %>%
+            column_spec(2, width = "1.6cm"),
+      "\\end{minipage} 
+    \\end{table}"
+    ))
+  
+    cat("\n\n") # space between tables
   }
-  
-  log10like <- as.character(round(dt_log10like[["Log10_Likelihood"]][dt_log10like[["Marker"]] == "Overall"], 2))
-  num_attempt <- as.character(num_attempt)
-  count_solution <- as.character(count_solution)
-  
-  df_convergence_display <- data.frame(a = c("log10(likelihood)", "No. MLE attempts", "No. acceptances"), 
-                                       b = c(log10like, num_attempt, count_solution))
-  
-  cat(sprintf("\\subsubsection*{Number of contributors: %s}\n", hnc))
-  
-  print(kable(df_param_display, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
-          kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
-          column_spec(1, width = "4.8cm") %>%
-          column_spec(2, width = "2.4cm") %>%
-          column_spec(3, width = "2.4cm") %>%
-          column_spec(4, width = "2.4cm") %>%
-          column_spec(5, width = "2.4cm")
-  )
-  
-  cat("\\vspace{-2em}\n")
-  
-  cat(c("\\begin{table}[!htb]
-    \\begin{minipage}[t]{.5\\linewidth}
-      \\centering
-      \\vspace{0pt}",
-        kable(df_rep_display, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
-          kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
-          column_spec(1, width = "3.1cm") %>%
-          column_spec(2, width = "4.1cm"), 
-    "\\end{minipage}%
-    \\begin{minipage}[t]{.5\\linewidth}
-      \\centering
-      \\vspace{0pt}",
-        kable(df_convergence_display, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "") %>%
-          kable_styling(latex_options = c("HOLD_position"), full_width = FALSE) %>%
-          column_spec(1, width = "5.6cm") %>%
-          column_spec(2, width = "1.6cm"),
-    "\\end{minipage} 
-  \\end{table}"
-  ))
-  
-  cat("\n\n") # space between tables
 }
 ```
 
@@ -252,143 +271,166 @@ if(!is.null(lr_list)){
 }
 ```
 
-\clearpage
-
-\section*{Probabilistic genotyping (per combination)}
-
 ```{r pg_per_comb, echo = FALSE, results='asis'}
 
-n_mk_use <- length(markers_use)
+if(!is.null(data_hnc_list)){
+  cat("\\clearpage")
+  cat("\\section*{Probabilistic genotyping (per combination)}")
+  
+  n_mk_use <- length(markers_use)
 
-for(i in 1:length(hnc_all)){
-  hnc <- hnc_all[i]
-  data_hnc <- data_hnc_list[[i]]
-  dt_pg_list <- data_hnc$dt_pg_list
+  for(i in 1:length(hnc_all)){
+    hnc <- hnc_all[i]
+    data_hnc <- data_hnc_list[[i]]
+    dt_pg_list <- data_hnc$dt_pg_list
   
-  cat(sprintf("\\subsection*{Number of contributors: %s}\n", hnc))
+    cat(sprintf("\\subsection*{Number of contributors: %s}\n", hnc))
   
-  for(j in 1:n_mk_use){
-    mk <- markers_use[j]
-    dt_pg_per_comb <- dt_pg_list[[mk]]
+    for(j in 1:n_mk_use){
+      mk <- markers_use[j]
+      dt_pg_per_comb <- dt_pg_list[[mk]]
     
-    if(radio_gt == "radio_gt_top"){
-      if(nrow(dt_pg_per_comb) > gt_x){
-        dt_pg_per_comb <- dt_pg_per_comb[1:gt_x,]
+      # --- Extract up to the point where the total probability exceeds 'gt_prob_sum' --- #
+    
+      cumprob <- cumsum(dt_pg_per_comb$Probability)
+    
+      # Get the first row number where the total exceeds 'gt_prob_sum'
+      cutoff_index <- which.max(cumprob > gt_prob_sum)
+    
+      # If there are no values exceeding 'gt_prob_sum', use all rows.
+      if(cutoff_index == 0){
+        cutoff_index <- nrow(dt_pg_per_comb$Probability)
       }
+    
+      # Extract
+      dt_pg_per_comb <- dt_pg_per_comb[1:cutoff_index]
+    
+      # --- Extract displayed columns --- #
+    
+      dt_pg_per_comb <- dt_pg_per_comb[, which(is.element(names(dt_pg_per_comb), c(paste0("U", 1:hnc), "Probability"))), with = FALSE]
+    
+      # --- Display the table --- #
+    
+      cat(sprintf("\\subsubsection*{%s}\n", mk))
+    
+      tb <- kable(dt_pg_per_comb, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
+      tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
+      tb <- column_spec(tb, 1:ncol(dt_pg_per_comb), width = "2.4cm")
+      print(tb)
+    
+      cat("\n\n")
     }
-    
-    else if(radio_gt == "radio_gt_prob"){
-      dt_pg_per_comb <- dt_pg_per_comb[dt_pg_per_comb$Probability >= gt_y]
-    }
-    
-    dt_pg_per_comb <- dt_pg_per_comb[, which(is.element(names(dt_pg_per_comb), c(paste0("U", 1:hnc), "Probability"))), with = FALSE]
-    
-    cat(sprintf("\\subsubsection*{%s}\n", mk))
-    
-    kable(dt_pg_per_comb, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
-      kable_styling(latex_options = c("HOLD_position"), full_width = FALSE)
   }
 }
 ```
-
-\clearpage
-
-\section*{Probabilistic genotyping (per contributor)}
 
 ```{r pg_per_contrib, echo = FALSE, results='asis'}
 
-aggregate_pg_contrib <- function(dt_pg, contrib){
-  aggregated_data <- dt_pg %>%
-    group_by_at(which(names(dt_pg) == contrib)) %>%
-    summarise(Probability = sum(Probability))
-  aggregated_data <- aggregated_data %>%
-    arrange(desc(Probability))
-  return(aggregated_data)
-}
-
-n_mk_use <- length(markers_use)
-
-for(i in 1:length(hnc_all)){
-  hnc <- hnc_all[i]
-  data_hnc <- data_hnc_list[[i]]
-  dt_pg_list <- data_hnc$dt_pg_list
+if(!is.null(data_hnc_list)){
+  cat("\\clearpage")
+  cat("\\section*{Probabilistic genotyping (per contributor)}")
   
-  for(j in 1:hnc){
+  n_mk_use <- length(markers_use)
+
+  for(i in 1:length(hnc_all)){
+    hnc <- hnc_all[i]
+    data_hnc <- data_hnc_list[[i]]
+    dt_pg_list <- data_hnc$dt_pg_list
+  
+    for(j in 1:hnc){
     
-    dt_pg_per_contrib_all <- NULL
+      dt_pg_per_contrib_all <- NULL
     
-    for(k in 1:n_mk_use){
-      mk <- markers_use[j]
-      dt_pg_per_contrib <- aggregate_pg_contrib(dt_pg_list[[mk]], paste0("U", j))
+      for(k in 1:n_mk_use){
       
-      if(radio_gt == "radio_gt_top"){
-        if(nrow(dt_pg_per_contrib) > gt_x){
-          dt_pg_per_contrib <- dt_pg_per_contrib[1:gt_x]
-        }
+        #mk <- markers_use[j]
+        #dt_pg_per_contrib <- aggregate_pg_contrib(dt_pg_list[[mk]], paste0("U", j))
+      
+        #col_mk <- rep("", nrow(dt_pg_per_contrib))
+        #col_mk[1] <- mk
+      
+        #dt_pg_per_contrib <- cbind(col_mk, dt_pg_per_contrib)
+        #names(dt_pg_per_contrib)[1] <- "Marker"
       }
-      
-      else if(radio_gt == "radio_gt_prob"){
-        dt_pg_per_contrib <- dt_pg_per_contrib[dt_pg_per_contrib$Probability >= gt_y]
-      }
-      
-      col_mk <- rep("", nrow(dt_pg_per_contrib))
-      col_mk[1] <- mk
-      
-      dt_pg_per_contrib <- cbind(col_mk, dt_pg_per_contrib)
-      names(dt_pg_per_contrib)[1] <- "Marker"
     }
   }
 }
 ```
 
-\clearpage
-
-\section*{Crime stain profile}
-
 ```{r csp, echo = FALSE, results='asis'}
 
-sn_csp_all <- unique(dt_csp[, SampleName])
-n_rep <- length(sn_csp_all)
-df_csp_rep <- data.frame("Replicate" = as.character(1:n_rep), 
-                         "Sample Name" = sn_csp_all, 
-                         check.names = FALSE)
+if(!is.null(dt_csp)){
+  cat("\\clearpage")
+  cat("\\section*{Crime stain profile}")
+  
+  sn_csp_all <- unique(dt_csp[, SampleName])
+  n_rep <- length(sn_csp_all)
+  df_csp_rep <- data.frame("Replicate" = as.character(1:n_rep), 
+                           "Sample Name" = sn_csp_all, 
+                           check.names = FALSE)
 
-kable(df_csp_rep, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
-      kable_styling(latex_options = c("HOLD_position"), full_width = FALSE)
+  tb <- kable(df_csp_rep, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
+  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
+  tb <- column_spec(tb, 1, width = "2.4cm")
+  tb <- column_spec(tb, 2, width = "13.4cm")
+  print(tb)
+  cat("\n\n")
 
-dt_display_csp <- create_dt_display_csp(dt_csp)
+  dt_display_csp <- create_dt_display_csp(dt_csp)
 
-dt_display_csp[, g := cumsum(!is.na(Marker))]
+  dt_display_csp[, g := cumsum(!is.na(Marker))]
 
-tmp_markers <- dt_display_csp$Marker
-tmp_markers[is.na(tmp_markers)] <- ""
-dt_display_csp$Marker <- tmp_markers
+  tmp_markers <- dt_display_csp$Marker
+  tmp_markers[is.na(tmp_markers)] <- ""
+  dt_display_csp$Marker <- tmp_markers
 
-ends <- dt_display_csp[g > 0, .(end = .I[.N]), by = g]$end
-cut_positions <- if (length(ends) > 1) ends[-length(ends)] else integer(0)
+  ends <- dt_display_csp[g > 0, .(end = .I[.N]), by = g]$end
+  cut_positions <- if (length(ends) > 1) ends[-length(ends)] else integer(0)
 
-kable(
-  dt_display_csp[, 1:(ncol(dt_display_csp) - 1), with = FALSE], 
-  format = "latex", 
-  booktabs = TRUE, 
-  longtable = TRUE, 
-  row.names = FALSE, 
-  align = c("l", rep("r", n_rep + 1)), 
-  escape = TRUE, 
-  float = FALSE, 
-  linesep = ""
-) %>%
-  kable_styling(
-    latex_options = c("HOLD_position", "repeat_header"), 
-    position = "left", 
-    full_width = FALSE
-  ) %>%
-  row_spec(cut_positions, extra_latex_after = "\\midrule")
+  n_table_csp <- (n_rep - 1) %/% 4 + 1
+  for(i in 1:n_table_csp){
+    cand_height_label <- paste0("Height", (4 * (i - 1) + 1):(4 * i))
+    index_display <- which(is.element(names(dt_display_csp), c("Marker", "Allele", cand_height_label)))
+  
+    tb <- kable(
+      dt_display_csp[, index_display, with = FALSE], 
+      format = "latex", 
+      booktabs = TRUE, 
+      longtable = TRUE, 
+      row.names = FALSE, 
+      align = c("l", rep("r", length(index_display) - 1)), 
+      escape = TRUE, 
+      float = FALSE, 
+      linesep = ""
+    )
+    tb <- kable_styling(
+      tb, 
+      latex_options = c("HOLD_position", "repeat_header"), 
+      position = "left", 
+      full_width = FALSE
+    )
+    tb <- row_spec(
+      tb,
+      cut_positions, 
+      extra_latex_after = "\\midrule"
+    )
+    tb <- column_spec(
+      tb, 
+      1:length(index_display), 
+      width = "2.4cm"
+    )
+    print(tb)
+    cat("\n\n")
+  }
+}
 ```
 
 ```{r ref, echo = FALSE, results='asis'}
 
 if(!is.null(dt_ref)){
+  cat("\\clearpage")
+  cat("\\section*{Reference profile}")
+  
   dt_ref_display <- NULL
   samples <- unique(dt_ref$SampleName)
   n_sample <- length(samples)
@@ -413,10 +455,39 @@ if(!is.null(dt_ref)){
     }
   }
   
-  cat("\\section*{Reference profile}")
-  
-  kable(dt_ref_display, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "") %>%
-    kable_styling(latex_options = c("HOLD_position"), full_width = FALSE)
+  n_table_ref <- (n_sample - 1) %/% 5 + 1
+  for(i in 1:n_table_ref){
+    if(i == n_table_ref){
+      samples_display <- samples[(5 * (i - 1) + 1):length(samples)]
+    }else{
+      samples_display <- samples[(5 * (i - 1) + 1):(5 * i)]
+    }
+    index_display <- which(is.element(names(dt_ref_display), c("Marker", samples_display)))
+    
+    tb <- kable(
+      dt_ref_display[, index_display, with = FALSE], 
+      format = "latex", 
+      booktabs = TRUE, 
+      longtable = TRUE, 
+      row.names = FALSE, 
+      escape = TRUE, 
+      float = FALSE, 
+      linesep = ""
+    )
+    tb <- kable_styling(
+      tb, 
+      latex_options = c("HOLD_position", "repeat_header"), 
+      position = "left", 
+      full_width = FALSE
+    )
+    tb <- column_spec(
+      tb, 
+      1:length(index_display), 
+      width = "2.4cm"
+    )
+    print(tb)
+    cat("\n\n")
+  }
 }
 ```
 

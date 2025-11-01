@@ -46,7 +46,7 @@ create_dt_display_csp <- function(dt_csp){
         heights_s1 <- heights_s1[index_tmp_s1_1]
 
         index_tmp_s1_2 <- match(alleles_s1, alleles_all)
-        display_heights_s1 <- rep(NA, n_al_all)
+        display_heights_s1 <- rep(0, n_al_all)
         display_heights_s1[index_tmp_s1_2] <- heights_s1
 
         display_mk <- cbind(display_mk, display_heights_s1)
