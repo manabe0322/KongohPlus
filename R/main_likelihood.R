@@ -336,15 +336,15 @@ calculate_lr <- function(noc_hp, hp, noc_hd, hd, refs,
 
   # --- Create output data --- #
 
-  lr_data <- list("hp" = hp,
-                  "hd" = hd,
-                  "dt_lr" = dt_lr)
-
   contrib_order_hp <- create_contrib_order(hyp_id_all_hp[index_max_loglike_hp, ], refs)
   contrib_order_hd <- create_contrib_order(hyp_id_all_hd[index_max_loglike_hd, ], refs)
   dt_lr_calc_record_1 <- data.table("Hp" = paste0(contrib_order_hp, collapse = ", "),
                                     "Hd" = paste0(contrib_order_hd, collapse = ", "),
                                     "LR" = dt_lr$LR[length(markers_use) + 1])
+
+  lr_data <- list("hp" = paste0(contrib_order_hp, collapse = ", "),
+                  "hd" = paste0(contrib_order_hd, collapse = ", "),
+                  "dt_lr" = dt_lr)
 
   return(list("lr_data" = lr_data, "dt_lr_calc_record_1" = dt_lr_calc_record_1))
 }
