@@ -482,10 +482,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
                                Log10_Likelihood = c(log10like_all_mk, sum(log10like_all_mk)))
 
-    dt_param <- data.table("Parameter" = c(rep("Template amount", hnc), rep("Degradation", hnc), rep("Replicate amplification efficiency", n_rep)),
-                           "Contributor" = c(paste0("U", 1:hnc), paste0("U", 1:hnc), rep(NA, n_rep)),
-                           "Replicate" = c(rep(NA, hnc), rep(NA, hnc), 1:n_rep),
-                           "Estimated value" = c(temp, deg, rep_ae))
+    dt_param <- data.table("Parameter" = c(rep("Template amount", hnc), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Replicate amplification efficiency", n_rep)),
+                           "Contributor" = c(paste0("U", 1:hnc), paste0("U", 1:hnc), paste0("U", 1:hnc), rep(NA, n_rep)),
+                           "Replicate" = c(rep(NA, hnc), rep(NA, hnc), rep(NA, hnc), 1:n_rep),
+                           "Estimated value" = c(temp, temp / sum(temp), deg, rep_ae))
 
     # End computation
     end_time <- proc.time()
@@ -563,6 +563,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     sizes_list <- tmp$sizes_list
     heights_list <- tmp$heights_list
     min_size <- min(dt_kit_auto$Size)
+    max_size <- max(dt_kit_auto$Size)
 
     # Set allele probabilities
     tmp <- set_al_prob(markers_use, dt_af, peaks_list)
@@ -622,6 +623,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     pop_prob_list <- NULL
     ae_use <- NULL
     min_size <- NULL
+    max_size <- NULL
     data_hnc_list <- NULL
   }
 
@@ -633,5 +635,6 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
               "pop_prob_list" = pop_prob_list,
               "ae_use" = ae_use,
               "min_size" = min_size,
+              "max_size" = max_size,
               "data_hnc_list" = data_hnc_list))
 }
