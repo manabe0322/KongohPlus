@@ -123,10 +123,10 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
 #' @param h_dropin_fltr The drop-in peak height filter to narrow down a list of the genotype combinations
 #' @param freq_di The drop-in frequency
 #' @param shape_di The shape parameter of the gamma distribution for the drop-in model
-#' @param rate_di The rate parameter of the gamma distribution for the drop-in model
+#' @param scale_di The scale parameter of the gamma distribution for the drop-in model
 #' @param ae_use A vector of the locus-specific amplification efficiencies for each marker
-#' @param cv_allele The coefficient of variation for allelels
-#' @param cv_stutter The coefficient of variation for stutters
+#' @param scale_allele The scale parameter for allelels
+#' @param scale_stutter The scale parameter for stutters
 #' @param list_dt_average_sr A list of the data.table for the average stutter ratios
 #' @param min_temp Minimum template amount
 #' @param max_temp Maximum template amount
@@ -140,8 +140,8 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
 perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                             pop_al_list, pop_prob_list, theta,
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
-                            freq_di, shape_di, rate_di,
-                            ae_use, cv_allele, cv_stutter, list_dt_average_sr,
+                            freq_di, shape_di, scale_di,
+                            ae_use, scale_allele, scale_stutter, list_dt_average_sr,
                             min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs){
 
   # --- Start computation --- #
@@ -169,9 +169,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
   rph_base_use <- vector(mode = "list", length = n_mk)
   names(rph_base_use) <- markers_use
 
-  # CV squared
-  cv_square_base_use <- vector(mode = "list", length = n_mk)
-  names(cv_square_base_use) <- markers_use
+  # Scale parameters
+  scale_base_use <- vector(mode = "list", length = n_mk)
+  names(scale_base_use) <- markers_use
 
   # Scale of degradation corrected by sizes
   deg_size_base_use <- vector(mode = "list", length = n_mk)
@@ -244,16 +244,16 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     # --- Calculate the probability of drop-in in the current marker --- #
 
-    auc_below_at <- pgamma(q = at, shape = shape_di, rate = rate_di)
+    auc_below_at <- pgamma(q = at, shape = shape_di, scale = scale_di)
     logprob_di_use[i] <- log(freq_di / (1 - auc_below_at))
 
     # --- Prepare the relative peak heights --- #
 
     rph_base_use[[i]] <- rph_base_mk <- make_rph_base(peaks, bsrs, fsrs, dsrs, m2srs, ae)
 
-    # --- Prepare the CV squared values for each peak --- #
+    # --- Prepare the scale parameters for each peak --- #
 
-    cv_square_base_use[[i]] <- cv_square_base_mk <- c(rep(cv_allele^2, n_peak), rep(cv_stutter^2, 4 * n_peak), 0, -1)
+    scale_base_use[[i]] <- scale_base_mk <- c(rep(scale_allele, n_peak), rep(scale_stutter, 4 * n_peak), 0, -1)
 
     # --- Prepare the scale of degradation corrected by sizes --- #
 
@@ -345,7 +345,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
         # Assign log-likelihood of the drop-in for de-duplicated objects (pattern 1)
         if(length(index_dropin) != 0){
-          loglike_di_list[[j]][[i]] <- log(dgamma(oph_dedup1_tmp[index_dropin], shape_di, rate_di)) + logprob_di_use[i]
+          loglike_di_list[[j]][[i]] <- log(dgamma(oph_dedup1_tmp[index_dropin], shape = shape_di, scale = scale_di)) + logprob_di_use[i]
         }else{
           loglike_di_list[[j]][[i]] <- numeric(0)
         }
@@ -380,7 +380,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
       # Calculate log probability densities of all genotype combinations
       lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(tph_all_rep, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
-                                              rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list,
+                                              rph_base_use, scale_base_use, deg_size_base_use, oph_base_use, loglike_di_list,
                                               index_dedup1_list_cpp, index_dedup2_list_cpp, n_gt_perm_use, n_peak_use)
 
       # Calculate log likelihood in each marker
@@ -468,7 +468,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     # Calculate log probability densities of all genotype combinations
     lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(tph_all_rep, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
-                                            rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list,
+                                            rph_base_use, scale_base_use, deg_size_base_use, oph_base_use, loglike_di_list,
                                             index_dedup1_list_cpp, index_dedup2_list_cpp, n_gt_perm_use, n_peak_use)
 
     # Calculate log likelihood in each marker
@@ -584,13 +584,13 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     ae_use <- expect_ae[match(markers_use, names(expect_ae))]
 
     # Extract peak height parameters
-    cv_allele <- dt_anameth$Value[dt_anameth$Subcategory == "CV for allele"]
-    cv_stutter <- dt_anameth$Value[dt_anameth$Subcategory == "CV for stutter"]
+    scale_allele <- dt_anameth$Value[dt_anameth$Subcategory == "Scale parameter (allele)"]
+    scale_stutter <- dt_anameth$Value[dt_anameth$Subcategory == "Scale parameter (stutter)"]
 
     # Extract drop-in parameters
     freq_di <- dt_anameth$Value[dt_anameth$Subcategory == "Frequency"]
     shape_di <- dt_anameth$Value[dt_anameth$Subcategory == "Shape parameter"]
-    rate_di <- dt_anameth$Value[dt_anameth$Subcategory == "Rate parameter"]
+    scale_di <- dt_anameth$Value[dt_anameth$Subcategory == "Scale parameter"]
 
     n_hnc <- length(hnc_all)
     data_hnc_list <- vector(mode = "list", length = n_hnc)
@@ -599,8 +599,8 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
       data_hnc <- try(perform_deconvo(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                                       pop_al_list, pop_prob_list, theta,
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
-                                      freq_di, shape_di, rate_di,
-                                      ae_use, cv_allele, cv_stutter, list_dt_average_sr,
+                                      freq_di, shape_di, scale_di,
+                                      ae_use, scale_allele, scale_stutter, list_dt_average_sr,
                                       min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs))
       if(!inherits(data_hnc, "try-error")){
         data_hnc_list[[i]] <- data_hnc

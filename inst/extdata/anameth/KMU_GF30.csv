@@ -51,11 +51,11 @@ LSAE,D10S1248,,1.247893345,,,,,,,,,
 LSAE,D1S1656,,1.043680585,,,,,,,,,
 LSAE,D12S391,,0.824404625,,,,,,,,,
 LSAE,D2S1338,,1.059265991,,,,,,,,,
-Peak height,CV for allele,,9.699886,,,,,,,,,
-Peak height,CV for stutter,,3.486751,,,,,,,,,
+Peak height,Scale parameter (allele),,94.08778841,,,,,,,,,
+Peak height,Scale parameter (stutter),,12.15743254,,,,,,,,,
 Drop-in,Frequency,,0.004593477,,,,,,,,,
 Drop-in,Shape parameter,,5.26074,,,,,,,,,
-Drop-in,Rate parameter,,0.08866416,,,,,,,,,
+Drop-in,Scale parameter,,11.27851434,,,,,,,,,
 SR,D3S1358,,,9,9,0.019815204,9,0.007547396,9,0.005320558,NA,0
 SR,D3S1358,,,10,10,0.027876328,10,0.007547396,10,0.005320558,NA,0
 SR,D3S1358,,,11,11,0.035937451,11,0.007547396,11,0.005320558,NA,0

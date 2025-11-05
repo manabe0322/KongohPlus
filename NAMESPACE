@@ -3,6 +3,7 @@
 export(KongohPlus)
 export(aggregate_pg_contrib)
 export(create_dt_display_csp)
+export(create_fig_eph)
 importFrom(DT,JS)
 importFrom(DT,dataTableOutput)
 importFrom(DT,datatable)

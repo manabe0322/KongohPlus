@@ -144,8 +144,8 @@ create_default_dt_anameth <- function(path_pack, kit_name, stutter_name, param_n
                                                    markers_auto,
                                                    "Maximum BSR", "Maximum FSR", "Maximum DSR", "Maximum M2SR", "Maximum number of drop-in", "Maximum height of drop-in",
                                                    dt_expect_ae$Marker,
-                                                   "CV for allele", "CV for stutter",
-                                                   "Frequency", "Shape parameter", "Rate parameter"),
+                                                   "Scale parameter (allele)", "Scale parameter (stutter)",
+                                                   "Frequency", "Shape parameter", "Scale parameter"),
                                    Name = c(kit_name, stutter_name, param_name, dropin_name, rep("", 2 * n_mk + 11)),
                                    Value = c(rep(NA, 4),
                                              rep(100, n_mk),
@@ -154,7 +154,7 @@ create_default_dt_anameth <- function(path_pack, kit_name, stutter_name, param_n
                                              dt_est_gamma$Value,
                                              dt_est_dropin$Value[dt_est_dropin$Parameter == "Frequency"],
                                              dt_est_dropin$Value[dt_est_dropin$Parameter == "Shape parameter"],
-                                             dt_est_dropin$Value[dt_est_dropin$Parameter == "Rate parameter"]
+                                             dt_est_dropin$Value[dt_est_dropin$Parameter == "Scale parameter"]
                                              ),
                                    Allele = rep(NA, 2 * n_mk + 15),
                                    "Corrected allele (BSR)" = rep(NA, 2 * n_mk + 15),

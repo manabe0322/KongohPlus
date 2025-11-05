@@ -5,8 +5,8 @@
 \title{create_dt_gamma_data}
 \usage{
 create_dt_gamma_data(
-  cv_allele,
-  cv_stutter,
+  scale_allele,
+  scale_stutter,
   samples_gamma,
   markers_gamma,
   peaks_gamma,
@@ -17,9 +17,9 @@ create_dt_gamma_data(
 )
 }
 \arguments{
-\item{cv_allele}{The coefficient of variation for allelels}
+\item{scale_allele}{The scale parameter for allelels}
 
-\item{cv_stutter}{The coefficient of variation for stutters}
+\item{scale_stutter}{The scale parameter for stutters}
 
 \item{samples_gamma}{A vector of the sample names for gamma data}
 

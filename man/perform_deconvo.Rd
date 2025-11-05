@@ -24,10 +24,10 @@ perform_deconvo(
   h_dropin_fltr,
   freq_di,
   shape_di,
-  rate_di,
+  scale_di,
   ae_use,
-  cv_allele,
-  cv_stutter,
+  scale_allele,
+  scale_stutter,
   list_dt_average_sr,
   min_temp,
   max_temp,
@@ -79,13 +79,13 @@ perform_deconvo(
 
 \item{shape_di}{The shape parameter of the gamma distribution for the drop-in model}
 
-\item{rate_di}{The rate parameter of the gamma distribution for the drop-in model}
+\item{scale_di}{The scale parameter of the gamma distribution for the drop-in model}
 
 \item{ae_use}{A vector of the locus-specific amplification efficiencies for each marker}
 
-\item{cv_allele}{The coefficient of variation for allelels}
+\item{scale_allele}{The scale parameter for allelels}
 
-\item{cv_stutter}{The coefficient of variation for stutters}
+\item{scale_stutter}{The scale parameter for stutters}
 
 \item{list_dt_average_sr}{A list of the data.table for the average stutter ratios}
 

@@ -455,19 +455,19 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
 #' @param tphs_gamma The total peak heights in one heterozygote allele for the gamma distribution
 #' @param ophs_gamma The observed peak heights for the gamma distribution
 #' @param ats_gamma The analytical thresholds for the gamma distribution
-#' @param min_cv_allele The minimum CV for alleles
-#' @param max_cv_allele The maximum CV for alleles
-#' @param min_cv_stutter The minimum CV for stutters
-#' @param max_cv_stutter The maximum CV for stutters
+#' @param min_scale_allele The minimum scale parameter for alleles
+#' @param max_scale_allele The maximum scale parameter for alleles
+#' @param min_scale_stutter The minimum scale parameter for stutters
+#' @param max_scale_stutter The maximum scale parameter for stutters
 #' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
-run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, stop_iter, max_iter, num_converged, max_mle_runs){
+run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs){
 
   like_func_gamma <- function(par){
-    cv_allele_squared <- (par[1] * (max_cv_allele - min_cv_allele) + min_cv_allele)^2
-    cv_stutter_squared <- (par[2] * (max_cv_stutter - min_cv_stutter) + min_cv_stutter)^2
+    scale_allele <- par[1] * (max_scale_allele - min_scale_allele) + min_scale_allele
+    scale_stutter <- par[2] * (max_scale_stutter - min_scale_stutter) + min_scale_stutter
 
     n_data <- length(tphs_gamma)
     dens <- rep(Inf, n_data)
@@ -476,24 +476,24 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
       tmp1 <- rphs_gamma[, i] * tphs_gamma[i]
       tmp2 <- tmp1
       for(j in 1:2){
-        tmp2[j] <- tmp2[j] * cv_allele_squared
+        tmp2[j] <- tmp2[j] * scale_allele
       }
       for(j in 3:10){
-        tmp2[j] <- tmp2[j] * cv_stutter_squared
+        tmp2[j] <- tmp2[j] * scale_stutter
       }
 
       tmp1_sum <- sum(tmp1)
       tmp2_sum <- sum(tmp2)
-      gamma_alpha <- tmp1_sum^2 / tmp2_sum
-      gamma_beta <- tmp1_sum / tmp2_sum
+      gamma_shape <- tmp1_sum^2 / tmp2_sum
+      gamma_scale <- tmp2_sum / tmp1_sum
 
       at <- ats_gamma[i]
       oph <- ophs_gamma[i]
 
       if(oph == 0){
-        dens[i] <- pgamma(at, shape = gamma_alpha, rate = gamma_beta)
+        dens[i] <- pgamma(at, shape = gamma_shape, scale = gamma_scale)
       }else{
-        dens[i] <- dgamma(oph, shape = gamma_alpha, rate = gamma_beta)
+        dens[i] <- dgamma(oph, shape = gamma_shape, scale = gamma_scale)
       }
     }
 
@@ -520,7 +520,7 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
   repeat{
     count_mle <- count_mle + 1
 
-    init_list[[count_mle]] <- init <- c(runif(1, min = min_cv_allele, max = max_cv_allele), runif(1, min = min_cv_stutter, max = max_cv_stutter))
+    init_list[[count_mle]] <- init <- c(runif(1, min = min_scale_allele, max = max_scale_allele), runif(1, min = min_scale_stutter, max = max_scale_stutter))
 
     opt_list[[count_mle]] <- opt <- GenSA(
       par = init,
@@ -554,11 +554,11 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
 
   # Extract parameters
   est_param <- rep(NA, 2)
-  names(est_param) <- c("cv_allele", "cv_stutter")
+  names(est_param) <- c("scale_allele", "scale_stutter")
   if(!is.null(current_opt)){
     tmp <- current_opt$par
-    est_param[1] <- tmp[1] * (max_cv_allele - min_cv_allele) + min_cv_allele
-    est_param[2] <- tmp[2] * (max_cv_stutter - min_cv_stutter) + min_cv_stutter
+    est_param[1] <- tmp[1] * (max_scale_allele - min_scale_allele) + min_scale_allele
+    est_param[2] <- tmp[2] * (max_scale_stutter - min_scale_stutter) + min_scale_stutter
   }
 
   return(list(est_param = est_param, init_list = init_list, opt_list = opt_list))
@@ -567,8 +567,8 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
 #' create_dt_gamma_data
 #'
 #' @description The function to create the data.table for gamma data
-#' @param cv_allele The coefficient of variation for allelels
-#' @param cv_stutter The coefficient of variation for stutters
+#' @param scale_allele The scale parameter for allelels
+#' @param scale_stutter The scale parameter for stutters
 #' @param samples_gamma A vector of the sample names for gamma data
 #' @param markers_gamma A vector of the markers for gamma data
 #' @param peaks_gamma A vector of the peaks for gamma data
@@ -576,8 +576,8 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_
 #' @param tphs_gamma A vector of the total peak heights for gamma data
 #' @param ophs_gamma A vector of the observed peak heights for gamma data
 #' @param ats_gamma A vector of the ATs for gamma data
-create_dt_gamma_data <- function(cv_allele, cv_stutter, samples_gamma, markers_gamma, peaks_gamma, rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma){
-  cv_square_base <- c(rep(cv_allele^2, 2), rep(cv_stutter^2, 8))
+create_dt_gamma_data <- function(scale_allele, scale_stutter, samples_gamma, markers_gamma, peaks_gamma, rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma){
+  scale_base <- c(rep(scale_allele, 2), rep(scale_stutter, 8))
   index_cpp <- 0:9
   n_data <- length(samples_gamma)
   gamma_shape <- gamma_scale <- quantile95 <- quantile5 <- rep(NA, n_data)
@@ -595,7 +595,7 @@ create_dt_gamma_data <- function(cv_allele, cv_stutter, samples_gamma, markers_g
     }
 
     # Calculate gamma parameters
-    gamma_param <- calc_gamma_param_cpp(rphs, cv_square_base, index_cpp, tphs_gamma[i])
+    gamma_param <- calc_gamma_param_cpp(rphs, scale_base, index_cpp, tphs_gamma[i])
     gamma_shape[i] <- gamma_param[1]
     gamma_scale[i] <- gamma_param[2]
 
@@ -637,17 +637,17 @@ create_dt_gamma_data <- function(cv_allele, cv_stutter, samples_gamma, markers_g
 #' @param dt_setting_est_par The data.table for the parameter settings
 #' @param min_alpha The minimum alpha
 #' @param max_alpha The maximum alpha
-#' @param min_cv_allele The minimum CV for alleles
-#' @param max_cv_allele The maximum CV for alleles
-#' @param min_cv_stutter The minimum CV for stutters
-#' @param max_cv_stutter The maximum CV for stutters
+#' @param min_scale_allele The minimum scale parameter for alleles
+#' @param max_scale_allele The maximum scale parameter for alleles
+#' @param min_scale_stutter The minimum scale parameter for stutters
+#' @param max_scale_stutter The maximum scale parameter for stutters
 #' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
                                 min_alpha, max_alpha,
-                                min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter,
+                                min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
                                 stop_iter, max_iter, num_converged, max_mle_runs){
   # Extract information on setting
   markers_auto <- dt_setting_est_par$Marker
@@ -694,8 +694,8 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
 
   if(any(is.na(alpha))){
     expect_ae <- rep(NA, n_mk_auto)
-    cv_allele <- NA
-    cv_stutter <- NA
+    scale_allele <- NA
+    scale_stutter <- NA
     init_list_gamma <- NULL
     opt_list_gamma <- NULL
     dt_gamma_data <- NULL
@@ -718,20 +718,20 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     peaks_gamma <- tmp$peaks_gamma
 
     # Perform MLE for gamma distribution
-    tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter, stop_iter, max_iter, num_converged, max_mle_runs)
+    tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs)
     est_param <- tmp$est_param
-    cv_allele <- est_param["cv_allele"]
-    cv_stutter <- est_param["cv_stutter"]
+    scale_allele <- est_param["scale_allele"]
+    scale_stutter <- est_param["scale_stutter"]
     init_list_gamma <- tmp$init_list
     opt_list_gamma <- tmp$opt_list
 
     # Create the data.table for the gamma data
-    dt_gamma_data <- create_dt_gamma_data(cv_allele, cv_stutter, samples_gamma, markers_gamma, peaks_gamma, rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma)
+    dt_gamma_data <- create_dt_gamma_data(scale_allele, scale_stutter, samples_gamma, markers_gamma, peaks_gamma, rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma)
   }
 
   # Create the data.table for estimated parameters
   dt_expect_ae <- data.table(Marker = markers_auto, Alpha = alpha, LSAE = expect_ae)
-  dt_est_gamma <- data.table(Parameter = c("CV for allele", "CV for stutter"), Value = c(cv_allele, cv_stutter))
+  dt_est_gamma <- data.table(Parameter = c("Scale parameter (allele)", "Scale parameter (stutter)"), Value = c(scale_allele, scale_stutter))
 
   return(list("dt_expect_ae" = dt_expect_ae,
               "init_list_ae" = init_list_ae,

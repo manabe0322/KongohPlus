@@ -9,8 +9,8 @@ run_mle_dropin(
   heights,
   min_shape_di,
   max_shape_di,
-  min_rate_di,
-  max_rate_di,
+  min_scale_di,
+  max_scale_di,
   stop_iter,
   max_iter,
   num_converged,
@@ -26,9 +26,9 @@ run_mle_dropin(
 
 \item{max_shape_di}{The maximum shape}
 
-\item{min_rate_di}{The minimum rate}
+\item{min_scale_di}{The minimum scale}
 
-\item{max_rate_di}{The maximum rate}
+\item{max_scale_di}{The maximum scale}
 
 \item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
 

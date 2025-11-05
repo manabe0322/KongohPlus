@@ -99,7 +99,7 @@ view_dropin_server <- function(id, path_pack){
         if(!is.null(dt_est_dropin) && !is.null(dt_dropin_data) && nrow(dt_dropin_data) != 0){
           heights <- dt_dropin_data$Height
           shape_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Shape parameter"]
-          rate_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Rate parameter"]
+          scale_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Scale parameter"]
 
           tb_ph <- table(heights)
           x_val <- 0:round(max(heights) * 1.5, 0)
@@ -108,7 +108,7 @@ view_dropin_server <- function(id, path_pack){
 
           ggplot() +
             geom_line(data = data.frame(X = x_val, Y = y_val, P = y_val * 0.01), aes(X, P, color = "Observed"), linewidth = 1) +
-            stat_function(fun = dgamma, args = list(shape = shape_di, rate = rate_di), aes(color = "Estimated"), linewidth = 1) +
+            stat_function(fun = dgamma, args = list(shape = shape_di, scale = scale_di), aes(color = "Estimated"), linewidth = 1) +
             xlim(0, max(x_val)) +
             labs(color = NULL, x = "Peak height (RFU)") +
             scale_y_continuous(

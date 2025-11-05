@@ -466,16 +466,16 @@ BEGIN_RCPP
 END_RCPP
 }
 // calc_gamma_param_cpp
-std::vector<double> calc_gamma_param_cpp(const std::vector<double>& rph_dedup1, const std::vector<double>& cv_square_base_mk1, const std::vector<int>& index_dedup1, const double tph);
-RcppExport SEXP _KongohPlus_calc_gamma_param_cpp(SEXP rph_dedup1SEXP, SEXP cv_square_base_mk1SEXP, SEXP index_dedup1SEXP, SEXP tphSEXP) {
+std::vector<double> calc_gamma_param_cpp(const std::vector<double>& rph_dedup1, const std::vector<double>& scale_base_mk1, const std::vector<int>& index_dedup1, const double tph);
+RcppExport SEXP _KongohPlus_calc_gamma_param_cpp(SEXP rph_dedup1SEXP, SEXP scale_base_mk1SEXP, SEXP index_dedup1SEXP, SEXP tphSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< const std::vector<double>& >::type rph_dedup1(rph_dedup1SEXP);
-    Rcpp::traits::input_parameter< const std::vector<double>& >::type cv_square_base_mk1(cv_square_base_mk1SEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type scale_base_mk1(scale_base_mk1SEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type index_dedup1(index_dedup1SEXP);
     Rcpp::traits::input_parameter< const double >::type tph(tphSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_gamma_param_cpp(rph_dedup1, cv_square_base_mk1, index_dedup1, tph));
+    rcpp_result_gen = Rcpp::wrap(calc_gamma_param_cpp(rph_dedup1, scale_base_mk1, index_dedup1, tph));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -506,8 +506,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // calc_lpd_dedup1_mk
-std::vector<double> calc_lpd_dedup1_mk(const double tph, const std::vector<double>& mp, const std::vector<double>& deg, const int hnc, const double at, const int n_general, const int n_dropout, const int n_dropin, const int n_ignore, const std::vector<double>& rph_base_use_mk1, const std::vector<double>& cv_square_base_mk1, const std::vector<double>& deg_size_base_mk1, const std::vector<double>& oph_base_rep1_mk1, const std::vector<double>& loglike_di_rep1_mk1, const std::vector<std::vector<int>>& index_dedup1_rep1_mk1_cpp);
-RcppExport SEXP _KongohPlus_calc_lpd_dedup1_mk(SEXP tphSEXP, SEXP mpSEXP, SEXP degSEXP, SEXP hncSEXP, SEXP atSEXP, SEXP n_generalSEXP, SEXP n_dropoutSEXP, SEXP n_dropinSEXP, SEXP n_ignoreSEXP, SEXP rph_base_use_mk1SEXP, SEXP cv_square_base_mk1SEXP, SEXP deg_size_base_mk1SEXP, SEXP oph_base_rep1_mk1SEXP, SEXP loglike_di_rep1_mk1SEXP, SEXP index_dedup1_rep1_mk1_cppSEXP) {
+std::vector<double> calc_lpd_dedup1_mk(const double tph, const std::vector<double>& mp, const std::vector<double>& deg, const int hnc, const double at, const int n_general, const int n_dropout, const int n_dropin, const int n_ignore, const std::vector<double>& rph_base_use_mk1, const std::vector<double>& scale_base_mk1, const std::vector<double>& deg_size_base_mk1, const std::vector<double>& oph_base_rep1_mk1, const std::vector<double>& loglike_di_rep1_mk1, const std::vector<std::vector<int>>& index_dedup1_rep1_mk1_cpp);
+RcppExport SEXP _KongohPlus_calc_lpd_dedup1_mk(SEXP tphSEXP, SEXP mpSEXP, SEXP degSEXP, SEXP hncSEXP, SEXP atSEXP, SEXP n_generalSEXP, SEXP n_dropoutSEXP, SEXP n_dropinSEXP, SEXP n_ignoreSEXP, SEXP rph_base_use_mk1SEXP, SEXP scale_base_mk1SEXP, SEXP deg_size_base_mk1SEXP, SEXP oph_base_rep1_mk1SEXP, SEXP loglike_di_rep1_mk1SEXP, SEXP index_dedup1_rep1_mk1_cppSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -521,12 +521,12 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const int >::type n_dropin(n_dropinSEXP);
     Rcpp::traits::input_parameter< const int >::type n_ignore(n_ignoreSEXP);
     Rcpp::traits::input_parameter< const std::vector<double>& >::type rph_base_use_mk1(rph_base_use_mk1SEXP);
-    Rcpp::traits::input_parameter< const std::vector<double>& >::type cv_square_base_mk1(cv_square_base_mk1SEXP);
+    Rcpp::traits::input_parameter< const std::vector<double>& >::type scale_base_mk1(scale_base_mk1SEXP);
     Rcpp::traits::input_parameter< const std::vector<double>& >::type deg_size_base_mk1(deg_size_base_mk1SEXP);
     Rcpp::traits::input_parameter< const std::vector<double>& >::type oph_base_rep1_mk1(oph_base_rep1_mk1SEXP);
     Rcpp::traits::input_parameter< const std::vector<double>& >::type loglike_di_rep1_mk1(loglike_di_rep1_mk1SEXP);
     Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type index_dedup1_rep1_mk1_cpp(index_dedup1_rep1_mk1_cppSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_lpd_dedup1_mk(tph, mp, deg, hnc, at, n_general, n_dropout, n_dropin, n_ignore, rph_base_use_mk1, cv_square_base_mk1, deg_size_base_mk1, oph_base_rep1_mk1, loglike_di_rep1_mk1, index_dedup1_rep1_mk1_cpp));
+    rcpp_result_gen = Rcpp::wrap(calc_lpd_dedup1_mk(tph, mp, deg, hnc, at, n_general, n_dropout, n_dropin, n_ignore, rph_base_use_mk1, scale_base_mk1, deg_size_base_mk1, oph_base_rep1_mk1, loglike_di_rep1_mk1, index_dedup1_rep1_mk1_cpp));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -545,8 +545,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // calc_lpd_gtc_rep1
-std::vector<std::vector<double>> calc_lpd_gtc_rep1(const double tph, const std::vector<double>& mp, const std::vector<double>& deg, const int hnc, const std::vector<double>& ats_use, const std::vector<int>& n_general_rep1, const std::vector<int>& n_dropout_rep1, const std::vector<int>& n_dropin_rep1, const std::vector<int>& n_ignore_rep1, const std::vector<std::vector<double>>& rph_base_use, const std::vector<std::vector<double>>& cv_square_base_use, const std::vector<std::vector<double>>& deg_size_base_use, const std::vector<std::vector<double>>& oph_base_use_rep1, const std::vector<std::vector<double>>& loglike_di_rep1, const std::vector<std::vector<std::vector<int>>>& index_dedup1_rep1_cpp, const std::vector<std::vector<int>>& index_dedup2_rep1_cpp, const std::vector<int>& n_gtc_use, const std::vector<int>& n_peak_use);
-RcppExport SEXP _KongohPlus_calc_lpd_gtc_rep1(SEXP tphSEXP, SEXP mpSEXP, SEXP degSEXP, SEXP hncSEXP, SEXP ats_useSEXP, SEXP n_general_rep1SEXP, SEXP n_dropout_rep1SEXP, SEXP n_dropin_rep1SEXP, SEXP n_ignore_rep1SEXP, SEXP rph_base_useSEXP, SEXP cv_square_base_useSEXP, SEXP deg_size_base_useSEXP, SEXP oph_base_use_rep1SEXP, SEXP loglike_di_rep1SEXP, SEXP index_dedup1_rep1_cppSEXP, SEXP index_dedup2_rep1_cppSEXP, SEXP n_gtc_useSEXP, SEXP n_peak_useSEXP) {
+std::vector<std::vector<double>> calc_lpd_gtc_rep1(const double tph, const std::vector<double>& mp, const std::vector<double>& deg, const int hnc, const std::vector<double>& ats_use, const std::vector<int>& n_general_rep1, const std::vector<int>& n_dropout_rep1, const std::vector<int>& n_dropin_rep1, const std::vector<int>& n_ignore_rep1, const std::vector<std::vector<double>>& rph_base_use, const std::vector<std::vector<double>>& scale_base_use, const std::vector<std::vector<double>>& deg_size_base_use, const std::vector<std::vector<double>>& oph_base_use_rep1, const std::vector<std::vector<double>>& loglike_di_rep1, const std::vector<std::vector<std::vector<int>>>& index_dedup1_rep1_cpp, const std::vector<std::vector<int>>& index_dedup2_rep1_cpp, const std::vector<int>& n_gtc_use, const std::vector<int>& n_peak_use);
+RcppExport SEXP _KongohPlus_calc_lpd_gtc_rep1(SEXP tphSEXP, SEXP mpSEXP, SEXP degSEXP, SEXP hncSEXP, SEXP ats_useSEXP, SEXP n_general_rep1SEXP, SEXP n_dropout_rep1SEXP, SEXP n_dropin_rep1SEXP, SEXP n_ignore_rep1SEXP, SEXP rph_base_useSEXP, SEXP scale_base_useSEXP, SEXP deg_size_base_useSEXP, SEXP oph_base_use_rep1SEXP, SEXP loglike_di_rep1SEXP, SEXP index_dedup1_rep1_cppSEXP, SEXP index_dedup2_rep1_cppSEXP, SEXP n_gtc_useSEXP, SEXP n_peak_useSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -560,7 +560,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::vector<int>& >::type n_dropin_rep1(n_dropin_rep1SEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type n_ignore_rep1(n_ignore_rep1SEXP);
     Rcpp::traits::input_parameter< const std::vector<std::vector<double>>& >::type rph_base_use(rph_base_useSEXP);
-    Rcpp::traits::input_parameter< const std::vector<std::vector<double>>& >::type cv_square_base_use(cv_square_base_useSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::vector<double>>& >::type scale_base_use(scale_base_useSEXP);
     Rcpp::traits::input_parameter< const std::vector<std::vector<double>>& >::type deg_size_base_use(deg_size_base_useSEXP);
     Rcpp::traits::input_parameter< const std::vector<std::vector<double>>& >::type oph_base_use_rep1(oph_base_use_rep1SEXP);
     Rcpp::traits::input_parameter< const std::vector<std::vector<double>>& >::type loglike_di_rep1(loglike_di_rep1SEXP);
@@ -568,13 +568,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type index_dedup2_rep1_cpp(index_dedup2_rep1_cppSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type n_gtc_use(n_gtc_useSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type n_peak_use(n_peak_useSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_rep1, n_dropout_rep1, n_dropin_rep1, n_ignore_rep1, rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use_rep1, loglike_di_rep1, index_dedup1_rep1_cpp, index_dedup2_rep1_cpp, n_gtc_use, n_peak_use));
+    rcpp_result_gen = Rcpp::wrap(calc_lpd_gtc_rep1(tph, mp, deg, hnc, ats_use, n_general_rep1, n_dropout_rep1, n_dropin_rep1, n_ignore_rep1, rph_base_use, scale_base_use, deg_size_base_use, oph_base_use_rep1, loglike_di_rep1, index_dedup1_rep1_cpp, index_dedup2_rep1_cpp, n_gtc_use, n_peak_use));
     return rcpp_result_gen;
 END_RCPP
 }
 // calc_lpd_gtc_all_rep
-std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const std::vector<double>& tph_all_rep, const std::vector<double>& mp, const std::vector<double>& deg, const int hnc, const std::vector<double>& ats_use, const std::vector<std::vector<int>>& n_general_list, const std::vector<std::vector<int>>& n_dropout_list, const std::vector<std::vector<int>>& n_dropin_list, const std::vector<std::vector<int>>& n_ignore_list, const std::vector<std::vector<double>>& rph_base_use, const std::vector<std::vector<double>>& cv_square_base_use, const std::vector<std::vector<double>>& deg_size_base_use, const std::vector<std::vector<std::vector<double>>>& oph_base_use, const std::vector<std::vector<std::vector<double>>>& loglike_di_list, const std::vector<std::vector<std::vector<std::vector<int>>>>& index_dedup1_list_cpp, const std::vector<std::vector<std::vector<int>>>& index_dedup2_list_cpp, const std::vector<int>& n_gtc_use, const std::vector<int>& n_peak_use);
-RcppExport SEXP _KongohPlus_calc_lpd_gtc_all_rep(SEXP tph_all_repSEXP, SEXP mpSEXP, SEXP degSEXP, SEXP hncSEXP, SEXP ats_useSEXP, SEXP n_general_listSEXP, SEXP n_dropout_listSEXP, SEXP n_dropin_listSEXP, SEXP n_ignore_listSEXP, SEXP rph_base_useSEXP, SEXP cv_square_base_useSEXP, SEXP deg_size_base_useSEXP, SEXP oph_base_useSEXP, SEXP loglike_di_listSEXP, SEXP index_dedup1_list_cppSEXP, SEXP index_dedup2_list_cppSEXP, SEXP n_gtc_useSEXP, SEXP n_peak_useSEXP) {
+std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const std::vector<double>& tph_all_rep, const std::vector<double>& mp, const std::vector<double>& deg, const int hnc, const std::vector<double>& ats_use, const std::vector<std::vector<int>>& n_general_list, const std::vector<std::vector<int>>& n_dropout_list, const std::vector<std::vector<int>>& n_dropin_list, const std::vector<std::vector<int>>& n_ignore_list, const std::vector<std::vector<double>>& rph_base_use, const std::vector<std::vector<double>>& scale_base_use, const std::vector<std::vector<double>>& deg_size_base_use, const std::vector<std::vector<std::vector<double>>>& oph_base_use, const std::vector<std::vector<std::vector<double>>>& loglike_di_list, const std::vector<std::vector<std::vector<std::vector<int>>>>& index_dedup1_list_cpp, const std::vector<std::vector<std::vector<int>>>& index_dedup2_list_cpp, const std::vector<int>& n_gtc_use, const std::vector<int>& n_peak_use);
+RcppExport SEXP _KongohPlus_calc_lpd_gtc_all_rep(SEXP tph_all_repSEXP, SEXP mpSEXP, SEXP degSEXP, SEXP hncSEXP, SEXP ats_useSEXP, SEXP n_general_listSEXP, SEXP n_dropout_listSEXP, SEXP n_dropin_listSEXP, SEXP n_ignore_listSEXP, SEXP rph_base_useSEXP, SEXP scale_base_useSEXP, SEXP deg_size_base_useSEXP, SEXP oph_base_useSEXP, SEXP loglike_di_listSEXP, SEXP index_dedup1_list_cppSEXP, SEXP index_dedup2_list_cppSEXP, SEXP n_gtc_useSEXP, SEXP n_peak_useSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -588,7 +588,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type n_dropin_list(n_dropin_listSEXP);
     Rcpp::traits::input_parameter< const std::vector<std::vector<int>>& >::type n_ignore_list(n_ignore_listSEXP);
     Rcpp::traits::input_parameter< const std::vector<std::vector<double>>& >::type rph_base_use(rph_base_useSEXP);
-    Rcpp::traits::input_parameter< const std::vector<std::vector<double>>& >::type cv_square_base_use(cv_square_base_useSEXP);
+    Rcpp::traits::input_parameter< const std::vector<std::vector<double>>& >::type scale_base_use(scale_base_useSEXP);
     Rcpp::traits::input_parameter< const std::vector<std::vector<double>>& >::type deg_size_base_use(deg_size_base_useSEXP);
     Rcpp::traits::input_parameter< const std::vector<std::vector<std::vector<double>>>& >::type oph_base_use(oph_base_useSEXP);
     Rcpp::traits::input_parameter< const std::vector<std::vector<std::vector<double>>>& >::type loglike_di_list(loglike_di_listSEXP);
@@ -596,7 +596,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< const std::vector<std::vector<std::vector<int>>>& >::type index_dedup2_list_cpp(index_dedup2_list_cppSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type n_gtc_use(n_gtc_useSEXP);
     Rcpp::traits::input_parameter< const std::vector<int>& >::type n_peak_use(n_peak_useSEXP);
-    rcpp_result_gen = Rcpp::wrap(calc_lpd_gtc_all_rep(tph_all_rep, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list, rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use, loglike_di_list, index_dedup1_list_cpp, index_dedup2_list_cpp, n_gtc_use, n_peak_use));
+    rcpp_result_gen = Rcpp::wrap(calc_lpd_gtc_all_rep(tph_all_rep, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list, rph_base_use, scale_base_use, deg_size_base_use, oph_base_use, loglike_di_list, index_dedup1_list_cpp, index_dedup2_list_cpp, n_gtc_use, n_peak_use));
     return rcpp_result_gen;
 END_RCPP
 }

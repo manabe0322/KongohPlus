@@ -29,19 +29,19 @@ check_est_dropin <- function(dt_ntc, dt_kit){
 #' @param heights A vector of drop-in peak heights
 #' @param min_shape_di The minimum shape
 #' @param max_shape_di The maximum shape
-#' @param min_rate_di The minimum rate
-#' @param max_rate_di The maximum rate
+#' @param min_scale_di The minimum scale
+#' @param max_scale_di The maximum scale
 #' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
-run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_rate_di, max_rate_di, stop_iter, max_iter, num_converged, max_mle_runs){
+run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs){
 
   like_func_dropin <- function(par){
     shape_di <- par[1] * (max_shape_di - min_shape_di) + min_shape_di
-    rate_di <- par[2] * (max_rate_di - min_rate_di) + min_rate_di
+    scale_di <- par[2] * (max_scale_di - min_scale_di) + min_scale_di
 
-    dens <- dgamma(heights, shape = shape_di, rate = rate_di)
+    dens <- dgamma(heights, shape = shape_di, scale = scale_di)
     loglike <- - sum(log(dens))
 
     if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
@@ -65,7 +65,7 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_ra
   repeat{
     count_mle <- count_mle + 1
 
-    init_list[[count_mle]] <- init <- c(runif(1, min = min_shape_di, max = max_shape_di), runif(1, min = min_rate_di, max = max_rate_di))
+    init_list[[count_mle]] <- init <- c(runif(1, min = min_shape_di, max = max_shape_di), runif(1, min = min_scale_di, max = max_scale_di))
 
     opt_list[[count_mle]] <- opt <- GenSA(
       par = init,
@@ -99,11 +99,11 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_ra
 
   # Extract parameters
   est_param <- rep(NA, 2)
-  names(est_param) <- c("shape_di", "rate_di")
+  names(est_param) <- c("shape_di", "scale_di")
   if(!is.null(current_opt)){
     tmp <- current_opt$par
     est_param[1] <- tmp[1] * (max_shape_di - min_shape_di) + min_shape_di
-    est_param[2] <- tmp[2] * (max_rate_di - min_rate_di) + min_rate_di
+    est_param[2] <- tmp[2] * (max_scale_di - min_scale_di) + min_scale_di
   }
 
   return(list(est_param = est_param, init_list = init_list, opt_list = opt_list))
@@ -117,13 +117,13 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_ra
 #' @param at_dropin The analytical threshold for drop-in peaks
 #' @param min_shape_di The minimum shape
 #' @param max_shape_di The maximum shape
-#' @param min_rate_di The minimum rate
-#' @param max_rate_di The maximum rate
+#' @param min_scale_di The minimum scale
+#' @param max_scale_di The maximum scale
 #' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
-estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, stop_iter, max_iter, num_converged, max_mle_runs){
+estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs){
 
     # --- Extract data for autosomal markers --- #
 
@@ -156,10 +156,10 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
   heights <- dt_dropin_data$Height
   n_dropin <- length(heights)
 
-  tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_rate_di, max_rate_di, stop_iter, max_iter, num_converged, max_mle_runs)
+  tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs)
   est_param <- tmp$est_param
   shape_di <- est_param["shape_di"]
-  rate_di <- est_param["rate_di"]
+  scale_di <- est_param["scale_di"]
   init_list_di <- tmp$init_list
   opt_list_di <- tmp$opt_list
 
@@ -167,8 +167,8 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
 
   n_sample_di <- length(unique(dt_ntc$SampleName))
   freq_dropin <- n_dropin / (n_sample_di * n_mk_di)
-  dt_est_dropin <- data.table(Parameter = c("Number of samples", "Number of markers", "Number of drop-in peaks", "Frequency", "Shape parameter", "Rate parameter"),
-                          Value = c(n_sample_di, n_mk_di, n_dropin, freq_dropin, shape_di, rate_di))
+  dt_est_dropin <- data.table(Parameter = c("Number of samples", "Number of markers", "Number of drop-in peaks", "Frequency", "Shape parameter", "Scale parameter"),
+                          Value = c(n_sample_di, n_mk_di, n_dropin, freq_dropin, shape_di, scale_di))
 
   return(list("dt_dropin_data" = dt_dropin_data,
               "dt_est_dropin" = dt_est_dropin,

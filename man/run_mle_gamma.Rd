@@ -9,10 +9,10 @@ run_mle_gamma(
   tphs_gamma,
   ophs_gamma,
   ats_gamma,
-  min_cv_allele,
-  max_cv_allele,
-  min_cv_stutter,
-  max_cv_stutter,
+  min_scale_allele,
+  max_scale_allele,
+  min_scale_stutter,
+  max_scale_stutter,
   stop_iter,
   max_iter,
   num_converged,
@@ -28,13 +28,13 @@ run_mle_gamma(
 
 \item{ats_gamma}{The analytical thresholds for the gamma distribution}
 
-\item{min_cv_allele}{The minimum CV for alleles}
+\item{min_scale_allele}{The minimum scale parameter for alleles}
 
-\item{max_cv_allele}{The maximum CV for alleles}
+\item{max_scale_allele}{The maximum scale parameter for alleles}
 
-\item{min_cv_stutter}{The minimum CV for stutters}
+\item{min_scale_stutter}{The minimum scale parameter for stutters}
 
-\item{max_cv_stutter}{The maximum CV for stutters}
+\item{max_scale_stutter}{The maximum scale parameter for stutters}
 
 \item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
 

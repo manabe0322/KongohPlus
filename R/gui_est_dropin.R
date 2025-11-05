@@ -64,15 +64,15 @@ est_dropin_server <- function(id, path_pack){
       rv_est_dropin_setting$dt_kit <- NULL
       rv_est_dropin_setting$name_kit_dropin <- NULL
       rv_est_dropin_setting$min_shape_di <- 0.01
-      rv_est_dropin_setting$max_shape_di <- 20
-      rv_est_dropin_setting$min_rate_di <- 0.01
-      rv_est_dropin_setting$max_rate_di <- 20
+      rv_est_dropin_setting$max_shape_di <- 100
+      rv_est_dropin_setting$min_scale_di <- 0.01
+      rv_est_dropin_setting$max_scale_di <- 100
       rv_est_dropin_setting$stop_iter <- 500
       rv_est_dropin_setting$max_iter <- 5000
       rv_est_dropin_setting$num_converged <- 3
       rv_est_dropin_setting$max_mle_runs <- 10
       rv_est_dropin_setting$bool_correct_mle_shape_di <- TRUE
-      rv_est_dropin_setting$bool_correct_mle_rate_di <- TRUE
+      rv_est_dropin_setting$bool_correct_mle_scale_di <- TRUE
       rv_est_dropin_setting$bool_correct_advanced_1 <- TRUE
       rv_est_dropin_setting$bool_correct_advanced_2 <- TRUE
       rv_est_dropin_setting$data_est_dropin <- NULL
@@ -115,13 +115,13 @@ est_dropin_server <- function(id, path_pack){
                    numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_dropin_setting$stop_iter),
                    numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", rv_est_dropin_setting$num_converged),
                    numericInput(session$ns("min_shape_di"), label = "Minimum shape parameter", value = rv_est_dropin_setting$min_shape_di),
-                   numericInput(session$ns("min_rate_di"), label = "Minimum rate parameter", value = rv_est_dropin_setting$min_rate_di)
+                   numericInput(session$ns("min_scale_di"), label = "Minimum scale parameter", value = rv_est_dropin_setting$min_scale_di)
             ),
             column(6,
                    numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_dropin_setting$max_iter),
                    numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_dropin_setting$max_mle_runs),
                    numericInput(session$ns("max_shape_di"), label = "Maximum shape parameter", value = rv_est_dropin_setting$max_shape_di),
-                   numericInput(session$ns("max_rate_di"), label = "Maximum rate parameter", value = rv_est_dropin_setting$max_rate_di)
+                   numericInput(session$ns("max_scale_di"), label = "Maximum scale parameter", value = rv_est_dropin_setting$max_scale_di)
             )
           ),
           footer = tagList(
@@ -157,28 +157,28 @@ est_dropin_server <- function(id, path_pack){
         }
       })
 
-      observeEvent(input$min_rate_di | input$max_rate_di, {
-        min_rate_di <- input$min_rate_di
-        max_rate_di <- input$max_rate_di
+      observeEvent(input$min_scale_di | input$max_scale_di, {
+        min_scale_di <- input$min_scale_di
+        max_scale_di <- input$max_scale_di
 
-        hideFeedback("min_rate_di")
-        hideFeedback("max_rate_di")
-        rv_est_dropin_setting$bool_correct_mle_rate_di <- TRUE
+        hideFeedback("min_scale_di")
+        hideFeedback("max_scale_di")
+        rv_est_dropin_setting$bool_correct_mle_scale_di <- TRUE
 
-        if(!is.numeric(min_rate_di) || min_rate_di <= 0){
-          showFeedbackDanger(inputId = "min_rate_di", text = "Value must be positive.")
-          rv_est_dropin_setting$bool_correct_mle_rate_di <- FALSE
+        if(!is.numeric(min_scale_di) || min_scale_di <= 0){
+          showFeedbackDanger(inputId = "min_scale_di", text = "Value must be positive.")
+          rv_est_dropin_setting$bool_correct_mle_scale_di <- FALSE
         }
 
-        if(!is.numeric(max_rate_di) || max_rate_di <= 0){
-          showFeedbackDanger(inputId = "max_rate_di", text = "Value must be positive.")
-          rv_est_dropin_setting$bool_correct_mle_rate_di <- FALSE
+        if(!is.numeric(max_scale_di) || max_scale_di <= 0){
+          showFeedbackDanger(inputId = "max_scale_di", text = "Value must be positive.")
+          rv_est_dropin_setting$bool_correct_mle_scale_di <- FALSE
         }
 
-        if(is.numeric(min_rate_di) && is.numeric(max_rate_di) && max_rate_di < min_rate_di){
-          showFeedbackDanger(inputId = "min_rate_di", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_rate_di", text = "Minimum value cannot be greater than maximum value.")
-          rv_est_dropin_setting$bool_correct_mle_rate_di <- FALSE
+        if(is.numeric(min_scale_di) && is.numeric(max_scale_di) && max_scale_di < min_scale_di){
+          showFeedbackDanger(inputId = "min_scale_di", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_scale_di", text = "Minimum value cannot be greater than maximum value.")
+          rv_est_dropin_setting$bool_correct_mle_scale_di <- FALSE
         }
       })
 
@@ -240,7 +240,7 @@ est_dropin_server <- function(id, path_pack){
         req(rv_est_dropin_setting)
 
         if(all(rv_est_dropin_setting$bool_correct_mle_shape_di,
-               rv_est_dropin_setting$bool_correct_mle_rate_di,
+               rv_est_dropin_setting$bool_correct_mle_scale_di,
                rv_est_dropin_setting$bool_correct_advanced_1,
                rv_est_dropin_setting$bool_correct_advanced_2)){
           enable("act_advance_dropin_save")
@@ -252,8 +252,8 @@ est_dropin_server <- function(id, path_pack){
       observeEvent(input$act_advance_dropin_save, {
         rv_est_dropin_setting$min_shape_di <- input$min_shape_di
         rv_est_dropin_setting$max_shape_di <- input$max_shape_di
-        rv_est_dropin_setting$min_rate_di <- input$min_rate_di
-        rv_est_dropin_setting$max_rate_di <- input$max_rate_di
+        rv_est_dropin_setting$min_scale_di <- input$min_scale_di
+        rv_est_dropin_setting$max_scale_di <- input$max_scale_di
         rv_est_dropin_setting$stop_iter <- input$stop_iter
         rv_est_dropin_setting$max_iter <- input$max_iter
         rv_est_dropin_setting$num_converged <- input$num_converged
@@ -272,8 +272,8 @@ est_dropin_server <- function(id, path_pack){
         at_dropin <- input$at_dropin
         min_shape_di <- rv_est_dropin_setting$min_shape_di
         max_shape_di <- rv_est_dropin_setting$max_shape_di
-        min_rate_di <- rv_est_dropin_setting$min_rate_di
-        max_rate_di <- rv_est_dropin_setting$max_rate_di
+        min_scale_di <- rv_est_dropin_setting$min_scale_di
+        max_scale_di <- rv_est_dropin_setting$max_scale_di
         stop_iter <- rv_est_dropin_setting$stop_iter
         max_iter <- rv_est_dropin_setting$max_iter
         num_converged <- rv_est_dropin_setting$num_converged
@@ -286,14 +286,14 @@ est_dropin_server <- function(id, path_pack){
           waiter_hide()
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          data_est_dropin <- estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_rate_di, max_rate_di, stop_iter, max_iter, num_converged, max_mle_runs)
+          data_est_dropin <- estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs)
           data_est_dropin$fn_ntc <- fn_ntc
           data_est_dropin$name_kit_dropin <- name_kit_dropin
           data_est_dropin$at_dropin <- at_dropin
           data_est_dropin$min_shape_di <- min_shape_di
           data_est_dropin$max_shape_di <- max_shape_di
-          data_est_dropin$min_rate_di <- min_rate_di
-          data_est_dropin$max_rate_di <- max_rate_di
+          data_est_dropin$min_scale_di <- min_scale_di
+          data_est_dropin$max_scale_di <- max_scale_di
           data_est_dropin$stop_iter <- stop_iter
           data_est_dropin$max_iter <- max_iter
           data_est_dropin$num_converged <- num_converged
@@ -366,7 +366,7 @@ est_dropin_server <- function(id, path_pack){
           output$plot_dropin <- renderPlot({
             heights <- dt_dropin_data$Height
             shape_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Shape parameter"]
-            rate_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Rate parameter"]
+            scale_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Scale parameter"]
 
             tb_ph <- table(heights)
             x_val <- 0:round(max(heights) * 1.5, 0)
@@ -375,7 +375,7 @@ est_dropin_server <- function(id, path_pack){
 
             ggplot() +
               geom_line(data = data.frame(X = x_val, Y = y_val, P = y_val * 0.01), aes(X, P, color = "Observed"), linewidth = 1) +
-              stat_function(fun = dgamma, args = list(shape = shape_di, rate = rate_di), aes(color = "Estimated"), linewidth = 1) +
+              stat_function(fun = dgamma, args = list(shape = shape_di, scale = scale_di), aes(color = "Estimated"), linewidth = 1) +
               xlim(0, max(x_val)) +
               labs(color = NULL, x = "Peak height (RFU)") +
               scale_y_continuous(

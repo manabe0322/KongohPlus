@@ -29,6 +29,18 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
       rv_report$data_hnc_list <- NULL
       rv_report$dt_ignore_mk <- NULL
       rv_report$hnc_all <- NULL
+      rv_report$message_sr <- NULL
+      rv_report$min_size <- NULL
+      rv_report$max_size <- NULL
+      rv_report$min_temp <- 1
+      rv_report$max_temp <- 32000
+      rv_report$min_rep_ae <- 0.2
+      rv_report$max_rep_ae <- 5
+      rv_report$min_deg <- 0.0001
+      rv_report$stop_iter <- 500
+      rv_report$max_iter <- 5000
+      rv_report$num_converged <- 3
+      rv_report$max_mle_runs <- 10
       rv_report$theta <- NULL
       rv_report$dt_ref <- NULL
       rv_report$fn_ref <- NULL
@@ -50,6 +62,18 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
           rv_report$data_hnc_list <- data_deconvo$data_hnc_list
           rv_report$dt_ignore_mk <- data_deconvo$dt_ignore_mk
           rv_report$hnc_all <- data_deconvo$hnc_all
+          rv_report$message_sr <- data_deconvo$message_sr
+          rv_report$min_size <- data_deconvo$min_size
+          rv_report$max_size <- data_deconvo$max_size
+          rv_report$min_temp <- data_deconvo$min_temp
+          rv_report$max_temp <- data_deconvo$max_temp
+          rv_report$min_rep_ae <- data_deconvo$min_rep_ae
+          rv_report$max_rep_ae <- data_deconvo$max_rep_ae
+          rv_report$min_deg <- data_deconvo$min_deg
+          rv_report$stop_iter <- data_deconvo$stop_iter
+          rv_report$max_iter <- data_deconvo$max_iter
+          rv_report$num_converged <- data_deconvo$num_converged
+          rv_report$max_mle_runs <- data_deconvo$max_mle_runs
           rv_report$theta <- data_deconvo$theta
 
           enable("download_report")
@@ -88,6 +112,18 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
               data_hnc_list = rv_report$data_hnc_list,
               dt_ignore_mk = rv_report$dt_ignore_mk,
               hnc_all = rv_report$hnc_all,
+              message_sr = rv_report$message_sr,
+              min_size = rv_report$min_size,
+              max_size = rv_report$max_size,
+              min_temp = rv_report$min_temp,
+              max_temp = rv_report$max_temp,
+              min_rep_ae = rv_report$min_rep_ae,
+              max_rep_ae = rv_report$max_rep_ae,
+              min_deg = rv_report$min_deg,
+              stop_iter = rv_report$stop_iter,
+              max_iter = rv_report$max_iter,
+              num_converged = rv_report$num_converged,
+              max_mle_runs = rv_report$max_mle_runs,
               theta = rv_report$theta,
               dt_ref = rv_report$dt_ref,
               fn_ref = rv_report$fn_ref,

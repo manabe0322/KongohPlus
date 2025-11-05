@@ -73,17 +73,17 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       rv_est_par_setting$name_sr <- NULL
       rv_est_par_setting$min_alpha <- 0.01
       rv_est_par_setting$max_alpha <- 100
-      rv_est_par_setting$min_cv_allele <- 0.01
-      rv_est_par_setting$max_cv_allele <- 20
-      rv_est_par_setting$min_cv_stutter <- 0.01
-      rv_est_par_setting$max_cv_stutter <- 20
+      rv_est_par_setting$min_scale_allele <- 0.01
+      rv_est_par_setting$max_scale_allele <- 400
+      rv_est_par_setting$min_scale_stutter <- 0.01
+      rv_est_par_setting$max_scale_stutter <- 400
       rv_est_par_setting$stop_iter <- 500
       rv_est_par_setting$max_iter <- 5000
       rv_est_par_setting$num_converged <- 3
       rv_est_par_setting$max_mle_runs <- 10
       rv_est_par_setting$bool_correct_mle_alpha <- TRUE
-      rv_est_par_setting$bool_correct_mle_cv_allele <- TRUE
-      rv_est_par_setting$bool_correct_mle_cv_stutter <- TRUE
+      rv_est_par_setting$bool_correct_mle_scale_allele <- TRUE
+      rv_est_par_setting$bool_correct_mle_scale_stutter <- TRUE
       rv_est_par_setting$bool_correct_advanced_1 <- TRUE
       rv_est_par_setting$bool_correct_advanced_2 <- TRUE
 
@@ -161,15 +161,15 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
                    numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_par_setting$stop_iter),
                    numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_est_par_setting$num_converged),
                    numericInput(session$ns("min_alpha"), label = "Minimum alpha for LSAE", value = rv_est_par_setting$min_alpha),
-                   numericInput(session$ns("min_cv_allele"), label = "Minimum CV for alleles", value = rv_est_par_setting$min_cv_allele),
-                   numericInput(session$ns("min_cv_stutter"), label = "Minimum CV for stutters", value = rv_est_par_setting$min_cv_stutter)
+                   numericInput(session$ns("min_scale_allele"), label = "Minimum scale parameter for alleles", value = rv_est_par_setting$min_scale_allele),
+                   numericInput(session$ns("min_scale_stutter"), label = "Minimum scale parameter for stutters", value = rv_est_par_setting$min_scale_stutter)
             ),
             column(6,
                    numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_par_setting$max_iter),
                    numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_par_setting$max_mle_runs),
                    numericInput(session$ns("max_alpha"), label = "Maximum alpha for LSAE", value = rv_est_par_setting$max_alpha),
-                   numericInput(session$ns("max_cv_allele"), label = "Maximum CV for alleles", value = rv_est_par_setting$max_cv_allele),
-                   numericInput(session$ns("max_cv_stutter"), label = "Maximum CV for stutters", value = rv_est_par_setting$max_cv_stutter)
+                   numericInput(session$ns("max_scale_allele"), label = "Maximum scale parameter for alleles", value = rv_est_par_setting$max_scale_allele),
+                   numericInput(session$ns("max_scale_stutter"), label = "Maximum scale parameter for stutters", value = rv_est_par_setting$max_scale_stutter)
             )
           ),
           footer = tagList(
@@ -205,53 +205,53 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         }
       })
 
-      observeEvent(input$min_cv_allele | input$max_cv_allele, {
-        min_cv_allele <- input$min_cv_allele
-        max_cv_allele <- input$max_cv_allele
+      observeEvent(input$min_scale_allele | input$max_scale_allele, {
+        min_scale_allele <- input$min_scale_allele
+        max_scale_allele <- input$max_scale_allele
 
-        hideFeedback("min_cv_allele")
-        hideFeedback("max_cv_allele")
-        rv_est_par_setting$bool_correct_mle_cv_allele <- TRUE
+        hideFeedback("min_scale_allele")
+        hideFeedback("max_scale_allele")
+        rv_est_par_setting$bool_correct_mle_scale_allele <- TRUE
 
-        if(!is.numeric(min_cv_allele) || min_cv_allele <= 0){
-          showFeedbackDanger(inputId = "min_cv_allele", text = "Value must be positive.")
-          rv_est_par_setting$bool_correct_mle_cv_allele <- FALSE
+        if(!is.numeric(min_scale_allele) || min_scale_allele <= 0){
+          showFeedbackDanger(inputId = "min_scale_allele", text = "Value must be positive.")
+          rv_est_par_setting$bool_correct_mle_scale_allele <- FALSE
         }
 
-        if(!is.numeric(max_cv_allele) || max_cv_allele <= 0){
-          showFeedbackDanger(inputId = "max_cv_allele", text = "Value must be positive.")
-          rv_est_par_setting$bool_correct_mle_cv_allele <- FALSE
+        if(!is.numeric(max_scale_allele) || max_scale_allele <= 0){
+          showFeedbackDanger(inputId = "max_scale_allele", text = "Value must be positive.")
+          rv_est_par_setting$bool_correct_mle_scale_allele <- FALSE
         }
 
-        if(is.numeric(min_cv_allele) && is.numeric(max_cv_allele) && max_cv_allele < min_cv_allele){
-          showFeedbackDanger(inputId = "min_cv_allele", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_cv_allele", text = "Minimum value cannot be greater than maximum value.")
-          rv_est_par_setting$bool_correct_mle_cv_allele <- FALSE
+        if(is.numeric(min_scale_allele) && is.numeric(max_scale_allele) && max_scale_allele < min_scale_allele){
+          showFeedbackDanger(inputId = "min_scale_allele", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_scale_allele", text = "Minimum value cannot be greater than maximum value.")
+          rv_est_par_setting$bool_correct_mle_scale_allele <- FALSE
         }
       })
 
-      observeEvent(input$min_cv_stutter | input$max_cv_stutter, {
-        min_cv_stutter <- input$min_cv_stutter
-        max_cv_stutter <- input$max_cv_stutter
+      observeEvent(input$min_scale_stutter | input$max_scale_stutter, {
+        min_scale_stutter <- input$min_scale_stutter
+        max_scale_stutter <- input$max_scale_stutter
 
-        hideFeedback("min_cv_stutter")
-        hideFeedback("max_cv_stutter")
-        rv_est_par_setting$bool_correct_mle_cv_stutter <- TRUE
+        hideFeedback("min_scale_stutter")
+        hideFeedback("max_scale_stutter")
+        rv_est_par_setting$bool_correct_mle_scale_stutter <- TRUE
 
-        if(!is.numeric(min_cv_stutter) || min_cv_stutter <= 0){
-          showFeedbackDanger(inputId = "min_cv_stutter", text = "Value must be positive.")
-          rv_est_par_setting$bool_correct_mle_cv_stutter <- FALSE
+        if(!is.numeric(min_scale_stutter) || min_scale_stutter <= 0){
+          showFeedbackDanger(inputId = "min_scale_stutter", text = "Value must be positive.")
+          rv_est_par_setting$bool_correct_mle_scale_stutter <- FALSE
         }
 
-        if(!is.numeric(max_cv_stutter) || max_cv_stutter <= 0){
-          showFeedbackDanger(inputId = "max_cv_stutter", text = "Value must be positive.")
-          rv_est_par_setting$bool_correct_mle_cv_stutter <- FALSE
+        if(!is.numeric(max_scale_stutter) || max_scale_stutter <= 0){
+          showFeedbackDanger(inputId = "max_scale_stutter", text = "Value must be positive.")
+          rv_est_par_setting$bool_correct_mle_scale_stutter <- FALSE
         }
 
-        if(is.numeric(min_cv_stutter) && is.numeric(max_cv_stutter) && max_cv_stutter < min_cv_stutter){
-          showFeedbackDanger(inputId = "min_cv_stutter", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_cv_stutter", text = "Minimum value cannot be greater than maximum value.")
-          rv_est_par_setting$bool_correct_mle_cv_stutter <- FALSE
+        if(is.numeric(min_scale_stutter) && is.numeric(max_scale_stutter) && max_scale_stutter < min_scale_stutter){
+          showFeedbackDanger(inputId = "min_scale_stutter", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "max_scale_stutter", text = "Minimum value cannot be greater than maximum value.")
+          rv_est_par_setting$bool_correct_mle_scale_stutter <- FALSE
         }
       })
 
@@ -313,8 +313,8 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         req(rv_est_par)
 
         if(all(rv_est_par_setting$bool_correct_mle_alpha,
-               rv_est_par_setting$bool_correct_mle_cv_allele,
-               rv_est_par_setting$bool_correct_mle_cv_stutter,
+               rv_est_par_setting$bool_correct_mle_scale_allele,
+               rv_est_par_setting$bool_correct_mle_scale_stutter,
                rv_est_par_setting$bool_correct_advanced_1,
                rv_est_par_setting$bool_correct_advanced_2)){
           enable("act_advance_par_save")
@@ -326,10 +326,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
       observeEvent(input$act_advance_par_save, {
         rv_est_par_setting$min_alpha <- input$min_alpha
         rv_est_par_setting$max_alpha <- input$max_alpha
-        rv_est_par_setting$min_cv_allele <- input$min_cv_allele
-        rv_est_par_setting$max_cv_allele <- input$max_cv_allele
-        rv_est_par_setting$min_cv_stutter <- input$min_cv_stutter
-        rv_est_par_setting$max_cv_stutter <- input$max_cv_stutter
+        rv_est_par_setting$min_scale_allele <- input$min_scale_allele
+        rv_est_par_setting$max_scale_allele <- input$max_scale_allele
+        rv_est_par_setting$min_scale_stutter <- input$min_scale_stutter
+        rv_est_par_setting$max_scale_stutter <- input$max_scale_stutter
         rv_est_par_setting$stop_iter <- input$stop_iter
         rv_est_par_setting$max_iter <- input$max_iter
         rv_est_par_setting$num_converged <- input$num_converged
@@ -352,10 +352,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         name_sr <- rv_est_par_setting$name_sr
         min_alpha <- rv_est_par_setting$min_alpha
         max_alpha <- rv_est_par_setting$max_alpha
-        min_cv_allele <- rv_est_par_setting$min_cv_allele
-        max_cv_allele <- rv_est_par_setting$max_cv_allele
-        min_cv_stutter <- rv_est_par_setting$min_cv_stutter
-        max_cv_stutter <- rv_est_par_setting$max_cv_stutter
+        min_scale_allele <- rv_est_par_setting$min_scale_allele
+        max_scale_allele <- rv_est_par_setting$max_scale_allele
+        min_scale_stutter <- rv_est_par_setting$min_scale_stutter
+        max_scale_stutter <- rv_est_par_setting$max_scale_stutter
         stop_iter <- rv_est_par_setting$stop_iter
         max_iter <- rv_est_par_setting$max_iter
         num_converged <- rv_est_par_setting$num_converged
@@ -369,7 +369,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         }else{
           data_est_par <- estimate_parameters(dt_exp_param, dt_gt_param, list_dt_average_sr, dt_setting_est_par,
                                               min_alpha, max_alpha,
-                                              min_cv_allele, max_cv_allele, min_cv_stutter, max_cv_stutter,
+                                              min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
                                               stop_iter, max_iter, num_converged, max_mle_runs)
 
           data_est_par$fn_exp_param <- fn_exp_param
@@ -380,10 +380,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           data_est_par$name_sr <- name_sr
           data_est_par$min_alpha <- min_alpha
           data_est_par$max_alpha <- max_alpha
-          data_est_par$min_cv_allele <- min_cv_allele
-          data_est_par$max_cv_allele <- max_cv_allele
-          data_est_par$min_cv_stutter <- min_cv_stutter
-          data_est_par$max_cv_stutter <- max_cv_stutter
+          data_est_par$min_scale_allele <- min_scale_allele
+          data_est_par$max_scale_allele <- max_scale_allele
+          data_est_par$min_scale_stutter <- min_scale_stutter
+          data_est_par$max_scale_stutter <- max_scale_stutter
           data_est_par$stop_iter <- stop_iter
           data_est_par$max_iter <- max_iter
           data_est_par$num_converged <- num_converged

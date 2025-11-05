@@ -27,7 +27,7 @@ std::vector<double> calc_rph_dedup1_cpp(const std::vector<double>& mp,
 
 // [[Rcpp::export]]
 std::vector<double> calc_gamma_param_cpp(const std::vector<double>& rph_dedup1,
-                                         const std::vector<double>& cv_square_base_mk1,
+                                         const std::vector<double>& scale_base_mk1,
                                          const std::vector<int>& index_dedup1,
                                          const double tph){
 
@@ -37,7 +37,7 @@ std::vector<double> calc_gamma_param_cpp(const std::vector<double>& rph_dedup1,
 
   for(int i = 0; i < n_al; ++i){
     tmp1_sum += rph_dedup1[i];
-    tmp2_sum += rph_dedup1[i] * cv_square_base_mk1[index_dedup1[i]];
+    tmp2_sum += rph_dedup1[i] * scale_base_mk1[index_dedup1[i]];
   }
 
   std::vector<double> gamma_param(2);
@@ -102,7 +102,7 @@ std::vector<double> calc_lpd_dedup1_mk(const double tph,
                                        const int n_dropin,
                                        const int n_ignore,
                                        const std::vector<double>& rph_base_use_mk1,
-                                       const std::vector<double>& cv_square_base_mk1,
+                                       const std::vector<double>& scale_base_mk1,
                                        const std::vector<double>& deg_size_base_mk1,
                                        const std::vector<double>& oph_base_rep1_mk1,
                                        const std::vector<double>& loglike_di_rep1_mk1,
@@ -117,7 +117,7 @@ std::vector<double> calc_lpd_dedup1_mk(const double tph,
       int min_index = *std::min_element(index_dedup1.begin(), index_dedup1.end());
 
       std::vector<double> rph_dedup1_general = calc_rph_dedup1_cpp(mp, deg, hnc, rph_base_use_mk1, index_dedup1, deg_size_base_mk1[min_index]);
-      std::vector<double> gamma_param = calc_gamma_param_cpp(rph_dedup1_general, cv_square_base_mk1, index_dedup1, tph);
+      std::vector<double> gamma_param = calc_gamma_param_cpp(rph_dedup1_general, scale_base_mk1, index_dedup1, tph);
 
       double pd = gamma_pdf(oph_base_rep1_mk1[min_index], gamma_param[0], gamma_param[1]);
       double log_pd;
@@ -137,7 +137,7 @@ std::vector<double> calc_lpd_dedup1_mk(const double tph,
       int min_index = *std::min_element(index_dedup1.begin(), index_dedup1.end());
 
       std::vector<double> rph_dedup1_dropout = calc_rph_dedup1_cpp(mp, deg, hnc, rph_base_use_mk1, index_dedup1, deg_size_base_mk1[min_index]);
-      std::vector<double> gamma_param = calc_gamma_param_cpp(rph_dedup1_dropout, cv_square_base_mk1, index_dedup1, tph);
+      std::vector<double> gamma_param = calc_gamma_param_cpp(rph_dedup1_dropout, scale_base_mk1, index_dedup1, tph);
 
       double cd = gamma_cdf(at, gamma_param[0], gamma_param[1]);
       double log_cd;
@@ -189,7 +189,7 @@ std::vector<std::vector<double>> calc_lpd_gtc_rep1(const double tph,
                                                    const std::vector<int>& n_dropin_rep1,
                                                    const std::vector<int>& n_ignore_rep1,
                                                    const std::vector<std::vector<double>>& rph_base_use,
-                                                   const std::vector<std::vector<double>>& cv_square_base_use,
+                                                   const std::vector<std::vector<double>>& scale_base_use,
                                                    const std::vector<std::vector<double>>& deg_size_base_use,
                                                    const std::vector<std::vector<double>>& oph_base_use_rep1,
                                                    const std::vector<std::vector<double>>& loglike_di_rep1,
@@ -203,7 +203,7 @@ std::vector<std::vector<double>> calc_lpd_gtc_rep1(const double tph,
 
   for(int i = 0; i < n_mk; ++i){
     std::vector<double> lpd_dedup1_mk = calc_lpd_dedup1_mk(tph, mp, deg, hnc, ats_use[i], n_general_rep1[i], n_dropout_rep1[i], n_dropin_rep1[i], n_ignore_rep1[i],
-                                                           rph_base_use[i], cv_square_base_use[i], deg_size_base_use[i], oph_base_use_rep1[i], loglike_di_rep1[i],
+                                                           rph_base_use[i], scale_base_use[i], deg_size_base_use[i], oph_base_use_rep1[i], loglike_di_rep1[i],
                                                            index_dedup1_rep1_cpp[i]);
 
     lpd_gtc_rep1[i] = calc_lpd_gtc_mk(lpd_dedup1_mk, index_dedup2_rep1_cpp[i], n_gtc_use[i], n_peak_use[i]);
@@ -223,7 +223,7 @@ std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const std::ve
                                                                    const std::vector<std::vector<int>>& n_dropin_list,
                                                                    const std::vector<std::vector<int>>& n_ignore_list,
                                                                    const std::vector<std::vector<double>>& rph_base_use,
-                                                                   const std::vector<std::vector<double>>& cv_square_base_use,
+                                                                   const std::vector<std::vector<double>>& scale_base_use,
                                                                    const std::vector<std::vector<double>>& deg_size_base_use,
                                                                    const std::vector<std::vector<std::vector<double>>>& oph_base_use,
                                                                    const std::vector<std::vector<std::vector<double>>>& loglike_di_list,
@@ -238,7 +238,7 @@ std::vector<std::vector<std::vector<double>>> calc_lpd_gtc_all_rep(const std::ve
 
   for(int i = 0; i < n_rep; ++i){
     lpd_gtc_all_rep[i] = calc_lpd_gtc_rep1(tph_all_rep[i], mp, deg, hnc, ats_use, n_general_list[i], n_dropout_list[i], n_dropin_list[i], n_ignore_list[i],
-                                           rph_base_use, cv_square_base_use, deg_size_base_use, oph_base_use[i], loglike_di_list[i],
+                                           rph_base_use, scale_base_use, deg_size_base_use, oph_base_use[i], loglike_di_list[i],
                                            index_dedup1_list_cpp[i], index_dedup2_list_cpp[i], n_gtc_use, n_peak_use);
   }
 
