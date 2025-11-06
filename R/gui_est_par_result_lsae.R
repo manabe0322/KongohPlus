@@ -10,11 +10,12 @@ est_par_result_lsae_ui <- function(id){
     fluidRow(
       column(
         3,
+        actionButton(ns("act_saveas_est_par_1"), label = "Save as", class = "btn btn-primary btn-lg"),
+        br(),
         wellPanel(
           h4("Expected LSAE"),
           dataTableOutput(ns("dt_expect_ae"))
-        ),
-        actionButton(ns("act_saveas_est_par_1"), label = "Save as", class = "btn btn-primary btn-lg")
+        )
       ),
       column(
         9,

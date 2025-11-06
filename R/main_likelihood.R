@@ -349,3 +349,19 @@ calculate_lr <- function(noc_hp, hp, noc_hd, hd, refs,
   return(list("lr_data" = lr_data, "dt_lr_calc_record_1" = dt_lr_calc_record_1))
 }
 
+#' create_contrib_order
+#'
+#' @description The function to create a vector of the ordered contributor
+#' @param hyp_id_best A vector of the contributors' IDs for the best hypothesis
+#' @param refs A vector of the references' names
+create_contrib_order <- function(hyp_id_best, refs){
+  hnc <- length(hyp_id_best)
+  contrib_order <- rep("U", hnc)
+  for(i in 1:hnc){
+    id1 <- hyp_id_best[i]
+    if(id1 != 0){
+      contrib_order[i] <- refs[id1]
+    }
+  }
+  return(contrib_order)
+}

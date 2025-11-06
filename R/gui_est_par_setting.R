@@ -39,22 +39,6 @@ est_par_setting_ui <- function(id){
   )
 }
 
-#' create_init_dt_setting_est_par
-#'
-#' @description The function to create the initial data.table in the setting tab for estimating parameters
-#' @param dt_kit The data.table of information on a kit
-create_init_dt_setting_est_par <- function(dt_kit){
-  dt_kit_auto <- extract_kit_auto(dt_kit)
-  markers <- unique(dt_kit_auto$Marker)
-
-  dt_setting_est_par <- data.table(Marker = markers,
-                                   AT = c(rep(35, 5), rep(65, 3), rep(45, 4), rep(50, 5), rep(60, 4)))
-  col_int <- c("AT")
-  dt_setting_est_par[, (col_int) := lapply(.SD, as.integer), .SDcols = col_int]
-
-  return(dt_setting_est_par)
-}
-
 #' est_par_setting_server
 #'
 #' @description The function to create the server module for setting to estimate parameters

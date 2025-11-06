@@ -8,7 +8,8 @@ report_ui <- function(id){
            useWaiter(),
            textInput(ns("case_name"), label = h4("Case name")),
            textInput(ns("user_name"), label = h4("User name")),
-           disabled(downloadButton(ns("download_report"), "Report"))
+           br(),
+           disabled(downloadButton(ns("download_report"), "Report", class = "btn btn-primary btn-lg"))
   )
 }
 
