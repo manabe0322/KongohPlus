@@ -63,7 +63,7 @@ KongohPlus <- function(num_threads = NULL){
                              ),
 
                              navbarMenu("Tools",
-                                        tabPanel("Example files"),
+                                        example_file_ui("example_file"),
                                         view_sr_ui("view_sr"),
                                         view_lsae_ui("view_lsae"),
                                         view_gamma_ui("view_gamma"),
@@ -87,6 +87,7 @@ KongohPlus <- function(num_threads = NULL){
 
     # --- Tools --- #
 
+    example_file_server("example_file", path_pack)
     view_sr_server("view_sr", path_pack)
     view_lsae_server("view_lsae", path_pack)
     view_gamma_server("view_gamma", path_pack)
