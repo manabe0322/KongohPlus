@@ -50,6 +50,15 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, markers_auto, method){
     }
   }
 
+  # --- Check OL, OMR, and Spike --- #
+
+  rowindex_ol <- nrow(which(dt_csp[, grep("Allele", names(dt_csp)), with = FALSE] == "OL", arr.ind = TRUE))
+  rowindex_omr <- nrow(which(dt_csp[, grep("Allele", names(dt_csp)), with = FALSE] == "OMR", arr.ind = TRUE))
+  rowindex_spike <- nrow(which(dt_csp[, grep("Allele", names(dt_csp)), with = FALSE] == "Spike", arr.ind = TRUE))
+  if(rowindex_ol != 0 || rowindex_omr != 0 || rowindex_spike != 0){
+    error_message <- paste0(error_message, "Invalid allele label: contains OL, OMR, and/or Spike.<br>")
+  }
+
   return(error_message)
 }
 

@@ -30,19 +30,22 @@ check_est_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr){
   error_message <- ""
   markers_est_sr <- dt_setting_est_sr$Marker
 
-  # Check the marker set of the experimental data
+  # --- Check the marker set of the experimental data --- #
+
   sn_mk_problem_exp <- check_dt_mk(dt_exp, markers_est_sr)
   if(length(sn_mk_problem_exp) > 0){
     error_message <- paste0(error_message, "Inappropriate marker set of the following sample(s) in the experimental data: ", paste0(sn_mk_problem_exp, collapse = ", "), ".<br>")
   }
 
-  # Check the marker set of the genotype data
+  # --- Check the marker set of the genotype data --- #
+
   sn_mk_problem_gt <- check_dt_mk(dt_gt, markers_est_sr)
   if(length(sn_mk_problem_gt) > 0){
     error_message <- paste0(error_message, "Inappropriate marker set of the following sample(s) in the genotype data: ", paste0(sn_mk_problem_gt, collapse = ", "), ".<br>")
   }
 
-  # Check the sample names
+  # --- Check the sample names --- #
+
   sn_exp <- unique(dt_exp$SampleName)
   sn_gt <- unique(dt_gt$SampleName)
   sn_without_gt <- setdiff(sn_exp, sn_gt)
@@ -50,42 +53,57 @@ check_est_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr){
     error_message <- paste0(error_message, "No genotype data of the following samples: ", paste0(sn_without_gt, collapse = ", "), ".<br>")
   }
 
-  # Check the analytical thresholds
+  # --- Check OL, OMR, and Spike --- #
+
+  rowindex_ol <- nrow(which(dt_exp[, grep("Allele", names(dt_exp)), with = FALSE] == "OL", arr.ind = TRUE))
+  rowindex_omr <- nrow(which(dt_exp[, grep("Allele", names(dt_exp)), with = FALSE] == "OMR", arr.ind = TRUE))
+  rowindex_spike <- nrow(which(dt_exp[, grep("Allele", names(dt_exp)), with = FALSE] == "Spike", arr.ind = TRUE))
+  if(rowindex_ol != 0 || rowindex_omr != 0 || rowindex_spike != 0){
+    error_message <- paste0(error_message, "Invalid allele label: contains OL, OMR, and/or Spike.<br>")
+  }
+
+  # --- Check the analytical thresholds --- #
+
   at_all_mk <- dt_setting_est_sr$AT
   bool_without_at <- is.na(at_all_mk)
   if(any(bool_without_at)){
     error_message <- paste0(error_message, "Set the analytical threshold(s) of the following marker(s): ", paste0(markers_est_sr[bool_without_at], collapse = ", "), ".<br>")
   }
 
-  # Check the BSR model
+  # --- Check the BSR model --- #
+
   model_bsr <- dt_setting_est_sr[["BSR model"]]
   index_without_model_bsr <- which(model_bsr == "")
   if(length(index_without_model_bsr) != 0){
     error_message <- paste0(error_message, "Set the BSR model of the following marker(s): ", paste0(markers_est_sr[index_without_model_bsr], collapse = ", "), ".<br>")
   }
 
-  # Check the FSR model
+  # --- Check the FSR model --- #
+
   model_fsr <- dt_setting_est_sr[["FSR model"]]
   index_without_model_fsr <- which(model_fsr == "")
   if(length(index_without_model_fsr) != 0){
     error_message <- paste0(error_message, "Set the FSR model of the following marker(s): ", paste0(markers_est_sr[index_without_model_fsr], collapse = ", "), ".<br>")
   }
 
-  # Check the DSR model
+  # --- Check the DSR model --- #
+
   model_dsr <- dt_setting_est_sr[["DSR model"]]
   index_without_model_dsr <- which(model_dsr == "")
   if(length(index_without_model_dsr) != 0){
     error_message <- paste0(error_message, "Set the DSR model of the following marker(s): ", paste0(markers_est_sr[index_without_model_dsr], collapse = ", "), ".<br>")
   }
 
-  # Check the M2SR model
+  # --- Check the M2SR model --- #
+
   model_m2sr <- dt_setting_est_sr[["M2SR model"]]
   index_without_model_m2sr <- which(model_m2sr == "")
   if(length(index_without_model_m2sr) != 0){
     error_message <- paste0(error_message, "Set the M2SR model of the following marker(s): ", paste0(markers_est_sr[index_without_model_m2sr], collapse = ", "), ".<br>")
   }
 
-  # Check the registration of all alleles
+  # --- Check the registration of all alleles --- #
+
   n_mk <- length(markers_est_sr)
   dt_gt_tmp <- copy(dt_gt)
   setindex(dt_gt_tmp, Marker)
@@ -109,7 +127,8 @@ check_est_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr){
   }
   error_message <- paste0(error_message, error_message_info_al)
 
-  # Check corrected alleles
+  # --- Check corrected alleles --- #
+
   error_message_info_ca <- character(0)
   for(i in 1:n_mk){
     if(is.element("Linear (Corrected Allele)", c(model_bsr[i], model_fsr[i], model_dsr[i], model_m2sr[i]))){

@@ -64,9 +64,10 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_use, ats_use){
       rep1 <- name_csp_all[j]
       dt_csp_mk_rep1 <- dt_csp_mk[SampleName == rep1]
       peaks <- as.numeric(dt_csp_mk_rep1[, index_allele, with = FALSE])
-      peaks <- peaks[!is.na(peaks)]
       heights <- as.numeric(dt_csp_mk_rep1[, index_height, with = FALSE])
-      heights <- heights[!is.na(heights)]
+      index_rm_na <- which(!is.na(peaks))
+      peaks <- peaks[index_rm_na]
+      heights <- heights[index_rm_na]
 
       # Keep peaks above AT
       if(length(peaks) != 0){
