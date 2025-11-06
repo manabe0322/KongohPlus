@@ -20,7 +20,7 @@ est_sr_setting_ui <- function(id){
                           br(),
                           br(),
                           br(),
-                          uiOutput(ns("act_analyze_est_sr"))
+                          uiOutput(ns("ui_analyze_est_sr"))
              ),
              mainPanel(width = 9,
                        tags$style(HTML("
@@ -117,9 +117,15 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         file_input <- input$exp_data
         if(!is.null(file_input)){
           dt_exp_sr <- fread(file_input$datapath)
-          dt_exp_sr <- change_data_type_exp(dt_exp_sr)
-          rv_est_sr_setting$dt_exp_sr <- dt_exp_sr
-          rv_est_sr_setting$fn_exp_sr <- file_input$name
+          dt_exp_sr <- try(change_data_type_csp(dt_exp_sr))
+          if(!inherits(dt_exp_sr, "try-error")){
+            rv_est_sr_setting$dt_exp_sr <- dt_exp_sr
+            rv_est_sr_setting$fn_exp_sr <- file_input$name
+          }else{
+            rv_est_sr_setting$dt_exp_sr <- NULL
+            rv_est_sr_setting$fn_exp_sr <- NULL
+            showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
+          }
         }
       })
 
@@ -128,9 +134,15 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         file_input <- input$gt_data
         if(!is.null(file_input)){
           dt_gt_sr <- fread(file_input$datapath)
-          dt_gt_sr <- change_data_type_gt(dt_gt_sr)
-          rv_est_sr_setting$dt_gt_sr <- dt_gt_sr
-          rv_est_sr_setting$fn_gt_sr <- file_input$name
+          dt_gt_sr <- try(change_data_type_ref(dt_gt_sr))
+          if(!inherits(dt_gt_sr, "try-error")){
+            rv_est_sr_setting$dt_gt_sr <- dt_gt_sr
+            rv_est_sr_setting$fn_gt_sr <- file_input$name
+          }else{
+            rv_est_sr_setting$dt_gt_sr <- NULL
+            rv_est_sr_setting$fn_gt_sr <- NULL
+            showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
+          }
         }
       })
 
@@ -142,9 +154,17 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         path_kit <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/kit")), input$load_kit)$datapath
         if(length(path_kit) > 0){
           dt_kit <- fread(path_kit)
-          rv_est_sr_setting$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
-          rv_est_sr_setting$dt_setting_est_sr <- create_init_dt_setting_est_sr(dt_kit)
-          rv_est_sr_setting$name_kit_stutter <- str_replace(basename(path_kit), ".{4}$", "")
+          dt_kit <- try(change_data_type_kit(dt_kit))
+          if(inherits(dt_kit, "try-error")){
+            rv_est_sr_setting$dt_kit <- NULL
+            rv_est_sr_setting$dt_setting_est_sr <- NULL
+            rv_est_sr_setting$name_kit_stutter <- NULL
+            showModal(modalDialog(title = "Error", "The file format of the selected kit is invalid. Please update a file in the correct format.", easyClose = TRUE, footer = NULL))
+          }else{
+            rv_est_sr_setting$dt_kit <- dt_kit
+            rv_est_sr_setting$dt_setting_est_sr <- create_init_dt_setting_est_sr(dt_kit)
+            rv_est_sr_setting$name_kit_stutter <- str_replace(basename(path_kit), ".{4}$", "")
+          }
         }
       })
 
@@ -366,7 +386,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         removeModal()
       })
 
-      output$act_analyze_est_sr <- renderUI({
+      output$ui_analyze_est_sr <- renderUI({
         dt_exp_sr <- rv_est_sr_setting$dt_exp_sr
         dt_gt_sr <- rv_est_sr_setting$dt_gt_sr
         dt_kit <- rv_est_sr_setting$dt_kit
@@ -406,30 +426,35 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           waiter_hide()
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          data_est_sr <- estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr,
-                                             min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
-                                             stop_iter, max_iter, num_converged, max_mle_runs)
-          data_est_sr$fn_exp_sr <- fn_exp_sr
-          data_est_sr$fn_gt_sr <- fn_gt_sr
-          data_est_sr$dt_setting_est_sr <- dt_setting_est_sr
-          data_est_sr$name_kit_stutter <- name_kit_stutter
-          data_est_sr$min_slope <- min_slope
-          data_est_sr$max_slope <- max_slope
-          data_est_sr$min_intercept <- min_intercept
-          data_est_sr$max_intercept <- max_intercept
-          data_est_sr$min_myu <- min_myu
-          data_est_sr$max_myu <- max_myu
-          data_est_sr$min_sigma <- min_sigma
-          data_est_sr$max_sigma <- max_sigma
-          data_est_sr$stop_iter <- stop_iter
-          data_est_sr$max_iter <- max_iter
-          data_est_sr$num_converged <- num_converged
-          data_est_sr$max_mle_runs <- max_mle_runs
-          rv_est_sr$data_est_sr <- data_est_sr
+          data_est_sr <- try(estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr,
+                                                 min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
+                                                 stop_iter, max_iter, num_converged, max_mle_runs))
+          if(inherits(data_est_sr, "try-error")){
+            waiter_hide()
+            showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
+          }else{
+            data_est_sr$fn_exp_sr <- fn_exp_sr
+            data_est_sr$fn_gt_sr <- fn_gt_sr
+            data_est_sr$dt_setting_est_sr <- dt_setting_est_sr
+            data_est_sr$name_kit_stutter <- name_kit_stutter
+            data_est_sr$min_slope <- min_slope
+            data_est_sr$max_slope <- max_slope
+            data_est_sr$min_intercept <- min_intercept
+            data_est_sr$max_intercept <- max_intercept
+            data_est_sr$min_myu <- min_myu
+            data_est_sr$max_myu <- max_myu
+            data_est_sr$min_sigma <- min_sigma
+            data_est_sr$max_sigma <- max_sigma
+            data_est_sr$stop_iter <- stop_iter
+            data_est_sr$max_iter <- max_iter
+            data_est_sr$num_converged <- num_converged
+            data_est_sr$max_mle_runs <- max_mle_runs
+            rv_est_sr$data_est_sr <- data_est_sr
 
-          waiter_hide()
+            waiter_hide()
 
-          updateTabsetPanel(session = session_est_sr_top, inputId = "tabset_est_sr", selected = "Result")
+            updateTabsetPanel(session = session_est_sr_top, inputId = "tabset_est_sr", selected = "Result")
+          }
         }
       })
 

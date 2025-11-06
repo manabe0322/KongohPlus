@@ -4,30 +4,37 @@
 file_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("File",
-           sidebarLayout(
-             sidebarPanel(width = 3,
-                          fileInput(ns("file_csp"), label = h4("Crime stain profile"), accept = ".csv", buttonLabel = "Load"),
-                          fileInput(ns("file_ref"), label = h4("Reference profile"), accept = ".csv", buttonLabel = "Load"),
-                          fileInput(ns("file_af"), label = h4("Allele frequency"), accept = ".csv", buttonLabel = "Load"),
-                          br(),
-                          actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg")
-             ),
-             mainPanel(width = 9,
-                       tabsetPanel(id = ns("tabset_load_file"),
-                                   type = "tabs",
-                                   tabPanel("Crime stain profile",
-                                            dataTableOutput(ns("dt_csp"))
-                                   ),
-                                   tabPanel("Reference profile",
-                                            dataTableOutput(ns("dt_ref"))
-                                   ),
-                                   tabPanel("Allele frequency",
-                                            dataTableOutput(ns("dt_af"))
-                                   )
-                       )
-             )
-           )
+  tabPanel(
+    "File",
+    sidebarLayout(
+      sidebarPanel(
+        width = 3,
+        fileInput(ns("file_csp"), label = h4("Crime stain profile"), accept = ".csv", buttonLabel = "Load"),
+        fileInput(ns("file_ref"), label = h4("Reference profile"), accept = ".csv", buttonLabel = "Load"),
+        fileInput(ns("file_af"), label = h4("Allele frequency"), accept = ".csv", buttonLabel = "Load"),
+        br(),
+        actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg")
+      ),
+      mainPanel(
+        width = 9,
+        tabsetPanel(
+          id = ns("tabset_load_file"),
+          type = "tabs",
+          tabPanel(
+            "Crime stain profile",
+            uiOutput(ns("info_csp"))
+          ),
+          tabPanel(
+            "Reference profile",
+            uiOutput(ns("info_ref"))
+          ),
+          tabPanel(
+            "Allele frequency",
+            uiOutput(ns("info_af"))
+          )
+        )
+      )
+    )
   )
 }
 
@@ -45,6 +52,9 @@ file_server <- function(id, session_top, bool_load_proj){
       rv_input$fn_csp <- NULL
       rv_input$fn_ref <- NULL
       rv_input$fn_af <- NULL
+      rv_input$bool_csp <- TRUE
+      rv_input$bool_ref <- TRUE
+      rv_input$bool_af <- TRUE
 
       # --- Load crime stain profiles --- #
 
@@ -52,9 +62,17 @@ file_server <- function(id, session_top, bool_load_proj){
         file_input <- input$file_csp
         if(!is.null(file_input)){
           dt_csp <- fread(file_input$datapath)
-          dt_csp <- change_data_type_csp(dt_csp)
-          rv_input$dt_csp <- dt_csp
-          rv_input$fn_csp <- file_input$name
+          dt_csp <- try(change_data_type_csp(dt_csp))
+          if(!inherits(dt_csp, "try-error")){
+            rv_input$dt_csp <- dt_csp
+            rv_input$fn_csp <- file_input$name
+            rv_input$bool_csp <- TRUE
+          }else{
+            showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
+            rv_input$dt_csp <- NULL
+            rv_input$fn_csp <- NULL
+            rv_input$bool_csp <- FALSE
+          }
           updateTabsetPanel(inputId = "tabset_load_file", selected = "Crime stain profile")
         }
       })
@@ -65,9 +83,17 @@ file_server <- function(id, session_top, bool_load_proj){
         file_input <- input$file_ref
         if(!is.null(file_input)){
           dt_ref <- fread(file_input$datapath)
-          dt_ref <- change_data_type_ref(dt_ref)
-          rv_input$dt_ref <- dt_ref
-          rv_input$fn_ref <- file_input$name
+          dt_ref <- try(change_data_type_ref(dt_ref))
+          if(!inherits(dt_ref, "try-error")){
+            rv_input$dt_ref <- dt_ref
+            rv_input$fn_ref <- file_input$name
+            rv_input$bool_ref <- TRUE
+          }else{
+            showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
+            rv_input$dt_ref <- NULL
+            rv_input$fn_ref <- NULL
+            rv_input$bool_ref <- FALSE
+          }
           updateTabsetPanel(inputId = "tabset_load_file", selected = "Reference profile")
         }
       })
@@ -78,14 +104,35 @@ file_server <- function(id, session_top, bool_load_proj){
         file_input <- input$file_af
         if(!is.null(file_input)){
           dt_af <- fread(file_input$datapath)
-          dt_af <- change_data_type_af(dt_af)
-          rv_input$dt_af <- dt_af
-          rv_input$fn_af <- file_input$name
+          dt_af <- try(change_data_type_af(dt_af))
+          if(!inherits(dt_af, "try-error")){
+            rv_input$dt_af <- dt_af
+            rv_input$fn_af <- file_input$name
+            rv_input$bool_af <- TRUE
+          }else{
+            showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
+            rv_input$dt_af <- NULL
+            rv_input$fn_af <- NULL
+            rv_input$bool_af <- FALSE
+          }
           updateTabsetPanel(inputId = "tabset_load_file", selected = "Allele frequency")
         }
       })
 
       # --- Display crime stain profiles --- #
+
+      output$info_csp <- renderUI({
+        if(rv_input$bool_csp){
+          dataTableOutput(session$ns("dt_csp"))
+        }
+
+        else{
+          tagList(
+            br(),
+            tags$p("The selected file format is invalid. Please upload a file in the correct format.", style = "color: red; font-weight: bold;")
+          )
+        }
+      })
 
       output$dt_csp <- renderDT({
         dt_csp <- rv_input$dt_csp
@@ -124,6 +171,19 @@ file_server <- function(id, session_top, bool_load_proj){
       })
 
       # --- Display reference profiles --- #
+
+      output$info_ref <- renderUI({
+        if(rv_input$bool_ref){
+          dataTableOutput(session$ns("dt_ref"))
+        }
+
+        else{
+          tagList(
+            br(),
+            tags$p("The selected file format is invalid. Please upload a file in the correct format.", style = "color: red; font-weight: bold;")
+          )
+        }
+      })
 
       output$dt_ref <- renderDataTable({
         dt_ref <- rv_input$dt_ref
@@ -167,6 +227,19 @@ file_server <- function(id, session_top, bool_load_proj){
       })
 
       # --- Display allele frequencies --- #
+
+      output$info_af <- renderUI({
+        if(rv_input$bool_af){
+          dataTableOutput(session$ns("dt_af"))
+        }
+
+        else{
+          tagList(
+            br(),
+            tags$p("The selected file format is invalid. Please upload a file in the correct format.", style = "color: red; font-weight: bold;")
+          )
+        }
+      })
 
       output$dt_af <- renderDataTable({
         dt_af <- rv_input$dt_af

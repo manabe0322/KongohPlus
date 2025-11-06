@@ -153,12 +153,16 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
               }
 
               dt_kit <- fread(paste0(path_pack, "/extdata/kit/", name_kit_stutter, ".csv"))
-              dt_kit <- change_data_type_kit(dt_kit)
-              rv_est_sr_result$dt_kit_mk <- dt_kit[Marker == select_mk]
+              dt_kit <- try(change_data_type_kit(dt_kit))
+              if(inherits(dt_kit, "try-error")){
+                rv_est_sr_result$dt_kit_mk <- NULL
+                showModal(modalDialog(title = "Error", "The file format of the selected kit is invalid.", easyClose = TRUE, footer = NULL))
+              }else{
+                rv_est_sr_result$dt_kit_mk <- dt_kit[Marker == select_mk]
+              }
             }
           }
         })
-
 
         output$dt_average_sr_display <- renderDataTable({
           dt_average_sr <- rv_est_sr_result$dt_average_sr
@@ -337,14 +341,15 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
 
         observeEvent(input$dt_sr_data_display_rows_selected, {
           index_select <- input$dt_sr_data_display_rows_selected
-          if(length(index_select) == 1){
+          dt_kit_mk <- rv_est_sr_result$dt_kit_mk
+
+          if(length(index_select) == 1 && !is.null(dt_kit_mk)){
             dt_sr_data_display <- rv_est_sr_result$dt_sr_data_display
             al <- as.character(dt_sr_data_display[["Allele"]][index_select])
             sr <- dt_sr_data_display[["SR"]][index_select]
 
             meth <- rv_est_sr_result$meth
             if(meth == "Linear (Corrected Allele)"){
-              dt_kit_mk <- rv_est_sr_result$dt_kit_mk
               alcor <- dt_kit_mk[["Corrected Allele"]][dt_kit_mk[["Allele"]] == al]
             }else{
               alcor <- as.numeric(al)

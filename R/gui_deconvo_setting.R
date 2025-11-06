@@ -456,53 +456,57 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
 
         # Extract information on the kit
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Name[dt_anameth$Category == "Kit"], ".csv"))
-        dt_kit <- change_data_type_kit(dt_kit)
-        dt_kit_auto <- extract_kit_auto(dt_kit)
-        markers_auto <- unique(dt_kit_auto[, Marker])
-
-        rv_deconvo_setting$dt_ignore_mk <- dt_ignore_mk <- hot_to_r(input$dt_ignore_mk)
-
-        # Check input files
-        error_message <- check_main_file(dt_csp, NULL, dt_af, markers_auto, method = "deconvo")
-        if(error_message != ""){
-          waiter_hide()
-          showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
+        dt_kit <- try(change_data_type_kit(dt_kit))
+        if(inherits(dt_kit, "try-error")){
+          showModal(modalDialog(title = "Error", "The file format of the selected kit is invalid. Please update a file in the correct format.", easyClose = TRUE, footer = NULL))
         }else{
-          # Check registration of the stutter ratio
-          list_dt_average_sr <- create_list_dt_average_sr(dt_anameth, markers_auto)
-          message_sr <- check_csp_sr(dt_csp, dt_ignore_mk, dt_anameth, list_dt_average_sr)
+          dt_kit_auto <- extract_kit_auto(dt_kit)
+          markers_auto <- unique(dt_kit_auto[, Marker])
 
-          if(message_sr == "error"){
+          rv_deconvo_setting$dt_ignore_mk <- dt_ignore_mk <- hot_to_r(input$dt_ignore_mk)
+
+          # Check input files
+          error_message <- check_main_file(dt_csp, NULL, dt_af, markers_auto, method = "deconvo")
+          if(error_message != ""){
             waiter_hide()
-            showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
+            showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
           }else{
-            hnc_all <- hnc_from:hnc_to
-            data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
-                                                    min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs)
-            data_deconvo$hnc_all <- hnc_all
-            data_deconvo$theta <- theta
-            data_deconvo$dt_csp <- dt_csp
-            data_deconvo$dt_af <- dt_af
-            data_deconvo$fn_csp <- fn_csp
-            data_deconvo$fn_af <- fn_af
-            data_deconvo$fn_anameth <- fn_anameth
-            data_deconvo$dt_anameth <- dt_anameth
-            data_deconvo$dt_kit <- dt_kit
-            data_deconvo$dt_ignore_mk <- dt_ignore_mk
-            data_deconvo$list_dt_average_sr <- list_dt_average_sr
-            data_deconvo$message_sr <- message_sr
-            data_deconvo$min_temp <- min_temp
-            data_deconvo$max_temp <- max_temp
-            data_deconvo$min_rep_ae <- min_rep_ae
-            data_deconvo$max_rep_ae <- max_rep_ae
-            data_deconvo$min_deg <- min_deg
-            data_deconvo$stop_iter <- stop_iter
-            data_deconvo$max_iter <- max_iter
-            data_deconvo$num_converged <- num_converged
-            data_deconvo$max_mle_runs <- max_mle_runs
-            rv_deconvo$data_deconvo <- data_deconvo
+            # Check registration of the stutter ratio
+            list_dt_average_sr <- create_list_dt_average_sr(dt_anameth, markers_auto)
+            message_sr <- check_csp_sr(dt_csp, dt_ignore_mk, dt_anameth, list_dt_average_sr)
 
-            waiter_hide()
+            if(message_sr == "error"){
+              waiter_hide()
+              showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
+            }else{
+              hnc_all <- hnc_from:hnc_to
+              data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
+                                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs)
+              data_deconvo$hnc_all <- hnc_all
+              data_deconvo$theta <- theta
+              data_deconvo$dt_csp <- dt_csp
+              data_deconvo$dt_af <- dt_af
+              data_deconvo$fn_csp <- fn_csp
+              data_deconvo$fn_af <- fn_af
+              data_deconvo$fn_anameth <- fn_anameth
+              data_deconvo$dt_anameth <- dt_anameth
+              data_deconvo$dt_kit <- dt_kit
+              data_deconvo$dt_ignore_mk <- dt_ignore_mk
+              data_deconvo$list_dt_average_sr <- list_dt_average_sr
+              data_deconvo$message_sr <- message_sr
+              data_deconvo$min_temp <- min_temp
+              data_deconvo$max_temp <- max_temp
+              data_deconvo$min_rep_ae <- min_rep_ae
+              data_deconvo$max_rep_ae <- max_rep_ae
+              data_deconvo$min_deg <- min_deg
+              data_deconvo$stop_iter <- stop_iter
+              data_deconvo$max_iter <- max_iter
+              data_deconvo$num_converged <- num_converged
+              data_deconvo$max_mle_runs <- max_mle_runs
+              rv_deconvo$data_deconvo <- data_deconvo
+
+              waiter_hide()
+            }
           }
         }
       })

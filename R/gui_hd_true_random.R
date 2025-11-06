@@ -139,14 +139,21 @@ hd_true_random_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true_rand
           file_input <- input$file_gt_non_contrib
           if(!is.null(file_input)){
             dt_gt_non_contrib <- fread(file_input$datapath)
-            dt_gt_non_contrib <- change_data_type_ref(dt_gt_non_contrib)
-            rv_hd_true_random$dt_gt_non_contrib <- dt_gt_non_contrib
+            dt_gt_non_contrib <- try(change_data_type_ref(dt_gt_non_contrib))
+            if(!inherits(dt_gt_non_contrib, "try-error")){
+              rv_hd_true_random$dt_gt_non_contrib <- dt_gt_non_contrib
+            }else{
+              rv_hd_true_random$dt_gt_non_contrib <- NULL
+              showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
+            }
           }else{
             rv_hd_true_random$dt_gt_non_contrib <- NULL
           }
 
           if(!is.null(rv_hd_true_random$dt_gt_non_contrib) && !input$check_random){
             enable("act_analyze_hd_true")
+          }else{
+            disable("act_analyze_hd_true")
           }
         })
 
@@ -163,6 +170,8 @@ hd_true_random_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true_rand
 
           if(rv_hd_true_random$bool_n_simu && input$check_random){
             enable("act_analyze_hd_true")
+          }else{
+            disable("act_analyze_hd_true")
           }
         })
 
@@ -187,19 +196,24 @@ hd_true_random_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true_rand
             showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
           }else{
             hnc <- as.numeric(input$noc)
-            tmp <- perform_hd_true(hnc, data_deconvo, n_simu, dt_gt_non_contrib, importance_sampling = FALSE)
-            rv_hd_true_random$dt_lr_rand <- dt_lr_rand <- tmp$dt_lr_rand
-
-            if(is.null(dt_lr_rand)){
-              data_hnc_list <- data_deconvo$data_hnc_list
-              data_h1 <- data_hnc_list[[which(hnc_all == hnc)]]
-              error_message_h1 <- data_h1$error_message
+            tmp <- try(perform_hd_true(hnc, data_deconvo, n_simu, dt_gt_non_contrib, importance_sampling = FALSE))
+            if(inherits(tmp, "try-error")){
               waiter_hide()
-              showModal(modalDialog(title = "Error", HTML(error_message_h1), easyClose = TRUE, footer = NULL))
+              showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
             }else{
-              rv_hd_true_random$lr_rand <- as.numeric(dt_lr_rand[nrow(dt_lr_rand), .SD, .SDcols = !c("Marker")])
-              rv_hd_true_random$dt_gt_non_contrib <- tmp$dt_gt_non_contrib
-              waiter_hide()
+              rv_hd_true_random$dt_lr_rand <- dt_lr_rand <- tmp$dt_lr_rand
+
+              if(is.null(dt_lr_rand)){
+                data_hnc_list <- data_deconvo$data_hnc_list
+                data_h1 <- data_hnc_list[[which(hnc_all == hnc)]]
+                error_message_h1 <- data_h1$error_message
+                waiter_hide()
+                showModal(modalDialog(title = "Error", HTML(error_message_h1), easyClose = TRUE, footer = NULL))
+              }else{
+                rv_hd_true_random$lr_rand <- as.numeric(dt_lr_rand[nrow(dt_lr_rand), .SD, .SDcols = !c("Marker")])
+                rv_hd_true_random$dt_gt_non_contrib <- tmp$dt_gt_non_contrib
+                waiter_hide()
+              }
             }
           }
         })

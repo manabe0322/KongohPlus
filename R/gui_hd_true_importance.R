@@ -132,21 +132,26 @@ hd_true_importance_server_sub <- function(id, path_pack, rv_deconvo, rv_hd_true_
 
           hnc <- as.numeric(input$noc)
           n_simu <- input$n_simu
-          tmp <- perform_hd_true(hnc, data_deconvo, n_simu, dt_gt_non_contrib = NULL, importance_sampling = TRUE)
-          rv_hd_true_importance$dt_lr_importance <- dt_lr_importance <- tmp$dt_lr_rand
-          rv_hd_true_importance$lr_importance <- lr_importance <- as.numeric(dt_lr_importance[nrow(dt_lr_importance), .SD, .SDcols = grep("Sample", names(dt_lr_importance))])
-          rv_hd_true_importance$bias <- bias <- tmp$bias
-          rv_hd_true_importance$dt_gt_non_contrib <- tmp$dt_gt_non_contrib
-
-          if(is.null(dt_lr_importance)){
-            data_hnc_list <- data_deconvo$data_hnc_list
-            data_h1 <- data_hnc_list[[which(hnc_all == hnc)]]
-            error_message_h1 <- data_h1$error_message
+          tmp <- try(perform_hd_true(hnc, data_deconvo, n_simu, dt_gt_non_contrib = NULL, importance_sampling = TRUE))
+          if(inherits(tmp, "try-error")){
             waiter_hide()
-            showModal(modalDialog(title = "Error", HTML(error_message_h1), easyClose = TRUE, footer = NULL))
+            showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
           }else{
-            rv_hd_true_importance$expect_lr_hd <- sum(lr_importance * bias) / n_simu
-            waiter_hide()
+            rv_hd_true_importance$dt_lr_importance <- dt_lr_importance <- tmp$dt_lr_rand
+            rv_hd_true_importance$lr_importance <- lr_importance <- as.numeric(dt_lr_importance[nrow(dt_lr_importance), .SD, .SDcols = grep("Sample", names(dt_lr_importance))])
+            rv_hd_true_importance$bias <- bias <- tmp$bias
+            rv_hd_true_importance$dt_gt_non_contrib <- tmp$dt_gt_non_contrib
+
+            if(is.null(dt_lr_importance)){
+              data_hnc_list <- data_deconvo$data_hnc_list
+              data_h1 <- data_hnc_list[[which(hnc_all == hnc)]]
+              error_message_h1 <- data_h1$error_message
+              waiter_hide()
+              showModal(modalDialog(title = "Error", HTML(error_message_h1), easyClose = TRUE, footer = NULL))
+            }else{
+              rv_hd_true_importance$expect_lr_hd <- sum(lr_importance * bias) / n_simu
+              waiter_hide()
+            }
           }
         })
 

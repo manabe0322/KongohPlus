@@ -60,39 +60,43 @@ info_al_server <- function(id, path_pack){
         path_kit <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/kit")), input$load_kit)$datapath
         if(length(path_kit) > 0){
           dt_kit <- fread(path_kit)
-          dt_kit <- change_data_type_kit(dt_kit)
-          setindex(dt_kit, Marker)
-          markers <- unique(dt_kit$Marker)
-          n_mk <- length(markers)
-          list_dt_info_al <- vector(mode = "list", length = n_mk)
-          names(list_dt_info_al) <- markers
-          rep_uni_len_all_mk <- rep(NA, n_mk)
-          names(rep_uni_len_all_mk) <- markers
-          chr_all_mk <- rep("", n_mk)
-          names(chr_all_mk) <- markers
-          for(i in 1:n_mk){
-            dt_kit_mk <- dt_kit[Marker == markers[i]]
-            alleles <- dt_kit_mk[["Allele"]]
-            if(length(alleles) == 1 && is.na(alleles)){
-              list_dt_info_al[[i]] <- data.table("Allele" = character(0),
-                                                 "Corrected Allele" = numeric(0),
-                                                 "Size" = numeric(0))
-            }else{
-              list_dt_info_al[[i]] <- data.table("Allele" = dt_kit_mk[["Allele"]],
-                                                 "Corrected Allele" = dt_kit_mk[["Corrected Allele"]],
-                                                 "Size" = dt_kit_mk[["Size"]])
+          dt_kit <- try(change_data_type_kit(dt_kit))
+          if(inherits(dt_kit, "try-error")){
+            showModal(modalDialog(title = "Error", "The file format of the selected kit is invalid. Please update a file in the correct format.", easyClose = TRUE, footer = NULL))
+          }else{
+            setindex(dt_kit, Marker)
+            markers <- unique(dt_kit$Marker)
+            n_mk <- length(markers)
+            list_dt_info_al <- vector(mode = "list", length = n_mk)
+            names(list_dt_info_al) <- markers
+            rep_uni_len_all_mk <- rep(NA, n_mk)
+            names(rep_uni_len_all_mk) <- markers
+            chr_all_mk <- rep("", n_mk)
+            names(chr_all_mk) <- markers
+            for(i in 1:n_mk){
+              dt_kit_mk <- dt_kit[Marker == markers[i]]
+              alleles <- dt_kit_mk[["Allele"]]
+              if(length(alleles) == 1 && is.na(alleles)){
+                list_dt_info_al[[i]] <- data.table("Allele" = character(0),
+                                                   "Corrected Allele" = numeric(0),
+                                                   "Size" = numeric(0))
+              }else{
+                list_dt_info_al[[i]] <- data.table("Allele" = dt_kit_mk[["Allele"]],
+                                                   "Corrected Allele" = dt_kit_mk[["Corrected Allele"]],
+                                                   "Size" = dt_kit_mk[["Size"]])
+              }
+              rep_uni_len_all_mk[i] <- unique(dt_kit_mk[["Repeat Unit Length"]])[1]
+              chr_all_mk[i] <- unique(dt_kit_mk[["Chromosome"]])[1]
             }
-            rep_uni_len_all_mk[i] <- unique(dt_kit_mk[["Repeat Unit Length"]])[1]
-            chr_all_mk[i] <- unique(dt_kit_mk[["Chromosome"]])[1]
-          }
-          rv_info_al$dt_kit <- dt_kit
-          rv_info_al$name_kit <- str_replace(basename(path_kit), ".{4}$", "")
-          rv_info_al$list_dt_info_al <- list_dt_info_al
-          rv_info_al$markers <- markers
-          rv_info_al$rep_uni_len_all_mk <- rep_uni_len_all_mk
-          rv_info_al$chr_all_mk <- chr_all_mk
+            rv_info_al$dt_kit <- dt_kit
+            rv_info_al$name_kit <- str_replace(basename(path_kit), ".{4}$", "")
+            rv_info_al$list_dt_info_al <- list_dt_info_al
+            rv_info_al$markers <- markers
+            rv_info_al$rep_uni_len_all_mk <- rep_uni_len_all_mk
+            rv_info_al$chr_all_mk <- chr_all_mk
 
-          enable("act_save_allele")
+            enable("act_save_allele")
+          }
         }
       })
 

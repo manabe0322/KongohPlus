@@ -25,7 +25,7 @@ est_dropin_ui <- function(id){
                  br(),
                  br(),
                  br(),
-                 actionButton(ns("act_analyze_est_dropin"), label = "Analyze", class = "btn btn-primary btn-lg"),
+                 uiOutput(ns("ui_analyze_est_dropin")),
                  br(),
                  br(),
                  disabled(actionButton(ns("act_saveas_est_dropin_1"), label = "Save as", class = "btn btn-primary btn-lg"))
@@ -82,9 +82,15 @@ est_dropin_server <- function(id, path_pack){
         file_input <- input$ntc_data
         if(!is.null(file_input)){
           dt_ntc <- fread(file_input$datapath)
-          dt_ntc <- change_data_type_exp(dt_ntc)
-          rv_est_dropin_setting$dt_ntc <- dt_ntc
-          rv_est_dropin_setting$fn_ntc <- file_input$name
+          dt_ntc <- try(change_data_type_csp(dt_ntc))
+          if(!inherits(dt_ntc, "try-error")){
+            rv_est_dropin_setting$dt_ntc <- dt_ntc
+            rv_est_dropin_setting$fn_ntc <- file_input$name
+          }else{
+            rv_est_dropin_setting$dt_ntc <- NULL
+            rv_est_dropin_setting$fn_ntc <- NULL
+            showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
+          }
         }
       })
 
@@ -96,8 +102,14 @@ est_dropin_server <- function(id, path_pack){
         path_kit <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/kit")), input$load_kit)$datapath
         if(length(path_kit) > 0){
           dt_kit <- fread(path_kit)
-          rv_est_dropin_setting$dt_kit <- dt_kit <- change_data_type_kit(dt_kit)
-          rv_est_dropin_setting$name_kit_dropin <- str_replace(basename(path_kit), ".{4}$", "")
+          dt_kit <- try(change_data_type_kit(dt_kit))
+          if(inherits(dt_kit, "try-error")){
+            rv_est_dropin_setting$dt_kit <- NULL
+            showModal(modalDialog(title = "Error", "The file format of the selected kit is invalid. Please update a file in the correct format.", easyClose = TRUE, footer = NULL))
+          }else{
+            rv_est_dropin_setting$dt_kit <- dt_kit
+            rv_est_dropin_setting$name_kit_dropin <- str_replace(basename(path_kit), ".{4}$", "")
+          }
         }
       })
 
@@ -105,7 +117,7 @@ est_dropin_server <- function(id, path_pack){
         disabled(textInput(session$ns("name_kit_dropin"), label = "", value = rv_est_dropin_setting$name_kit_dropin))
       })
 
-      #### Advanced setting ####
+      # --- Advanced setting --- #
 
       observeEvent(input$act_advance_dropin, {
         showModal(modalDialog(
@@ -261,6 +273,16 @@ est_dropin_server <- function(id, path_pack){
         removeModal()
       })
 
+      output$ui_analyze_est_dropin <- renderUI({
+        dt_ntc <- rv_est_dropin_setting$dt_ntc
+        dt_kit <- rv_est_dropin_setting$dt_kit
+        if(any(is.null(dt_ntc), is.null(dt_kit))){
+          disabled(actionButton(session$ns("act_analyze_est_dropin"), label = "Analyze", class = "btn btn-primary btn-lg"))
+        }else{
+          actionButton(session$ns("act_analyze_est_dropin"), label = "Analyze", class = "btn btn-primary btn-lg")
+        }
+      })
+
       # Start estimating dropin parameters
       observeEvent(input$act_analyze_est_dropin, {
         waiter_show(html = spin_3k(), color = "white")
@@ -286,21 +308,26 @@ est_dropin_server <- function(id, path_pack){
           waiter_hide()
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          data_est_dropin <- estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs)
-          data_est_dropin$fn_ntc <- fn_ntc
-          data_est_dropin$name_kit_dropin <- name_kit_dropin
-          data_est_dropin$at_dropin <- at_dropin
-          data_est_dropin$min_shape_di <- min_shape_di
-          data_est_dropin$max_shape_di <- max_shape_di
-          data_est_dropin$min_scale_di <- min_scale_di
-          data_est_dropin$max_scale_di <- max_scale_di
-          data_est_dropin$stop_iter <- stop_iter
-          data_est_dropin$max_iter <- max_iter
-          data_est_dropin$num_converged <- num_converged
-          data_est_dropin$max_mle_runs <- max_mle_runs
-          rv_est_dropin_setting$data_est_dropin <- data_est_dropin
+          data_est_dropin <- try(estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs))
+          if(inherits(data_est_dropin, "try-error")){
+            waiter_hide()
+            showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
+          }else{
+            data_est_dropin$fn_ntc <- fn_ntc
+            data_est_dropin$name_kit_dropin <- name_kit_dropin
+            data_est_dropin$at_dropin <- at_dropin
+            data_est_dropin$min_shape_di <- min_shape_di
+            data_est_dropin$max_shape_di <- max_shape_di
+            data_est_dropin$min_scale_di <- min_scale_di
+            data_est_dropin$max_scale_di <- max_scale_di
+            data_est_dropin$stop_iter <- stop_iter
+            data_est_dropin$max_iter <- max_iter
+            data_est_dropin$num_converged <- num_converged
+            data_est_dropin$max_mle_runs <- max_mle_runs
+            rv_est_dropin_setting$data_est_dropin <- data_est_dropin
 
-          waiter_hide()
+            waiter_hide()
+          }
         }
       })
 

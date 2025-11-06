@@ -23,7 +23,7 @@ est_par_setting_ui <- function(id){
                           br(),
                           br(),
                           br(),
-                          actionButton(ns("act_analyze_est_par"), label = "Analyze", class = "btn btn-primary btn-lg")
+                          uiOutput(ns("ui_analyze_est_par"))
              ),
              mainPanel(width = 9,
                        tags$style(HTML("
@@ -79,9 +79,15 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         file_input <- input$exp_data
         if(!is.null(file_input)){
           dt_exp_param <- fread(file_input$datapath)
-          dt_exp_param <- change_data_type_exp(dt_exp_param)
-          rv_est_par_setting$dt_exp_param <- dt_exp_param
-          rv_est_par_setting$fn_exp_param <- file_input$name
+          dt_exp_param <- try(change_data_type_csp(dt_exp_param))
+          if(!inherits(dt_exp_param, "try-error")){
+            rv_est_par_setting$dt_exp_param <- dt_exp_param
+            rv_est_par_setting$fn_exp_param <- file_input$name
+          }else{
+            rv_est_par_setting$dt_exp_param <- NULL
+            rv_est_par_setting$fn_exp_param <- NULL
+            showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
+          }
         }
       })
 
@@ -90,9 +96,15 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         file_input <- input$gt_data
         if(!is.null(file_input)){
           dt_gt_param <- fread(file_input$datapath)
-          dt_gt_param <- change_data_type_gt(dt_gt_param)
-          rv_est_par_setting$dt_gt_param <- dt_gt_param
-          rv_est_par_setting$fn_gt_param <- file_input$name
+          dt_gt_param <- try(change_data_type_ref(dt_gt_param))
+          if(!inherits(dt_gt_param, "try-error")){
+            rv_est_par_setting$dt_gt_param <- dt_gt_param
+            rv_est_par_setting$fn_gt_param <- file_input$name
+          }else{
+            rv_est_par_setting$dt_gt_param <- NULL
+            rv_est_par_setting$fn_gt_param <- NULL
+            showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
+          }
         }
       })
 
@@ -123,15 +135,23 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         name_kit_param <- rv_est_par_setting$name_kit_param
         if(!is.null(name_kit_param)){
           dt_kit <- fread(paste0(path_pack, "/extdata/kit/", name_kit_param, ".csv"))
-          dt_kit <- change_data_type_kit(dt_kit)
-          rv_est_par_setting$dt_setting_est_par <- dt_setting_est_par <- create_init_dt_setting_est_par(dt_kit)
+          dt_kit <- try(change_data_type_kit(dt_kit))
+          if(inherits(dt_kit, "try-error")){
+            rv_est_par_setting$dt_setting_est_par <- NULL
+            showModal(modalDialog(title = "Error", "The file format of the selected kit is invalid. Please update a file in the correct format.", easyClose = TRUE, footer = NULL))
+          }else{
+            rv_est_par_setting$dt_setting_est_par <- create_init_dt_setting_est_par(dt_kit)
+          }
 
-          output$dt_setting_est_par <- renderRHandsontable({
-            rhandsontable(dt_setting_est_par, rowHeaders = FALSE) %>%
-              hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-              hot_col(c("Marker"), type = "text", readOnly = TRUE, width = 100) %>%
-              hot_col(c("AT"), type = "numeric", format = "0", width = 50)
-          })
+          dt_setting_est_par <- rv_est_par_setting$dt_setting_est_par
+          if(!is.null(dt_setting_est_par)){
+            output$dt_setting_est_par <- renderRHandsontable({
+              rhandsontable(dt_setting_est_par, rowHeaders = FALSE) %>%
+                hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+                hot_col(c("Marker"), type = "text", readOnly = TRUE, width = 100) %>%
+                hot_col(c("AT"), type = "numeric", format = "0", width = 50)
+            })
+          }
         }
       })
 
@@ -321,6 +341,17 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         removeModal()
       })
 
+      output$ui_analyze_est_par <- renderUI({
+        dt_exp_param <- rv_est_par_setting$dt_exp_param
+        dt_gt_param <- rv_est_par_setting$dt_gt_param
+        dt_setting_est_par <- rv_est_par_setting$dt_setting_est_par
+        if(any(is.null(dt_exp_param), is.null(dt_gt_param), is.null(dt_setting_est_par))){
+          disabled(actionButton(session$ns("act_analyze_est_par"), label = "Analyze", class = "btn btn-primary btn-lg"))
+        }else{
+          actionButton(session$ns("act_analyze_est_par"), label = "Analyze", class = "btn btn-primary btn-lg")
+        }
+      })
+
       # Start estimating parameters
       observeEvent(input$act_analyze_est_par, {
         waiter_show(html = spin_3k(), color = "white")
@@ -351,33 +382,37 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
           waiter_hide()
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          data_est_par <- estimate_parameters(dt_exp_param, dt_gt_param, list_dt_average_sr, dt_setting_est_par,
-                                              min_alpha, max_alpha,
-                                              min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
-                                              stop_iter, max_iter, num_converged, max_mle_runs)
+          data_est_par <- try(estimate_parameters(dt_exp_param, dt_gt_param, list_dt_average_sr, dt_setting_est_par,
+                                                  min_alpha, max_alpha,
+                                                  min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
+                                                  stop_iter, max_iter, num_converged, max_mle_runs))
+          if(inherits(data_est_par, "try-error")){
+            waiter_hide()
+            showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
+          }else{
+            data_est_par$fn_exp_param <- fn_exp_param
+            data_est_par$fn_gt_param <- fn_gt_param
+            data_est_par$dt_setting_est_par <- dt_setting_est_par
+            data_est_par$list_dt_average_sr <- list_dt_average_sr
+            data_est_par$name_kit_param <- name_kit_param
+            data_est_par$name_sr <- name_sr
+            data_est_par$min_alpha <- min_alpha
+            data_est_par$max_alpha <- max_alpha
+            data_est_par$min_scale_allele <- min_scale_allele
+            data_est_par$max_scale_allele <- max_scale_allele
+            data_est_par$min_scale_stutter <- min_scale_stutter
+            data_est_par$max_scale_stutter <- max_scale_stutter
+            data_est_par$stop_iter <- stop_iter
+            data_est_par$max_iter <- max_iter
+            data_est_par$num_converged <- num_converged
+            data_est_par$max_mle_runs <- max_mle_runs
 
-          data_est_par$fn_exp_param <- fn_exp_param
-          data_est_par$fn_gt_param <- fn_gt_param
-          data_est_par$dt_setting_est_par <- dt_setting_est_par
-          data_est_par$list_dt_average_sr <- list_dt_average_sr
-          data_est_par$name_kit_param <- name_kit_param
-          data_est_par$name_sr <- name_sr
-          data_est_par$min_alpha <- min_alpha
-          data_est_par$max_alpha <- max_alpha
-          data_est_par$min_scale_allele <- min_scale_allele
-          data_est_par$max_scale_allele <- max_scale_allele
-          data_est_par$min_scale_stutter <- min_scale_stutter
-          data_est_par$max_scale_stutter <- max_scale_stutter
-          data_est_par$stop_iter <- stop_iter
-          data_est_par$max_iter <- max_iter
-          data_est_par$num_converged <- num_converged
-          data_est_par$max_mle_runs <- max_mle_runs
+            rv_est_par$data_est_par <- data_est_par
 
-          rv_est_par$data_est_par <- data_est_par
+            waiter_hide()
 
-          waiter_hide()
-
-          updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result (LSAE)")
+            updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result (LSAE)")
+          }
         }
       })
 
