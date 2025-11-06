@@ -9,7 +9,7 @@ License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true
 Depends:
-    R (>= 4.4.0), 
+    R (>= 4.4.3), 
     shiny
 Imports:
     combinat, 
@@ -33,7 +33,6 @@ Imports:
     shinyjs, 
     shinythemes, 
     stringr, 
-    tidyselect, 
     waiter
 LinkingTo: 
     Rcpp
