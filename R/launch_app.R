@@ -124,13 +124,15 @@ KongohPlus <- function(num_threads = NULL){
       rv_deconvo$data_deconvo <- data_deconvo <- rv_load_proj$data_deconvo
       if(!is.null(data_deconvo)){
         rv_input$dt_csp <- data_deconvo$dt_csp
+        rv_input$fn_csp <- data_deconvo$fn_csp
         rv_input$dt_af <- data_deconvo$dt_af
+        rv_input$fn_af <- data_deconvo$fn_af
       }
 
       data_lr <- rv_load_proj$data_lr
       if(length(data_lr) != 0){
         rv_input$dt_ref <- rv_lr$dt_ref <- data_lr$dt_ref
-        rv_lr$fn_ref <- data_lr$fn_ref
+        rv_input$fn_ref <- rv_lr$fn_ref <- data_lr$fn_ref
         rv_lr$refs <- data_lr$refs
         rv_lr$lr_list <- data_lr$lr_list
         rv_lr$dt_lr_calc_record <- data_lr$dt_lr_calc_record
