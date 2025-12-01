@@ -19,7 +19,7 @@
 #' @importFrom shinyjs disable disabled enable refresh useShinyjs
 #' @importFrom shinythemes shinytheme
 #' @importFrom stringr str_replace
-#' @importFrom waiter useWaiter waiter_show waiter_hide spin_3k
+#' @importFrom waiter useWaiter waiter_show waiter_hide spin_3k transparent Waiter
 "_PACKAGE"
 
 #' @useDynLib KongohPlus, .registration = TRUE

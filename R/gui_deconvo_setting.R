@@ -89,6 +89,10 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo <- reactiveValues()
       rv_deconvo$data_deconvo <- NULL
 
+      waiter_ui <- Waiter$new(html = tagList(spin_3k(),
+                                             h3("Checking input files...")),
+                              color = transparent(.5))
+
       observe({
         req(rv_input)
         req(rv_deconvo)
@@ -432,12 +436,13 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       # --- Perform deconvolution --- #
 
       observeEvent(input$act_analyze_deconvo, {
-        waiter_show(html = spin_3k(), color = "white")
+        waiter_ui$show()
 
         # Fix setting
         rv_deconvo_setting$hnc_from <- hnc_from <- input$noc_from
         rv_deconvo_setting$hnc_to <- hnc_to <- input$noc_to
         rv_deconvo_setting$theta <- theta <- input$theta
+
         fn_csp <- rv_deconvo_setting$fn_csp
         dt_csp <- rv_deconvo_setting$dt_csp
         fn_af <- rv_deconvo_setting$fn_af
@@ -468,7 +473,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           # Check input files
           error_message <- check_main_file(dt_csp, NULL, dt_af, markers_auto, method = "deconvo")
           if(error_message != ""){
-            waiter_hide()
+            waiter_ui$hide()
             showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
           }else{
             # Check registration of the stutter ratio
@@ -476,12 +481,13 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             message_sr <- check_csp_sr(dt_csp, dt_ignore_mk, dt_anameth, list_dt_average_sr)
 
             if(message_sr == "error"){
-              waiter_hide()
+              waiter_ui$hide()
               showModal(modalDialog(title = "Error", "All markers are ignored!", easyClose = TRUE, footer = NULL))
             }else{
               hnc_all <- hnc_from:hnc_to
               data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
-                                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs)
+                                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs,
+                                                      waiter_ui)
               data_deconvo$hnc_all <- hnc_all
               data_deconvo$theta <- theta
               data_deconvo$dt_csp <- dt_csp
@@ -505,7 +511,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
               data_deconvo$max_mle_runs <- max_mle_runs
               rv_deconvo$data_deconvo <- data_deconvo
 
-              waiter_hide()
+              waiter_ui$hide()
             }
           }
         }

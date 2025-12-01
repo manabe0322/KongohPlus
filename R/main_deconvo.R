@@ -137,12 +137,14 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
+#' @param waiter_ui Information on UI for waiter
 perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                             pop_al_list, pop_prob_list, theta,
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, scale_di,
                             ae_use, scale_allele, scale_stutter, list_dt_average_sr,
-                            min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs){
+                            min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs,
+                            waiter_ui){
 
   # --- Start computation --- #
 
@@ -408,6 +410,15 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     repeat{
       count_mle <- count_mle + 1
 
+      waiter_ui$update(
+        html = tagList(
+          spin_3k(),
+          h3(paste0("Performing deconvolution assuming ", hnc, " contributor(s)")),
+          h3(paste0("Running MLE #", count_mle, " of ", max_mle_runs)),
+          h3(paste0("Number of convergences so far: ", count_solution))
+        )
+      )
+
       init_list[[count_mle]] <- init <- rbeta(2 * hnc + n_rep - 1, 1, 1)
 
       opt_list[[count_mle]] <- opt <- GenSA(
@@ -465,6 +476,14 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     }
 
     # --- Calculate the likelihood using the estimated parameters --- #
+
+    waiter_ui$update(
+      html = tagList(
+        spin_3k(),
+        h3(paste0("Performing deconvolution assuming ", hnc, " contributor(s)")),
+        h3(paste0("Calculating the likelihood using the estimated parameters"))
+      )
+    )
 
     # Calculate log probability densities of all genotype combinations
     lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(tph_all_rep, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
@@ -543,8 +562,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
+#' @param waiter_ui Information on UI for waiter
 perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
-                                    min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs){
+                                    min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs,
+                                    waiter_ui){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
   if(n_mk != 0){
@@ -596,12 +617,21 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     data_hnc_list <- vector(mode = "list", length = n_hnc)
     for(i in 1:n_hnc){
       hnc <- hnc_all[i]
+
+      waiter_ui$update(
+        html = tagList(
+          spin_3k(),
+          h3(paste0("Performing deconvolution assuming ", hnc, " contributor(s)"))
+        )
+      )
+
       data_hnc <- try(perform_deconvo(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
                                       pop_al_list, pop_prob_list, theta,
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, scale_di,
                                       ae_use, scale_allele, scale_stutter, list_dt_average_sr,
-                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs))
+                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs,
+                                      waiter_ui))
       if(!inherits(data_hnc, "try-error")){
         data_hnc_list[[i]] <- data_hnc
       }else{
