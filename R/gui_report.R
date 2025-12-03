@@ -94,48 +94,53 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
           paste0("report_", Sys.Date(), ".pdf")
         },
         content = function(file){
-          waiter_show(html = spin_3k(), color = "white")
+          message_pdf_env <- check_pdf_env()
+          if(nzchar(message_pdf_env)){
+            showModal(modalDialog(title = "Error", HTML(message_pdf_env), easyClose = TRUE, footer = NULL))
+          }else{
+            waiter_show(html = spin_3k(), color = "white")
 
-          report_tmp <- file.path(tempdir(), "report.Rmd")
-          file.copy(paste0(path_pack, "/rmd/report.Rmd"), report_tmp, overwrite = TRUE)
-          render(
-            input = report_tmp,
-            output_file = file,
-            params = list(
-              case_name = input$case_name,
-              user_name = input$user_name,
-              dt_csp = rv_report$dt_csp,
-              fn_csp = rv_report$fn_csp,
-              fn_af = rv_report$fn_af,
-              dt_anameth = rv_report$dt_anameth,
-              fn_anameth = rv_report$fn_anameth,
-              markers_use = rv_report$markers_use,
-              data_hnc_list = rv_report$data_hnc_list,
-              dt_ignore_mk = rv_report$dt_ignore_mk,
-              hnc_all = rv_report$hnc_all,
-              message_sr = rv_report$message_sr,
-              min_size = rv_report$min_size,
-              max_size = rv_report$max_size,
-              min_temp = rv_report$min_temp,
-              max_temp = rv_report$max_temp,
-              min_rep_ae = rv_report$min_rep_ae,
-              max_rep_ae = rv_report$max_rep_ae,
-              min_deg = rv_report$min_deg,
-              stop_iter = rv_report$stop_iter,
-              max_iter = rv_report$max_iter,
-              num_converged = rv_report$num_converged,
-              max_mle_runs = rv_report$max_mle_runs,
-              theta = rv_report$theta,
-              dt_ref = rv_report$dt_ref,
-              fn_ref = rv_report$fn_ref,
-              dt_lr_calc_record = rv_report$dt_lr_calc_record,
-              lr_list = rv_report$lr_list,
-              gt_prob_sum = rv_report$gt_prob_sum
-            ),
-            envir = new.env(parent = globalenv())
-          )
+            report_tmp <- file.path(tempdir(), "report.Rmd")
+            file.copy(paste0(path_pack, "/rmd/report.Rmd"), report_tmp, overwrite = TRUE)
+            render(
+              input = report_tmp,
+              output_file = file,
+              params = list(
+                case_name = input$case_name,
+                user_name = input$user_name,
+                dt_csp = rv_report$dt_csp,
+                fn_csp = rv_report$fn_csp,
+                fn_af = rv_report$fn_af,
+                dt_anameth = rv_report$dt_anameth,
+                fn_anameth = rv_report$fn_anameth,
+                markers_use = rv_report$markers_use,
+                data_hnc_list = rv_report$data_hnc_list,
+                dt_ignore_mk = rv_report$dt_ignore_mk,
+                hnc_all = rv_report$hnc_all,
+                message_sr = rv_report$message_sr,
+                min_size = rv_report$min_size,
+                max_size = rv_report$max_size,
+                min_temp = rv_report$min_temp,
+                max_temp = rv_report$max_temp,
+                min_rep_ae = rv_report$min_rep_ae,
+                max_rep_ae = rv_report$max_rep_ae,
+                min_deg = rv_report$min_deg,
+                stop_iter = rv_report$stop_iter,
+                max_iter = rv_report$max_iter,
+                num_converged = rv_report$num_converged,
+                max_mle_runs = rv_report$max_mle_runs,
+                theta = rv_report$theta,
+                dt_ref = rv_report$dt_ref,
+                fn_ref = rv_report$fn_ref,
+                dt_lr_calc_record = rv_report$dt_lr_calc_record,
+                lr_list = rv_report$lr_list,
+                gt_prob_sum = rv_report$gt_prob_sum
+              ),
+              envir = new.env(parent = globalenv())
+            )
 
-          waiter_hide()
+            waiter_hide()
+          }
         }
       )
     }
