@@ -123,7 +123,8 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
-estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs){
+#' @param waiter_ui Information on UI for waiter
+estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs, waiter_ui){
 
     # --- Extract data for autosomal markers --- #
 
@@ -152,6 +153,15 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
                                Height = ph_tmp)
 
   # --- Perform MLE --- #
+
+  if(!is.null(waiter_ui)){
+    waiter_ui$update(
+      html = tagList(
+        spin_3k(),
+        h3("Performing MLE for drop-in parameters")
+      )
+    )
+  }
 
   heights <- dt_dropin_data$Height
   n_dropin <- length(heights)

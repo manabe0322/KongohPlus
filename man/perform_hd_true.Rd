@@ -9,7 +9,8 @@ perform_hd_true(
   data_deconvo,
   n_simu,
   dt_gt_non_contrib = NULL,
-  importance_sampling = FALSE
+  importance_sampling = FALSE,
+  waiter_ui = NULL
 )
 }
 \arguments{
@@ -22,6 +23,8 @@ perform_hd_true(
 \item{dt_gt_non_contrib}{The data.table of the genotypes for non-contributors}
 
 \item{importance_sampling}{Whether importance sampling will be performed or not}
+
+\item{waiter_ui}{Information on UI for waiter}
 }
 \description{
 The function to perform Hd-true test

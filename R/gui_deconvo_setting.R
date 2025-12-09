@@ -89,10 +89,6 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo <- reactiveValues()
       rv_deconvo$data_deconvo <- NULL
 
-      waiter_ui <- Waiter$new(html = tagList(spin_3k(),
-                                             h3("Checking input files...")),
-                              color = transparent(.5))
-
       observe({
         req(rv_input)
         req(rv_deconvo)
@@ -436,6 +432,9 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       # --- Perform deconvolution --- #
 
       observeEvent(input$act_analyze_deconvo, {
+        waiter_ui <- Waiter$new(html = tagList(spin_3k(),
+                                               h3("Checking the settings...")),
+                                color = transparent(.5))
         waiter_ui$show()
 
         # Fix setting

@@ -289,11 +289,22 @@ est_dropin_server <- function(id, path_pack){
 
       # Start estimating dropin parameters
       observeEvent(input$act_analyze_est_dropin, {
-        req(rv_est_dropin_setting)
+        req(rv_est_dropin_setting$dt_ntc)
+        req(rv_est_dropin_setting$fn_ntc)
+        req(rv_est_dropin_setting$name_kit_dropin)
+        req(rv_est_dropin_setting$min_shape_di)
+        req(rv_est_dropin_setting$max_shape_di)
+        req(rv_est_dropin_setting$min_scale_di)
+        req(rv_est_dropin_setting$max_scale_di)
+        req(rv_est_dropin_setting$stop_iter)
+        req(rv_est_dropin_setting$max_iter)
+        req(rv_est_dropin_setting$num_converged)
+        req(rv_est_dropin_setting$max_mle_runs)
+        req(rv_est_dropin_setting$dt_kit)
+
         dt_ntc <- rv_est_dropin_setting$dt_ntc
         fn_ntc <- rv_est_dropin_setting$fn_ntc
         name_kit_dropin <- rv_est_dropin_setting$name_kit_dropin
-        at_dropin <- input$at_dropin
         min_shape_di <- rv_est_dropin_setting$min_shape_di
         max_shape_di <- rv_est_dropin_setting$max_shape_di
         min_scale_di <- rv_est_dropin_setting$min_scale_di
@@ -303,49 +314,38 @@ est_dropin_server <- function(id, path_pack){
         num_converged <- rv_est_dropin_setting$num_converged
         max_mle_runs <- rv_est_dropin_setting$max_mle_runs
         dt_kit <- rv_est_dropin_setting$dt_kit
+        at_dropin <- input$at_dropin
 
-        if(all(!is.na(dt_ntc),
-               !is.na(fn_ntc),
-               !is.na(name_kit_dropin),
-               !is.na(at_dropin),
-               !is.na(min_shape_di),
-               !is.na(max_shape_di),
-               !is.na(min_scale_di),
-               !is.na(max_scale_di),
-               !is.na(stop_iter),
-               !is.na(max_iter),
-               !is.na(num_converged),
-               !is.na(max_mle_runs),
-               !is.na(dt_kit))){
+        waiter_ui <- Waiter$new(html = tagList(spin_3k(),
+                                               h3("Checking the settings...")),
+                                color = transparent(.5))
+        waiter_ui$show()
 
-          waiter_show(html = spin_3k(), color = "white")
-
-          # Check input files and setting
-          error_message <- check_est_dropin(dt_ntc, dt_kit)
-          if(error_message != ""){
-            waiter_hide()
-            showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
+        # Check input files and setting
+        error_message <- check_est_dropin(dt_ntc, dt_kit)
+        if(error_message != ""){
+          waiter_ui$hide()
+          showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
+        }else{
+          data_est_dropin <- try(estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs, waiter_ui))
+          if(inherits(data_est_dropin, "try-error")){
+            waiter_ui$hide()
+            showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
           }else{
-            data_est_dropin <- try(estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs))
-            if(inherits(data_est_dropin, "try-error")){
-              waiter_hide()
-              showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
-            }else{
-              data_est_dropin$fn_ntc <- fn_ntc
-              data_est_dropin$name_kit_dropin <- name_kit_dropin
-              data_est_dropin$at_dropin <- at_dropin
-              data_est_dropin$min_shape_di <- min_shape_di
-              data_est_dropin$max_shape_di <- max_shape_di
-              data_est_dropin$min_scale_di <- min_scale_di
-              data_est_dropin$max_scale_di <- max_scale_di
-              data_est_dropin$stop_iter <- stop_iter
-              data_est_dropin$max_iter <- max_iter
-              data_est_dropin$num_converged <- num_converged
-              data_est_dropin$max_mle_runs <- max_mle_runs
-              rv_est_dropin_setting$data_est_dropin <- data_est_dropin
+            data_est_dropin$fn_ntc <- fn_ntc
+            data_est_dropin$name_kit_dropin <- name_kit_dropin
+            data_est_dropin$at_dropin <- at_dropin
+            data_est_dropin$min_shape_di <- min_shape_di
+            data_est_dropin$max_shape_di <- max_shape_di
+            data_est_dropin$min_scale_di <- min_scale_di
+            data_est_dropin$max_scale_di <- max_scale_di
+            data_est_dropin$stop_iter <- stop_iter
+            data_est_dropin$max_iter <- max_iter
+            data_est_dropin$num_converged <- num_converged
+            data_est_dropin$max_mle_runs <- max_mle_runs
+            rv_est_dropin_setting$data_est_dropin <- data_est_dropin
 
-              waiter_hide()
-            }
+            waiter_ui$hide()
           }
         }
       })
@@ -418,80 +418,71 @@ est_dropin_server <- function(id, path_pack){
       })
 
       output$dt_est_dropin <- renderDataTable({
-        req(rv_est_dropin_result)
+        req(rv_est_dropin_result$dt_est_dropin)
         dt_est_dropin <- rv_est_dropin_result$dt_est_dropin
 
-        if(!is.null(dt_est_dropin)){
-          datatable(
-            dt_est_dropin,
-            selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_est_dropin), ordering = FALSE, autowidth = FALSE),
-            rownames = FALSE
-          )
-        }
+        datatable(
+          dt_est_dropin,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_est_dropin), ordering = FALSE, autowidth = FALSE),
+          rownames = FALSE
+        )
       })
 
       output$ui_plot_dropin <- renderUI({
-        req(rv_est_dropin_result)
-        dt_dropin_data <- rv_est_dropin_result$dt_dropin_data
-
-        if(nrow(dt_dropin_data) != 0){
-          plotOutput(session$ns("plot_dropin"), width = "100%", height = "300px")
-        }
+        req(rv_est_dropin_result$dt_dropin_data)
+        plotOutput(session$ns("plot_dropin"), width = "100%", height = "300px")
       })
 
       output$plot_dropin <- renderPlot({
-        req(rv_est_dropin_result)
+        req(rv_est_dropin_result$dt_est_dropin)
+        req(rv_est_dropin_result$dt_dropin_data)
         dt_est_dropin <- rv_est_dropin_result$dt_est_dropin
         dt_dropin_data <- rv_est_dropin_result$dt_dropin_data
 
-        if(!is.null(dt_est_dropin) && !is.null(dt_dropin_data)){
-          heights <- dt_dropin_data$Height
-          shape_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Shape parameter"]
-          scale_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Scale parameter"]
+        heights <- dt_dropin_data$Height
+        shape_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Shape parameter"]
+        scale_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Scale parameter"]
 
-          tb_ph <- table(heights)
-          x_val <- 0:round(max(heights) * 1.5, 0)
-          y_val <- rep(0, length(x_val))
-          y_val[match(as.numeric(names(tb_ph)), x_val)] <- tb_ph
+        tb_ph <- table(heights)
+        x_val <- 0:round(max(heights) * 1.5, 0)
+        y_val <- rep(0, length(x_val))
+        y_val[match(as.numeric(names(tb_ph)), x_val)] <- tb_ph
 
-          ggplot() +
-            geom_line(data = data.frame(X = x_val, Y = y_val, P = y_val * 0.01), aes(X, P, color = "Observed"), linewidth = 1) +
-            stat_function(fun = dgamma, args = list(shape = shape_di, scale = scale_di), aes(color = "Estimated"), linewidth = 1) +
-            xlim(0, max(x_val)) +
-            labs(color = NULL, x = "Peak height (RFU)") +
-            scale_y_continuous(
-              name = "Probability density",
-              sec.axis = sec_axis(~ . * 100, name = "Count")
-            ) +
-            scale_color_manual(values = c("Observed" = "#4169e1", "Estimated" = "#c71585")) +
-            theme(
-              plot.title = element_text(size = 14),
-              legend.text = element_text(size = 12),
-              axis.title.x = element_text(size = 12),
-              axis.title.y = element_text(size = 12),
-              axis.text.x = element_text(size = 12),
-              axis.text.y = element_text(size = 12)
-            )
-        }
+        ggplot() +
+          geom_line(data = data.frame(X = x_val, Y = y_val, P = y_val * 0.01), aes(X, P, color = "Observed"), linewidth = 1) +
+          stat_function(fun = dgamma, args = list(shape = shape_di, scale = scale_di), aes(color = "Estimated"), linewidth = 1) +
+          xlim(0, max(x_val)) +
+          labs(color = NULL, x = "Peak height (RFU)") +
+          scale_y_continuous(
+            name = "Probability density",
+            sec.axis = sec_axis(~ . * 100, name = "Count")
+          ) +
+          scale_color_manual(values = c("Observed" = "#4169e1", "Estimated" = "#c71585")) +
+          theme(
+            plot.title = element_text(size = 14),
+            legend.text = element_text(size = 12),
+            axis.title.x = element_text(size = 12),
+            axis.title.y = element_text(size = 12),
+            axis.text.x = element_text(size = 12),
+            axis.text.y = element_text(size = 12)
+          )
       })
 
       output$dt_dropin_data <- renderDataTable({
-        req(rv_est_dropin_result)
+        req(rv_est_dropin_result$dt_dropin_data)
         dt_dropin_data <- rv_est_dropin_result$dt_dropin_data
 
-        if(!is.null(dt_dropin_data)){
-          datatable(
-            dt_dropin_data,
-            selection = "none",
-            options = list(
-              iDisplayLength = 10,
-              autoWidth = FALSE
-            ),
-            rownames = FALSE
-          ) %>%
-            formatStyle(names(dt_dropin_data), lineHeight = "80%")
-        }
+        datatable(
+          dt_dropin_data,
+          selection = "none",
+          options = list(
+            iDisplayLength = 10,
+            autoWidth = FALSE
+          ),
+          rownames = FALSE
+        ) %>%
+          formatStyle(names(dt_dropin_data), lineHeight = "80%")
       })
     }
   )

@@ -399,7 +399,10 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
 
       # Start estimating average stutter ratios
       observeEvent(input$act_analyze_est_sr, {
-        waiter_show(html = spin_3k(), color = "white")
+        waiter_ui <- Waiter$new(html = tagList(spin_3k(),
+                                               h3("Checking the settings...")),
+                                color = transparent(.5))
+        waiter_ui$show()
 
         fn_exp_sr <- rv_est_sr_setting$fn_exp_sr
         dt_exp_sr <- rv_est_sr_setting$dt_exp_sr
@@ -423,14 +426,15 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
 
         error_message <- check_est_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr)
         if(error_message != ""){
-          waiter_hide()
+          waiter_ui$hide()
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           data_est_sr <- try(estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr,
                                                  min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
-                                                 stop_iter, max_iter, num_converged, max_mle_runs))
+                                                 stop_iter, max_iter, num_converged, max_mle_runs,
+                                                 waiter_ui))
           if(inherits(data_est_sr, "try-error")){
-            waiter_hide()
+            waiter_ui$hide()
             showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
           }else{
             data_est_sr$fn_exp_sr <- fn_exp_sr
@@ -451,7 +455,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
             data_est_sr$max_mle_runs <- max_mle_runs
             rv_est_sr$data_est_sr <- data_est_sr
 
-            waiter_hide()
+            waiter_ui$hide()
 
             updateTabsetPanel(session = session_est_sr_top, inputId = "tabset_est_sr", selected = "Result")
           }

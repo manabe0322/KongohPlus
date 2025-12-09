@@ -125,7 +125,8 @@ generate_importance_gt <- function(n_simu, markers_use, dt_pg_list_h1, pop_al_li
 #' @param n_simu The number of simulations
 #' @param dt_gt_non_contrib The data.table of the genotypes for non-contributors
 #' @param importance_sampling Whether importance sampling will be performed or not
-perform_hd_true <- function(hnc, data_deconvo, n_simu, dt_gt_non_contrib = NULL, importance_sampling = FALSE){
+#' @param waiter_ui Information on UI for waiter
+perform_hd_true <- function(hnc, data_deconvo, n_simu, dt_gt_non_contrib = NULL, importance_sampling = FALSE, waiter_ui = NULL){
 
   # --- Extract data from data_deconvo --- #
 
@@ -182,6 +183,15 @@ perform_hd_true <- function(hnc, data_deconvo, n_simu, dt_gt_non_contrib = NULL,
     setindex(dt_gt_non_contrib, SampleName)
     sn_all_non_contrib <- unique(dt_gt_non_contrib[, SampleName])
     for(i in 1:n_simu){
+
+      if(!is.null(waiter_ui)){
+        waiter_ui$update(
+          html = tagList(
+            spin_3k(),
+            h3(paste0("Calculating the LR for non-contributor ", i))
+          )
+        )
+      }
 
       # --- Extract a reference profile --- #
 

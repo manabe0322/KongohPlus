@@ -118,10 +118,13 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       })
 
       output$warning_message <- renderUI({
-        req(rv_deconvo$data_deconvo)
+        req(rv_deconvo_result$data_hnc_list)
+        req(rv_deconvo_result$message_sr)
+        data_hnc_list <- rv_deconvo_result$data_hnc_list
+        message_sr <- rv_deconvo_result$message_sr
 
         warning_message <- ""
-        data_hnc_list <- rv_deconvo_result$data_hnc_list
+
 
         for(i in 1:length(data_hnc_list)){
           data_hnc <- data_hnc_list[[i]]
@@ -130,24 +133,24 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
             warning_message <- paste0(warning_message, tmp)
           }
         }
-        warning_message <- paste0(warning_message, rv_deconvo_result$message_sr)
+        warning_message <- paste0(warning_message, message_sr)
         HTML(warning_message)
       })
 
       output$act_lr <- renderUI({
         req(rv_deconvo$data_deconvo)
-
         actionButton(session$ns("act_lr"), label = "Likelihood ratio", class = "btn btn-primary btn-lg")
       })
 
       observeEvent(input$act_lr, {
         req(rv_deconvo$data_deconvo)
-
         updateNavbarPage(session = session_top, inputId = "navbar", selected = "Likelihood ratio")
       })
 
       output$dt_log10like <- renderDataTable(server = FALSE, {
-        req(rv_deconvo$data_deconvo)
+        req(rv_deconvo_result$hnc_all)
+        req(rv_deconvo_result$data_hnc_list)
+        req(rv_deconvo_result$markers_use)
 
         hnc_all <- rv_deconvo_result$hnc_all
         n_hnc <- length(hnc_all)
@@ -175,15 +178,13 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       })
 
       output$select_noc_param <- renderUI({
-        req(rv_deconvo$data_deconvo)
-
+        req(rv_deconvo_result$hnc_all)
         hnc_all <- rv_deconvo_result$hnc_all
         selectInput(session$ns("select_noc_param"), label = "Number of contributors", choices = hnc_all, selected = hnc_all[1], multiple = FALSE, selectize = FALSE)
       })
 
       output$button_ave_ph <- renderUI({
         req(rv_deconvo$data_deconvo)
-
         actionButton(session$ns("act_ave_ph"), label = "Illustrate the estimated peak height")
       })
 
@@ -201,13 +202,14 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       })
 
       observeEvent(input$select_noc_param, {
-        req(rv_deconvo$data_deconvo)
+        req(rv_deconvo_result$hnc_all)
+        req(rv_deconvo_result$data_hnc_list)
 
         hnc_all <- rv_deconvo_result$hnc_all
         data_hnc_list <- rv_deconvo_result$data_hnc_list
         index_hnc <- which(hnc_all == input$select_noc_param)
 
-        if(!is.null(hnc_all) && !is.null(data_hnc_list) && length(index_hnc) != 0){
+        if(length(index_hnc) != 0){
           data_hnc <- data_hnc_list[[index_hnc]]
           error_message <- data_hnc$error_message
           if(is.null(data_hnc$error_message)){
@@ -232,24 +234,21 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       })
 
       output$dt_param <- renderDataTable({
-        req(rv_deconvo$data_deconvo)
-
+        req(rv_deconvo_result$dt_param)
         dt_param <- rv_deconvo_result$dt_param
 
-        if(!is.null(dt_param)){
-          datatable(
-            dt_param,
-            selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_param), ordering = FALSE, autowidth = TRUE,
-                           columnDefs = list(list(width = "150px", targets = 0),
-                                             list(width = "70px", targets = 1),
-                                             list(width = "50px", targets = 2),
-                                             list(width = "70px", targets = 3))),
-            rownames = FALSE
-          ) %>%
-            formatSignif(columns = c("Estimated value"), digits = 4) %>%
-            formatStyle(names(dt_param), lineHeight = "80%")
-        }
+        datatable(
+          dt_param,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_param), ordering = FALSE, autowidth = TRUE,
+                         columnDefs = list(list(width = "150px", targets = 0),
+                                           list(width = "70px", targets = 1),
+                                           list(width = "50px", targets = 2),
+                                           list(width = "70px", targets = 3))),
+          rownames = FALSE
+        ) %>%
+          formatSignif(columns = c("Estimated value"), digits = 4) %>%
+          formatStyle(names(dt_param), lineHeight = "80%")
       })
     }
   )

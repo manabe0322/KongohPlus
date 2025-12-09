@@ -354,7 +354,10 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
 
       # Start estimating parameters
       observeEvent(input$act_analyze_est_par, {
-        waiter_show(html = spin_3k(), color = "white")
+        waiter_ui <- Waiter$new(html = tagList(spin_3k(),
+                                               h3("Checking the settings...")),
+                                color = transparent(.5))
+        waiter_ui$show()
 
         # Fix data
         fn_exp_param <- rv_est_par_setting$fn_exp_param
@@ -379,15 +382,16 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
         # Check input files and setting
         error_message <- check_est_par(dt_exp_param, dt_gt_param, dt_setting_est_par)
         if(error_message != ""){
-          waiter_hide()
+          waiter_ui$hide()
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
           data_est_par <- try(estimate_parameters(dt_exp_param, dt_gt_param, list_dt_average_sr, dt_setting_est_par,
                                                   min_alpha, max_alpha,
                                                   min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
-                                                  stop_iter, max_iter, num_converged, max_mle_runs))
+                                                  stop_iter, max_iter, num_converged, max_mle_runs,
+                                                  waiter_ui))
           if(inherits(data_est_par, "try-error")){
-            waiter_hide()
+            waiter_ui$hide()
             showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
           }else{
             data_est_par$fn_exp_param <- fn_exp_param
@@ -409,7 +413,7 @@ est_par_setting_server <- function(id, path_pack, session_param_top){
 
             rv_est_par$data_est_par <- data_est_par
 
-            waiter_hide()
+            waiter_ui$hide()
 
             updateTabsetPanel(session = session_param_top, inputId = "tabset_est_par", selected = "Result (LSAE)")
           }

@@ -22,7 +22,7 @@ perform_deconvo_all_noc(
   max_iter,
   num_converged,
   max_mle_runs,
-  waiter_ui
+  waiter_ui = NULL
 )
 }
 \arguments{

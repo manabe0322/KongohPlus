@@ -17,7 +17,8 @@ calculate_lr(
   theta,
   dt_pg_list_hp,
   dt_pg_list_hd,
-  dt_ref
+  dt_ref,
+  waiter_ui = NULL
 )
 }
 \arguments{
@@ -46,6 +47,8 @@ calculate_lr(
 \item{dt_pg_list_hd}{A list of the PG data.table for all markers in Hd}
 
 \item{dt_ref}{The data.table for the reference profiles}
+
+\item{waiter_ui}{Information on UI for waiter}
 }
 \description{
 The function to calculate a likelihood ratio

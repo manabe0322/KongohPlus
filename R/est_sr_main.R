@@ -591,9 +591,11 @@ calc_average_sr <- function(allele, slope, intercept){
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
+#' @param waiter_ui Information on UI for waiter
 perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto, meth_model_sr,
                                   min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
-                                  stop_iter, max_iter, num_converged, max_mle_runs){
+                                  stop_iter, max_iter, num_converged, max_mle_runs,
+                                  waiter_ui = NULL){
   # Extract data of the targeted stutter type
   if(stutter_type == "BS"){
     dt_st_type <- dt_sr_data[dt_sr_data$Bool_BS]
@@ -667,6 +669,16 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
 
         # Perform MLE for uniform model
         else if(meth == "Uniform"){
+
+          if(!is.null(waiter_ui)){
+            waiter_ui$update(
+              html = tagList(
+                spin_3k(),
+                h3(paste0("Performing MLE for ", stutter_type, " in ", mk))
+              )
+            )
+          }
+
           tmp <- run_mle_sr_uni(y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
           est_param <- tmp$est_param
           myu_all_mk[i] <- myu <- est_param["myu"]
@@ -686,6 +698,16 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
 
         # Perform MLE for linear model
         else{
+
+          if(!is.null(waiter_ui)){
+            waiter_ui$update(
+              html = tagList(
+                spin_3k(),
+                h3(paste0("Performing MLE for ", stutter_type, " in ", mk))
+              )
+            )
+          }
+
           tmp <- run_mle_sr_gen(x_al, y_sr, tap, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
           est_param <- tmp$est_param
           slope_all_mk[i] <- slope <- est_param["slope"]
@@ -728,6 +750,16 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
 
   # Perform MLE for uniform model (multiple loci together)
   if(length(y_sr_multi_mk) != 0){
+
+    if(!is.null(waiter_ui)){
+      waiter_ui$update(
+        html = tagList(
+          spin_3k(),
+          h3(paste0("Performing MLE for ", stutter_type, " based on aggregated data from multiple loci"))
+        )
+      )
+    }
+
     tmp <- run_mle_sr_uni(y_sr_multi_mk, tap_multi_mk, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
     est_param <- tmp$est_param
     myu_all_mk[index_multi_mk] <- est_param["myu"]
@@ -828,9 +860,11 @@ full_join_average_sr <- function(list_dt_average_bsr, list_dt_average_fsr, list_
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
+#' @param waiter_ui Information on UI for waiter
 estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
                                 min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
-                                stop_iter, max_iter, num_converged, max_mle_runs){
+                                stop_iter, max_iter, num_converged, max_mle_runs,
+                                waiter_ui = NULL){
   # Extract information on setting
   markers_auto <- dt_setting_est_sr$Marker
   n_mk_auto <- length(markers_auto)
@@ -851,6 +885,16 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   sr_consider_auto[, 4] <- meth_model_m2sr != "Not consider"
 
   # Arrange experimental data
+
+  if(!is.null(waiter_ui)){
+    waiter_ui$update(
+      html = tagList(
+        spin_3k(),
+        h3("Preparing data")
+      )
+    )
+  }
+
   tmp <- arrange_exp_data(dt_exp, dt_gt, markers_auto, sr_consider_auto, at_auto)
   peak_list <- tmp$peak_list
   height_list <- tmp$height_list
@@ -861,7 +905,8 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
 
   # Perform MLE for BSR
   tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "BS", markers_auto, meth_model_bsr,
-                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
+                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs,
+                               waiter_ui)
   dt_result_est_bsr <- tmp$dt_result_est_sr
   list_dt_average_bsr <- tmp$dt_average_sr_all_mk
   init_list_all_mk_bsr <- tmp$init_list_all_mk
@@ -869,7 +914,8 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
 
   # Perform MLE for FSR
   tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "FS", markers_auto, meth_model_fsr,
-                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
+                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs,
+                               waiter_ui)
   dt_result_est_fsr <- tmp$dt_result_est_sr
   list_dt_average_fsr <- tmp$dt_average_sr_all_mk
   init_list_all_mk_fsr <- tmp$init_list_all_mk
@@ -877,7 +923,8 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
 
   # Perform MLE for DSR
   tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "DS", markers_auto, meth_model_dsr,
-                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
+                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs,
+                               waiter_ui)
   dt_result_est_dsr <- tmp$dt_result_est_sr
   list_dt_average_dsr <- tmp$dt_average_sr_all_mk
   init_list_all_mk_dsr <- tmp$init_list_all_mk
@@ -885,7 +932,8 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
 
   # Perform MLE for M2SR
   tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "M2S", markers_auto, meth_model_m2sr,
-                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
+                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs,
+                               waiter_ui)
   dt_result_est_m2sr <- tmp$dt_result_est_sr
   list_dt_average_m2sr <- tmp$dt_average_sr_all_mk
   init_list_all_mk_m2sr <- tmp$init_list_all_mk

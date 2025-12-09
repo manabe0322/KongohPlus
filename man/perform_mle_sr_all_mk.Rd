@@ -21,7 +21,8 @@ perform_mle_sr_all_mk(
   stop_iter,
   max_iter,
   num_converged,
-  max_mle_runs
+  max_mle_runs,
+  waiter_ui = NULL
 )
 }
 \arguments{
@@ -58,6 +59,8 @@ perform_mle_sr_all_mk(
 \item{num_converged}{Number of converged MLE runs before stopping}
 
 \item{max_mle_runs}{Maximum number of MLE attempts}
+
+\item{waiter_ui}{Information on UI for waiter}
 }
 \description{
 The function to perform MLE for SR of all markers

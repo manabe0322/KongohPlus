@@ -661,10 +661,12 @@ create_dt_gamma_data <- function(scale_allele, scale_stutter, samples_gamma, mar
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
+#' @param waiter_ui Information on UI for waiter
 estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
                                 min_alpha, max_alpha,
                                 min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
-                                stop_iter, max_iter, num_converged, max_mle_runs){
+                                stop_iter, max_iter, num_converged, max_mle_runs,
+                                waiter_ui = NULL){
   # Extract information on setting
   markers_auto <- dt_setting_est_par$Marker
   n_mk_auto <- length(markers_auto)
@@ -685,6 +687,16 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   }
 
   # Arrange experimental data
+
+  if(!is.null(waiter_ui)){
+    waiter_ui$update(
+      html = tagList(
+        spin_3k(),
+        h3("Preparing data")
+      )
+    )
+  }
+
   tmp <- arrange_exp_data(dt_exp, dt_gt, markers_auto, sr_consider_auto, at_auto)
   peak_list <- tmp$peak_list
   height_list <- tmp$height_list
@@ -703,6 +715,16 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   names(dt_prop_ae_data_use) <- c("SampleName", markers_auto)
 
   # Perform MLE for AE
+
+  if(!is.null(waiter_ui)){
+    waiter_ui$update(
+      html = tagList(
+        spin_3k(),
+        h3("Performing MLE for LSAE")
+      )
+    )
+  }
+
   tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs)
   alpha <- tmp$est_param
   init_list_ae <- tmp$init_list
@@ -734,6 +756,16 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     peaks_gamma <- tmp$peaks_gamma
 
     # Perform MLE for gamma distribution
+
+    if(!is.null(waiter_ui)){
+      waiter_ui$update(
+        html = tagList(
+          spin_3k(),
+          h3("Performing MLE for peak height parameters")
+        )
+      )
+    }
+
     tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs)
     est_param <- tmp$est_param
     scale_allele <- est_param["scale_allele"]
