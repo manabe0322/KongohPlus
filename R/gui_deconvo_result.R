@@ -76,12 +76,25 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         req(rv_deconvo$data_deconvo)
 
         data_deconvo <- rv_deconvo$data_deconvo
-        rv_deconvo_result$markers_use <- data_deconvo$markers_use
-        rv_deconvo_result$message_sr <- data_deconvo$message_sr
-        rv_deconvo_result$hnc_all <- data_deconvo$hnc_all
-        rv_deconvo_result$data_hnc_list <- data_deconvo$data_hnc_list
-        rv_deconvo_result$min_size <- data_deconvo$min_size
-        rv_deconvo_result$max_size <- data_deconvo$max_size
+        if(!is.null(data_deconvo)){
+          rv_deconvo_result$dt_param <- NULL
+          rv_deconvo_result$error_message <- NULL
+          rv_deconvo_result$markers_use <- data_deconvo$markers_use
+          rv_deconvo_result$message_sr <- data_deconvo$message_sr
+          rv_deconvo_result$hnc_all <- data_deconvo$hnc_all
+          rv_deconvo_result$data_hnc_list <- data_deconvo$data_hnc_list
+          rv_deconvo_result$min_size <- data_deconvo$min_size
+          rv_deconvo_result$max_size <- data_deconvo$max_size
+        }else{
+          rv_deconvo_result$dt_param <- NULL
+          rv_deconvo_result$error_message <- NULL
+          rv_deconvo_result$markers_use <- NULL
+          rv_deconvo_result$message_sr <- NULL
+          rv_deconvo_result$hnc_all <- NULL
+          rv_deconvo_result$data_hnc_list <- NULL
+          rv_deconvo_result$min_size <- NULL
+          rv_deconvo_result$max_size <- NULL
+        }
       })
 
       output$title_warnings <- renderText({
@@ -194,7 +207,7 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         data_hnc_list <- rv_deconvo_result$data_hnc_list
         index_hnc <- which(hnc_all == input$select_noc_param)
 
-        if(length(index_hnc) != 0){
+        if(!is.null(hnc_all) && !is.null(data_hnc_list) && length(index_hnc) != 0){
           data_hnc <- data_hnc_list[[index_hnc]]
           error_message <- data_hnc$error_message
           if(is.null(data_hnc$error_message)){

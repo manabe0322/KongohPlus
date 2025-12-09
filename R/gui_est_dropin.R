@@ -77,6 +77,10 @@ est_dropin_server <- function(id, path_pack){
       rv_est_dropin_setting$bool_correct_advanced_2 <- TRUE
       rv_est_dropin_setting$data_est_dropin <- NULL
 
+      rv_est_dropin_result <- reactiveValues()
+      rv_est_dropin_result$dt_est_dropin <- NULL
+      rv_est_dropin_result$dt_dropin_data <- NULL
+
       # Load non template control data
       observeEvent(input$ntc_data, {
         file_input <- input$ntc_data
@@ -285,9 +289,7 @@ est_dropin_server <- function(id, path_pack){
 
       # Start estimating dropin parameters
       observeEvent(input$act_analyze_est_dropin, {
-        waiter_show(html = spin_3k(), color = "white")
-
-        # Fix data
+        req(rv_est_dropin_setting)
         dt_ntc <- rv_est_dropin_setting$dt_ntc
         fn_ntc <- rv_est_dropin_setting$fn_ntc
         name_kit_dropin <- rv_est_dropin_setting$name_kit_dropin
@@ -302,31 +304,48 @@ est_dropin_server <- function(id, path_pack){
         max_mle_runs <- rv_est_dropin_setting$max_mle_runs
         dt_kit <- rv_est_dropin_setting$dt_kit
 
-        # Check input files and setting
-        error_message <- check_est_dropin(dt_ntc, dt_kit)
-        if(error_message != ""){
-          waiter_hide()
-          showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
-        }else{
-          data_est_dropin <- try(estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs))
-          if(inherits(data_est_dropin, "try-error")){
-            waiter_hide()
-            showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
-          }else{
-            data_est_dropin$fn_ntc <- fn_ntc
-            data_est_dropin$name_kit_dropin <- name_kit_dropin
-            data_est_dropin$at_dropin <- at_dropin
-            data_est_dropin$min_shape_di <- min_shape_di
-            data_est_dropin$max_shape_di <- max_shape_di
-            data_est_dropin$min_scale_di <- min_scale_di
-            data_est_dropin$max_scale_di <- max_scale_di
-            data_est_dropin$stop_iter <- stop_iter
-            data_est_dropin$max_iter <- max_iter
-            data_est_dropin$num_converged <- num_converged
-            data_est_dropin$max_mle_runs <- max_mle_runs
-            rv_est_dropin_setting$data_est_dropin <- data_est_dropin
+        if(all(!is.na(dt_ntc),
+               !is.na(fn_ntc),
+               !is.na(name_kit_dropin),
+               !is.na(at_dropin),
+               !is.na(min_shape_di),
+               !is.na(max_shape_di),
+               !is.na(min_scale_di),
+               !is.na(max_scale_di),
+               !is.na(stop_iter),
+               !is.na(max_iter),
+               !is.na(num_converged),
+               !is.na(max_mle_runs),
+               !is.na(dt_kit))){
 
+          waiter_show(html = spin_3k(), color = "white")
+
+          # Check input files and setting
+          error_message <- check_est_dropin(dt_ntc, dt_kit)
+          if(error_message != ""){
             waiter_hide()
+            showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
+          }else{
+            data_est_dropin <- try(estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs))
+            if(inherits(data_est_dropin, "try-error")){
+              waiter_hide()
+              showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
+            }else{
+              data_est_dropin$fn_ntc <- fn_ntc
+              data_est_dropin$name_kit_dropin <- name_kit_dropin
+              data_est_dropin$at_dropin <- at_dropin
+              data_est_dropin$min_shape_di <- min_shape_di
+              data_est_dropin$max_shape_di <- max_shape_di
+              data_est_dropin$min_scale_di <- min_scale_di
+              data_est_dropin$max_scale_di <- max_scale_di
+              data_est_dropin$stop_iter <- stop_iter
+              data_est_dropin$max_iter <- max_iter
+              data_est_dropin$num_converged <- num_converged
+              data_est_dropin$max_mle_runs <- max_mle_runs
+              rv_est_dropin_setting$data_est_dropin <- data_est_dropin
+
+              waiter_hide()
+            }
           }
         }
       })
@@ -335,106 +354,143 @@ est_dropin_server <- function(id, path_pack){
         req(rv_est_dropin_setting)
         data_est_dropin <- rv_est_dropin_setting$data_est_dropin
         if(!is.null(data_est_dropin)){
+          rv_est_dropin_result$dt_est_dropin <- data_est_dropin$dt_est_dropin
+          rv_est_dropin_result$dt_dropin_data <- data_est_dropin$dt_dropin_data
           enable("act_saveas_est_dropin_1")
-
-          dt_est_dropin <- data_est_dropin$dt_est_dropin
-          dt_dropin_data <- data_est_dropin$dt_dropin_data
-
-          observeEvent(input$act_saveas_est_dropin_1, {
-            showModal(modalDialog(
-              title = "Save drop-in data",
-              textInput(session$ns("fn_est_dropin"), label = "Enter the file name"),
-              footer = tagList(
-                disabled(actionButton(session$ns("act_saveas_est_dropin_2"), "Save")),
-                modalButton("Close")
-              )
-            ))
-          })
-
-          observeEvent(input$fn_est_dropin, {
-            fn_est_dropin <- input$fn_est_dropin
-            dropin_file_names <- list.files(paste0(path_pack, "/extdata/dropin"))
-            if(is.element(paste0(fn_est_dropin, ".RData"), dropin_file_names)){
-              showFeedbackDanger(inputId = "fn_est_dropin", text = "A file with the same name already exists.")
-              disable("act_saveas_est_dropin_2")
-            }else if(nchar(fn_est_dropin) == 0){
-              hideFeedback("fn_est_dropin")
-              disable("act_saveas_est_dropin_2")
-            }else{
-              hideFeedback("fn_est_dropin")
-              enable("act_saveas_est_dropin_2")
-            }
-          })
-
-          observeEvent(input$act_saveas_est_dropin_2, {
-            fn_est_dropin <- input$fn_est_dropin
-
-            save(list = c("data_est_dropin"),
-                 file = paste0(path_pack, "/extdata/dropin/", fn_est_dropin, ".RData"))
-
-            removeModal()
-          })
-
-          output$dt_est_dropin <- renderDataTable({
-            datatable(
-              dt_est_dropin,
-              selection = "none",
-              options = list(dom = "t", iDisplayLength = nrow(dt_est_dropin), ordering = FALSE, autowidth = FALSE),
-              rownames = FALSE
-            )
-          })
-
-          output$ui_plot_dropin <- renderUI({
-            if(nrow(dt_dropin_data) != 0){
-              plotOutput(session$ns("plot_dropin"), width = "100%", height = "300px")
-            }
-          })
-
-          output$plot_dropin <- renderPlot({
-            heights <- dt_dropin_data$Height
-            shape_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Shape parameter"]
-            scale_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Scale parameter"]
-
-            tb_ph <- table(heights)
-            x_val <- 0:round(max(heights) * 1.5, 0)
-            y_val <- rep(0, length(x_val))
-            y_val[match(as.numeric(names(tb_ph)), x_val)] <- tb_ph
-
-            ggplot() +
-              geom_line(data = data.frame(X = x_val, Y = y_val, P = y_val * 0.01), aes(X, P, color = "Observed"), linewidth = 1) +
-              stat_function(fun = dgamma, args = list(shape = shape_di, scale = scale_di), aes(color = "Estimated"), linewidth = 1) +
-              xlim(0, max(x_val)) +
-              labs(color = NULL, x = "Peak height (RFU)") +
-              scale_y_continuous(
-                name = "Probability density",
-                sec.axis = sec_axis(~ . * 100, name = "Count")
-              ) +
-              scale_color_manual(values = c("Observed" = "#4169e1", "Estimated" = "#c71585")) +
-              theme(
-                plot.title = element_text(size = 14),
-                legend.text = element_text(size = 12),
-                axis.title.x = element_text(size = 12),
-                axis.title.y = element_text(size = 12),
-                axis.text.x = element_text(size = 12),
-                axis.text.y = element_text(size = 12)
-              )
-          })
-
-          output$dt_dropin_data <- renderDataTable({
-            datatable(
-              dt_dropin_data,
-              selection = "none",
-              options = list(
-                iDisplayLength = 10,
-                autoWidth = FALSE
-              ),
-              rownames = FALSE
-            ) %>%
-              formatStyle(names(dt_dropin_data), lineHeight = "80%")
-          })
-
         }else{
+          rv_est_dropin_result$dt_est_dropin <- NULL
+          rv_est_dropin_result$dt_dropin_data <- NULL
           disable("act_saveas_est_dropin_1")
+        }
+      })
+
+      observeEvent(input$act_saveas_est_dropin_1, {
+        req(rv_est_dropin_setting)
+        data_est_dropin <- rv_est_dropin_setting$data_est_dropin
+
+        if(!is.null(data_est_dropin)){
+          showModal(modalDialog(
+            title = "Save drop-in data",
+            textInput(session$ns("fn_est_dropin"), label = "Enter the file name"),
+            footer = tagList(
+              disabled(actionButton(session$ns("act_saveas_est_dropin_2"), "Save")),
+              modalButton("Close")
+            )
+          ))
+        }
+
+        else{
+          showModal(modalDialog(title = "Error", "No drop-in data.", easyClose = TRUE, footer = NULL))
+        }
+      })
+
+      observeEvent(input$fn_est_dropin, {
+        fn_est_dropin <- input$fn_est_dropin
+        dropin_file_names <- list.files(paste0(path_pack, "/extdata/dropin"))
+        if(is.element(paste0(fn_est_dropin, ".RData"), dropin_file_names)){
+          showFeedbackDanger(inputId = "fn_est_dropin", text = "A file with the same name already exists.")
+          disable("act_saveas_est_dropin_2")
+        }else if(nchar(fn_est_dropin) == 0){
+          hideFeedback("fn_est_dropin")
+          disable("act_saveas_est_dropin_2")
+        }else{
+          hideFeedback("fn_est_dropin")
+          enable("act_saveas_est_dropin_2")
+        }
+      })
+
+      observeEvent(input$act_saveas_est_dropin_2, {
+        req(rv_est_dropin_setting)
+        data_est_dropin <- rv_est_dropin_setting$data_est_dropin
+        fn_est_dropin <- input$fn_est_dropin
+
+        if(!is.null(data_est_dropin)){
+          save(list = c("data_est_dropin"),
+               file = paste0(path_pack, "/extdata/dropin/", fn_est_dropin, ".RData"))
+
+          removeModal()
+        }
+
+        else{
+          removeModal()
+          showModal(modalDialog(title = "Error", "No drop-in data.", easyClose = TRUE, footer = NULL))
+        }
+      })
+
+      output$dt_est_dropin <- renderDataTable({
+        req(rv_est_dropin_result)
+        dt_est_dropin <- rv_est_dropin_result$dt_est_dropin
+
+        if(!is.null(dt_est_dropin)){
+          datatable(
+            dt_est_dropin,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_est_dropin), ordering = FALSE, autowidth = FALSE),
+            rownames = FALSE
+          )
+        }
+      })
+
+      output$ui_plot_dropin <- renderUI({
+        req(rv_est_dropin_result)
+        dt_dropin_data <- rv_est_dropin_result$dt_dropin_data
+
+        if(nrow(dt_dropin_data) != 0){
+          plotOutput(session$ns("plot_dropin"), width = "100%", height = "300px")
+        }
+      })
+
+      output$plot_dropin <- renderPlot({
+        req(rv_est_dropin_result)
+        dt_est_dropin <- rv_est_dropin_result$dt_est_dropin
+        dt_dropin_data <- rv_est_dropin_result$dt_dropin_data
+
+        if(!is.null(dt_est_dropin) && !is.null(dt_dropin_data)){
+          heights <- dt_dropin_data$Height
+          shape_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Shape parameter"]
+          scale_di <- dt_est_dropin$Value[dt_est_dropin$Parameter == "Scale parameter"]
+
+          tb_ph <- table(heights)
+          x_val <- 0:round(max(heights) * 1.5, 0)
+          y_val <- rep(0, length(x_val))
+          y_val[match(as.numeric(names(tb_ph)), x_val)] <- tb_ph
+
+          ggplot() +
+            geom_line(data = data.frame(X = x_val, Y = y_val, P = y_val * 0.01), aes(X, P, color = "Observed"), linewidth = 1) +
+            stat_function(fun = dgamma, args = list(shape = shape_di, scale = scale_di), aes(color = "Estimated"), linewidth = 1) +
+            xlim(0, max(x_val)) +
+            labs(color = NULL, x = "Peak height (RFU)") +
+            scale_y_continuous(
+              name = "Probability density",
+              sec.axis = sec_axis(~ . * 100, name = "Count")
+            ) +
+            scale_color_manual(values = c("Observed" = "#4169e1", "Estimated" = "#c71585")) +
+            theme(
+              plot.title = element_text(size = 14),
+              legend.text = element_text(size = 12),
+              axis.title.x = element_text(size = 12),
+              axis.title.y = element_text(size = 12),
+              axis.text.x = element_text(size = 12),
+              axis.text.y = element_text(size = 12)
+            )
+        }
+      })
+
+      output$dt_dropin_data <- renderDataTable({
+        req(rv_est_dropin_result)
+        dt_dropin_data <- rv_est_dropin_result$dt_dropin_data
+
+        if(!is.null(dt_dropin_data)){
+          datatable(
+            dt_dropin_data,
+            selection = "none",
+            options = list(
+              iDisplayLength = 10,
+              autoWidth = FALSE
+            ),
+            rownames = FALSE
+          ) %>%
+            formatStyle(names(dt_dropin_data), lineHeight = "80%")
         }
       })
     }

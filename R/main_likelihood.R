@@ -289,8 +289,10 @@ create_dt_lr <- function(subsub_log10like_all_mk_hp, subsub_log10like_all_mk_hd,
 #' @param dt_pg_list_hp A list of the PG data.table for all markers in Hp
 #' @param dt_pg_list_hd A list of the PG data.table for all markers in Hd
 #' @param dt_ref The data.table for the reference profiles
+#' @param waiter_ui Information on UI for waiter
 calculate_lr <- function(noc_hp, hp, noc_hd, hd, refs,
-                         markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_pg_list_hd, dt_ref){
+                         markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_pg_list_hd, dt_ref,
+                         waiter_ui = NULL){
 
   # --- Contributor IDs for all possible hypotheses --- #
 
@@ -317,6 +319,15 @@ calculate_lr <- function(noc_hp, hp, noc_hd, hd, refs,
 
   # --- Calculate log10 likelihood of Hp --- #
 
+  if(!is.null(waiter_ui)){
+    waiter_ui$update(
+      html = tagList(
+        spin_3k(),
+        h3("Calculating log10 likelihood of Hp")
+      )
+    )
+  }
+
   loglike_all_hyp_hp <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_ref, hyp_id_all_hp, ref_id_lr)
   tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hp)
   index_max_loglike_hp <- tmp$index_max_loglike
@@ -324,12 +335,30 @@ calculate_lr <- function(noc_hp, hp, noc_hd, hd, refs,
 
   # --- Calculate log10 likelihood of Hd --- #
 
+  if(!is.null(waiter_ui)){
+    waiter_ui$update(
+      html = tagList(
+        spin_3k(),
+        h3("Calculating log10 likelihood of Hd")
+      )
+    )
+  }
+
   loglike_all_hyp_hd <- calc_loglike_all_hyp(markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hd, dt_ref, hyp_id_all_hd, ref_id_lr)
   tmp <- calc_subsub_log10like_all_mk(loglike_all_hyp_hd)
   index_max_loglike_hd <- tmp$index_max_loglike
   subsub_log10like_all_mk_hd <- tmp$subsub_log10like_all_mk
 
   # --- Calculate LR --- #
+
+  if(!is.null(waiter_ui)){
+    waiter_ui$update(
+      html = tagList(
+        spin_3k(),
+        h3("Calculating LR")
+      )
+    )
+  }
 
   dt_lr <- create_dt_lr(subsub_log10like_all_mk_hp, subsub_log10like_all_mk_hd, markers_use)
   names(dt_lr) <- c("Marker", "log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR")
