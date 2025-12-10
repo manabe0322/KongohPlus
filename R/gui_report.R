@@ -98,7 +98,10 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
           if(nzchar(message_pdf_env)){
             showModal(modalDialog(title = "Error", HTML(message_pdf_env), easyClose = TRUE, footer = NULL))
           }else{
-            waiter_show(html = spin_3k(), color = "white")
+            waiter_ui <- Waiter$new(html = tagList(spin_3k(),
+                                                   h3("Generating the report...")),
+                                    color = transparent(.5))
+            waiter_ui$show()
 
             report_tmp <- file.path(tempdir(), "report.Rmd")
             file.copy(paste0(path_pack, "/rmd/report.Rmd"), report_tmp, overwrite = TRUE)
@@ -139,7 +142,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
               envir = new.env(parent = globalenv())
             )
 
-            waiter_hide()
+            waiter_ui$hide()
           }
         }
       )

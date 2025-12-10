@@ -41,7 +41,11 @@ load_proj_server <- function(id, session_top){
         if(is.null(proj)){
           showModal(modalDialog(title = "Error", "Select a project file!", easyClose = TRUE, footer = NULL))
         }else{
-          waiter_show(html = spin_3k(), color = "white")
+          waiter_ui <- Waiter$new(html = tagList(spin_3k(),
+                                                 h3("Loading the project...")),
+                                  color = transparent(.5))
+          waiter_ui$show()
+
           load(input$file_proj$datapath)
           rv_load_proj$data_deconvo <- data_deconvo
           rv_load_proj$data_lr <- data_lr
@@ -53,7 +57,8 @@ load_proj_server <- function(id, session_top){
           }else{
             updateNavbarPage(session = session_top, "navbar", selected = "Deconvolution")
           }
-          waiter_hide()
+
+          waiter_ui$hide()
         }
       }, ignoreInit = TRUE)
 

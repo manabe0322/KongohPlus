@@ -52,13 +52,18 @@ save_proj_server <- function(id, rv_deconvo, rv_lr, rv_hd_true_random, rv_hd_tru
         },
 
         content = function(file){
-          waiter_show(html = spin_3k(), color = "white")
+          waiter_ui <- Waiter$new(html = tagList(spin_3k(),
+                                                 h3("Saving the project...")),
+                                  color = transparent(.5))
+          waiter_ui$show()
+
           save(list = c("data_deconvo",
                         "data_lr",
                         "hd_true_random",
                         "hd_true_importance"),
                file = file)
-          waiter_hide()
+
+          waiter_ui$hide()
         }
       )
     }
