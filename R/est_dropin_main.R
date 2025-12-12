@@ -158,7 +158,7 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
     waiter_ui$update(
       html = tagList(
         spin_3k(),
-        h3("Performing MLE for drop-in parameters")
+        h3("Performing MLE for drop-in parameters...")
       )
     )
   }

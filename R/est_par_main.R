@@ -692,7 +692,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     waiter_ui$update(
       html = tagList(
         spin_3k(),
-        h3("Preparing data")
+        h3("Preparing data...")
       )
     )
   }
@@ -720,7 +720,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     waiter_ui$update(
       html = tagList(
         spin_3k(),
-        h3("Performing MLE for LSAE")
+        h3("Performing MLE for LSAE...")
       )
     )
   }
@@ -761,7 +761,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
       waiter_ui$update(
         html = tagList(
           spin_3k(),
-          h3("Performing MLE for peak height parameters")
+          h3("Performing MLE for peak height parameters...")
         )
       )
     }

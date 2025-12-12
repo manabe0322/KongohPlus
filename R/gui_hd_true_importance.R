@@ -72,6 +72,15 @@ hd_true_importance_server <- function(id, path_pack, rv_deconvo){
         rv_hd_true_importance$fn_csp <- data_deconvo$fn_csp
         rv_hd_true_importance$fn_af <- data_deconvo$fn_af
         rv_hd_true_importance$data_hnc_list <- data_deconvo$data_hnc_list
+
+        bool_perform_deconvo <- rv_deconvo$bool_perform_deconvo
+        if(bool_perform_deconvo){
+          rv_hd_true_importance$dt_lr_importance <- NULL
+          rv_hd_true_importance$dt_gt_non_contrib <- NULL
+          rv_hd_true_importance$lr_importance <- NULL
+          rv_hd_true_importance$bias <- NULL
+          rv_hd_true_importance$expect_lr_hd <- NULL
+        }
       })
 
       output$title_csp <- renderUI({
@@ -127,6 +136,7 @@ hd_true_importance_server <- function(id, path_pack, rv_deconvo){
 
       output$act_analyze_hd_true <- renderUI({
         req(rv_hd_true_importance$theta)
+        theta <- rv_hd_true_importance$theta
 
         if(theta == 0){
           actionButton(session$ns("act_analyze_hd_true"), label = "Analyze", class = "btn btn-primary btn-lg")
@@ -136,6 +146,9 @@ hd_true_importance_server <- function(id, path_pack, rv_deconvo){
       })
 
       observeEvent(input$act_analyze_hd_true, {
+        req(rv_hd_true_importance$hnc_all)
+        hnc_all <- rv_hd_true_importance$hnc_all
+
         waiter_ui <- Waiter$new(html = tagList(spin_3k(),
                                                h3("Checking the settings...")),
                                 color = transparent(.5))
@@ -149,9 +162,6 @@ hd_true_importance_server <- function(id, path_pack, rv_deconvo){
           showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
         }else{
           rv_hd_true_importance$dt_lr_importance <- dt_lr_importance <- tmp$dt_lr_rand
-          rv_hd_true_importance$lr_importance <- lr_importance <- as.numeric(dt_lr_importance[nrow(dt_lr_importance), .SD, .SDcols = grep("Sample", names(dt_lr_importance))])
-          rv_hd_true_importance$bias <- bias <- tmp$bias
-          rv_hd_true_importance$dt_gt_non_contrib <- tmp$dt_gt_non_contrib
 
           if(is.null(dt_lr_importance)){
             data_hnc_list <- rv_hd_true_importance$data_hnc_list
@@ -160,6 +170,9 @@ hd_true_importance_server <- function(id, path_pack, rv_deconvo){
             waiter_ui$hide()
             showModal(modalDialog(title = "Error", HTML(error_message_h1), easyClose = TRUE, footer = NULL))
           }else{
+            rv_hd_true_importance$lr_importance <- lr_importance <- as.numeric(dt_lr_importance[nrow(dt_lr_importance), .SD, .SDcols = grep("Sample", names(dt_lr_importance))])
+            rv_hd_true_importance$bias <- bias <- tmp$bias
+            rv_hd_true_importance$dt_gt_non_contrib <- tmp$dt_gt_non_contrib
             rv_hd_true_importance$expect_lr_hd <- sum(lr_importance * bias) / n_simu
             waiter_ui$hide()
           }
@@ -168,6 +181,8 @@ hd_true_importance_server <- function(id, path_pack, rv_deconvo){
 
       output$act_reason <- renderText({
         req(rv_hd_true_importance$theta)
+        theta <- rv_hd_true_importance$theta
+
         if(theta == 0){
           ""
         }else{

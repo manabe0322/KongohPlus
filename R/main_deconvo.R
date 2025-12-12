@@ -414,7 +414,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         waiter_ui$update(
           html = tagList(
             spin_3k(),
-            h3(paste0("Performing deconvolution assuming ", hnc, " contributor(s)")),
+            h3(paste0("Performing deconvolution assuming ", hnc, " contributor(s)...")),
             h3(paste0("Running MLE #", count_mle, " of ", max_mle_runs)),
             h3(paste0("Number of convergences so far: ", count_solution))
           )
@@ -474,7 +474,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     if(count_solution == num_converged){
       warning_message <- NULL
     }else{
-      warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged under ", hnc, " contributor. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
+      warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged under ", hnc, " contributor(s). This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
     }
 
     # --- Calculate the likelihood using the estimated parameters --- #
@@ -483,7 +483,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       waiter_ui$update(
         html = tagList(
           spin_3k(),
-          h3(paste0("Performing deconvolution assuming ", hnc, " contributor(s)")),
+          h3(paste0("Performing deconvolution assuming ", hnc, " contributor(s)...")),
           h3(paste0("Calculating the likelihood using the estimated parameters"))
         )
       )
@@ -626,7 +626,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
         waiter_ui$update(
           html = tagList(
             spin_3k(),
-            h3(paste0("Performing deconvolution assuming ", hnc, " contributor(s)"))
+            h3(paste0("Performing deconvolution assuming ", hnc, " contributor(s)..."))
           )
         )
       }

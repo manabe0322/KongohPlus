@@ -12,10 +12,8 @@ geometry: top=25mm,bottom=25mm,left=25mm,right=25mm
 documentclass: report
 fontsize: 10pt
 header-includes:
-  - \usepackage{fontspec}
-  - \setmainfont{Noto Sans}
-  - \setsansfont{Noto Sans}
-  - \setmonofont{Noto Sans}
+  - \usepackage{sourcesanspro}
+  - \renewcommand{\familydefault}{\sfdefault}
   - \usepackage[hidelinks]{hyperref}
   - \setlength{\tabcolsep}{2mm}  # Space between columns
 params:

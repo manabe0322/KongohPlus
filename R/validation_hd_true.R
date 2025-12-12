@@ -188,7 +188,7 @@ perform_hd_true <- function(hnc, data_deconvo, n_simu, dt_gt_non_contrib = NULL,
         waiter_ui$update(
           html = tagList(
             spin_3k(),
-            h3(paste0("Calculating the LR for non-contributor ", i))
+            h3(paste0("Calculating the LR for non-contributor ", i, "..."))
           )
         )
       }

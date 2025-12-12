@@ -78,6 +78,8 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
           rv_report$theta <- data_deconvo$theta
 
           enable("download_report")
+        }else{
+          disable("download_report")
         }
       })
 
@@ -94,6 +96,8 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
           paste0("report_", Sys.Date(), ".pdf")
         },
         content = function(file){
+          req(rv_deconvo$data_deconvo)
+
           message_pdf_env <- check_pdf_env()
           if(nzchar(message_pdf_env)){
             showModal(modalDialog(title = "Error", HTML(message_pdf_env), easyClose = TRUE, footer = NULL))

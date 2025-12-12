@@ -674,7 +674,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
             waiter_ui$update(
               html = tagList(
                 spin_3k(),
-                h3(paste0("Performing MLE for ", stutter_type, " in ", mk))
+                h3(paste0("Performing MLE for ", stutter_type, " in ", mk, "..."))
               )
             )
           }
@@ -703,7 +703,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
             waiter_ui$update(
               html = tagList(
                 spin_3k(),
-                h3(paste0("Performing MLE for ", stutter_type, " in ", mk))
+                h3(paste0("Performing MLE for ", stutter_type, " in ", mk, "..."))
               )
             )
           }
@@ -755,7 +755,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
       waiter_ui$update(
         html = tagList(
           spin_3k(),
-          h3(paste0("Performing MLE for ", stutter_type, " based on aggregated data from multiple loci"))
+          h3(paste0("Performing MLE for ", stutter_type, " based on aggregated data from multiple loci..."))
         )
       )
     }
@@ -890,7 +890,7 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
     waiter_ui$update(
       html = tagList(
         spin_3k(),
-        h3("Preparing data")
+        h3("Preparing data...")
       )
     )
   }

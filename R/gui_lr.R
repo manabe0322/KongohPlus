@@ -78,6 +78,8 @@ lr_server <- function(id, rv_input, rv_deconvo){
       observe({
         req(rv_deconvo)
         data_deconvo <- rv_deconvo$data_deconvo
+        bool_perform_deconvo <- rv_deconvo$bool_perform_deconvo
+
         if(!is.null(data_deconvo)){
           rv_lr_setting$hnc_all <- data_deconvo$hnc_all
           rv_lr_setting$dt_csp <- data_deconvo$dt_csp
@@ -100,6 +102,12 @@ lr_server <- function(id, rv_input, rv_deconvo){
           rv_lr_setting$pop_prob_list <- NULL
           rv_lr_setting$theta <- NULL
           rv_lr_setting$data_hnc_list <- NULL
+        }
+
+        if(bool_perform_deconvo){
+          rv_lr$lr_list <- NULL
+          rv_lr$dt_lr_calc_record <- NULL
+          rv_lr$dt_lr_display <- NULL
         }
       })
 
@@ -131,6 +139,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
       })
 
       observeEvent(input$act_analyze_lr, {
+        req(rv_lr_setting$hnc_all)
         req(rv_lr_setting$dt_csp)
         req(rv_lr_setting$dt_af)
         req(rv_lr_setting$dt_kit)
@@ -141,6 +150,7 @@ lr_server <- function(id, rv_input, rv_deconvo){
         req(rv_lr_setting$theta)
         req(rv_lr_setting$data_hnc_list)
 
+        hnc_all <- rv_lr_setting$hnc_all
         dt_csp <- rv_lr_setting$dt_csp
         dt_af <- rv_lr_setting$dt_af
         dt_kit <- rv_lr_setting$dt_kit

@@ -88,6 +88,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
 
       rv_deconvo <- reactiveValues()
       rv_deconvo$data_deconvo <- NULL
+      rv_deconvo$bool_perform_deconvo <- FALSE
 
       observe({
         req(rv_input)
@@ -436,6 +437,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
                                                h3("Checking the settings...")),
                                 color = transparent(.5))
         waiter_ui$show()
+
+        rv_deconvo$bool_perform_deconvo <- TRUE
 
         # Fix setting
         rv_deconvo_setting$hnc_from <- hnc_from <- input$noc_from

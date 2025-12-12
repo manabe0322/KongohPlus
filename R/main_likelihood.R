@@ -323,7 +323,7 @@ calculate_lr <- function(noc_hp, hp, noc_hd, hd, refs,
     waiter_ui$update(
       html = tagList(
         spin_3k(),
-        h3("Calculating log10 likelihood of Hp")
+        h3("Calculating log10 likelihood of Hp...")
       )
     )
   }
@@ -339,7 +339,7 @@ calculate_lr <- function(noc_hp, hp, noc_hd, hd, refs,
     waiter_ui$update(
       html = tagList(
         spin_3k(),
-        h3("Calculating log10 likelihood of Hd")
+        h3("Calculating log10 likelihood of Hd...")
       )
     )
   }
@@ -355,7 +355,7 @@ calculate_lr <- function(noc_hp, hp, noc_hd, hd, refs,
     waiter_ui$update(
       html = tagList(
         spin_3k(),
-        h3("Calculating LR")
+        h3("Calculating LR...")
       )
     )
   }

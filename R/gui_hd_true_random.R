@@ -72,6 +72,13 @@ hd_true_random_server <- function(id, path_pack, rv_deconvo){
         rv_hd_true_random$fn_af <- data_deconvo$fn_af
         rv_hd_true_random$markers_use <- data_deconvo$markers_use
         rv_hd_true_random$data_hnc_list <- data_deconvo$data_hnc_list
+
+        bool_perform_deconvo <- rv_deconvo$bool_perform_deconvo
+        if(bool_perform_deconvo){
+          rv_hd_true_random$lr_rand <- NULL
+          rv_hd_true_random$dt_lr_rand <- NULL
+          rv_hd_true_random$dt_gt_non_contrib <- NULL
+        }
       })
 
       output$title_csp <- renderUI({

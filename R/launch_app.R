@@ -72,7 +72,7 @@ KongohPlus <- function(num_threads = NULL){
                                         hd_true_importance_ui("hd_true_importance")
                              ),
 
-                             tabPanel("Manual")
+                             manual_ui("manual")
                   )
   )
 
@@ -94,6 +94,10 @@ KongohPlus <- function(num_threads = NULL){
     view_dropin_server("view_dropin", path_pack)
     rv_hd_true_random <- hd_true_random_server("hd_true_random", path_pack, rv_deconvo)
     rv_hd_true_importance <- hd_true_importance_server("hd_true_importance", path_pack, rv_deconvo)
+
+    # --- Manual --- #
+
+    manual_server("manual", ver_soft, path_pack)
 
     # --- Setting --- #
 
@@ -122,6 +126,8 @@ KongohPlus <- function(num_threads = NULL){
       req(rv_hd_true_importance)
 
       rv_deconvo$data_deconvo <- data_deconvo <- rv_load_proj$data_deconvo
+      rv_deconvo$bool_perform_deconvo <- FALSE
+
       if(!is.null(data_deconvo)){
         rv_input$dt_csp <- data_deconvo$dt_csp
         rv_input$fn_csp <- data_deconvo$fn_csp
