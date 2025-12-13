@@ -136,25 +136,23 @@ KongohPlus <- function(num_threads = NULL){
       }
 
       data_lr <- rv_load_proj$data_lr
-      if(length(data_lr) != 0){
-        rv_input$dt_ref <- rv_lr$dt_ref <- data_lr$dt_ref
-        rv_input$fn_ref <- rv_lr$fn_ref <- data_lr$fn_ref
-        rv_lr$refs <- data_lr$refs
-        rv_lr$lr_list <- data_lr$lr_list
-        rv_lr$dt_lr_calc_record <- data_lr$dt_lr_calc_record
-      }
+      rv_input$dt_ref <- rv_lr$dt_ref <- data_lr$dt_ref
+      rv_input$fn_ref <- rv_lr$fn_ref <- data_lr$fn_ref
+      rv_lr$refs <- data_lr$refs
+      rv_lr$lr_list <- data_lr$lr_list
+      rv_lr$dt_lr_calc_record <- data_lr$dt_lr_calc_record
 
       hd_true_random <- rv_load_proj$hd_true_random
-      if(!is.null(hd_true_random)){
-        rv_hd_true_random$lr_rand <- hd_true_random$lr_rand
-      }
+      rv_hd_true_random$lr_rand <- hd_true_random$lr_rand
+      rv_hd_true_random$dt_lr_rand <- hd_true_random$dt_lr_rand
+      rv_hd_true_random$dt_gt_non_contrib <- hd_true_random$dt_gt_non_contrib
 
       hd_true_importance <- rv_load_proj$hd_true_importance
-      if(!is.null(hd_true_importance)){
-        rv_hd_true_importance$lr_importance <- hd_true_importance$lr_importance
-        rv_hd_true_importance$bias <- hd_true_importance$bias
-        rv_hd_true_importance$expect_lr_hd <- hd_true_importance$expect_lr_hd
-      }
+      rv_hd_true_importance$lr_importance <- hd_true_importance$lr_importance
+      rv_hd_true_importance$bias <- hd_true_importance$bias
+      rv_hd_true_importance$expect_lr_hd <- hd_true_importance$expect_lr_hd
+      rv_hd_true_importance$dt_lr_importance <- hd_true_importance$dt_lr_importance
+      rv_hd_true_importance$dt_gt_non_contrib <- hd_true_importance$dt_gt_non_contrib
     })
 
     # --- Save project --- #

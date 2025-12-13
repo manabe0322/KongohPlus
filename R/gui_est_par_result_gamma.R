@@ -59,18 +59,15 @@ est_par_result_gamma_server <- function(id, path_pack, rv_est_par){
         req(rv_est_par)
         data_est_par <- rv_est_par$data_est_par
 
+        rv_est_par_result_gamma$dt_est_gamma <- NULL
+        rv_est_par_result_gamma$dt_gamma_data <- NULL
+        rv_est_par_result_gamma$df_select_gamma_allele <- NULL
+        rv_est_par_result_gamma$df_select_gamma_stutter <- NULL
+        rv_est_par_result_gamma$df_select_gamma_mix <- NULL
+
         if(!is.null(data_est_par)){
           rv_est_par_result_gamma$dt_est_gamma <- data_est_par$dt_est_gamma
           rv_est_par_result_gamma$dt_gamma_data <- data_est_par$dt_gamma_data
-          rv_est_par_result_gamma$df_select_gamma_allele <- NULL
-          rv_est_par_result_gamma$df_select_gamma_stutter <- NULL
-          rv_est_par_result_gamma$df_select_gamma_mix <- NULL
-        }else{
-          rv_est_par_result_gamma$dt_est_gamma <- NULL
-          rv_est_par_result_gamma$dt_gamma_data <- NULL
-          rv_est_par_result_gamma$df_select_gamma_allele <- NULL
-          rv_est_par_result_gamma$df_select_gamma_stutter <- NULL
-          rv_est_par_result_gamma$df_select_gamma_mix <- NULL
         }
       })
 

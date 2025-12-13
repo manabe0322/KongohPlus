@@ -93,7 +93,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
 
       output$download_report <- downloadHandler(
         filename = function() {
-          paste0("report_", Sys.Date(), ".pdf")
+          paste0("report_", gsub(" ", "_", format(as.POSIXct(Sys.time()), "%Y-%m-%d %H%M%S")), "_", input$case_name, "_", input$user_name, ".pdf")
         },
         content = function(file){
           req(rv_deconvo$data_deconvo)

@@ -47,15 +47,15 @@ est_par_result_lsae_server <- function(id, path_pack, rv_est_par){
         req(rv_est_par)
         data_est_par <- rv_est_par$data_est_par
 
+        rv_est_par_result_lsae$dt_prop_ae_data_use <- NULL
+        rv_est_par_result_lsae$dt_expect_ae <- NULL
+        rv_est_par_result_lsae$df_select_lsae <- NULL
+
         if(!is.null(data_est_par)){
           rv_est_par_result_lsae$dt_prop_ae_data_use <- data_est_par$dt_prop_ae_data_use
           rv_est_par_result_lsae$dt_expect_ae <- data_est_par$dt_expect_ae
-          rv_est_par_result_lsae$df_select_lsae <- NULL
           enable("act_saveas_est_par_1")
         }else{
-          rv_est_par_result_lsae$dt_prop_ae_data_use <- NULL
-          rv_est_par_result_lsae$dt_expect_ae <- NULL
-          rv_est_par_result_lsae$df_select_lsae <- NULL
           disable("act_saveas_est_par_1")
         }
       })

@@ -50,21 +50,27 @@ hd_true_importance_server <- function(id, path_pack, rv_deconvo){
     id,
     function(input, output, session){
       rv_hd_true_importance <- reactiveValues()
-      rv_hd_true_importance$dt_lr_importance <- NULL
-      rv_hd_true_importance$dt_gt_non_contrib <- NULL
-      rv_hd_true_importance$lr_importance <- NULL
-      rv_hd_true_importance$bias <- NULL
-      rv_hd_true_importance$expect_lr_hd <- NULL
       rv_hd_true_importance$data_deconvo <- NULL
       rv_hd_true_importance$hnc_all <- NULL
       rv_hd_true_importance$theta <- NULL
       rv_hd_true_importance$fn_csp <- NULL
       rv_hd_true_importance$fn_af <- NULL
       rv_hd_true_importance$data_hnc_list <- NULL
+      rv_hd_true_importance$lr_importance <- NULL
+      rv_hd_true_importance$bias <- NULL
+      rv_hd_true_importance$expect_lr_hd <- NULL
+      rv_hd_true_importance$dt_lr_importance <- NULL
+      rv_hd_true_importance$dt_gt_non_contrib <- NULL
 
       observe({
         req(rv_deconvo)
         req(rv_hd_true_importance)
+
+        rv_hd_true_importance$hnc_all <- NULL
+        rv_hd_true_importance$theta <- NULL
+        rv_hd_true_importance$fn_csp <- NULL
+        rv_hd_true_importance$fn_af <- NULL
+        rv_hd_true_importance$data_hnc_list <- NULL
 
         rv_hd_true_importance$data_deconvo <- data_deconvo <- rv_deconvo$data_deconvo
         rv_hd_true_importance$hnc_all <- data_deconvo$hnc_all
@@ -75,11 +81,11 @@ hd_true_importance_server <- function(id, path_pack, rv_deconvo){
 
         bool_perform_deconvo <- rv_deconvo$bool_perform_deconvo
         if(bool_perform_deconvo){
-          rv_hd_true_importance$dt_lr_importance <- NULL
-          rv_hd_true_importance$dt_gt_non_contrib <- NULL
           rv_hd_true_importance$lr_importance <- NULL
           rv_hd_true_importance$bias <- NULL
           rv_hd_true_importance$expect_lr_hd <- NULL
+          rv_hd_true_importance$dt_lr_importance <- NULL
+          rv_hd_true_importance$dt_gt_non_contrib <- NULL
         }
       })
 

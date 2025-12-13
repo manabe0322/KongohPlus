@@ -9,7 +9,7 @@
 3. Execute the following command in R to install required packages.
 
 ``` r
-install.packages('https://github.com/manabe0322/KongohPlus/releases/download/v0.21.4/KongohPlus_0.21.9.zip', repos = NULL, type = 'win.binary')
+install.packages('https://github.com/manabe0322/KongohPlus/releases/download/v0.21.4/KongohPlus_0.21.10.zip', repos = NULL, type = 'win.binary')
 install.packages(c("shiny", "combinat", "data.table", "dplyr", "DT", "GenSA", "ggplot2", "gridExtra", "gtools", "htmltools", "kableExtra", "knitr", "magrittr", "parallel", "Rcpp", "rhandsontable", "rmarkdown", "shinyFeedback", "shinyFiles", "shinyjs", "shinythemes", "stringr", "waiter"))
 ```
 

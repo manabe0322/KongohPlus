@@ -66,6 +66,12 @@ hd_true_random_server <- function(id, path_pack, rv_deconvo){
         req(rv_deconvo)
         req(rv_hd_true_random)
 
+        rv_hd_true_random$hnc_all <- NULL
+        rv_hd_true_random$fn_csp <- NULL
+        rv_hd_true_random$fn_af <- NULL
+        rv_hd_true_random$markers_use <- NULL
+        rv_hd_true_random$data_hnc_list <- NULL
+
         rv_hd_true_random$data_deconvo <- data_deconvo <- rv_deconvo$data_deconvo
         rv_hd_true_random$hnc_all <- data_deconvo$hnc_all
         rv_hd_true_random$fn_csp <- data_deconvo$fn_csp
@@ -268,7 +274,7 @@ hd_true_random_server <- function(id, path_pack, rv_deconvo){
       )
 
       output$ui_download_dt_gt_non_contrib <- renderUI({
-        req(rv_hd_true_random$dt_lr_rand)
+        req(rv_hd_true_random$dt_gt_non_contrib)
         downloadButton(session$ns("download_dt_gt_non_contrib"), "Download genotypes")
       })
 

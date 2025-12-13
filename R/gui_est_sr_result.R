@@ -59,35 +59,28 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         req(rv_est_sr)
         data_est_sr <- rv_est_sr$data_est_sr
 
+        rv_est_sr_result$markers_auto <- NULL
+        rv_est_sr_result$list_dt_average_sr <- NULL
+        rv_est_sr_result$dt_setting_est_sr <- NULL
+        rv_est_sr_result$dt_sr_data <- NULL
+        rv_est_sr_result$name_kit_stutter <- NULL
+        rv_est_sr_result$dt_average_sr <- NULL
+        rv_est_sr_result$dt_st_type <- NULL
+        rv_est_sr_result$meth_all_mk <- NULL
+        rv_est_sr_result$meth <- NULL
+        rv_est_sr_result$dt_st_mk <- NULL
+        rv_est_sr_result$dt_kit_mk <- NULL
+        rv_est_sr_result$dt_sr_data_display <- NULL
+        rv_est_sr_result$df_select_sr <- NULL
+
         if(!is.null(data_est_sr)){
           rv_est_sr_result$markers_auto <- names(data_est_sr$list_dt_average_sr)
           rv_est_sr_result$list_dt_average_sr <- data_est_sr$list_dt_average_sr
           rv_est_sr_result$dt_setting_est_sr <- data_est_sr$dt_setting_est_sr
           rv_est_sr_result$dt_sr_data <- data_est_sr$dt_sr_data
           rv_est_sr_result$name_kit_stutter <- data_est_sr$name_kit_stutter
-          rv_est_sr_result$dt_average_sr <- NULL
-          rv_est_sr_result$dt_st_type <- NULL
-          rv_est_sr_result$meth_all_mk <- NULL
-          rv_est_sr_result$meth <- NULL
-          rv_est_sr_result$dt_st_mk <- NULL
-          rv_est_sr_result$dt_kit_mk <- NULL
-          rv_est_sr_result$dt_sr_data_display <- NULL
-          rv_est_sr_result$df_select_sr <- NULL
           enable("act_saveas_est_sr_1")
         }else{
-          rv_est_sr_result$markers_auto <- NULL
-          rv_est_sr_result$list_dt_average_sr <- NULL
-          rv_est_sr_result$dt_setting_est_sr <- NULL
-          rv_est_sr_result$dt_sr_data <- NULL
-          rv_est_sr_result$name_kit_stutter <- NULL
-          rv_est_sr_result$dt_average_sr <- NULL
-          rv_est_sr_result$dt_st_type <- NULL
-          rv_est_sr_result$meth_all_mk <- NULL
-          rv_est_sr_result$meth <- NULL
-          rv_est_sr_result$dt_st_mk <- NULL
-          rv_est_sr_result$dt_kit_mk <- NULL
-          rv_est_sr_result$dt_sr_data_display <- NULL
-          rv_est_sr_result$df_select_sr <- NULL
           disable("act_saveas_est_sr_1")
         }
       })

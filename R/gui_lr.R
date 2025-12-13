@@ -80,6 +80,19 @@ lr_server <- function(id, rv_input, rv_deconvo){
         data_deconvo <- rv_deconvo$data_deconvo
         bool_perform_deconvo <- rv_deconvo$bool_perform_deconvo
 
+        rv_lr_setting$hnc_all <- NULL
+        rv_lr_setting$dt_csp <- NULL
+        rv_lr_setting$dt_af <- NULL
+        rv_lr_setting$dt_kit <- NULL
+        rv_lr_setting$markers_use <- NULL
+        rv_lr_setting$peaks_list <- NULL
+        rv_lr_setting$pop_al_list <- NULL
+        rv_lr_setting$pop_prob_list <- NULL
+        rv_lr_setting$theta <- NULL
+        rv_lr_setting$data_hnc_list <- NULL
+
+        rv_lr$dt_lr_display <- NULL
+
         if(!is.null(data_deconvo)){
           rv_lr_setting$hnc_all <- data_deconvo$hnc_all
           rv_lr_setting$dt_csp <- data_deconvo$dt_csp
@@ -91,23 +104,11 @@ lr_server <- function(id, rv_input, rv_deconvo){
           rv_lr_setting$pop_prob_list <- data_deconvo$pop_prob_list
           rv_lr_setting$theta <- data_deconvo$theta
           rv_lr_setting$data_hnc_list <- data_deconvo$data_hnc_list
-        }else{
-          rv_lr_setting$hnc_all <- NULL
-          rv_lr_setting$dt_csp <- NULL
-          rv_lr_setting$dt_af <- NULL
-          rv_lr_setting$dt_kit <- NULL
-          rv_lr_setting$markers_use <- NULL
-          rv_lr_setting$peaks_list <- NULL
-          rv_lr_setting$pop_al_list <- NULL
-          rv_lr_setting$pop_prob_list <- NULL
-          rv_lr_setting$theta <- NULL
-          rv_lr_setting$data_hnc_list <- NULL
         }
 
         if(bool_perform_deconvo){
           rv_lr$lr_list <- NULL
           rv_lr$dt_lr_calc_record <- NULL
-          rv_lr$dt_lr_display <- NULL
         }
       })
 
