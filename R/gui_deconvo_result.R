@@ -118,8 +118,8 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       })
 
       output$warning_message <- renderUI({
-        req(rv_deconvo_result$data_hnc_list)
-        req(rv_deconvo_result$message_sr)
+        req(!is.null(rv_deconvo_result$data_hnc_list))
+        req(!is.null(rv_deconvo_result$message_sr))
         data_hnc_list <- rv_deconvo_result$data_hnc_list
         message_sr <- rv_deconvo_result$message_sr
 
