@@ -7,19 +7,21 @@ create_dt_info_anameth <- function(path_pack){
   n_anameth <- length(fn_anameth)
 
   if(n_anameth != 0){
-    info_kit <- info_stutter <- info_param <- info_dropin <- rep("", n_anameth)
+    info_kit <- info_stutter <- info_lsae <- info_gamma <- info_dropin <- rep("", n_anameth)
     for(i in 1:n_anameth){
       dt_anameth_1 <- fread(paste0(path_pack, "/extdata/anameth/", fn_anameth[i]))
       info_kit[i] <- dt_anameth_1$Name[dt_anameth_1$Category == "Kit"]
       info_stutter[i] <- dt_anameth_1$Name[dt_anameth_1$Category == "Stutter data"]
-      info_param[i] <- dt_anameth_1$Name[dt_anameth_1$Category == "Parameter data"]
+      info_lsae[i] <- dt_anameth_1$Name[dt_anameth_1$Category == "LSAE data"]
+      info_gamma[i] <- dt_anameth_1$Name[dt_anameth_1$Category == "Gamma data"]
       info_dropin[i] <- dt_anameth_1$Name[dt_anameth_1$Category == "Drop-in data"]
     }
 
     dt_info_anameth <- data.table("Analysis method" = gsub(".{4}$", "", fn_anameth),
                                   "Kit" = info_kit,
                                   "Stutter data" = info_stutter,
-                                  "Parameter data" = info_param,
+                                  "LSAE data" = info_lsae,
+                                  "Gamma data" = info_gamma,
                                   "Drop-in data" = info_dropin)
     return(dt_info_anameth)
   }else{
@@ -89,22 +91,24 @@ create_dt_anameth_sr <- function(list_dt_average_sr, markers_auto){
 #' @param path_pack The package path of KongohPlus
 #' @param kit_name A kit name
 #' @param stutter_name The name of the stutter data
-#' @param param_name The name of the parameter data
+#' @param lsae_name The name of the LSAE data
+#' @param gamma_name The name of the gamma data
 #' @param dropin_name The name of the drop-in data
-create_default_dt_anameth <- function(path_pack, kit_name, stutter_name, param_name, dropin_name){
+create_default_dt_anameth <- function(path_pack, kit_name, stutter_name, lsae_name, gamma_name, dropin_name){
   dt_kit <- fread(paste0(path_pack, "/extdata/kit/", kit_name, ".csv"))
   markers_auto <- unique(dt_kit[["Marker"]][dt_kit[["Chromosome"]] == "Autosomal"])
   n_mk <- length(markers_auto)
 
   load(paste0(path_pack, "/extdata/stutter/", stutter_name, ".RData"))
-  load(paste0(path_pack, "/extdata/param/", param_name, ".RData"))
+  load(paste0(path_pack, "/extdata/lsae/", lsae_name, ".RData"))
+  load(paste0(path_pack, "/extdata/gamma/", gamma_name, ".RData"))
   load(paste0(path_pack, "/extdata/dropin/", dropin_name, ".RData"))
 
-  dt_expect_ae <- data_est_par$dt_expect_ae
-  dt_est_gamma <- data_est_par$dt_est_gamma
+  dt_expect_ae <- data_est_lsae$dt_expect_ae
+  dt_est_gamma <- data_est_gamma$dt_est_gamma
   dt_est_dropin <- data_est_dropin$dt_est_dropin
 
-  default_dt_anameth <- data.table(Category = c("Kit", "Stutter data", "Parameter data", "Drop-in data",
+  default_dt_anameth <- data.table(Category = c("Kit", "Stutter data", "LSAE data", "Gamma data", "Drop-in data",
                                                 rep("AT", n_mk),
                                                 rep("Genotype filter", 6),
                                                 rep("LSAE", n_mk),
@@ -116,7 +120,7 @@ create_default_dt_anameth <- function(path_pack, kit_name, stutter_name, param_n
                                                    dt_expect_ae$Marker,
                                                    "Scale parameter (allele)", "Scale parameter (stutter)",
                                                    "Frequency", "Shape parameter", "Scale parameter"),
-                                   Name = c(kit_name, stutter_name, param_name, dropin_name, rep("", 2 * n_mk + 11)),
+                                   Name = c(kit_name, stutter_name, lsae_name, gamma_name, dropin_name, rep("", 2 * n_mk + 11)),
                                    Value = c(rep(NA, 4),
                                              rep(100, n_mk),
                                              0.3, 0.2, 0.05, 0.1, 2, 150,

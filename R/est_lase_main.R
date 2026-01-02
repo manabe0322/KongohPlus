@@ -1,0 +1,227 @@
+#' create_dt_ae_data
+#'
+#' @description The function to create a data.table of the locus-specific amplification efficiencies
+#' @param peak_list A list of peaks
+#' @param height_list A list of heights
+create_dt_ae_data <- function(peak_list, height_list){
+  sample_names <- names(peak_list)
+  n_sample <- length(sample_names)
+  markers <- names(peak_list[[1]])
+  n_mk <- length(markers)
+
+  n_data <- n_sample * n_mk
+  sample_name_all <- rep("", n_data)
+  marker_all <- rep("", n_data)
+  temp_amount_all <- rep(NA, n_data)
+  prop_ae_all <- rep(NA, n_data)
+  ae_all <- rep(NA, n_data)
+
+  current_index <- 1
+  for(i in 1:n_sample){
+    peak_list_one <- peak_list[[i]]
+    height_list_one <- height_list[[i]]
+
+    index_assign <- current_index:(current_index + n_mk - 1)
+    sample_name_all[index_assign] <- sample_names[i]
+    marker_all[index_assign] <- markers
+
+    temp_amount <- sapply(height_list_one, sum)
+    sum_temp_amount <- sum(temp_amount)
+    temp_amount_all[index_assign] <- temp_amount
+    prop_ae_all[index_assign] <- temp_amount / sum_temp_amount
+    ae_all[index_assign] <- n_mk * temp_amount / sum_temp_amount
+
+    current_index <- current_index + n_mk
+  }
+
+  dt_ae_data <- data.table(SampleName = sample_name_all,
+                           Marker = marker_all,
+                           TempAmount = temp_amount_all,
+                           PropAE = prop_ae_all,
+                           AE = ae_all)
+
+  return(dt_ae_data)
+}
+
+#' run_mle_ae
+#'
+#' @description The function to perform MLE for the locus-specific amplification efficiency
+#' @param prop_ae_data_use A matrix of the proportion of the amplification efficiencies (only data used for MLE)
+#' @param min_alpha The minimum alpha
+#' @param max_alpha The maximum alpha
+#' @param stop_iter Number of iterations without improvement before stopping one MLE run
+#' @param max_iter Maximum number of iterations in one MLE run
+#' @param num_converged Number of converged MLE runs before stopping
+#' @param max_mle_runs Maximum number of MLE attempts
+run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs){
+
+  # Likelihood function for the locus-specific amplification efficiency
+  like_fun_ae <- function(par){
+    alpha <- par * (max_alpha - min_alpha) + min_alpha
+
+    n_data <- ncol(prop_ae_data_use)
+    dens <- rep(Inf, n_data)
+
+    for(i in 1:n_data){
+      dens[i] <- ddirichlet(prop_ae_data_use[, i], alpha)
+    }
+
+    loglike <- - sum(log(dens))
+
+    if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
+      loglike <- Inf
+    }
+
+    return(loglike)
+  }
+
+  n_mk <- nrow(prop_ae_data_use)
+  lower_bounds <- rep(0, n_mk)
+  upper_bounds <- rep(1, n_mk)
+
+  # Perform simulated annealing
+  current_opt <- NULL
+  current_score <- Inf
+  current_score_round <- Inf
+  count_mle <- 0
+  count_solution <- 0
+  init_list <- list()
+  opt_list <- list()
+  repeat{
+    count_mle <- count_mle + 1
+
+    init_list[[count_mle]] <- init <- rdirichlet(1, rep(1, n_mk))
+
+    opt_list[[count_mle]] <- opt <- GenSA(
+      par = init,
+      fn = like_fun_ae,
+      lower = lower_bounds,
+      upper = upper_bounds,
+      control = list(verbose = TRUE, nb.stop.improvement = stop_iter, maxit = max_iter)
+    )
+
+    score <- opt$value
+    if(score < current_score){
+      current_opt <- opt
+      current_score <- score
+    }
+
+    score_round <- round(score, 3)
+    if(score_round < current_score_round){
+      current_score_round <- score_round
+      count_solution <- 1
+    }else if(score_round == current_score_round){
+      count_solution <- count_solution + 1
+    }
+
+    if(count_solution == num_converged){
+      break
+    }else if(count_mle == max_mle_runs){
+      current_opt <- NULL
+      break
+    }
+  }
+
+  # Extract parameters
+  if(!is.null(current_opt)){
+    est_param <- current_opt$par * (max_alpha - min_alpha) + min_alpha
+  }else{
+    est_param <- rep(NA, n_mk)
+  }
+  names(est_param) <- paste0("alpha[", 1:n_mk, "]")
+
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list))
+}
+
+#' estimate_lsae
+#'
+#' @description The function to estimate parameters of the locus-specific amplification efficiencies
+#' @param dt_exp The data.table for experimental data
+#' @param dt_gt The data.table for genotype data
+#' @param list_dt_average_sr A list of the data.table for average stutter ratios in all markers
+#' @param dt_setting_est_par The data.table for the parameter settings
+#' @param min_alpha The minimum alpha
+#' @param max_alpha The maximum alpha
+#' @param stop_iter Number of iterations without improvement before stopping one MLE run
+#' @param max_iter Maximum number of iterations in one MLE run
+#' @param num_converged Number of converged MLE runs before stopping
+#' @param max_mle_runs Maximum number of MLE attempts
+#' @param waiter_ui Information on UI for waiter
+estimate_lsae <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
+                          min_alpha, max_alpha,
+                          stop_iter, max_iter, num_converged, max_mle_runs,
+                          waiter_ui = NULL){
+
+  # Extract information on setting
+  markers_auto <- dt_setting_est_par$Marker
+  n_mk_auto <- length(markers_auto)
+  at_auto <- dt_setting_est_par$AT
+  names(at_auto) <- markers_auto
+
+  # Information on considering stutter ratios
+  sr_consider_auto <- matrix(TRUE, n_mk_auto, 4)
+  rownames(sr_consider_auto) <- markers_auto
+  colnames(sr_consider_auto) <- c("BS", "FS", "DS", "M2S")
+  for(i in 1:n_mk_auto){
+    mk <- markers_auto[i]
+    dt_average_sr <- list_dt_average_sr[[mk]]
+    sr_consider_auto[i, "BS"] <- any(dt_average_sr[["Average BSR"]] != 0)
+    sr_consider_auto[i, "FS"] <- any(dt_average_sr[["Average FSR"]] != 0)
+    sr_consider_auto[i, "DS"] <- any(dt_average_sr[["Average DSR"]] != 0)
+    sr_consider_auto[i, "M2S"] <- any(dt_average_sr[["Average M2SR"]] != 0)
+  }
+
+  # --- Arrange experimental data --- #
+
+  if(!is.null(waiter_ui)){
+    waiter_ui$update(
+      html = tagList(
+        spin_3k(),
+        h3("Preparing data...")
+      )
+    )
+  }
+
+  tmp <- arrange_exp_data(dt_exp, dt_gt, markers_auto, sr_consider_auto, at_auto)
+  peak_list <- tmp$peak_list
+  height_list <- tmp$height_list
+  gt_list <- tmp$gt_list
+
+  # --- Prepare data for LSAE --- #
+
+  dt_ae_data <- create_dt_ae_data(peak_list, height_list)
+  prop_ae_data <- matrix(dt_ae_data$PropAE, nrow = n_mk_auto)
+  index_use <- which(apply(prop_ae_data, 2, prod) > 0)
+  prop_ae_data_use <- prop_ae_data[, index_use, drop = FALSE]
+
+  sn_all <- unique(dt_ae_data$SampleName)
+  dt_prop_ae_data_use <- data.table(SampleName = sn_all[index_use])
+  dt_prop_ae_data_use <- cbind(dt_prop_ae_data_use, as.data.table(t(prop_ae_data_use * n_mk_auto)))
+  names(dt_prop_ae_data_use) <- c("SampleName", markers_auto)
+
+  # --- Perform MLE for LSAE --- #
+
+  if(!is.null(waiter_ui)){
+    waiter_ui$update(
+      html = tagList(
+        spin_3k(),
+        h3("Performing MLE for LSAE...")
+      )
+    )
+  }
+
+  tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs)
+  alpha <- tmp$est_param
+  init_list_ae <- tmp$init_list
+  opt_list_ae <- tmp$opt_list
+
+  # --- Create the data.table for LSAE --- #
+
+  expect_ae <- n_mk_auto * (alpha + 1) / (sum(alpha) + n_mk_auto)
+  dt_expect_ae <- data.table(Marker = markers_auto, Alpha = alpha, LSAE = expect_ae)
+
+  return(list("dt_expect_ae" = dt_expect_ae,
+              "init_list_ae" = init_list_ae,
+              "opt_list_ae" = opt_list_ae,
+              "dt_prop_ae_data_use" = dt_prop_ae_data_use))
+}

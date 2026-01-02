@@ -1,15 +1,18 @@
-#' est_par_result_gamma_ui
+#' est_gamma_result_ui
 #'
-#' @description The function to create the ui module to create the result tab for estimating gamma parameters
-est_par_result_gamma_ui <- function(id){
+#' @description The function to create the ui module to create the result tab for the gamma scale parameter
+est_gamma_result_ui <- function(id){
   ns <- NS(id)
 
   tabPanel(
-    "Result (peak height parameters)",
+    "Result",
     br(),
     fluidRow(
       column(
         3,
+        actionButton(ns("act_saveas_est_gamma_1"), label = "Save as", class = "btn btn-primary btn-lg"),
+        br(),
+        br(),
         wellPanel(
           h4("Estimated parameters"),
           dataTableOutput(ns("dt_est_gamma"))
@@ -41,39 +44,95 @@ est_par_result_gamma_ui <- function(id){
   )
 }
 
-#' est_par_result_gamma_server
+#' est_gamma_result_server
 #'
-#' @description The function to create the server module to create the result tab for estimating gamma parameters
-est_par_result_gamma_server <- function(id, path_pack, rv_est_par){
+#' @description The function to create the server module to create the result tab for the gamma scale parameter
+est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
   moduleServer(
     id,
     function(input, output, session){
-      rv_est_par_result_gamma <- reactiveValues()
-      rv_est_par_result_gamma$dt_est_gamma <- NULL
-      rv_est_par_result_gamma$dt_gamma_data <- NULL
-      rv_est_par_result_gamma$df_select_gamma_allele <- NULL
-      rv_est_par_result_gamma$df_select_gamma_stutter <- NULL
-      rv_est_par_result_gamma$df_select_gamma_mix <- NULL
+      rv_est_gamma_result <- reactiveValues()
+      rv_est_gamma_result$dt_est_gamma <- NULL
+      rv_est_gamma_result$dt_gamma_data <- NULL
+      rv_est_gamma_result$df_select_gamma_allele <- NULL
+      rv_est_gamma_result$df_select_gamma_stutter <- NULL
+      rv_est_gamma_result$df_select_gamma_mix <- NULL
 
       observe({
-        req(rv_est_par)
-        data_est_par <- rv_est_par$data_est_par
+        req(rv_est_gamma)
+        data_est_gamma <- rv_est_gamma$data_est_gamma
 
-        rv_est_par_result_gamma$dt_est_gamma <- NULL
-        rv_est_par_result_gamma$dt_gamma_data <- NULL
-        rv_est_par_result_gamma$df_select_gamma_allele <- NULL
-        rv_est_par_result_gamma$df_select_gamma_stutter <- NULL
-        rv_est_par_result_gamma$df_select_gamma_mix <- NULL
+        rv_est_gamma_result$dt_est_gamma <- NULL
+        rv_est_gamma_result$dt_gamma_data <- NULL
+        rv_est_gamma_result$df_select_gamma_allele <- NULL
+        rv_est_gamma_result$df_select_gamma_stutter <- NULL
+        rv_est_gamma_result$df_select_gamma_mix <- NULL
 
-        if(!is.null(data_est_par)){
-          rv_est_par_result_gamma$dt_est_gamma <- data_est_par$dt_est_gamma
-          rv_est_par_result_gamma$dt_gamma_data <- data_est_par$dt_gamma_data
+        if(!is.null(data_est_gamma)){
+          rv_est_gamma_result$dt_est_gamma <- data_est_gamma$dt_est_gamma
+          rv_est_gamma_result$dt_gamma_data <- data_est_gamma$dt_gamma_data
+          enable("act_saveas_est_gamma_1")
+        }else{
+          disable("act_saveas_est_gamma_1")
+        }
+      })
+
+      observeEvent(input$act_saveas_est_gamma_1, {
+        req(rv_est_gamma)
+        data_est_gamma <- rv_est_gamma$data_est_gamma
+
+        if(!is.null(data_est_gamma)){
+          showModal(modalDialog(
+            title = "Save data for the gamma scale parameter",
+            textInput(session$ns("fn_est_gamma"), label = "Enter the file name"),
+            footer = tagList(
+              disabled(actionButton(session$ns("act_saveas_est_gamma_2"), "Save")),
+              modalButton("Close")
+            )
+          ))
+        }
+
+        else{
+          showModal(modalDialog(title = "Error", "No data.", easyClose = TRUE, footer = NULL))
+        }
+      })
+
+      observeEvent(input$fn_est_gamma, {
+        fn_est_gamma <- input$fn_est_gamma
+        gamma_file_names <- list.files(paste0(path_pack, "/extdata/gamma"))
+        if(is.element(paste0(fn_est_gamma, ".RData"), gamma_file_names)){
+          showFeedbackDanger(inputId = "fn_est_gamma", text = "A file with the same name already exists.")
+          disable("act_saveas_est_gamma_2")
+        }else if(nchar(fn_est_gamma) == 0){
+          hideFeedback("fn_est_gamma")
+          disable("act_saveas_est_gamma_2")
+        }else{
+          hideFeedback("fn_est_gamma")
+          enable("act_saveas_est_gamma_2")
+        }
+      })
+
+      observeEvent(input$act_saveas_est_gamma_2, {
+        req(rv_est_gamma)
+        data_est_gamma <- rv_est_gamma$data_est_gamma
+        fn_est_gamma <- input$fn_est_gamma
+
+        if(!is.null(data_est_gamma)){
+          save(list = c("data_est_gamma"),
+               file = paste0(path_pack, "/extdata/gamma/", fn_est_gamma, ".RData"))
+
+          removeModal()
+        }
+
+        else{
+          removeModal()
+          showModal(modalDialog(title = "Error", "No data.", easyClose = TRUE, footer = NULL))
         }
       })
 
       output$dt_est_gamma <- renderDataTable({
-        req(rv_est_par_result_gamma$dt_est_gamma)
-        dt_est_gamma <- rv_est_par_result_gamma$dt_est_gamma
+        req(rv_est_gamma_result$dt_est_gamma)
+        dt_est_gamma <- rv_est_gamma_result$dt_est_gamma
 
         datatable(
           dt_est_gamma,
@@ -86,14 +145,14 @@ est_par_result_gamma_server <- function(id, path_pack, rv_est_par){
       })
 
       output$ui_plot_gamma_allele <- renderUI({
-        req(rv_est_par_result_gamma$dt_gamma_data)
+        req(rv_est_gamma_result$dt_gamma_data)
         plotOutput(session$ns("plot_gamma_allele"), width = "100%", height = "300px")
       })
 
       output$plot_gamma_allele <- renderPlot({
-        req(rv_est_par_result_gamma$dt_gamma_data)
-        dt_gamma_data <- rv_est_par_result_gamma$dt_gamma_data
-        df_select_gamma_allele <- rv_est_par_result_gamma$df_select_gamma_allele  # It can be either null or not.
+        req(rv_est_gamma_result$dt_gamma_data)
+        dt_gamma_data <- rv_est_gamma_result$dt_gamma_data
+        df_select_gamma_allele <- rv_est_gamma_result$df_select_gamma_allele  # It can be either null or not.
 
         index_target <- which(dt_gamma_data[["Peak type"]] == "Allele")
         n_data <- length(index_target)
@@ -140,14 +199,14 @@ est_par_result_gamma_server <- function(id, path_pack, rv_est_par){
       })
 
       output$ui_plot_gamma_stutter <- renderUI({
-        req(rv_est_par_result_gamma$dt_gamma_data)
+        req(rv_est_gamma_result$dt_gamma_data)
         plotOutput(session$ns("plot_gamma_stutter"), width = "100%", height = "300px")
       })
 
       output$plot_gamma_stutter <- renderPlot({
-        req(rv_est_par_result_gamma$dt_gamma_data)
-        dt_gamma_data <- rv_est_par_result_gamma$dt_gamma_data
-        df_select_gamma_stutter <- rv_est_par_result_gamma$df_select_gamma_stutter  # It can be either null or not.
+        req(rv_est_gamma_result$dt_gamma_data)
+        dt_gamma_data <- rv_est_gamma_result$dt_gamma_data
+        df_select_gamma_stutter <- rv_est_gamma_result$df_select_gamma_stutter  # It can be either null or not.
 
         index_target <- which(dt_gamma_data[["Peak type"]] == "Stutter")
         n_data <- length(index_target)
@@ -194,14 +253,14 @@ est_par_result_gamma_server <- function(id, path_pack, rv_est_par){
       })
 
       output$ui_plot_gamma_mix <- renderUI({
-        req(rv_est_par_result_gamma$dt_gamma_data)
+        req(rv_est_gamma_result$dt_gamma_data)
         plotOutput(session$ns("plot_gamma_mix"), width = "100%", height = "300px")
       })
 
       output$plot_gamma_mix <- renderPlot({
-        req(rv_est_par_result_gamma$dt_gamma_data)
-        dt_gamma_data <- rv_est_par_result_gamma$dt_gamma_data
-        df_select_gamma_mix <- rv_est_par_result_gamma$df_select_gamma_mix  # It can be either null or not.
+        req(rv_est_gamma_result$dt_gamma_data)
+        dt_gamma_data <- rv_est_gamma_result$dt_gamma_data
+        df_select_gamma_mix <- rv_est_gamma_result$df_select_gamma_mix  # It can be either null or not.
 
         index_target <- which(dt_gamma_data[["Peak type"]] == "Allele + Stutter")
         n_data <- length(index_target)
@@ -248,8 +307,8 @@ est_par_result_gamma_server <- function(id, path_pack, rv_est_par){
       })
 
       output$dt_gamma_data <- renderDataTable({
-        req(rv_est_par_result_gamma$dt_gamma_data)
-        dt_gamma_data <- rv_est_par_result_gamma$dt_gamma_data
+        req(rv_est_gamma_result$dt_gamma_data)
+        dt_gamma_data <- rv_est_gamma_result$dt_gamma_data
 
         dt_gamma_data_display <- data.table("SampleName" = factor(dt_gamma_data[["SampleName"]], levels = unique(dt_gamma_data[["SampleName"]]), labels = unique(dt_gamma_data[["SampleName"]])),
                                             "Marker" = factor(dt_gamma_data[["Marker"]], levels = unique(dt_gamma_data[["Marker"]]), labels = unique(dt_gamma_data[["Marker"]])),
@@ -288,23 +347,23 @@ est_par_result_gamma_server <- function(id, path_pack, rv_est_par){
       })
 
       observeEvent(input$dt_gamma_data_rows_selected, {
-        req(rv_est_par_result_gamma$dt_gamma_data)
-        dt_gamma_data <- rv_est_par_result_gamma$dt_gamma_data
+        req(rv_est_gamma_result$dt_gamma_data)
+        dt_gamma_data <- rv_est_gamma_result$dt_gamma_data
         index_select <- input$dt_gamma_data_rows_selected
 
         if(length(index_select) == 1){
           if(dt_gamma_data[["Peak type"]][index_select] == "Allele"){
-            rv_est_par_result_gamma$df_select_gamma_allele <- data.frame(Expected = dt_gamma_data[["Expected peak height"]][index_select], Observed = dt_gamma_data[["Observed peak height"]][index_select])
-            rv_est_par_result_gamma$df_select_gamma_stutter <- NULL
-            rv_est_par_result_gamma$df_select_gamma_mix <- NULL
+            rv_est_gamma_result$df_select_gamma_allele <- data.frame(Expected = dt_gamma_data[["Expected peak height"]][index_select], Observed = dt_gamma_data[["Observed peak height"]][index_select])
+            rv_est_gamma_result$df_select_gamma_stutter <- NULL
+            rv_est_gamma_result$df_select_gamma_mix <- NULL
           }else if(dt_gamma_data[["Peak type"]][index_select] == "Stutter"){
-            rv_est_par_result_gamma$df_select_gamma_allele <- NULL
-            rv_est_par_result_gamma$df_select_gamma_stutter <- data.frame(Expected = dt_gamma_data[["Expected peak height"]][index_select], Observed = dt_gamma_data[["Observed peak height"]][index_select])
-            rv_est_par_result_gamma$df_select_gamma_mix <- NULL
+            rv_est_gamma_result$df_select_gamma_allele <- NULL
+            rv_est_gamma_result$df_select_gamma_stutter <- data.frame(Expected = dt_gamma_data[["Expected peak height"]][index_select], Observed = dt_gamma_data[["Observed peak height"]][index_select])
+            rv_est_gamma_result$df_select_gamma_mix <- NULL
           }else if(dt_gamma_data[["Peak type"]][index_select] == "Allele + Stutter"){
-            rv_est_par_result_gamma$df_select_gamma_allele <- NULL
-            rv_est_par_result_gamma$df_select_gamma_stutter <- NULL
-            rv_est_par_result_gamma$df_select_gamma_mix <- data.frame(Expected = dt_gamma_data[["Expected peak height"]][index_select], Observed = dt_gamma_data[["Observed peak height"]][index_select])
+            rv_est_gamma_result$df_select_gamma_allele <- NULL
+            rv_est_gamma_result$df_select_gamma_stutter <- NULL
+            rv_est_gamma_result$df_select_gamma_mix <- data.frame(Expected = dt_gamma_data[["Expected peak height"]][index_select], Observed = dt_gamma_data[["Observed peak height"]][index_select])
           }
         }
       })

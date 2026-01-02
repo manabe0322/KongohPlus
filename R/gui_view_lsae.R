@@ -1,20 +1,20 @@
 #' view_lsae_ui
 #'
-#' @description The function to create the ui module for viewing LSAE parameters
+#' @description The function to create the ui module for viewing the locus-specific amplification efficiencies
 view_lsae_ui <- function(id){
   ns <- NS(id)
 
   tabPanel(
-    "View LSAE",
-    titlePanel("View LSAE"),
+    "View locus-specific amplification efficiencies",
+    titlePanel("View locus-specific amplification efficiencies"),
     br(),
     fluidRow(
       column(
         3,
         wellPanel(
           fluidRow(
-            column(3, br(), shinyFilesButton(ns("load_param_data"), label = "Load", title = "Select a file", multiple = FALSE)),
-            column(9, uiOutput(ns("fn_param_data")))
+            column(3, br(), shinyFilesButton(ns("load_lsae_data"), label = "Load", title = "Select a file", multiple = FALSE)),
+            column(9, uiOutput(ns("fn_lsae_data")))
           )
         ),
         wellPanel(
@@ -37,35 +37,35 @@ view_lsae_ui <- function(id){
 
 #' view_lsae_server
 #'
-#' @description The function to create the server module for viewing LSAE parameters
+#' @description The function to create the server module for viewing the locus-specific amplification efficiencies
 view_lsae_server <- function(id, path_pack){
   moduleServer(
     id,
     function(input, output, session){
       rv_view_lsae <- reactiveValues()
-      rv_view_lsae$fn_param_data <- NULL
+      rv_view_lsae$fn_lsae_data <- NULL
       rv_view_lsae$dt_prop_ae_data_use <- NULL
       rv_view_lsae$dt_expect_ae <- NULL
       rv_view_lsae$df_select_lsae <- NULL
 
-      shinyFileChoose(input, "load_param_data", roots = c(documents = paste0(path_pack, "/extdata/param")), session = session, filetypes = c("RData"))
+      shinyFileChoose(input, "load_lsae_data", roots = c(documents = paste0(path_pack, "/extdata/lsae")), session = session, filetypes = c("RData"))
 
-      observeEvent(input$load_param_data, {
-        req(input$load_param_data)
-        path_param_data <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/param")), input$load_param_data)$datapath
+      observeEvent(input$load_lsae_data, {
+        req(input$load_lsae_data)
+        path_lsae_data <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/lsae")), input$load_lsae_data)$datapath
 
-        if(length(path_param_data) > 0){
-          rv_view_lsae$fn_param_data <- basename(path_param_data)
+        if(length(path_lsae_data) > 0){
+          rv_view_lsae$fn_lsae_data <- basename(path_lsae_data)
 
-          load(path_param_data)
+          load(path_lsae_data)
 
-          rv_view_lsae$dt_prop_ae_data_use <- data_est_par$dt_prop_ae_data_use
-          rv_view_lsae$dt_expect_ae <- data_est_par$dt_expect_ae
+          rv_view_lsae$dt_prop_ae_data_use <- data_est_lsae$dt_prop_ae_data_use
+          rv_view_lsae$dt_expect_ae <- data_est_lsae$dt_expect_ae
         }
       })
 
-      output$fn_param_data <- renderUI({
-        disabled(textInput(session$ns("fn_param_data"), label = "", value = rv_view_lsae$fn_param_data))
+      output$fn_lsae_data <- renderUI({
+        disabled(textInput(session$ns("fn_lsae_data"), label = "", value = rv_view_lsae$fn_lsae_data))
       })
 
       output$dt_expect_ae <- renderDataTable({

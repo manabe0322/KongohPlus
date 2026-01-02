@@ -4,7 +4,7 @@
 anameth_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("6. Set the analysis method",
+  tabPanel("7. Set the analysis method",
 
            tags$style("
              .edit-modal .modal-dialog {
@@ -16,7 +16,7 @@ anameth_ui <- function(id){
                overflow-y: auto;        /* Enable vertical scrolling if needed */
              }
            "),
-           titlePanel("6. Set the analysis method"),
+           titlePanel("7. Set the analysis method"),
            br(),
            actionButton(ns("act_anameth_new"), "New"),
            actionButton(ns("act_anameth_copy"), "Copy"),
@@ -57,8 +57,11 @@ anameth_server <- function(id, path_pack){
         stutter_all <- list.files(paste0(path_pack, "/extdata/stutter"))
         stutter_all <- gsub(".{6}$", "", stutter_all)
 
-        param_all <- list.files(paste0(path_pack, "/extdata/param"))
-        param_all <- gsub(".{6}$", "", param_all)
+        lsae_all <- list.files(paste0(path_pack, "/extdata/lsae"))
+        lsae_all <- gsub(".{6}$", "", lsae_all)
+
+        gamma_all <- list.files(paste0(path_pack, "/extdata/gamma"))
+        gamma_all <- gsub(".{6}$", "", gamma_all)
 
         dropin_all <- list.files(paste0(path_pack, "/extdata/dropin"))
         dropin_all <- gsub(".{6}$", "", dropin_all)
@@ -69,9 +72,11 @@ anameth_server <- function(id, path_pack){
           br(),
           selectInput(session$ns("kit_name"), label = "Select kit", choices = kit_all, selected = kit_all[1], selectize = FALSE),
           br(),
-          selectInput(session$ns("stutter_name"), label = "Select stutter data", choices = stutter_all, selected = stutter_all[1], selectize = FALSE),
+          selectInput(session$ns("stutter_name"), label = "Select data for the stutter ratio", choices = stutter_all, selected = stutter_all[1], selectize = FALSE),
           br(),
-          selectInput(session$ns("param_name"), label = "Select parameter data", choices = param_all, selected = param_all[1], selectize = FALSE),
+          selectInput(session$ns("lsae_name"), label = "Select data for the locus-specific amplification efficiencies", choices = lsae_all, selected = lsae_all[1], selectize = FALSE),
+          br(),
+          selectInput(session$ns("gamma_name"), label = "Select data for the gamma scale parameter", choices = gamma_all, selected = gamma_all[1], selectize = FALSE),
           br(),
           selectInput(session$ns("dropin_name"), label = "Select drop-in data", choices = dropin_all, selected = dropin_all[1], selectize = FALSE),
           footer = tagList(
@@ -102,23 +107,26 @@ anameth_server <- function(id, path_pack){
         anameth_name <- input$anameth_name
         kit_name <- input$kit_name
         stutter_name <- input$stutter_name
-        param_name <- input$param_name
+        lsae_name <- input$lsae_name
+        gamma_name <- input$gamma_name
         dropin_name <- input$dropin_name
 
-        if(all(!is.null(kit_name), !is.null(stutter_name), !is.null(param_name), !is.null(dropin_name))){
+        if(all(!is.null(kit_name), !is.null(stutter_name), !is.null(lsae_name), !is.null(gamma_name), !is.null(dropin_name))){
           load(paste0(path_pack, "/extdata/stutter/", stutter_name, ".RData"))
-          load(paste0(path_pack, "/extdata/param/", param_name, ".RData"))
+          load(paste0(path_pack, "/extdata/lsae/", lsae_name, ".RData"))
+          load(paste0(path_pack, "/extdata/gamma/", gamma_name, ".RData"))
           load(paste0(path_pack, "/extdata/dropin/", dropin_name, ".RData"))
 
-          if(kit_name == data_est_sr$name_kit_stutter && kit_name == data_est_par$name_kit_param && kit_name == data_est_dropin$name_kit_dropin){
+          if(kit_name == data_est_sr$name_kit_stutter && kit_name == data_est_lsae$name_kit_lsae && kit_name == data_est_gamma$name_kit_gamma && kit_name == data_est_dropin$name_kit_dropin){
             dt_tmp <- data.table("Analysis method" = anameth_name,
                                  "Kit" = kit_name,
                                  "Stutter data" = stutter_name,
-                                 "Parameter data" = param_name,
+                                 "LSAE data" = lsae_name,
+                                 "Gamma data" = gamma_name,
                                  "Drop-in data" = dropin_name)
             rv_anameth$dt_info_anameth <- rbind(rv_anameth$dt_info_anameth, dt_tmp)
 
-            default_dt_anameth <- create_default_dt_anameth(path_pack, kit_name, stutter_name, param_name, dropin_name)
+            default_dt_anameth <- create_default_dt_anameth(path_pack, kit_name, stutter_name, lsae_name, gamma_name, dropin_name)
             write.csv(default_dt_anameth, paste0(path_pack, "/extdata/anameth/", anameth_name, ".csv"), row.names = FALSE)
 
             removeModal()
@@ -321,11 +329,12 @@ anameth_server <- function(id, path_pack){
         anameth_edit <- rv_anameth$anameth_edit
 
         if(!is.null(dt_anameth_edit)){
-          dt_edit_general <- data.table(Category = c("Analysis method", "Kit", "Stutter data", "Parameter data", "Drop-in data"),
+          dt_edit_general <- data.table(Category = c("Analysis method", "Kit", "Stutter data", "LSAE data", "Gamma data", "Drop-in data"),
                                         Name = c(anameth_edit,
                                                  dt_anameth_edit$Name[dt_anameth_edit$Category == "Kit"],
                                                  dt_anameth_edit$Name[dt_anameth_edit$Category == "Stutter data"],
-                                                 dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"],
+                                                 dt_anameth_edit$Name[dt_anameth_edit$Category == "LSAE data"],
+                                                 dt_anameth_edit$Name[dt_anameth_edit$Category == "Gamma data"],
                                                  dt_anameth_edit$Name[dt_anameth_edit$Category == "Drop-in data"]
                                         ))
 
@@ -570,11 +579,11 @@ anameth_server <- function(id, path_pack){
           }else{
             # Mark as edited when the LSAE parameters or gamma parameters are changed.
             if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"], 6) != round(dt_edit_lsae$LSAE, 6))){
-              name_param <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"]
+              name_lsae <- dt_anameth_edit$Name[dt_anameth_edit$Category == "LSAE data"]
 
-              if(substring(name_param, nchar(name_param) - 8) != " (edited)"){
-                dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"] <- paste0(name_param, " (edited)")
-                dt_info_anameth[["Parameter data"]][index_select] <- paste0(name_param, " (edited)")
+              if(substring(name_lsae, nchar(name_lsae) - 8) != " (edited)"){
+                dt_anameth_edit$Name[dt_anameth_edit$Category == "LSAE data"] <- paste0(name_lsae, " (edited)")
+                dt_info_anameth[["LSAE data"]][index_select] <- paste0(name_lsae, " (edited)")
               }
             }
 
@@ -593,11 +602,11 @@ anameth_server <- function(id, path_pack){
           }else{
             # Mark as edited when the LSAE parameters or gamma parameters are changed.
             if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"], 6) != round(dt_edit_gamma$Value, 6))){
-              name_param <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"]
+              name_gamma <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Gamma data"]
 
-              if(substring(name_param, nchar(name_param) - 8) != " (edited)"){
-                dt_anameth_edit$Name[dt_anameth_edit$Category == "Parameter data"] <- paste0(name_param, " (edited)")
-                dt_info_anameth[["Parameter data"]][index_select] <- paste0(name_param, " (edited)")
+              if(substring(name_gamma, nchar(name_gamma) - 8) != " (edited)"){
+                dt_anameth_edit$Name[dt_anameth_edit$Category == "Gamma data"] <- paste0(name_gamma, " (edited)")
+                dt_info_anameth[["Gamma data"]][index_select] <- paste0(name_gamma, " (edited)")
               }
             }
 

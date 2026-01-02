@@ -1,20 +1,20 @@
 #' view_gamma_ui
 #'
-#' @description The function to create the ui module for viewing peak height parameters
+#' @description The function to create the ui module for viewing the gamma scale parameter
 view_gamma_ui <- function(id){
   ns <- NS(id)
 
   tabPanel(
-    "View peak height parameters",
-    titlePanel("View peak height parameters"),
+    "View the gamma scale parameter",
+    titlePanel("View the gamma scale parameter"),
     br(),
     fluidRow(
       column(
         3,
         wellPanel(
           fluidRow(
-            column(3, br(), shinyFilesButton(ns("load_param_data"), label = "Load", title = "Select a file", multiple = FALSE)),
-            column(9, uiOutput(ns("fn_param_data")))
+            column(3, br(), shinyFilesButton(ns("load_gamma_data"), label = "Load", title = "Select a file", multiple = FALSE)),
+            column(9, uiOutput(ns("fn_gamma_data")))
           )
         ),
         wellPanel(
@@ -50,37 +50,37 @@ view_gamma_ui <- function(id){
 
 #' view_gamma_server
 #'
-#' @description The function to create the server module for viewing peak height parameters
+#' @description The function to create the server module for viewing the gamma scale parameter
 view_gamma_server <- function(id, path_pack){
   moduleServer(
     id,
     function(input, output, session){
       rv_view_gamma <- reactiveValues()
-      rv_view_gamma$fn_param_data <- NULL
+      rv_view_gamma$fn_gamma_data <- NULL
       rv_view_gamma$dt_est_gamma <- NULL
       rv_view_gamma$dt_gamma_data <- NULL
       rv_view_gamma$df_select_gamma_allele <- NULL
       rv_view_gamma$df_select_gamma_stutter <- NULL
       rv_view_gamma$df_select_gamma_mix <- NULL
 
-      shinyFileChoose(input, "load_param_data", roots = c(documents = paste0(path_pack, "/extdata/param")), session = session, filetypes = c("RData"))
+      shinyFileChoose(input, "load_gamma_data", roots = c(documents = paste0(path_pack, "/extdata/gamma")), session = session, filetypes = c("RData"))
 
-      observeEvent(input$load_param_data, {
-        req(input$load_param_data)
-        path_param_data <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/param")), input$load_param_data)$datapath
+      observeEvent(input$load_gamma_data, {
+        req(input$load_gamma_data)
+        path_gamma_data <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/gamma")), input$load_gamma_data)$datapath
 
-        if(length(path_param_data) > 0){
-          rv_view_gamma$fn_param_data <- basename(path_param_data)
+        if(length(path_gamma_data) > 0){
+          rv_view_gamma$fn_gamma_data <- basename(path_gamma_data)
 
-          load(path_param_data)
+          load(path_gamma_data)
 
-          rv_view_gamma$dt_gamma_data <- data_est_par$dt_gamma_data
-          rv_view_gamma$dt_est_gamma <- data_est_par$dt_est_gamma
+          rv_view_gamma$dt_gamma_data <- data_est_gamma$dt_gamma_data
+          rv_view_gamma$dt_est_gamma <- data_est_gamma$dt_est_gamma
         }
       })
 
-      output$fn_param_data <- renderUI({
-        disabled(textInput(session$ns("fn_param_data"), label = "", value = rv_view_gamma$fn_param_data))
+      output$fn_gamma_data <- renderUI({
+        disabled(textInput(session$ns("fn_gamma_data"), label = "", value = rv_view_gamma$fn_gamma_data))
       })
 
       output$dt_est_gamma <- renderDataTable({

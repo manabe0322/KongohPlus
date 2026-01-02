@@ -1,7 +1,8 @@
 Category,Subcategory,Name,Value,Allele,Corrected allele (BSR),Average BSR,Corrected allele (FSR),Average FSR,Corrected allele (DSR),Average DSR,Corrected allele (M2SR),Average M2SR
 Kit,,GlobalFiler,,,,,,,,,,
 Stutter data,,Stutter_GF29_15sec_PROVEDIt,,,,,,,,,,
-Parameter data,,Param_GF29_15sec_PROVEDIt,,,,,,,,,,
+LSAE data,,LSAE_GF29_15sec_PROVEDIt,,,,,,,,,,
+Gamma data,,Gamma_GF29_15sec_PROVEDIt,,,,,,,,,,
 Drop-in data,,Drop-in_GF29_15sec_PROVEDIt,,,,,,,,,,
 AT,D3S1358,,35,,,,,,,,,
 AT,vWA,,35,,,,,,,,,

@@ -1,114 +1,3 @@
-#' create_init_dt_setting_est_par
-#'
-#' @description The function to create the initial data.table in the setting tab for estimating parameters
-#' @param dt_kit The data.table of information on a kit
-create_init_dt_setting_est_par <- function(dt_kit){
-  dt_kit_auto <- extract_kit_auto(dt_kit)
-  markers <- unique(dt_kit_auto$Marker)
-
-  dt_setting_est_par <- data.table(Marker = markers,
-                                   AT = c(rep(35, 5), rep(65, 3), rep(45, 4), rep(50, 5), rep(60, 4)))
-  col_int <- c("AT")
-  dt_setting_est_par[, (col_int) := lapply(.SD, as.integer), .SDcols = col_int]
-
-  return(dt_setting_est_par)
-}
-
-#' check_est_par
-#'
-#' @description The function to check files for estimating parameters
-#' @param dt_exp The data.table of the experimental data
-#' @param dt_gt The data.table of the genotype data
-#' @param dt_setting_est_par The data.table in the setting tab for estimating parameters
-check_est_par <- function(dt_exp, dt_gt, dt_setting_est_par){
-  error_message <- ""
-
-  # Whether all required data is loaded or not
-  if(is.null(dt_exp)){
-    error_message <- paste0(error_message, "Load experimental data!<br>")
-  }
-  if(is.null(dt_gt)){
-    error_message <- paste0(error_message, "Load genotype data!<br>")
-  }
-
-  # Check the analytical thresholds
-  markers_est_par <- dt_setting_est_par$Marker
-  at_all_mk <- dt_setting_est_par$AT
-  bool_without_at <- is.na(at_all_mk)
-  if(any(bool_without_at)){
-    error_message <- paste0(error_message, "Set the analytical threshold(s) of the following marker(s): ", paste0(markers_est_par[bool_without_at], collapse = ", "), ".<br>")
-  }
-
-  if(all(!is.null(dt_exp), !is.null(dt_gt))){
-    # Check the marker set of the experimental data
-    sn_mk_problem_exp <- check_dt_mk(dt_exp, markers_est_par) # The function is defined in est_sr_main.R
-    if(length(sn_mk_problem_exp) > 0){
-      error_message <- paste0(error_message, "Inappropriate marker set of the following sample(s) in the experimental data: ", paste0(sn_mk_problem_exp, collapse = ", "), ".<br>")
-    }
-
-    # Check the marker set of the genotype data
-    sn_mk_problem_gt <- check_dt_mk(dt_gt, markers_est_par) # The function is defined in est_sr_main.R
-    if(length(sn_mk_problem_gt) > 0){
-      error_message <- paste0(error_message, "Inappropriate marker set of the following sample(s) in the genotype data: ", paste0(sn_mk_problem_gt, collapse = ", "), ".<br>")
-    }
-
-    # Check the sample names
-    sn_exp <- unique(dt_exp$SampleName)
-    sn_gt <- unique(dt_gt$SampleName)
-    sn_without_gt <- setdiff(sn_exp, sn_gt)
-    if(length(sn_without_gt) > 0){
-      error_message <- paste0(error_message, "No genotype data of the following samples: ", paste0(sn_without_gt, collapse = ", "), ".<br>")
-    }
-  }
-
-  return(error_message)
-}
-
-#' create_dt_ae_data
-#'
-#' @description The function to create a data.table of the locus-specific amplification efficiencies
-#' @param peak_list A list of peaks
-#' @param height_list A list of heights
-create_dt_ae_data <- function(peak_list, height_list){
-  sample_names <- names(peak_list)
-  n_sample <- length(sample_names)
-  markers <- names(peak_list[[1]])
-  n_mk <- length(markers)
-
-  n_data <- n_sample * n_mk
-  sample_name_all <- rep("", n_data)
-  marker_all <- rep("", n_data)
-  temp_amount_all <- rep(NA, n_data)
-  prop_ae_all <- rep(NA, n_data)
-  ae_all <- rep(NA, n_data)
-
-  current_index <- 1
-  for(i in 1:n_sample){
-    peak_list_one <- peak_list[[i]]
-    height_list_one <- height_list[[i]]
-
-    index_assign <- current_index:(current_index + n_mk - 1)
-    sample_name_all[index_assign] <- sample_names[i]
-    marker_all[index_assign] <- markers
-
-    temp_amount <- sapply(height_list_one, sum)
-    sum_temp_amount <- sum(temp_amount)
-    temp_amount_all[index_assign] <- temp_amount
-    prop_ae_all[index_assign] <- temp_amount / sum_temp_amount
-    ae_all[index_assign] <- n_mk * temp_amount / sum_temp_amount
-
-    current_index <- current_index + n_mk
-  }
-
-  dt_ae_data <- data.table(SampleName = sample_name_all,
-                           Marker = marker_all,
-                           TempAmount = temp_amount_all,
-                           PropAE = prop_ae_all,
-                           AE = ae_all)
-
-  return(dt_ae_data)
-}
-
 #' calc_ave_het_ph_all_data
 #'
 #' @description The function to calculate the average heterozygote allele peak heights of all marker
@@ -122,96 +11,6 @@ calc_ave_het_ph_all_data <- function(height_list){
     ave_het_ph_all_data[i] <- mean(ave_het_ph_per_mk) / 2
   }
   return(ave_het_ph_all_data)
-}
-
-#' run_mle_ae
-#'
-#' @description The function to perform MLE for the locus-specific amplification efficiency
-#' @param prop_ae_data_use A matrix of the proportion of the amplification efficiencies (only data used for MLE)
-#' @param min_alpha The minimum alpha
-#' @param max_alpha The maximum alpha
-#' @param stop_iter Number of iterations without improvement before stopping one MLE run
-#' @param max_iter Maximum number of iterations in one MLE run
-#' @param num_converged Number of converged MLE runs before stopping
-#' @param max_mle_runs Maximum number of MLE attempts
-run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs){
-
-  # Likelihood function for the locus-specific amplification efficiency
-  like_fun_ae <- function(par){
-    alpha <- par * (max_alpha - min_alpha) + min_alpha
-
-    n_data <- ncol(prop_ae_data_use)
-    dens <- rep(Inf, n_data)
-
-    for(i in 1:n_data){
-      dens[i] <- ddirichlet(prop_ae_data_use[, i], alpha)
-    }
-
-    loglike <- - sum(log(dens))
-
-    if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
-      loglike <- Inf
-    }
-
-    return(loglike)
-  }
-
-  n_mk <- nrow(prop_ae_data_use)
-  lower_bounds <- rep(0, n_mk)
-  upper_bounds <- rep(1, n_mk)
-
-  # Perform simulated annealing
-  current_opt <- NULL
-  current_score <- Inf
-  current_score_round <- Inf
-  count_mle <- 0
-  count_solution <- 0
-  init_list <- list()
-  opt_list <- list()
-  repeat{
-    count_mle <- count_mle + 1
-
-    init_list[[count_mle]] <- init <- rdirichlet(1, rep(1, n_mk))
-
-    opt_list[[count_mle]] <- opt <- GenSA(
-      par = init,
-      fn = like_fun_ae,
-      lower = lower_bounds,
-      upper = upper_bounds,
-      control = list(verbose = TRUE, nb.stop.improvement = stop_iter, maxit = max_iter)
-    )
-
-    score <- opt$value
-    if(score < current_score){
-      current_opt <- opt
-      current_score <- score
-    }
-
-    score_round <- round(score, 3)
-    if(score_round < current_score_round){
-      current_score_round <- score_round
-      count_solution <- 1
-    }else if(score_round == current_score_round){
-      count_solution <- count_solution + 1
-    }
-
-    if(count_solution == num_converged){
-      break
-    }else if(count_mle == max_mle_runs){
-      current_opt <- NULL
-      break
-    }
-  }
-
-  # Extract parameters
-  if(!is.null(current_opt)){
-    est_param <- current_opt$par * (max_alpha - min_alpha) + min_alpha
-  }else{
-    est_param <- rep(NA, n_mk)
-  }
-  names(est_param) <- paste0("alpha[", 1:n_mk, "]")
-
-  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list))
 }
 
 #' calc_relative_ph
@@ -339,17 +138,19 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
 
     for(j in 1:n_mk){
       count <- count + 1
+      mk <- markers_auto[j]
 
-      peaks <- peak_s1[[j]]
+      peaks <- peak_s1[[mk]]
       peaks <- round(as.numeric(peaks), 1)
       n_peak <- length(peaks)
+
       if(n_peak != 0){
-        gt <- gt_s1[j, ]
+        gt <- gt_s1[mk, ]
         gt <- round(as.numeric(gt), 1)
 
-        heights <- height_s1[[j]]
-        ae <- expect_ae[j]
-        mk <- markers_auto[j]
+        heights <- height_s1[[mk]]
+        ae <- expect_ae[mk]
+
         dt_average_sr <- list_dt_average_sr[[mk]]
         allele_sr <- round(as.numeric(dt_average_sr$Allele), 1)
         bsr_average <- dt_average_sr[["Average BSR"]]
@@ -358,7 +159,7 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
         m2sr_average <- dt_average_sr[["Average M2SR"]]
         at <- at_auto[mk]
 
-        cand_peaks <- make_cand_peak(gt, sr_consider_auto[j, ])
+        cand_peaks <- make_cand_peak(gt, sr_consider_auto[mk, ])
 
         rphs_per_component <- calc_relative_ph(cand_peaks, gt, ae, allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average)
         rphs <- apply(rphs_per_component, 2, sum)
@@ -644,15 +445,14 @@ create_dt_gamma_data <- function(scale_allele, scale_stutter, samples_gamma, mar
   return(dt_gamma_data)
 }
 
-#' estimate_parameters
+#' estimate_gamma
 #'
 #' @description The function to estimate parameters of the locus-specific amplification efficiencies and the gamma distribution
 #' @param dt_exp The data.table for experimental data
 #' @param dt_gt The data.table for genotype data
 #' @param list_dt_average_sr A list of the data.table for average stutter ratios in all markers
 #' @param dt_setting_est_par The data.table for the parameter settings
-#' @param min_alpha The minimum alpha
-#' @param max_alpha The maximum alpha
+#' @param dt_expect_ae The data.table for the expected LSAE
 #' @param min_scale_allele The minimum scale parameter for alleles
 #' @param max_scale_allele The maximum scale parameter for alleles
 #' @param min_scale_stutter The minimum scale parameter for stutters
@@ -662,11 +462,11 @@ create_dt_gamma_data <- function(scale_allele, scale_stutter, samples_gamma, mar
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param waiter_ui Information on UI for waiter
-estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
-                                min_alpha, max_alpha,
-                                min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
-                                stop_iter, max_iter, num_converged, max_mle_runs,
-                                waiter_ui = NULL){
+estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par, dt_expect_ae,
+                           min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
+                           stop_iter, max_iter, num_converged, max_mle_runs,
+                           waiter_ui = NULL){
+
   # Extract information on setting
   markers_auto <- dt_setting_est_par$Marker
   n_mk_auto <- length(markers_auto)
@@ -686,7 +486,7 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
     sr_consider_auto[i, "M2S"] <- any(dt_average_sr[["Average M2SR"]] != 0)
   }
 
-  # Arrange experimental data
+  # --- Arrange experimental data --- #
 
   if(!is.null(waiter_ui)){
     waiter_ui$update(
@@ -702,90 +502,48 @@ estimate_parameters <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_es
   height_list <- tmp$height_list
   gt_list <- tmp$gt_list
 
-  # Prepare data for AE
-  dt_ae_data <- create_dt_ae_data(peak_list, height_list)
-  prop_ae_data <- matrix(dt_ae_data$PropAE, nrow = n_mk_auto)
-  index_use <- which(apply(prop_ae_data, 2, prod) > 0)
-  prop_ae_data_use <- prop_ae_data[, index_use, drop = FALSE]
+  # --- Prepare data for the expected LSAE --- #
 
-  # Output data for AE
-  sn_all <- unique(dt_ae_data$SampleName)
-  dt_prop_ae_data_use <- data.table(SampleName = sn_all[index_use])
-  dt_prop_ae_data_use <- cbind(dt_prop_ae_data_use, as.data.table(t(prop_ae_data_use * n_mk_auto)))
-  names(dt_prop_ae_data_use) <- c("SampleName", markers_auto)
+  expect_ae <- dt_expect_ae$LSAE
+  names(expect_ae) <- dt_expect_ae$Marker
 
-  # Perform MLE for AE
+  # --- Prepare data for estimating gamma distribution --- #
+
+  ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
+
+  mp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, expect_ae, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto)
+  rphs_gamma <- tmp$rphs_gamma
+  tphs_gamma <- tmp$tphs_gamma
+  ophs_gamma <- tmp$ophs_gamma
+  ats_gamma <- tmp$ats_gamma
+  samples_gamma <- tmp$samples_gamma
+  markers_gamma <- tmp$markers_gamma
+  peaks_gamma <- tmp$peaks_gamma
+
+  # --- Perform MLE for the gamma scale parameter --- #
 
   if(!is.null(waiter_ui)){
     waiter_ui$update(
       html = tagList(
         spin_3k(),
-        h3("Performing MLE for LSAE...")
+        h3("Performing MLE for peak height parameters...")
       )
     )
   }
 
-  tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs)
-  alpha <- tmp$est_param
-  init_list_ae <- tmp$init_list
-  opt_list_ae <- tmp$opt_list
+  tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs)
+  est_param <- tmp$est_param
+  scale_allele <- est_param["scale_allele"]
+  scale_stutter <- est_param["scale_stutter"]
+  init_list_gamma <- tmp$init_list
+  opt_list_gamma <- tmp$opt_list
 
-  if(any(is.na(alpha))){
-    expect_ae <- rep(NA, n_mk_auto)
-    scale_allele <- NA
-    scale_stutter <- NA
-    init_list_gamma <- NULL
-    opt_list_gamma <- NULL
-    dt_gamma_data <- NULL
-  }else{
-    # Calculate expected LSAE
-    expect_ae <- n_mk_auto * (alpha + 1) / (sum(alpha) + n_mk_auto)
-    names(expect_ae) <- markers_auto
+  # --- Create the data.tables --- #
 
-    # Prepare data for average heterozygote allele peak heights
-    ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
-
-    # Prepare peak height data for estimating gamma distribution
-    tmp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, expect_ae, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto)
-    rphs_gamma <- tmp$rphs_gamma
-    tphs_gamma <- tmp$tphs_gamma
-    ophs_gamma <- tmp$ophs_gamma
-    ats_gamma <- tmp$ats_gamma
-    samples_gamma <- tmp$samples_gamma
-    markers_gamma <- tmp$markers_gamma
-    peaks_gamma <- tmp$peaks_gamma
-
-    # Perform MLE for gamma distribution
-
-    if(!is.null(waiter_ui)){
-      waiter_ui$update(
-        html = tagList(
-          spin_3k(),
-          h3("Performing MLE for peak height parameters...")
-        )
-      )
-    }
-
-    tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs)
-    est_param <- tmp$est_param
-    scale_allele <- est_param["scale_allele"]
-    scale_stutter <- est_param["scale_stutter"]
-    init_list_gamma <- tmp$init_list
-    opt_list_gamma <- tmp$opt_list
-
-    # Create the data.table for the gamma data
-    dt_gamma_data <- create_dt_gamma_data(scale_allele, scale_stutter, samples_gamma, markers_gamma, peaks_gamma, rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma)
-  }
-
-  # Create the data.table for estimated parameters
-  dt_expect_ae <- data.table(Marker = markers_auto, Alpha = alpha, LSAE = expect_ae)
+  dt_gamma_data <- create_dt_gamma_data(scale_allele, scale_stutter, samples_gamma, markers_gamma, peaks_gamma, rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma)
   dt_est_gamma <- data.table(Parameter = c("Scale parameter (allele)", "Scale parameter (stutter)"), Value = c(scale_allele, scale_stutter))
 
-  return(list("dt_expect_ae" = dt_expect_ae,
-              "init_list_ae" = init_list_ae,
-              "opt_list_ae" = opt_list_ae,
-              "dt_prop_ae_data_use" = dt_prop_ae_data_use,
-              "dt_est_gamma" = dt_est_gamma,
+  return(list("dt_est_gamma" = dt_est_gamma,
               "init_list_gamma" = init_list_gamma,
               "opt_list_gamma" = opt_list_gamma,
               "dt_gamma_data" = dt_gamma_data))
