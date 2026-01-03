@@ -369,6 +369,13 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_sca
     }
   }
 
+  # Warning
+  if(count_solution == num_converged){
+    warning_message <- NULL
+  }else{
+    warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
+  }
+
   # Extract parameters
   est_param <- rep(NA, 2)
   names(est_param) <- c("scale_allele", "scale_stutter")
@@ -378,7 +385,7 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_sca
     est_param[2] <- tmp[2] * (max_scale_stutter - min_scale_stutter) + min_scale_stutter
   }
 
-  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list))
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, warning_message = warning_message))
 }
 
 #' create_dt_gamma_data
@@ -537,6 +544,7 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
   scale_stutter <- est_param["scale_stutter"]
   init_list_gamma <- tmp$init_list
   opt_list_gamma <- tmp$opt_list
+  warning_message <- tmp$warning_message
 
   # --- Create the data.tables --- #
 
@@ -546,5 +554,6 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
   return(list("dt_est_gamma" = dt_est_gamma,
               "init_list_gamma" = init_list_gamma,
               "opt_list_gamma" = opt_list_gamma,
+              "warning_message" = warning_message,
               "dt_gamma_data" = dt_gamma_data))
 }

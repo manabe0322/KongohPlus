@@ -16,6 +16,11 @@ est_gamma_result_ui <- function(id){
         wellPanel(
           h4("Estimated parameters"),
           dataTableOutput(ns("dt_est_gamma"))
+        ),
+        wellPanel(
+          h4("Warnings"),
+          htmlOutput(ns("warning_message")),
+          br()
         )
       ),
       column(
@@ -52,6 +57,7 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
     id,
     function(input, output, session){
       rv_est_gamma_result <- reactiveValues()
+      rv_est_gamma_result$warning_message <- NULL
       rv_est_gamma_result$dt_est_gamma <- NULL
       rv_est_gamma_result$dt_gamma_data <- NULL
       rv_est_gamma_result$df_select_gamma_allele <- NULL
@@ -62,6 +68,7 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
         req(rv_est_gamma)
         data_est_gamma <- rv_est_gamma$data_est_gamma
 
+        rv_est_gamma_result$warning_message <- NULL
         rv_est_gamma_result$dt_est_gamma <- NULL
         rv_est_gamma_result$dt_gamma_data <- NULL
         rv_est_gamma_result$df_select_gamma_allele <- NULL
@@ -69,6 +76,7 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
         rv_est_gamma_result$df_select_gamma_mix <- NULL
 
         if(!is.null(data_est_gamma)){
+          rv_est_gamma_result$warning_message <- data_est_gamma$warning_message
           rv_est_gamma_result$dt_est_gamma <- data_est_gamma$dt_est_gamma
           rv_est_gamma_result$dt_gamma_data <- data_est_gamma$dt_gamma_data
           enable("act_saveas_est_gamma_1")
@@ -142,6 +150,11 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
         ) %>%
           formatSignif(columns = c("Value"), digits = 4) %>%
           formatStyle(names(dt_est_gamma), lineHeight = "80%")
+      })
+
+      output$warning_message <- renderUI({
+        req(rv_est_gamma_result$warning_message)
+        HTML(rv_est_gamma_result$warning_message)
       })
 
       output$ui_plot_gamma_allele <- renderUI({

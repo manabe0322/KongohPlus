@@ -36,6 +36,11 @@ est_dropin_ui <- function(id){
                wellPanel(
                  h4("Estimated parameters"),
                  dataTableOutput(ns("dt_est_dropin"))
+               ),
+               wellPanel(
+                 h4("Warnings"),
+                 htmlOutput(ns("warning_message")),
+                 br()
                )
              ),
              column(
@@ -78,6 +83,7 @@ est_dropin_server <- function(id, path_pack){
       rv_est_dropin_setting$data_est_dropin <- NULL
 
       rv_est_dropin_result <- reactiveValues()
+      rv_est_dropin_result$warning_message <- NULL
       rv_est_dropin_result$dt_est_dropin <- NULL
       rv_est_dropin_result$dt_dropin_data <- NULL
 
@@ -354,10 +360,12 @@ est_dropin_server <- function(id, path_pack){
         req(rv_est_dropin_setting)
         data_est_dropin <- rv_est_dropin_setting$data_est_dropin
         if(!is.null(data_est_dropin)){
+          rv_est_dropin_result$warning_message <- data_est_dropin$warning_message
           rv_est_dropin_result$dt_est_dropin <- data_est_dropin$dt_est_dropin
           rv_est_dropin_result$dt_dropin_data <- data_est_dropin$dt_dropin_data
           enable("act_saveas_est_dropin_1")
         }else{
+          rv_est_dropin_result$warning_message <- NULL
           rv_est_dropin_result$dt_est_dropin <- NULL
           rv_est_dropin_result$dt_dropin_data <- NULL
           disable("act_saveas_est_dropin_1")
@@ -427,6 +435,11 @@ est_dropin_server <- function(id, path_pack){
           options = list(dom = "t", iDisplayLength = nrow(dt_est_dropin), ordering = FALSE, autowidth = FALSE),
           rownames = FALSE
         )
+      })
+
+      output$warning_message <- renderUI({
+        req(rv_est_dropin_result$warning_message)
+        HTML(rv_est_dropin_result$warning_message)
       })
 
       output$ui_plot_dropin <- renderUI({

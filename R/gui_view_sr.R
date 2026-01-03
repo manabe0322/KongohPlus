@@ -17,7 +17,12 @@ view_sr_ui <- function(id){
                  column(9, uiOutput(ns("fn_stutter_data")))
                ),
                uiOutput(ns("select_mk")),
-               uiOutput(ns("select_st_type"))
+               uiOutput(ns("select_st_type")),
+             ),
+             wellPanel(
+               h4("Warnings"),
+               htmlOutput(ns("warning_message")),
+               br()
              )
       ),
       column(4,
@@ -46,6 +51,7 @@ view_sr_server <- function(id, path_pack){
     id,
     function(input, output, session){
       rv_view_sr <- reactiveValues()
+      rv_view_sr$warning_message <- NULL
       rv_view_sr$fn_stutter_data <- NULL
       rv_view_sr$markers_auto <- character(0)
       rv_view_sr$list_dt_average_sr <- NULL
@@ -72,6 +78,7 @@ view_sr_server <- function(id, path_pack){
 
           load(path_stutter_data)
 
+          rv_view_sr$warning_message <- data_est_sr$warning_message
           rv_view_sr$markers_auto <- names(data_est_sr$list_dt_average_sr)
           rv_view_sr$list_dt_average_sr <- data_est_sr$list_dt_average_sr
           rv_view_sr$dt_setting_est_sr <- data_est_sr$dt_setting_est_sr
@@ -172,6 +179,10 @@ view_sr_server <- function(id, path_pack){
         }
       })
 
+      output$warning_message <- renderUI({
+        req(rv_view_sr$warning_message)
+        HTML(rv_view_sr$warning_message)
+      })
 
       output$dt_average_sr_display <- renderDataTable({
         dt_average_sr <- rv_view_sr$dt_average_sr

@@ -16,6 +16,11 @@ est_lsae_result_ui <- function(id){
         wellPanel(
           h4("Expected LSAE"),
           dataTableOutput(ns("dt_expect_ae"))
+        ),
+        wellPanel(
+          h4("Warnings"),
+          htmlOutput(ns("warning_message")),
+          br()
         )
       ),
       column(
@@ -39,6 +44,7 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
     id,
     function(input, output, session){
       rv_est_lsae_result <- reactiveValues()
+      rv_est_lsae_result$warning_message <- NULL
       rv_est_lsae_result$dt_prop_ae_data_use <- NULL
       rv_est_lsae_result$dt_expect_ae <- NULL
       rv_est_lsae_result$df_select_lsae <- NULL
@@ -47,11 +53,13 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
         req(rv_est_lsae)
         data_est_lsae <- rv_est_lsae$data_est_lsae
 
+        rv_est_lsae_result$warning_message <- NULL
         rv_est_lsae_result$dt_prop_ae_data_use <- NULL
         rv_est_lsae_result$dt_expect_ae <- NULL
         rv_est_lsae_result$df_select_lsae <- NULL
 
         if(!is.null(data_est_lsae)){
+          rv_est_lsae_result$warning_message <- data_est_lsae$warning_message
           rv_est_lsae_result$dt_prop_ae_data_use <- data_est_lsae$dt_prop_ae_data_use
           rv_est_lsae_result$dt_expect_ae <- data_est_lsae$dt_expect_ae
           enable("act_saveas_est_lsae_1")
@@ -125,6 +133,11 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
         ) %>%
           formatSignif(columns = c("Alpha", "LSAE"), digits = 4) %>%
           formatStyle(names(dt_expect_ae), lineHeight = "80%")
+      })
+
+      output$warning_message <- renderUI({
+        req(rv_est_lsae_result$warning_message)
+        HTML(rv_est_lsae_result$warning_message)
       })
 
       output$ui_plot_lsae <- renderUI({

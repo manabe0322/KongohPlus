@@ -97,6 +97,13 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
     }
   }
 
+  # Warning
+  if(count_solution == num_converged){
+    warning_message <- NULL
+  }else{
+    warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
+  }
+
   # Extract parameters
   est_param <- rep(NA, 2)
   names(est_param) <- c("shape_di", "scale_di")
@@ -106,7 +113,7 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
     est_param[2] <- tmp[2] * (max_scale_di - min_scale_di) + min_scale_di
   }
 
-  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list))
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, warning_message = warning_message))
 }
 
 #' estimate_dropin_params
@@ -172,6 +179,7 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
   scale_di <- est_param["scale_di"]
   init_list_di <- tmp$init_list
   opt_list_di <- tmp$opt_list
+  warning_message <- tmp$warning_message
 
   # --- Create the data.table for estimated parameters --- #
 
@@ -183,5 +191,6 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
   return(list("dt_dropin_data" = dt_dropin_data,
               "dt_est_dropin" = dt_est_dropin,
               "init_list_di" = init_list_di,
-              "opt_list_di" = opt_list_di))
+              "opt_list_di" = opt_list_di,
+              "warning_message" = warning_message))
 }

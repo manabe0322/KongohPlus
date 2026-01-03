@@ -378,6 +378,8 @@ create_dt_sr_data <- function(peak_list, height_list, gt_list, sr_consider_auto,
 #' run_mle_sr_gen
 #'
 #' @description The function to perform MLE for the stutter ratio (locus-specific model with slope)
+#' @param mk The marker name
+#' @param stutter_type "BS": back stutter, "FS": forward stutter, "DS": double-back stutter, "M2S": minus 2-nt stutter
 #' @param x_al A vector of the (corrected) alleles in the experimental data
 #' @param y_sr A vector of the stutter ratios in the experimental data
 #' @param tap A vector of the total allelic products in the experimental data
@@ -391,7 +393,7 @@ create_dt_sr_data <- function(peak_list, height_list, gt_list, sr_consider_auto,
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
-run_mle_sr_gen <- function(x_al, y_sr, tap, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs){
+run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs){
 
   # Likelihood function for the stutter ratio (locus-specific model with slope)
   like_fun_sr_gen <- function(par){
@@ -460,6 +462,13 @@ run_mle_sr_gen <- function(x_al, y_sr, tap, min_slope, max_slope, min_intercept,
     }
   }
 
+  # Warning
+  if(count_solution == num_converged){
+    warning_record <- NULL
+  }else{
+    warning_record <- paste0("&nbsp; &nbsp; - ", mk, ", ", stutter_type, " (", count_solution, ")")
+  }
+
   # Extract parameters
   est_param <- rep(NA, 3)
   names(est_param) <- c("slope", "intercept", "sigma")
@@ -470,12 +479,14 @@ run_mle_sr_gen <- function(x_al, y_sr, tap, min_slope, max_slope, min_intercept,
     est_param[3] <- tmp[3] * (max_sigma - min_sigma) + min_sigma
   }
 
-  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list))
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, warning_record = warning_record))
 }
 
 #' run_mle_sr_uni
 #'
 #' @description The function to perform MLE for the stutter ratio (uniform model)
+#' @param mk The marker name
+#' @param stutter_type "BS": back stutter, "FS": forward stutter, "DS": double-back stutter, "M2S": minus 2-nt stutter
 #' @param y_sr A vector of the stutter ratios in the experimental data
 #' @param tap A vector of the total allelic products in the experimental data
 #' @param min_myu The minimum myu
@@ -486,7 +497,7 @@ run_mle_sr_gen <- function(x_al, y_sr, tap, min_slope, max_slope, min_intercept,
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
-run_mle_sr_uni <- function(y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs){
+run_mle_sr_uni <- function(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs){
 
   # Likelihood function for the stutter ratio (uniform model)
   like_fun_sr_uni <- function(par){
@@ -549,6 +560,13 @@ run_mle_sr_uni <- function(y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, st
     }
   }
 
+  # Warning
+  if(count_solution == num_converged){
+    warning_record <- NULL
+  }else{
+    warning_record <- paste0("&nbsp; &nbsp; - ", mk, ", ", stutter_type, " (", count_solution, ")")
+  }
+
   # Extract parameters
   est_param <- rep(NA, 2)
   names(est_param) <- c("myu", "sigma")
@@ -558,7 +576,7 @@ run_mle_sr_uni <- function(y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, st
     est_param[2] <- tmp[2] * (max_sigma - min_sigma) + min_sigma
   }
 
-  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list))
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, warning_record = warning_record))
 }
 
 #' calc_average_sr
@@ -627,6 +645,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
   tmp_alcor_multi_mk <- vector(mode = "list", length = n_mk)
   init_list_all_mk <- vector(mode = "list", length = n_mk)
   opt_list_all_mk <- vector(mode = "list", length = n_mk)
+  warning_record_list_all_mk <- vector(mode = "list", length = n_mk)
 
   # Repeat for the number of markers
   for(i in 1:n_mk){
@@ -679,12 +698,13 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
             )
           }
 
-          tmp <- run_mle_sr_uni(y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
+          tmp <- run_mle_sr_uni(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
           est_param <- tmp$est_param
           myu_all_mk[i] <- myu <- est_param["myu"]
           sigma_all_mk[i] <- est_param["sigma"]
           init_list_all_mk[[i]] <- tmp$init_list
           opt_list_all_mk[[i]] <- tmp$opt_list
+          warning_record_list_all_mk[[i]] <- tmp$warning_record
 
           # Set the average stutter ratios for each allele
           average_sr <- rep(myu, length(alcor))
@@ -708,13 +728,14 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
             )
           }
 
-          tmp <- run_mle_sr_gen(x_al, y_sr, tap, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
+          tmp <- run_mle_sr_gen(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
           est_param <- tmp$est_param
           slope_all_mk[i] <- slope <- est_param["slope"]
           intercept_all_mk[i] <- intercept <- est_param["intercept"]
           sigma_all_mk[i] <- est_param["sigma"]
           init_list_all_mk[[i]] <- tmp$init_list
           opt_list_all_mk[[i]] <- tmp$opt_list
+          warning_record_list_all_mk[[i]] <- tmp$warning_record
 
           # Set the average stutter ratios for each allele
           if(any(is.na(slope), is.na(intercept))){
@@ -760,12 +781,13 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
       )
     }
 
-    tmp <- run_mle_sr_uni(y_sr_multi_mk, tap_multi_mk, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
+    tmp <- run_mle_sr_uni("Multiple loci", stutter_type, y_sr_multi_mk, tap_multi_mk, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
     est_param <- tmp$est_param
     myu_all_mk[index_multi_mk] <- est_param["myu"]
     sigma_all_mk[index_multi_mk] <- est_param["sigma"]
     init_list <- tmp$init_list
     opt_list <- tmp$opt_list
+    warning_record_list_all_mk[[index_multi_mk[1]]] <- tmp$warning_record
 
     # Set the average stutter ratios for each allele
     for(i in 1:length(index_multi_mk)){
@@ -798,7 +820,8 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
   return(list("dt_result_est_sr" = dt_result_est_sr,
               "dt_average_sr_all_mk" = dt_average_sr_all_mk,
               "init_list_all_mk" = init_list_all_mk,
-              "opt_list_all_mk" = opt_list_all_mk))
+              "opt_list_all_mk" = opt_list_all_mk,
+              "warning_record_list_all_mk" = warning_record_list_all_mk))
 }
 
 #' full_join_average_sr
@@ -839,6 +862,26 @@ full_join_average_sr <- function(list_dt_average_bsr, list_dt_average_fsr, list_
   }
 
   return(list_dt_average_sr)
+}
+
+#' create_warning_sr
+#'
+#' @description The function to create the warning message for the stutter ratios
+#' @param warning_record_list_all_mk_bsr A list of the warning records for BSR
+#' @param warning_record_list_all_mk_fsr A list of the warning records for FSR
+#' @param warning_record_list_all_mk_dsr A list of the warning records for DSR
+#' @param warning_record_list_all_mk_m2sr A list of the warning records for M2SR
+#' @param max_mle_runs Maximum number of MLE attempts
+#' @param num_converged Number of converged MLE runs before stopping
+create_warning_sr <- function(warning_record_list_all_mk_bsr, warning_record_list_all_mk_fsr, warning_record_list_all_mk_dsr, warning_record_list_all_mk_m2sr,
+                              max_mle_runs, num_converged){
+  bind_warning_record <- c(unlist(warning_record_list_all_mk_bsr), unlist(warning_record_list_all_mk_fsr), unlist(warning_record_list_all_mk_dsr), unlist(warning_record_list_all_mk_m2sr))
+  warning_message <- ""
+  if(!is.null(bind_warning_record)){
+    warning_message <- paste0("- A total of ", max_mle_runs, " MLE runs were performed; however, for the following markers and stutter types, the number of converged runs did not reach the specified threshold of ", num_converged, ". This may compromise the reliability of the results.<br>")
+    warning_message <- paste0(warning_message, paste0(bind_warning_record, collapse = "<br>"))
+  }
+  return(warning_message)
 }
 
 #' estimate_average_sr
@@ -903,7 +946,8 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   # Create a data.table for the stutter ratios
   dt_sr_data <- create_dt_sr_data(peak_list, height_list, gt_list, sr_consider_auto, dt_kit)
 
-  # Perform MLE for BSR
+  # --- Perform MLE for BSR --- #
+
   tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "BS", markers_auto, meth_model_bsr,
                                min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs,
                                waiter_ui)
@@ -911,8 +955,10 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   list_dt_average_bsr <- tmp$dt_average_sr_all_mk
   init_list_all_mk_bsr <- tmp$init_list_all_mk
   opt_list_all_mk_bsr <- tmp$opt_list_all_mk
+  warning_record_list_all_mk_bsr <- tmp$warning_record_list_all_mk
 
-  # Perform MLE for FSR
+  # --- Perform MLE for FSR --- #
+
   tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "FS", markers_auto, meth_model_fsr,
                                min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs,
                                waiter_ui)
@@ -920,8 +966,10 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   list_dt_average_fsr <- tmp$dt_average_sr_all_mk
   init_list_all_mk_fsr <- tmp$init_list_all_mk
   opt_list_all_mk_fsr <- tmp$opt_list_all_mk
+  warning_record_list_all_mk_fsr <- tmp$warning_record_list_all_mk
 
-  # Perform MLE for DSR
+  # --- Perform MLE for DSR --- #
+
   tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "DS", markers_auto, meth_model_dsr,
                                min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs,
                                waiter_ui)
@@ -929,8 +977,10 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   list_dt_average_dsr <- tmp$dt_average_sr_all_mk
   init_list_all_mk_dsr <- tmp$init_list_all_mk
   opt_list_all_mk_dsr <- tmp$opt_list_all_mk
+  warning_record_list_all_mk_dsr <- tmp$warning_record_list_all_mk
 
-  # Perform MLE for M2SR
+  # --- Perform MLE for M2SR --- #
+
   tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "M2S", markers_auto, meth_model_m2sr,
                                min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs,
                                waiter_ui)
@@ -938,8 +988,12 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   list_dt_average_m2sr <- tmp$dt_average_sr_all_mk
   init_list_all_mk_m2sr <- tmp$init_list_all_mk
   opt_list_all_mk_m2sr <- tmp$opt_list_all_mk
+  warning_record_list_all_mk_m2sr <- tmp$warning_record_list_all_mk
 
   list_dt_average_sr <- full_join_average_sr(list_dt_average_bsr, list_dt_average_fsr, list_dt_average_dsr, list_dt_average_m2sr)
+
+  warning_message <- create_warning_sr(warning_record_list_all_mk_bsr, warning_record_list_all_mk_fsr, warning_record_list_all_mk_dsr, warning_record_list_all_mk_m2sr,
+                                       max_mle_runs, num_converged)
 
   return(list("list_dt_average_sr" = list_dt_average_sr,
               "dt_result_est_bsr" = dt_result_est_bsr,
@@ -954,5 +1008,6 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
               "dt_result_est_m2sr" = dt_result_est_m2sr,
               "init_list_all_mk_m2sr" = init_list_all_mk_m2sr,
               "opt_list_all_mk_m2sr" = opt_list_all_mk_m2sr,
+              "warning_message" = warning_message,
               "dt_sr_data" = dt_sr_data))
 }

@@ -16,6 +16,11 @@ view_dropin_ui <- function(id){
             column(3, br(), shinyFilesButton(ns("load_dropin_data"), label = "Load", title = "Select a file", multiple = FALSE)),
             column(9, uiOutput(ns("fn_dropin_data")))
           )
+        ),
+        wellPanel(
+          h4("Warnings"),
+          htmlOutput(ns("warning_message")),
+          br()
         )
       ),
       column(
@@ -46,6 +51,7 @@ view_dropin_server <- function(id, path_pack){
     id,
     function(input, output, session){
       rv_view_dropin <- reactiveValues()
+      rv_view_dropin$warning_message <- NULL
       rv_view_dropin$fn_dropin_data <- NULL
       rv_view_dropin$dt_est_dropin <- NULL
       rv_view_dropin$dt_dropin_data <- NULL
@@ -61,6 +67,7 @@ view_dropin_server <- function(id, path_pack){
 
           load(path_dropin_data)
 
+          rv_view_dropin$warning_message <- data_est_dropin$warning_message
           rv_view_dropin$dt_est_dropin <- data_est_dropin$dt_est_dropin
           rv_view_dropin$dt_dropin_data <- data_est_dropin$dt_dropin_data
         }
@@ -81,6 +88,11 @@ view_dropin_server <- function(id, path_pack){
             rownames = FALSE
           )
         }
+      })
+
+      output$warning_message <- renderUI({
+        req(rv_view_dropin$warning_message)
+        HTML(rv_view_dropin$warning_message)
       })
 
       output$ui_plot_dropin <- renderUI({

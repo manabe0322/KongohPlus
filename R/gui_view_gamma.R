@@ -20,6 +20,11 @@ view_gamma_ui <- function(id){
         wellPanel(
           h4("Estimated parameters"),
           dataTableOutput(ns("dt_est_gamma"))
+        ),
+        wellPanel(
+          h4("Warnings"),
+          htmlOutput(ns("warning_message")),
+          br()
         )
       ),
       column(
@@ -56,6 +61,7 @@ view_gamma_server <- function(id, path_pack){
     id,
     function(input, output, session){
       rv_view_gamma <- reactiveValues()
+      rv_view_gamma$warning_message <- NULL
       rv_view_gamma$fn_gamma_data <- NULL
       rv_view_gamma$dt_est_gamma <- NULL
       rv_view_gamma$dt_gamma_data <- NULL
@@ -74,6 +80,7 @@ view_gamma_server <- function(id, path_pack){
 
           load(path_gamma_data)
 
+          rv_view_gamma$warning_message <- data_est_gamma$warning_message
           rv_view_gamma$dt_gamma_data <- data_est_gamma$dt_gamma_data
           rv_view_gamma$dt_est_gamma <- data_est_gamma$dt_est_gamma
         }
@@ -96,6 +103,11 @@ view_gamma_server <- function(id, path_pack){
             formatSignif(columns = c("Value"), digits = 4) %>%
             formatStyle(names(dt_est_gamma), lineHeight = "80%")
         }
+      })
+
+      output$warning_message <- renderUI({
+        req(rv_view_gamma$warning_message)
+        HTML(rv_view_gamma$warning_message)
       })
 
       output$ui_plot_gamma_allele <- renderUI({

@@ -5,6 +5,8 @@
 \title{run_mle_sr_gen}
 \usage{
 run_mle_sr_gen(
+  mk,
+  stutter_type,
   x_al,
   y_sr,
   tap,
@@ -21,6 +23,10 @@ run_mle_sr_gen(
 )
 }
 \arguments{
+\item{mk}{The marker name}
+
+\item{stutter_type}{"BS": back stutter, "FS": forward stutter, "DS": double-back stutter, "M2S": minus 2-nt stutter}
+
 \item{x_al}{A vector of the (corrected) alleles in the experimental data}
 
 \item{y_sr}{A vector of the stutter ratios in the experimental data}

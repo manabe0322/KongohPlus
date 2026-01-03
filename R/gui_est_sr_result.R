@@ -8,14 +8,20 @@ est_sr_result_ui <- function(id){
            br(),
            fluidRow(
              column(3,
+                    actionButton(ns("act_saveas_est_sr_1"), label = "Save as", class = "btn btn-primary btn-lg"),
+                    br(),
+                    br(),
+                    wellPanel(
+                      h4("Warnings"),
+                      htmlOutput(ns("warning_message")),
+                      br()
+                    )
+             ),
+             column(4,
                     wellPanel(
                       uiOutput(ns("select_mk")),
                       uiOutput(ns("select_st_type"))
                     ),
-                    br(),
-                    actionButton(ns("act_saveas_est_sr_1"), label = "Save as", class = "btn btn-primary btn-lg")
-             ),
-             column(4,
                     wellPanel(
                       h4("Average stutter ratio"),
                       dataTableOutput(ns("dt_average_sr_display"))
@@ -42,6 +48,7 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
     function(input, output, session){
       rv_est_sr_result <- reactiveValues()
       rv_est_sr_result$markers_auto <- NULL
+      rv_est_sr_result$warning_message <- NULL
       rv_est_sr_result$list_dt_average_sr <- NULL
       rv_est_sr_result$dt_setting_est_sr <- NULL
       rv_est_sr_result$dt_sr_data <- NULL
@@ -60,6 +67,7 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         data_est_sr <- rv_est_sr$data_est_sr
 
         rv_est_sr_result$markers_auto <- NULL
+        rv_est_sr_result$warning_message <- NULL
         rv_est_sr_result$list_dt_average_sr <- NULL
         rv_est_sr_result$dt_setting_est_sr <- NULL
         rv_est_sr_result$dt_sr_data <- NULL
@@ -75,6 +83,7 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
 
         if(!is.null(data_est_sr)){
           rv_est_sr_result$markers_auto <- names(data_est_sr$list_dt_average_sr)
+          rv_est_sr_result$warning_message <- data_est_sr$warning_message
           rv_est_sr_result$list_dt_average_sr <- data_est_sr$list_dt_average_sr
           rv_est_sr_result$dt_setting_est_sr <- data_est_sr$dt_setting_est_sr
           rv_est_sr_result$dt_sr_data <- data_est_sr$dt_sr_data
@@ -144,6 +153,11 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           removeModal()
           showModal(modalDialog(title = "Error", "No stutter data.", easyClose = TRUE, footer = NULL))
         }
+      })
+
+      output$warning_message <- renderUI({
+        req(rv_est_sr_result$warning_message)
+        HTML(rv_est_sr_result$warning_message)
       })
 
       observeEvent(list(input$select_mk, input$select_st_type), {

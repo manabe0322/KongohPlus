@@ -5,6 +5,8 @@
 \title{run_mle_sr_uni}
 \usage{
 run_mle_sr_uni(
+  mk,
+  stutter_type,
   y_sr,
   tap,
   min_myu,
@@ -18,6 +20,10 @@ run_mle_sr_uni(
 )
 }
 \arguments{
+\item{mk}{The marker name}
+
+\item{stutter_type}{"BS": back stutter, "FS": forward stutter, "DS": double-back stutter, "M2S": minus 2-nt stutter}
+
 \item{y_sr}{A vector of the stutter ratios in the experimental data}
 
 \item{tap}{A vector of the total allelic products in the experimental data}
