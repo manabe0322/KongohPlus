@@ -128,7 +128,7 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         path_sr <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/stutter")), input$load_sr)$datapath
         if(length(path_sr) > 0){
           load(path_sr)
-          rv_est_gamma_setting$list_dt_average_sr <- data_est_lsae$list_dt_average_sr
+          rv_est_gamma_setting$list_dt_average_sr <- data_est_sr$list_dt_average_sr
           rv_est_gamma_setting$name_kit_stutter <- data_est_sr$name_kit_stutter
           rv_est_gamma_setting$name_sr <- str_replace(basename(path_sr), ".{6}$", "")
         }
@@ -147,10 +147,14 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         path_lsae <- parseFilePaths(roots = c(documents = paste0(path_pack, "/extdata/lsae")), input$load_lsae)$datapath
         if(length(path_lsae) > 0){
           load(path_lsae)
-          rv_est_gamma_setting$dt_expect_ae <- data_est_sr$dt_expect_ae
-          rv_est_gamma_setting$name_kit_lsae <- data_est_sr$name_kit_lsae
+          rv_est_gamma_setting$dt_expect_ae <- data_est_lsae$dt_expect_ae
+          rv_est_gamma_setting$name_kit_lsae <- data_est_lsae$name_kit_lsae
           rv_est_gamma_setting$name_lsae <- str_replace(basename(path_lsae), ".{6}$", "")
         }
+      })
+
+      output$name_lsae <- renderUI({
+        disabled(textInput(session$ns("name_lsae"), label = "", value = rv_est_gamma_setting$name_lsae))
       })
 
       # --- Prepare dataset for the kit --- #

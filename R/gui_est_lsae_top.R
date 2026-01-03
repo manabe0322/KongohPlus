@@ -1,11 +1,11 @@
 #' est_lsae_ui
 #'
 #' @description The function to create the ui module for estimating locus-specific amplification efficiencies
-est_par_ui <- function(id){
+est_lsae_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("4. Estimate locus-specific amplification efficiencies",
-           titlePanel("4. Estimate locus-specific amplification efficiencies"),
+  tabPanel("4. Estimate the locus-specific amplification efficiencies",
+           titlePanel("4. Estimate the locus-specific amplification efficiencies"),
            br(),
            tabsetPanel(id = ns("tabset_est_lsae"),
                        type = "tabs",

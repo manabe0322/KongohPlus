@@ -78,7 +78,7 @@ anameth_server <- function(id, path_pack){
           br(),
           selectInput(session$ns("gamma_name"), label = "Select data for the gamma scale parameter", choices = gamma_all, selected = gamma_all[1], selectize = FALSE),
           br(),
-          selectInput(session$ns("dropin_name"), label = "Select drop-in data", choices = dropin_all, selected = dropin_all[1], selectize = FALSE),
+          selectInput(session$ns("dropin_name"), label = "Select data for the drop-in", choices = dropin_all, selected = dropin_all[1], selectize = FALSE),
           footer = tagList(
             actionButton(session$ns("act_add_anameth_new"), "Add the analysis method"),
             modalButton("Close")

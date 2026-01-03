@@ -7,5 +7,5 @@
 est_sr_ui(id)
 }
 \description{
-The function to create the ui module for estimating average stutter ratios
+The function to create the ui module for estimating the average stutter ratios
 }

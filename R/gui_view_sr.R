@@ -5,8 +5,8 @@ view_sr_ui <- function(id){
   ns <- NS(id)
 
   tabPanel(
-    "View stutter ratios",
-    titlePanel("View stutter ratios"),
+    "View the stutter ratios",
+    titlePanel("View the stutter ratios"),
     br(),
     fluidRow(
       column(3,

@@ -7,5 +7,5 @@
 view_lsae_ui(id)
 }
 \description{
-The function to create the ui module for viewing LSAE parameters
+The function to create the ui module for viewing the locus-specific amplification efficiencies
 }

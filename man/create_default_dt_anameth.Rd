@@ -8,7 +8,8 @@ create_default_dt_anameth(
   path_pack,
   kit_name,
   stutter_name,
-  param_name,
+  lsae_name,
+  gamma_name,
   dropin_name
 )
 }
@@ -19,7 +20,9 @@ create_default_dt_anameth(
 
 \item{stutter_name}{The name of the stutter data}
 
-\item{param_name}{The name of the parameter data}
+\item{lsae_name}{The name of the LSAE data}
+
+\item{gamma_name}{The name of the gamma data}
 
 \item{dropin_name}{The name of the drop-in data}
 }

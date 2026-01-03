@@ -7,5 +7,5 @@
 est_sr_server(id, path_pack)
 }
 \description{
-The function to create the server module for estimating average stutter ratios
+The function to create the server module for estimating the average stutter ratios
 }

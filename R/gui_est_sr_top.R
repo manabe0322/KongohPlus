@@ -1,11 +1,11 @@
 #' est_sr_ui
 #'
-#' @description The function to create the ui module for estimating average stutter ratios
+#' @description The function to create the ui module for estimating the average stutter ratios
 est_sr_ui <- function(id){
   ns <- NS(id)
 
-  tabPanel("3. Estimate stutter ratios",
-           titlePanel("3. Estimate stutter ratios"),
+  tabPanel("3. Estimate the stutter ratios",
+           titlePanel("3. Estimate the stutter ratios"),
            br(),
            tabsetPanel(id = ns("tabset_est_sr"),
                        type = "tabs",
@@ -17,7 +17,7 @@ est_sr_ui <- function(id){
 
 #' est_sr_server
 #'
-#' @description The function to create the server module for estimating average stutter ratios
+#' @description The function to create the server module for estimating the average stutter ratios
 est_sr_server <- function(id, path_pack){
   moduleServer(
     id,

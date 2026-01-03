@@ -5,8 +5,8 @@ view_lsae_ui <- function(id){
   ns <- NS(id)
 
   tabPanel(
-    "View locus-specific amplification efficiencies",
-    titlePanel("View locus-specific amplification efficiencies"),
+    "View the locus-specific amplification efficiencies",
+    titlePanel("View the locus-specific amplification efficiencies"),
     br(),
     fluidRow(
       column(

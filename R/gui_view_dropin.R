@@ -5,8 +5,8 @@ view_dropin_ui <- function(id){
   ns <- NS(id)
 
   tabPanel(
-    "View drop-in parameters",
-    titlePanel("View drop-in parameters"),
+    "View the drop-in parameters",
+    titlePanel("View the drop-in parameters"),
     br(),
     fluidRow(
       column(

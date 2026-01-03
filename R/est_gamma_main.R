@@ -511,7 +511,7 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
 
   ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
 
-  mp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, expect_ae, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto)
+  tmp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, expect_ae, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto)
   rphs_gamma <- tmp$rphs_gamma
   tphs_gamma <- tmp$tphs_gamma
   ophs_gamma <- tmp$ophs_gamma

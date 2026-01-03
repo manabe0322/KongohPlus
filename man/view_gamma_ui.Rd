@@ -7,5 +7,5 @@
 view_gamma_ui(id)
 }
 \description{
-The function to create the ui module for viewing peak height parameters
+The function to create the ui module for viewing the gamma scale parameter
 }

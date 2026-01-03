@@ -7,5 +7,5 @@
 view_gamma_server(id, path_pack)
 }
 \description{
-The function to create the server module for viewing peak height parameters
+The function to create the server module for viewing the gamma scale parameter
 }

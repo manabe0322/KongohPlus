@@ -7,5 +7,5 @@
 view_lsae_server(id, path_pack)
 }
 \description{
-The function to create the server module for viewing LSAE parameters
+The function to create the server module for viewing the locus-specific amplification efficiencies
 }

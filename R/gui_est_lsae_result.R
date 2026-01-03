@@ -61,7 +61,7 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
       })
 
       observeEvent(input$act_saveas_est_lsae_1, {
-        req(rv_est_sr)
+        req(rv_est_lsae)
         data_est_lsae <- rv_est_lsae$data_est_lsae
 
         if(!is.null(data_est_lsae)){
