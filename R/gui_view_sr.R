@@ -42,12 +42,7 @@ view_sr_ui <- function(id){
              ),
              wellPanel(
                h4("View all MLE attempts"),
-               fluidRow(
-                 column(3, uiOutput(ns("button_all_mle_bsr"))),
-                 column(3, uiOutput(ns("button_all_mle_fsr"))),
-                 column(3, uiOutput(ns("button_all_mle_dsr"))),
-                 column(3, uiOutput(ns("button_all_mle_m2sr")))
-               )
+               uiOutput(ns("buttons_all_mle"))
              )
       ),
       column(5,
@@ -341,9 +336,18 @@ view_sr_server <- function(id, path_pack){
           formatStyle(names(dt_average_sr_display), lineHeight = "80%")
       })
 
-      output$button_all_mle_bsr <- renderUI({
+      output$buttons_all_mle <- renderUI({
         req(rv_view_sr$opt_list_all_mk_bsr)
-        actionButton(session$ns("act_all_mle_bsr"), label = "BSR")
+        req(rv_view_sr$opt_list_all_mk_fsr)
+        req(rv_view_sr$opt_list_all_mk_dsr)
+        req(rv_view_sr$opt_list_all_mk_m2sr)
+
+        tagList(
+          actionButton(session$ns("act_all_mle_bsr"), label = "BSR"),
+          actionButton(session$ns("act_all_mle_fsr"), label = "FSR"),
+          actionButton(session$ns("act_all_mle_dsr"), label = "DSR"),
+          actionButton(session$ns("act_all_mle_m2sr"), label = "M2SR")
+        )
       })
 
       observeEvent(input$act_all_mle_bsr, {
@@ -399,11 +403,6 @@ view_sr_server <- function(id, path_pack){
         }
       })
 
-      output$button_all_mle_fsr <- renderUI({
-        req(rv_view_sr$opt_list_all_mk_fsr)
-        actionButton(session$ns("act_all_mle_fsr"), label = "FSR")
-      })
-
       observeEvent(input$act_all_mle_fsr, {
         showModal(modalDialog(
           title = "All MLE attempts (FSR)",
@@ -457,11 +456,6 @@ view_sr_server <- function(id, path_pack){
         }
       })
 
-      output$button_all_mle_dsr <- renderUI({
-        req(rv_view_sr$opt_list_all_mk_dsr)
-        actionButton(session$ns("act_all_mle_dsr"), label = "DSR")
-      })
-
       observeEvent(input$act_all_mle_dsr, {
         showModal(modalDialog(
           title = "All MLE attempts (DSR)",
@@ -513,11 +507,6 @@ view_sr_server <- function(id, path_pack){
             formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
             formatStyle(name_converged, backgroundColor = "lightblue")
         }
-      })
-
-      output$button_all_mle_m2sr <- renderUI({
-        req(rv_view_sr$opt_list_all_mk_m2sr)
-        actionButton(session$ns("act_all_mle_m2sr"), label = "M2SR")
       })
 
       observeEvent(input$act_all_mle_m2sr, {
