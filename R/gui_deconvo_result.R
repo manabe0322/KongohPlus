@@ -140,7 +140,6 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
 
         warning_message <- ""
 
-
         for(i in 1:length(data_hnc_list)){
           data_hnc <- data_hnc_list[[i]]
           tmp <- data_hnc$warning_message

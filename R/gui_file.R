@@ -134,7 +134,7 @@ file_server <- function(id, session_top, bool_load_proj){
         }
       })
 
-      output$dt_csp <- renderDT({
+      output$dt_csp <- renderDataTable({
         dt_csp <- rv_input$dt_csp
 
         if(!is.null(dt_csp)){
