@@ -6,6 +6,16 @@ view_lsae_ui <- function(id){
 
   tabPanel(
     "View the locus-specific amplification efficiencies",
+    tags$style("
+             .edit-modal .modal-dialog {
+               width: 90% !important;   /* Expand up to 90% of the screen width */
+               max-width: 2000px;       /* Set maximum width */
+             }
+             .edit-modal .modal-body {
+               max-height: 80vh;        /* Limit height to 80% of the viewport */
+               overflow-y: auto;        /* Enable vertical scrolling if needed */
+             }
+           "),
     titlePanel("View the locus-specific amplification efficiencies"),
     br(),
     fluidRow(
@@ -19,7 +29,9 @@ view_lsae_ui <- function(id){
         ),
         wellPanel(
           h4("Expected LSAE"),
-          dataTableOutput(ns("dt_expect_ae"))
+          dataTableOutput(ns("dt_expect_ae")),
+          br(),
+          uiOutput(ns("button_all_mle"))
         ),
         wellPanel(
           h4("Warnings"),
@@ -52,6 +64,9 @@ view_lsae_server <- function(id, path_pack){
       rv_view_lsae$fn_lsae_data <- NULL
       rv_view_lsae$dt_prop_ae_data_use <- NULL
       rv_view_lsae$dt_expect_ae <- NULL
+      rv_view_lsae$opt_list_ae <- NULL
+      rv_view_lsae$min_alpha <- NULL
+      rv_view_lsae$max_alpha <- NULL
       rv_view_lsae$df_select_lsae <- NULL
 
       shinyFileChoose(input, "load_lsae_data", roots = c(documents = paste0(path_pack, "/extdata/lsae")), session = session, filetypes = c("RData"))
@@ -68,6 +83,9 @@ view_lsae_server <- function(id, path_pack){
           rv_view_lsae$warning_message <- data_est_lsae$warning_message
           rv_view_lsae$dt_prop_ae_data_use <- data_est_lsae$dt_prop_ae_data_use
           rv_view_lsae$dt_expect_ae <- data_est_lsae$dt_expect_ae
+          rv_view_lsae$opt_list_ae <- data_est_lsae$opt_list_ae
+          rv_view_lsae$min_alpha <- data_est_lsae$min_alpha
+          rv_view_lsae$max_alpha <- data_est_lsae$max_alpha
         }
       })
 
@@ -76,18 +94,84 @@ view_lsae_server <- function(id, path_pack){
       })
 
       output$dt_expect_ae <- renderDataTable({
+        req(rv_view_lsae$dt_expect_ae)
+
         dt_expect_ae <- rv_view_lsae$dt_expect_ae
 
-        if(!is.null(dt_expect_ae)){
-          datatable(
-            dt_expect_ae,
-            selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_expect_ae), ordering = FALSE, autoWidth = FALSE),
-            rownames = FALSE
-          ) %>%
-            formatSignif(columns = c("Alpha", "LSAE"), digits = 4) %>%
-            formatStyle(names(dt_expect_ae), lineHeight = "80%")
+        datatable(
+          dt_expect_ae,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_expect_ae), ordering = FALSE, autoWidth = FALSE),
+          rownames = FALSE
+        ) %>%
+          formatSignif(columns = c("Alpha", "LSAE"), digits = 4) %>%
+          formatStyle(names(dt_expect_ae), lineHeight = "80%")
+      })
+
+      output$button_all_mle <- renderUI({
+        req(rv_view_lsae$dt_expect_ae)
+        actionButton(session$ns("act_all_mle"), label = "View all MLE attempts")
+      })
+
+      observeEvent(input$act_all_mle, {
+        showModal(modalDialog(
+          title = "All MLE attempts",
+          dataTableOutput(session$ns("dt_all_mle")),
+          easyClose = TRUE,
+          footer = NULL
+        ) %>% tagAppendAttributes(class = "edit-modal")
+        )
+      })
+
+      output$dt_all_mle <- renderDataTable({
+        req(rv_view_lsae$dt_expect_ae)
+        req(rv_view_lsae$opt_list_ae)
+        req(rv_view_lsae$min_alpha)
+        req(rv_view_lsae$max_alpha)
+
+        dt_expect_ae <- rv_view_lsae$dt_expect_ae
+        opt_list <- rv_view_lsae$opt_list_ae
+        min_alpha <- rv_view_lsae$min_alpha
+        max_alpha <- rv_view_lsae$max_alpha
+
+        n_mk <- length(opt_list[[1]][["par"]])
+        count_mle <- length(opt_list)
+
+        mat_all_mle <- matrix(NA, n_mk + 1, count_mle)
+        all_scores <- rep(NA, count_mle)
+
+        for(i in 1:count_mle){
+          opt_one <- opt_list[[i]]
+          all_scores[i] <- score <- opt_one$value
+          est_params <- opt_one$par
+
+          alpha <- est_params * (max_alpha - min_alpha) + min_alpha
+          lsae <- n_mk * (alpha + 1) / (sum(alpha) + n_mk)
+
+          mat_all_mle[1, i] <- - score / log(10)
+          mat_all_mle[2:(n_mk + 1), i] <- lsae
         }
+
+        dt_all_mle <- as.data.table(mat_all_mle)
+        names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
+
+        name_param <- paste0("LSAE ", dt_expect_ae$Marker)
+        dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
+        setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
+
+        all_scores_round <- round(all_scores, 3)
+        index_converged <- which(all_scores_round == min(all_scores_round))
+        name_converged <- paste0("MLE ", index_converged)
+
+        datatable(
+          dt_all_mle,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        ) %>%
+          formatSignif(columns = paste0("MLE ", 1:count_mle), digits = 6) %>%
+          formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
+          formatStyle(name_converged, backgroundColor = "lightblue")
       })
 
       output$warning_message <- renderUI({
@@ -96,77 +180,72 @@ view_lsae_server <- function(id, path_pack){
       })
 
       output$ui_plot_lsae <- renderUI({
-        dt_prop_ae_data_use <- rv_view_lsae$dt_prop_ae_data_use
-
-        if(!is.null(dt_prop_ae_data_use)){
-          plotOutput(session$ns("plot_lsae"), width = "100%", height = "300px")
-        }
+        req(rv_view_lsae$dt_prop_ae_data_use)
+        plotOutput(session$ns("plot_lsae"), width = "100%", height = "300px")
       })
 
       output$plot_lsae <- renderPlot({
+        req(rv_view_lsae$dt_prop_ae_data_use)
+
         dt_prop_ae_data_use <- rv_view_lsae$dt_prop_ae_data_use
+        n_sample <- nrow(dt_prop_ae_data_use)
+        n_mk <- ncol(dt_prop_ae_data_use) - 1
+        markers <- colnames(dt_prop_ae_data_use)[-1]
 
-        if(!is.null(dt_prop_ae_data_use)){
-          n_sample <- nrow(dt_prop_ae_data_use)
-          n_mk <- ncol(dt_prop_ae_data_use) - 1
-          markers <- colnames(dt_prop_ae_data_use)[-1]
+        df <- data.frame(
+          Marker = as.vector(sapply(markers, rep, n_sample)),
+          LSAE = unlist(dt_prop_ae_data_use[, -c("SampleName"), with = FALSE])
+        )
+        df$Marker <- factor(df$Marker, levels = markers)
 
-          df <- data.frame(
-            Marker = as.vector(sapply(markers, rep, n_sample)),
-            LSAE = unlist(dt_prop_ae_data_use[, -c("SampleName"), with = FALSE])
-          )
-          df$Marker <- factor(df$Marker, levels = markers)
+        base_plot <- ggplot(df, aes(x = Marker, y = LSAE)) +
+          geom_boxplot(outlier.colour = "#c0c0c0")
 
-          base_plot <- ggplot(df, aes(x = Marker, y = LSAE)) +
-            geom_boxplot(outlier.colour = "#c0c0c0")
-
-          df_select_lsae <- rv_view_lsae$df_select_lsae
-          if(!is.null(df_select_lsae)){
-            base_plot <- base_plot +
-              geom_point(
-                data = df_select_lsae,
-                aes(x = Marker, y = LSAE),
-                color = "#e9bc00"
-              )
-          }
-
-          base_plot +
-            theme(
-              plot.title = element_text(size = 14),
-              legend.text = element_text(size = 12),
-              axis.title.x = element_text(size = 12),
-              axis.title.y = element_text(size = 12),
-              axis.text.x = element_text(size = 12, angle = 90, hjust = 1, vjust = 0.5),
-              axis.text.y = element_text(size = 12)
+        df_select_lsae <- rv_view_lsae$df_select_lsae
+        if(!is.null(df_select_lsae)){
+          base_plot <- base_plot +
+            geom_point(
+              data = df_select_lsae,
+              aes(x = Marker, y = LSAE),
+              color = "#e9bc00"
             )
         }
+
+        base_plot +
+          theme(
+            plot.title = element_text(size = 14),
+            legend.text = element_text(size = 12),
+            axis.title.x = element_text(size = 12),
+            axis.title.y = element_text(size = 12),
+            axis.text.x = element_text(size = 12, angle = 90, hjust = 1, vjust = 0.5),
+            axis.text.y = element_text(size = 12)
+          )
       })
 
       output$dt_lsae_data <- renderDataTable({
+        req(rv_view_lsae$dt_prop_ae_data_use)
+
         dt_prop_ae_data_use <- rv_view_lsae$dt_prop_ae_data_use
+        markers <- colnames(dt_prop_ae_data_use)[-1]
 
-        if(!is.null(dt_prop_ae_data_use)){
-          markers <- colnames(dt_prop_ae_data_use)[-1]
-
-          datatable(
-            dt_prop_ae_data_use,
-            selection = list(mode = "single", target = "row"),
-            options = list(
-              iDisplayLength = 10,
-              autoWidth = FALSE,
-              scrollX = TRUE,
-              columnDefs = list(
-                list(
-                  targets = 0,
-                  width = '300px' # Do not work because of too many columns
-                )
+        datatable(
+          dt_prop_ae_data_use,
+          selection = list(mode = "single", target = "row"),
+          options = list(
+            iDisplayLength = 10,
+            autoWidth = FALSE,
+            scrollX = TRUE,
+            columnDefs = list(
+              list(
+                targets = 0,
+                width = '300px' # Do not work because of too many columns
               )
-            ),
-            rownames = FALSE
-          ) %>%
-            formatSignif(columns = markers, digits = 4) %>%
-            formatStyle(names(dt_prop_ae_data_use), lineHeight = "80%")
-        }
+            )
+          ),
+          rownames = FALSE
+        ) %>%
+          formatSignif(columns = markers, digits = 4) %>%
+          formatStyle(names(dt_prop_ae_data_use), lineHeight = "80%")
       })
 
       observeEvent(input$dt_lsae_data_rows_selected, {

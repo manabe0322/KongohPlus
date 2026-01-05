@@ -6,6 +6,16 @@ est_gamma_result_ui <- function(id){
 
   tabPanel(
     "Result",
+    tags$style("
+             .edit-modal .modal-dialog {
+               width: 90% !important;   /* Expand up to 90% of the screen width */
+               max-width: 2000px;       /* Set maximum width */
+             }
+             .edit-modal .modal-body {
+               max-height: 80vh;        /* Limit height to 80% of the viewport */
+               overflow-y: auto;        /* Enable vertical scrolling if needed */
+             }
+           "),
     br(),
     fluidRow(
       column(
@@ -15,7 +25,9 @@ est_gamma_result_ui <- function(id){
         br(),
         wellPanel(
           h4("Estimated parameters"),
-          dataTableOutput(ns("dt_est_gamma"))
+          dataTableOutput(ns("dt_est_gamma")),
+          br(),
+          uiOutput(ns("button_all_mle"))
         ),
         wellPanel(
           h4("Warnings"),
@@ -58,8 +70,14 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
     function(input, output, session){
       rv_est_gamma_result <- reactiveValues()
       rv_est_gamma_result$warning_message <- NULL
-      rv_est_gamma_result$dt_est_gamma <- NULL
       rv_est_gamma_result$dt_gamma_data <- NULL
+      rv_est_gamma_result$dt_est_gamma <- NULL
+      rv_est_gamma_result$opt_list_gamma <- NULL
+      rv_est_gamma_result$min_scale_allele <- NULL
+      rv_est_gamma_result$max_scale_allele <- NULL
+      rv_est_gamma_result$min_scale_stutter <- NULL
+      rv_est_gamma_result$max_scale_stutter <- NULL
+
       rv_est_gamma_result$df_select_gamma_allele <- NULL
       rv_est_gamma_result$df_select_gamma_stutter <- NULL
       rv_est_gamma_result$df_select_gamma_mix <- NULL
@@ -69,16 +87,28 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
         data_est_gamma <- rv_est_gamma$data_est_gamma
 
         rv_est_gamma_result$warning_message <- NULL
-        rv_est_gamma_result$dt_est_gamma <- NULL
         rv_est_gamma_result$dt_gamma_data <- NULL
+        rv_est_gamma_result$dt_est_gamma <- NULL
+        rv_est_gamma_result$opt_list_gamma <- NULL
+        rv_est_gamma_result$min_scale_allele <- NULL
+        rv_est_gamma_result$max_scale_allele <- NULL
+        rv_est_gamma_result$min_scale_stutter <- NULL
+        rv_est_gamma_result$max_scale_stutter <- NULL
+
         rv_est_gamma_result$df_select_gamma_allele <- NULL
         rv_est_gamma_result$df_select_gamma_stutter <- NULL
         rv_est_gamma_result$df_select_gamma_mix <- NULL
 
         if(!is.null(data_est_gamma)){
           rv_est_gamma_result$warning_message <- data_est_gamma$warning_message
-          rv_est_gamma_result$dt_est_gamma <- data_est_gamma$dt_est_gamma
           rv_est_gamma_result$dt_gamma_data <- data_est_gamma$dt_gamma_data
+          rv_est_gamma_result$dt_est_gamma <- data_est_gamma$dt_est_gamma
+          rv_est_gamma_result$opt_list_gamma <- data_est_gamma$opt_list_gamma
+          rv_est_gamma_result$min_scale_allele <- data_est_gamma$min_scale_allele
+          rv_est_gamma_result$max_scale_allele <- data_est_gamma$max_scale_allele
+          rv_est_gamma_result$min_scale_stutter <- data_est_gamma$min_scale_stutter
+          rv_est_gamma_result$max_scale_stutter <- data_est_gamma$max_scale_stutter
+
           enable("act_saveas_est_gamma_1")
         }else{
           disable("act_saveas_est_gamma_1")
@@ -150,6 +180,74 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
         ) %>%
           formatSignif(columns = c("Value"), digits = 4) %>%
           formatStyle(names(dt_est_gamma), lineHeight = "80%")
+      })
+
+      output$button_all_mle <- renderUI({
+        req(rv_est_gamma_result$dt_est_gamma)
+        actionButton(session$ns("act_all_mle"), label = "View all MLE attempts")
+      })
+
+      observeEvent(input$act_all_mle, {
+        showModal(modalDialog(
+          title = "All MLE attempts",
+          dataTableOutput(session$ns("dt_all_mle")),
+          easyClose = TRUE,
+          footer = NULL
+        ) %>% tagAppendAttributes(class = "edit-modal")
+        )
+      })
+
+      output$dt_all_mle <- renderDataTable({
+        req(rv_est_gamma_result$opt_list_gamma)
+        req(rv_est_gamma_result$min_scale_allele)
+        req(rv_est_gamma_result$max_scale_allele)
+        req(rv_est_gamma_result$min_scale_stutter)
+        req(rv_est_gamma_result$max_scale_stutter)
+
+        opt_list <- rv_est_gamma_result$opt_list_gamma
+        min_scale_allele <- rv_est_gamma_result$min_scale_allele
+        max_scale_allele <- rv_est_gamma_result$max_scale_allele
+        min_scale_stutter <- rv_est_gamma_result$min_scale_stutter
+        max_scale_stutter <- rv_est_gamma_result$max_scale_stutter
+
+        n_param <- length(opt_list[[1]][["par"]])
+        count_mle <- length(opt_list)
+
+        mat_all_mle <- matrix(NA, n_param + 1, count_mle)
+        all_scores <- rep(NA, count_mle)
+
+        for(i in 1:count_mle){
+          opt_one <- opt_list[[i]]
+          all_scores[i] <- score <- opt_one$value
+          est_params <- opt_one$par
+
+          scale_allele <- est_params[1] * (max_scale_allele - min_scale_allele) + min_scale_allele
+          scale_stutter <- est_params[2] * (max_scale_stutter - min_scale_stutter) + min_scale_stutter
+
+          mat_all_mle[1, i] <- - score / log(10)
+          mat_all_mle[2:(n_param + 1), i] <- c(scale_allele, scale_stutter)
+        }
+
+        dt_all_mle <- as.data.table(mat_all_mle)
+        names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
+
+        name_param <- c("Scale parameter (allele)", "Scale parameter (stutter)")
+        dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
+        setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
+
+        all_scores_round <- round(all_scores, 3)
+        index_converged <- which(all_scores_round == min(all_scores_round))
+        name_converged <- paste0("MLE ", index_converged)
+
+        datatable(
+          dt_all_mle,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        ) %>%
+          formatSignif(columns = paste0("MLE ", 1:count_mle), digits = 6) %>%
+          formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
+          formatStyle(name_converged, backgroundColor = "lightblue")
       })
 
       output$warning_message <- renderUI({

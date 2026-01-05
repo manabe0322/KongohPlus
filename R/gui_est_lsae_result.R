@@ -6,6 +6,16 @@ est_lsae_result_ui <- function(id){
 
   tabPanel(
     "Result",
+    tags$style("
+             .edit-modal .modal-dialog {
+               width: 90% !important;   /* Expand up to 90% of the screen width */
+               max-width: 2000px;       /* Set maximum width */
+             }
+             .edit-modal .modal-body {
+               max-height: 80vh;        /* Limit height to 80% of the viewport */
+               overflow-y: auto;        /* Enable vertical scrolling if needed */
+             }
+           "),
     br(),
     fluidRow(
       column(
@@ -15,7 +25,9 @@ est_lsae_result_ui <- function(id){
         br(),
         wellPanel(
           h4("Expected LSAE"),
-          dataTableOutput(ns("dt_expect_ae"))
+          dataTableOutput(ns("dt_expect_ae")),
+          br(),
+          uiOutput(ns("button_all_mle"))
         ),
         wellPanel(
           h4("Warnings"),
@@ -47,6 +59,9 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
       rv_est_lsae_result$warning_message <- NULL
       rv_est_lsae_result$dt_prop_ae_data_use <- NULL
       rv_est_lsae_result$dt_expect_ae <- NULL
+      rv_est_lsae_result$opt_list_ae <- NULL
+      rv_est_lsae_result$min_alpha <- NULL
+      rv_est_lsae_result$max_alpha <- NULL
       rv_est_lsae_result$df_select_lsae <- NULL
 
       observe({
@@ -56,12 +71,18 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
         rv_est_lsae_result$warning_message <- NULL
         rv_est_lsae_result$dt_prop_ae_data_use <- NULL
         rv_est_lsae_result$dt_expect_ae <- NULL
+        rv_est_lsae_result$opt_list_ae <- NULL
+        rv_est_lsae_result$min_alpha <- NULL
+        rv_est_lsae_result$max_alpha <- NULL
         rv_est_lsae_result$df_select_lsae <- NULL
 
         if(!is.null(data_est_lsae)){
           rv_est_lsae_result$warning_message <- data_est_lsae$warning_message
           rv_est_lsae_result$dt_prop_ae_data_use <- data_est_lsae$dt_prop_ae_data_use
           rv_est_lsae_result$dt_expect_ae <- data_est_lsae$dt_expect_ae
+          rv_est_lsae_result$opt_list_ae <- data_est_lsae$opt_list_ae
+          rv_est_lsae_result$min_alpha <- data_est_lsae$min_alpha
+          rv_est_lsae_result$max_alpha <- data_est_lsae$max_alpha
           enable("act_saveas_est_lsae_1")
         }else{
           disable("act_saveas_est_lsae_1")
@@ -133,6 +154,72 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
         ) %>%
           formatSignif(columns = c("Alpha", "LSAE"), digits = 4) %>%
           formatStyle(names(dt_expect_ae), lineHeight = "80%")
+      })
+
+      output$button_all_mle <- renderUI({
+        req(rv_est_lsae_result$dt_expect_ae)
+        actionButton(session$ns("act_all_mle"), label = "View all MLE attempts")
+      })
+
+      observeEvent(input$act_all_mle, {
+        showModal(modalDialog(
+          title = "All MLE attempts",
+          dataTableOutput(session$ns("dt_all_mle")),
+          easyClose = TRUE,
+          footer = NULL
+        ) %>% tagAppendAttributes(class = "edit-modal")
+        )
+      })
+
+      output$dt_all_mle <- renderDataTable({
+        req(rv_est_lsae_result$dt_expect_ae)
+        req(rv_est_lsae_result$opt_list_ae)
+        req(rv_est_lsae_result$min_alpha)
+        req(rv_est_lsae_result$max_alpha)
+
+        dt_expect_ae <- rv_est_lsae_result$dt_expect_ae
+        opt_list <- rv_est_lsae_result$opt_list_ae
+        min_alpha <- rv_est_lsae_result$min_alpha
+        max_alpha <- rv_est_lsae_result$max_alpha
+
+        n_mk <- length(opt_list[[1]][["par"]])
+        count_mle <- length(opt_list)
+
+        mat_all_mle <- matrix(NA, n_mk + 1, count_mle)
+        all_scores <- rep(NA, count_mle)
+
+        for(i in 1:count_mle){
+          opt_one <- opt_list[[i]]
+          all_scores[i] <- score <- opt_one$value
+          est_params <- opt_one$par
+
+          alpha <- est_params * (max_alpha - min_alpha) + min_alpha
+          lsae <- n_mk * (alpha + 1) / (sum(alpha) + n_mk)
+
+          mat_all_mle[1, i] <- - score / log(10)
+          mat_all_mle[2:(n_mk + 1), i] <- lsae
+        }
+
+        dt_all_mle <- as.data.table(mat_all_mle)
+        names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
+
+        name_param <- paste0("LSAE ", dt_expect_ae$Marker)
+        dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
+        setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
+
+        all_scores_round <- round(all_scores, 3)
+        index_converged <- which(all_scores_round == min(all_scores_round))
+        name_converged <- paste0("MLE ", index_converged)
+
+        datatable(
+          dt_all_mle,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        ) %>%
+          formatSignif(columns = paste0("MLE ", 1:count_mle), digits = 6) %>%
+          formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
+          formatStyle(name_converged, backgroundColor = "lightblue")
       })
 
       output$warning_message <- renderUI({

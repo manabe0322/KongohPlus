@@ -6,6 +6,16 @@ est_dropin_ui <- function(id){
 
   tabPanel("6. Estimate the drop-in parameters",
            titlePanel("6. Estimate the drop-in parameters"),
+           tags$style("
+             .edit-modal .modal-dialog {
+               width: 90% !important;   /* Expand up to 90% of the screen width */
+               max-width: 2000px;       /* Set maximum width */
+             }
+             .edit-modal .modal-body {
+               max-height: 80vh;        /* Limit height to 80% of the viewport */
+               overflow-y: auto;        /* Enable vertical scrolling if needed */
+             }
+           "),
            br(),
            fluidRow(
              column(
@@ -35,7 +45,9 @@ est_dropin_ui <- function(id){
                4,
                wellPanel(
                  h4("Estimated parameters"),
-                 dataTableOutput(ns("dt_est_dropin"))
+                 dataTableOutput(ns("dt_est_dropin")),
+                 br(),
+                 uiOutput(ns("button_all_mle"))
                ),
                wellPanel(
                  h4("Warnings"),
@@ -86,6 +98,11 @@ est_dropin_server <- function(id, path_pack){
       rv_est_dropin_result$warning_message <- NULL
       rv_est_dropin_result$dt_est_dropin <- NULL
       rv_est_dropin_result$dt_dropin_data <- NULL
+      rv_est_dropin_result$opt_list_di <- NULL
+      rv_est_dropin_result$min_shape_di <- NULL
+      rv_est_dropin_result$max_shape_di <- NULL
+      rv_est_dropin_result$min_scale_di <- NULL
+      rv_est_dropin_result$max_scale_di <- NULL
 
       # Load non template control data
       observeEvent(input$ntc_data, {
@@ -363,11 +380,23 @@ est_dropin_server <- function(id, path_pack){
           rv_est_dropin_result$warning_message <- data_est_dropin$warning_message
           rv_est_dropin_result$dt_est_dropin <- data_est_dropin$dt_est_dropin
           rv_est_dropin_result$dt_dropin_data <- data_est_dropin$dt_dropin_data
+          rv_est_dropin_result$opt_list_di <- data_est_dropin$opt_list_di
+          rv_est_dropin_result$min_shape_di <- data_est_dropin$min_shape_di
+          rv_est_dropin_result$max_shape_di <- data_est_dropin$max_shape_di
+          rv_est_dropin_result$min_scale_di <- data_est_dropin$min_scale_di
+          rv_est_dropin_result$max_scale_di <- data_est_dropin$max_scale_di
+
           enable("act_saveas_est_dropin_1")
         }else{
           rv_est_dropin_result$warning_message <- NULL
           rv_est_dropin_result$dt_est_dropin <- NULL
           rv_est_dropin_result$dt_dropin_data <- NULL
+          rv_est_dropin_result$opt_list_di <- NULL
+          rv_est_dropin_result$min_shape_di <- NULL
+          rv_est_dropin_result$max_shape_di <- NULL
+          rv_est_dropin_result$min_scale_di <- NULL
+          rv_est_dropin_result$max_scale_di <- NULL
+
           disable("act_saveas_est_dropin_1")
         }
       })
@@ -435,6 +464,74 @@ est_dropin_server <- function(id, path_pack){
           options = list(dom = "t", iDisplayLength = nrow(dt_est_dropin), ordering = FALSE, autowidth = FALSE),
           rownames = FALSE
         )
+      })
+
+      output$button_all_mle <- renderUI({
+        req(rv_est_dropin_result$dt_est_dropin)
+        actionButton(session$ns("act_all_mle"), label = "View all MLE attempts")
+      })
+
+      observeEvent(input$act_all_mle, {
+        showModal(modalDialog(
+          title = "All MLE attempts",
+          dataTableOutput(session$ns("dt_all_mle")),
+          easyClose = TRUE,
+          footer = NULL
+        ) %>% tagAppendAttributes(class = "edit-modal")
+        )
+      })
+
+      output$dt_all_mle <- renderDataTable({
+        req(rv_est_dropin_result$opt_list_di)
+        req(rv_est_dropin_result$min_shape_di)
+        req(rv_est_dropin_result$max_shape_di)
+        req(rv_est_dropin_result$min_scale_di)
+        req(rv_est_dropin_result$max_scale_di)
+
+        opt_list <- rv_est_dropin_result$opt_list_di
+        min_shape_di <- rv_est_dropin_result$min_shape_di
+        max_shape_di <- rv_est_dropin_result$max_shape_di
+        min_scale_di <- rv_est_dropin_result$min_scale_di
+        max_scale_di <- rv_est_dropin_result$max_scale_di
+
+        n_param <- length(opt_list[[1]][["par"]])
+        count_mle <- length(opt_list)
+
+        mat_all_mle <- matrix(NA, n_param + 1, count_mle)
+        all_scores <- rep(NA, count_mle)
+
+        for(i in 1:count_mle){
+          opt_one <- opt_list[[i]]
+          all_scores[i] <- score <- opt_one$value
+          est_params <- opt_one$par
+
+          shape <- est_params[1] * (max_shape_di - min_shape_di) + min_shape_di
+          scale <- est_params[2] * (max_scale_di - min_scale_di) + min_scale_di
+
+          mat_all_mle[1, i] <- - score / log(10)
+          mat_all_mle[2:(n_param + 1), i] <- c(shape, scale)
+        }
+
+        dt_all_mle <- as.data.table(mat_all_mle)
+        names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
+
+        name_param <- c("Shape parameter", "Scale parameter")
+        dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
+        setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
+
+        all_scores_round <- round(all_scores, 3)
+        index_converged <- which(all_scores_round == min(all_scores_round))
+        name_converged <- paste0("MLE ", index_converged)
+
+        datatable(
+          dt_all_mle,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        ) %>%
+          formatSignif(columns = paste0("MLE ", 1:count_mle), digits = 6) %>%
+          formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
+          formatStyle(name_converged, backgroundColor = "lightblue")
       })
 
       output$warning_message <- renderUI({
