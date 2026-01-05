@@ -5,6 +5,16 @@ deconvo_result_ui <- function(id){
   ns <- NS(id)
 
   tabPanel("Result",
+           tags$style("
+             .edit-modal .modal-dialog {
+               width: 90% !important;   /* Expand up to 90% of the screen width */
+               max-width: 2000px;       /* Set maximum width */
+             }
+             .edit-modal .modal-body {
+               max-height: 80vh;        /* Limit height to 80% of the viewport */
+               overflow-y: auto;        /* Enable vertical scrolling if needed */
+             }
+           "),
            br(),
            fluidRow(
              column(2,
@@ -22,13 +32,18 @@ deconvo_result_ui <- function(id){
                       h4(textOutput(ns("title_param"))),
                       fluidRow(
                         column(
-                          6,
+                          3,
                           uiOutput(ns("select_noc_param"))
                         ),
                         column(
-                          6,
+                          5,
                           br(),
                           uiOutput(ns("button_ave_ph"))
+                        ),
+                        column(
+                          4,
+                          br(),
+                          uiOutput(ns("button_all_mle"))
                         )
                       ),
                       uiOutput(ns("param")),
@@ -60,6 +75,11 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       rv_deconvo_result$data_hnc_list <- NULL
       rv_deconvo_result$min_size <- NULL
       rv_deconvo_result$max_size <- NULL
+      rv_deconvo_result$min_temp <- NULL
+      rv_deconvo_result$max_temp <- NULL
+      rv_deconvo_result$min_deg <- NULL
+      rv_deconvo_result$min_rep_ae <- NULL
+      rv_deconvo_result$max_rep_ae <- NULL
 
       rowCallback <- c(
         "function(row, data){",
@@ -76,25 +96,20 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         req(rv_deconvo$data_deconvo)
 
         data_deconvo <- rv_deconvo$data_deconvo
-        if(!is.null(data_deconvo)){
-          rv_deconvo_result$dt_param <- NULL
-          rv_deconvo_result$error_message <- NULL
-          rv_deconvo_result$markers_use <- data_deconvo$markers_use
-          rv_deconvo_result$message_sr <- data_deconvo$message_sr
-          rv_deconvo_result$hnc_all <- data_deconvo$hnc_all
-          rv_deconvo_result$data_hnc_list <- data_deconvo$data_hnc_list
-          rv_deconvo_result$min_size <- data_deconvo$min_size
-          rv_deconvo_result$max_size <- data_deconvo$max_size
-        }else{
-          rv_deconvo_result$dt_param <- NULL
-          rv_deconvo_result$error_message <- NULL
-          rv_deconvo_result$markers_use <- NULL
-          rv_deconvo_result$message_sr <- NULL
-          rv_deconvo_result$hnc_all <- NULL
-          rv_deconvo_result$data_hnc_list <- NULL
-          rv_deconvo_result$min_size <- NULL
-          rv_deconvo_result$max_size <- NULL
-        }
+
+        rv_deconvo_result$dt_param <- NULL
+        rv_deconvo_result$error_message <- NULL
+        rv_deconvo_result$markers_use <- data_deconvo$markers_use
+        rv_deconvo_result$message_sr <- data_deconvo$message_sr
+        rv_deconvo_result$hnc_all <- data_deconvo$hnc_all
+        rv_deconvo_result$data_hnc_list <- data_deconvo$data_hnc_list
+        rv_deconvo_result$min_size <- data_deconvo$min_size
+        rv_deconvo_result$max_size <- data_deconvo$max_size
+        rv_deconvo_result$min_temp <- data_deconvo$min_temp
+        rv_deconvo_result$max_temp <- data_deconvo$max_temp
+        rv_deconvo_result$min_deg <- data_deconvo$min_deg
+        rv_deconvo_result$min_rep_ae <- data_deconvo$min_rep_ae
+        rv_deconvo_result$max_rep_ae <- data_deconvo$max_rep_ae
       })
 
       output$title_warnings <- renderText({
@@ -197,6 +212,99 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         ))
       })
 
+      output$button_all_mle <- renderUI({
+        req(rv_deconvo$data_deconvo)
+        actionButton(session$ns("act_all_mle"), label = "View all MLE attempts")
+      })
+
+      observeEvent(input$act_all_mle, {
+        showModal(modalDialog(
+          title = "All MLE attempts",
+          dataTableOutput(session$ns("dt_all_mle")),
+          easyClose = TRUE,
+          footer = NULL
+        ) %>% tagAppendAttributes(class = "edit-modal")
+        )
+      })
+
+      output$dt_all_mle <- renderDataTable({
+        req(rv_deconvo_result$hnc_all)
+        req(rv_deconvo_result$data_hnc_list)
+        req(rv_deconvo_result$dt_param)
+        req(rv_deconvo_result$min_temp)
+        req(rv_deconvo_result$max_temp)
+        req(rv_deconvo_result$min_deg)
+        req(rv_deconvo_result$min_rep_ae)
+        req(rv_deconvo_result$max_rep_ae)
+
+        hnc_all <- rv_deconvo_result$hnc_all
+        data_hnc_list <- rv_deconvo_result$data_hnc_list
+        dt_param <- rv_deconvo_result$dt_param
+        min_temp <- rv_deconvo_result$min_temp
+        max_temp <- rv_deconvo_result$max_temp
+        min_deg <- rv_deconvo_result$min_deg
+        min_rep_ae <- rv_deconvo_result$min_rep_ae
+        max_rep_ae <- rv_deconvo_result$max_rep_ae
+
+        hnc <- as.integer(input$select_noc_param)
+        index_hnc <- which(hnc_all == hnc)
+
+        if(length(index_hnc) != 0){
+          data_hnc <- data_hnc_list[[index_hnc]]
+          opt_list <- data_hnc$opt_list
+
+          n_rep <- length(which(dt_param$Parameter == "Replicate amplification efficiency"))
+
+          n_param <- nrow(dt_param) - hnc
+          count_mle <- length(opt_list)
+
+          mat_all_mle <- matrix(NA, n_param + 1, count_mle)
+          all_scores <- rep(NA, count_mle)
+          for(i in 1:count_mle){
+            opt_one <- opt_list[[i]]
+            all_scores[i] <- score <- opt_one$value
+            est_params <- opt_one$par
+
+            temp <- est_params[1:hnc] * (max_temp - min_temp) + min_temp
+            deg <- est_params[(hnc + 1):(2 * hnc)] * (1 - min_deg) + min_deg
+            if(n_rep == 1){
+              rep_ae <- 1
+            }else{
+              rep_ae <- c(1, est_params[(2 * hnc + 1):(2 * hnc + n_rep - 1)] * (max_rep_ae - min_rep_ae) + min_rep_ae)
+            }
+
+            index_order <- order(temp, decreasing = TRUE)
+            temp <- temp[index_order]
+            deg <- deg[index_order]
+
+            mat_all_mle[1, i] <- - score / log(10)
+            mat_all_mle[2:(n_param + 1), i] <- c(temp, deg, rep_ae)
+          }
+
+          dt_all_mle <- as.data.table(mat_all_mle)
+          names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
+
+          name_param <- dt_param$Parameter
+          name_param <- name_param[name_param != "Mixture proportion"]
+          dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
+          setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
+
+          all_scores_round <- round(all_scores, 3)
+          index_converged <- which(all_scores_round == min(all_scores_round))
+          name_converged <- paste0("MLE ", index_converged)
+
+          datatable(
+            dt_all_mle,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
+            rownames = FALSE
+          ) %>%
+            formatSignif(columns = paste0("MLE ", 1:count_mle), digits = 6) %>%
+            formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
+            formatStyle(name_converged, backgroundColor = "lightblue")
+        }
+      })
+
       output$plot_ave_ph <- renderPlot({
         create_fig_eph(rv_deconvo_result$dt_param, rv_deconvo_result$min_size, rv_deconvo_result$max_size)
       })
@@ -207,7 +315,9 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
 
         hnc_all <- rv_deconvo_result$hnc_all
         data_hnc_list <- rv_deconvo_result$data_hnc_list
-        index_hnc <- which(hnc_all == input$select_noc_param)
+
+        select_noc_param <- as.integer(input$select_noc_param)
+        index_hnc <- which(hnc_all == select_noc_param)
 
         if(length(index_hnc) != 0){
           data_hnc <- data_hnc_list[[index_hnc]]
@@ -223,7 +333,7 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       })
 
       output$param <- renderUI({
-        req(rv_deconvo$data_deconvo)
+        req(rv_deconvo_result$dt_param)
 
         dt_param <- rv_deconvo_result$dt_param
         if(is.null(dt_param)){
