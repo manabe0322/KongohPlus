@@ -5,12 +5,26 @@ est_sr_result_ui <- function(id){
   ns <- NS(id)
 
   tabPanel("Result",
+           tags$style("
+             .edit-modal .modal-dialog {
+               width: 90% !important;   /* Expand up to 90% of the screen width */
+               max-width: 2000px;       /* Set maximum width */
+             }
+             .edit-modal .modal-body {
+               max-height: 80vh;        /* Limit height to 80% of the viewport */
+               overflow-y: auto;        /* Enable vertical scrolling if needed */
+             }
+           "),
            br(),
            fluidRow(
              column(3,
                     actionButton(ns("act_saveas_est_sr_1"), label = "Save as", class = "btn btn-primary btn-lg"),
                     br(),
                     br(),
+                    wellPanel(
+                      selectInput(ns("select_mk"), label = h4("Marker"), choices = character(0), selected = NULL, multiple = FALSE, selectize = FALSE),
+                      selectInput(ns("select_st_type"), label = h4("Stutter type"), choices = character(0), selected = NULL, multiple = FALSE, selectize = FALSE)
+                    ),
                     wellPanel(
                       h4("Warnings"),
                       htmlOutput(ns("warning_message")),
@@ -19,12 +33,12 @@ est_sr_result_ui <- function(id){
              ),
              column(4,
                     wellPanel(
-                      uiOutput(ns("select_mk")),
-                      uiOutput(ns("select_st_type"))
-                    ),
-                    wellPanel(
                       h4("Average stutter ratio"),
                       dataTableOutput(ns("dt_average_sr_display"))
+                    ),
+                    wellPanel(
+                      h4("View all MLE attempts"),
+                      uiOutput(ns("buttons_all_mle"))
                     )
              ),
              column(5,
@@ -53,14 +67,32 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
       rv_est_sr_result$dt_setting_est_sr <- NULL
       rv_est_sr_result$dt_sr_data <- NULL
       rv_est_sr_result$name_kit_stutter <- NULL
+
+      rv_est_sr_result$opt_list_all_mk_bsr <- NULL
+      rv_est_sr_result$opt_list_all_mk_fsr <- NULL
+      rv_est_sr_result$opt_list_all_mk_dsr <- NULL
+      rv_est_sr_result$opt_list_all_mk_m2sr <- NULL
+      rv_est_sr_result$min_myu <- NULL
+      rv_est_sr_result$max_myu <- NULL
+      rv_est_sr_result$min_slope <- NULL
+      rv_est_sr_result$max_slope <- NULL
+      rv_est_sr_result$min_intercept <- NULL
+      rv_est_sr_result$max_intercept <- NULL
+      rv_est_sr_result$min_sigma <- NULL
+      rv_est_sr_result$max_sigma <- NULL
+
       rv_est_sr_result$dt_average_sr <- NULL
       rv_est_sr_result$dt_st_type <- NULL
       rv_est_sr_result$meth_all_mk <- NULL
       rv_est_sr_result$meth <- NULL
       rv_est_sr_result$dt_st_mk <- NULL
       rv_est_sr_result$dt_kit_mk <- NULL
-      rv_est_sr_result$dt_sr_data_display <- NULL
       rv_est_sr_result$df_select_sr <- NULL
+      rv_est_sr_result$dt_sr_data_display <- NULL
+      rv_est_sr_result$opt_select_mk_bsr <- NULL
+      rv_est_sr_result$opt_select_mk_fsr <- NULL
+      rv_est_sr_result$opt_select_mk_dsr <- NULL
+      rv_est_sr_result$opt_select_mk_m2sr <- NULL
 
       observe({
         req(rv_est_sr)
@@ -72,14 +104,32 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         rv_est_sr_result$dt_setting_est_sr <- NULL
         rv_est_sr_result$dt_sr_data <- NULL
         rv_est_sr_result$name_kit_stutter <- NULL
+
+        rv_est_sr_result$opt_list_all_mk_bsr <- NULL
+        rv_est_sr_result$opt_list_all_mk_fsr <- NULL
+        rv_est_sr_result$opt_list_all_mk_dsr <- NULL
+        rv_est_sr_result$opt_list_all_mk_m2sr <- NULL
+        rv_est_sr_result$min_myu <- NULL
+        rv_est_sr_result$max_myu <- NULL
+        rv_est_sr_result$min_slope <- NULL
+        rv_est_sr_result$max_slope <- NULL
+        rv_est_sr_result$min_intercept <- NULL
+        rv_est_sr_result$max_intercept <- NULL
+        rv_est_sr_result$min_sigma <- NULL
+        rv_est_sr_result$max_sigma <- NULL
+
         rv_est_sr_result$dt_average_sr <- NULL
         rv_est_sr_result$dt_st_type <- NULL
         rv_est_sr_result$meth_all_mk <- NULL
         rv_est_sr_result$meth <- NULL
         rv_est_sr_result$dt_st_mk <- NULL
         rv_est_sr_result$dt_kit_mk <- NULL
-        rv_est_sr_result$dt_sr_data_display <- NULL
         rv_est_sr_result$df_select_sr <- NULL
+        rv_est_sr_result$dt_sr_data_display <- NULL
+        rv_est_sr_result$opt_select_mk_bsr <- NULL
+        rv_est_sr_result$opt_select_mk_fsr <- NULL
+        rv_est_sr_result$opt_select_mk_dsr <- NULL
+        rv_est_sr_result$opt_select_mk_m2sr <- NULL
 
         if(!is.null(data_est_sr)){
           rv_est_sr_result$markers_auto <- names(data_est_sr$list_dt_average_sr)
@@ -88,21 +138,24 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           rv_est_sr_result$dt_setting_est_sr <- data_est_sr$dt_setting_est_sr
           rv_est_sr_result$dt_sr_data <- data_est_sr$dt_sr_data
           rv_est_sr_result$name_kit_stutter <- data_est_sr$name_kit_stutter
+
+          rv_est_sr_result$opt_list_all_mk_bsr <- data_est_sr$opt_list_all_mk_bsr
+          rv_est_sr_result$opt_list_all_mk_fsr <- data_est_sr$opt_list_all_mk_fsr
+          rv_est_sr_result$opt_list_all_mk_dsr <- data_est_sr$opt_list_all_mk_dsr
+          rv_est_sr_result$opt_list_all_mk_m2sr <- data_est_sr$opt_list_all_mk_m2sr
+          rv_est_sr_result$min_myu <- data_est_sr$min_myu
+          rv_est_sr_result$max_myu <- data_est_sr$max_myu
+          rv_est_sr_result$min_slope <- data_est_sr$min_slope
+          rv_est_sr_result$max_slope <- data_est_sr$max_slope
+          rv_est_sr_result$min_intercept <- data_est_sr$min_intercept
+          rv_est_sr_result$max_intercept <- data_est_sr$max_intercept
+          rv_est_sr_result$min_sigma <- data_est_sr$min_sigma
+          rv_est_sr_result$max_sigma <- data_est_sr$max_sigma
+
           enable("act_saveas_est_sr_1")
         }else{
           disable("act_saveas_est_sr_1")
         }
-      })
-
-      output$select_mk <- renderUI({
-        req(rv_est_sr_result$markers_auto)
-        markers_auto <- rv_est_sr_result$markers_auto
-        selectInput(session$ns("select_mk"), label = h4("Marker"), choices = markers_auto, selected = markers_auto[1], multiple = FALSE, selectize = FALSE)
-      })
-
-      output$select_st_type <- renderUI({
-        req(rv_est_sr_result$markers_auto)
-        selectInput(session$ns("select_st_type"), label = h4("Stutter type"), choices = c("Back stutter", "Forward stutter", "Double-back stutter", "Minus 2-nt stutter"), selected = "Back stutter", multiple = FALSE, selectize = FALSE)
       })
 
       observeEvent(input$act_saveas_est_sr_1, {
@@ -155,20 +208,53 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         }
       })
 
-      output$warning_message <- renderUI({
-        req(rv_est_sr_result$warning_message)
-        HTML(rv_est_sr_result$warning_message)
+      observeEvent(rv_est_sr_result$markers_auto, {
+        markers_auto <- rv_est_sr_result$markers_auto
+        if(length(markers_auto) == 0){
+          updateSelectInput(session, "select_mk", choices = character(0), selected = character(0))
+          updateSelectInput(session, "select_st_type", choices = character(0), selected = character(0))
+        }else{
+          prev_mk <- isolate(input$select_mk)
+          if(!is.null(prev_mk) && prev_mk %in% markers_auto){
+            current_mk <- prev_mk
+          }else{
+            current_mk <- markers_auto[1]
+          }
+          updateSelectInput(session, "select_mk", choices = markers_auto, selected = current_mk)
+
+          prev_st_type <- isolate(input$select_st_type)
+          if(!is.null(prev_st_type) && prev_st_type %in% c("Back stutter", "Forward stutter", "Double-back stutter", "Minus 2-nt stutter")){
+            current_st_type <- prev_st_type
+          }else{
+            current_st_type <- "Back stutter"
+          }
+          updateSelectInput(session, "select_st_type", choices = c("Back stutter", "Forward stutter", "Double-back stutter", "Minus 2-nt stutter"), selected = current_st_type)
+        }
       })
 
       observeEvent(list(input$select_mk, input$select_st_type), {
+        req(rv_est_sr_result$markers_auto)
         req(rv_est_sr_result$list_dt_average_sr)
         req(rv_est_sr_result$dt_setting_est_sr)
         req(rv_est_sr_result$dt_sr_data)
         req(rv_est_sr_result$name_kit_stutter)
+        req(rv_est_sr_result$opt_list_all_mk_bsr)
+        req(rv_est_sr_result$opt_list_all_mk_fsr)
+        req(rv_est_sr_result$opt_list_all_mk_dsr)
+        req(rv_est_sr_result$opt_list_all_mk_m2sr)
+
+        select_mk <- input$select_mk
+        select_st_type <- input$select_st_type
+
+        markers_auto <- rv_est_sr_result$markers_auto
         list_dt_average_sr <- rv_est_sr_result$list_dt_average_sr
         dt_setting_est_sr <- rv_est_sr_result$dt_setting_est_sr
         dt_sr_data <- rv_est_sr_result$dt_sr_data
         name_kit_stutter <- rv_est_sr_result$name_kit_stutter
+        opt_list_all_mk_bsr <- rv_est_sr_result$opt_list_all_mk_bsr
+        opt_list_all_mk_fsr <- rv_est_sr_result$opt_list_all_mk_fsr
+        opt_list_all_mk_dsr <- rv_est_sr_result$opt_list_all_mk_dsr
+        opt_list_all_mk_m2sr <- rv_est_sr_result$opt_list_all_mk_m2sr
 
         rv_est_sr_result$dt_average_sr <- NULL
         rv_est_sr_result$dt_st_type <- NULL
@@ -177,54 +263,69 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         rv_est_sr_result$dt_st_mk <- NULL
         rv_est_sr_result$dt_kit_mk <- NULL
         rv_est_sr_result$df_select_sr <- NULL
+        rv_est_sr_result$dt_sr_data_display <- NULL
+        rv_est_sr_result$opt_select_mk_bsr <- NULL
+        rv_est_sr_result$opt_select_mk_fsr <- NULL
+        rv_est_sr_result$opt_select_mk_dsr <- NULL
+        rv_est_sr_result$opt_select_mk_m2sr <- NULL
 
-        select_mk <- input$select_mk
-        select_st_type <- input$select_st_type
+        if(!is.null(select_mk) && !is.null(select_st_type)){
+          rv_est_sr_result$dt_average_sr <- list_dt_average_sr[[select_mk]]
 
-        rv_est_sr_result$dt_average_sr <- list_dt_average_sr[[select_mk]]
+          if(select_st_type == "Back stutter"){
+            dt_st_type <- dt_sr_data[dt_sr_data$Bool_BS]
+            meth_all_mk <- dt_setting_est_sr[["BSR model"]]
+            meth <- meth_all_mk[dt_setting_est_sr$Marker == select_mk]
+          }else if(select_st_type == "Forward stutter"){
+            dt_st_type <- dt_sr_data[dt_sr_data$Bool_FS]
+            meth_all_mk <- dt_setting_est_sr[["FSR model"]]
+            meth <- meth_all_mk[dt_setting_est_sr$Marker == select_mk]
+          }else if(select_st_type == "Double-back stutter"){
+            dt_st_type <- dt_sr_data[dt_sr_data$Bool_DS]
+            meth_all_mk <- dt_setting_est_sr[["DSR model"]]
+            meth <- meth_all_mk[dt_setting_est_sr$Marker == select_mk]
+          }else if(select_st_type == "Minus 2-nt stutter"){
+            dt_st_type <- dt_sr_data[dt_sr_data$Bool_M2S]
+            meth_all_mk <- dt_setting_est_sr[["M2SR model"]]
+            meth <- meth_all_mk[dt_setting_est_sr$Marker == select_mk]
+          }else{
+            dt_st_type <- dt_sr_data[rep(FALSE, nrow(dt_sr_data))]
+            meth_all_mk <- NULL
+            meth <- NULL
+          }
+          rv_est_sr_result$dt_st_type <- dt_st_type
+          rv_est_sr_result$meth_all_mk <- meth_all_mk
+          rv_est_sr_result$meth <- meth
 
-        if(select_st_type == "Back stutter"){
-          dt_st_type <- dt_sr_data[dt_sr_data$Bool_BS]
-          meth_all_mk <- dt_setting_est_sr[["BSR model"]]
-          meth <- meth_all_mk[dt_setting_est_sr$Marker == select_mk]
-        }else if(select_st_type == "Forward stutter"){
-          dt_st_type <- dt_sr_data[dt_sr_data$Bool_FS]
-          meth_all_mk <- dt_setting_est_sr[["FSR model"]]
-          meth <- meth_all_mk[dt_setting_est_sr$Marker == select_mk]
-        }else if(select_st_type == "Double-back stutter"){
-          dt_st_type <- dt_sr_data[dt_sr_data$Bool_DS]
-          meth_all_mk <- dt_setting_est_sr[["DSR model"]]
-          meth <- meth_all_mk[dt_setting_est_sr$Marker == select_mk]
-        }else if(select_st_type == "Minus 2-nt stutter"){
-          dt_st_type <- dt_sr_data[dt_sr_data$Bool_M2S]
-          meth_all_mk <- dt_setting_est_sr[["M2SR model"]]
-          meth <- meth_all_mk[dt_setting_est_sr$Marker == select_mk]
-        }else{
-          dt_st_type <- dt_sr_data[rep(FALSE, nrow(dt_sr_data))]
-          meth_all_mk <- NULL
-          meth <- NULL
+          if(nrow(dt_st_type) != 0){
+            dt_st_mk <- dt_st_type[Marker == select_mk]
+            dt_st_mk <- dt_st_mk[Allele != "Multiple"]
+            dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_SharedAllele]
+            dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_AlleleDropout]
+            dt_st_mk <- dt_st_mk[dt_st_mk$Bool_InfoAllele]
+            rv_est_sr_result$dt_st_mk <- dt_st_mk
+          }
+
+          index_mk <- which(markers_auto == select_mk)
+          rv_est_sr_result$opt_select_mk_bsr <- opt_list_all_mk_bsr[[index_mk]]
+          rv_est_sr_result$opt_select_mk_fsr <- opt_list_all_mk_fsr[[index_mk]]
+          rv_est_sr_result$opt_select_mk_dsr <- opt_list_all_mk_dsr[[index_mk]]
+          rv_est_sr_result$opt_select_mk_m2sr <- opt_list_all_mk_m2sr[[index_mk]]
+
+          dt_kit <- fread(paste0(path_pack, "/extdata/kit/", name_kit_stutter, ".csv"))
+          dt_kit <- try(change_data_type_kit(dt_kit))
+          if(inherits(dt_kit, "try-error")){
+            rv_est_sr_result$dt_kit_mk <- NULL
+            showModal(modalDialog(title = "Error", "The file format of the selected kit is invalid.", easyClose = TRUE, footer = NULL))
+          }else{
+            rv_est_sr_result$dt_kit_mk <- dt_kit[Marker == select_mk]
+          }
         }
-        rv_est_sr_result$dt_st_type <- dt_st_type
-        rv_est_sr_result$meth_all_mk <- meth_all_mk
-        rv_est_sr_result$meth <- meth
+      })
 
-        if(nrow(dt_st_type) != 0){
-          dt_st_mk <- dt_st_type[Marker == select_mk]
-          dt_st_mk <- dt_st_mk[Allele != "Multiple"]
-          dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_SharedAllele]
-          dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_AlleleDropout]
-          dt_st_mk <- dt_st_mk[dt_st_mk$Bool_InfoAllele]
-          rv_est_sr_result$dt_st_mk <- dt_st_mk
-        }
-
-        dt_kit <- fread(paste0(path_pack, "/extdata/kit/", name_kit_stutter, ".csv"))
-        dt_kit <- try(change_data_type_kit(dt_kit))
-        if(inherits(dt_kit, "try-error")){
-          rv_est_sr_result$dt_kit_mk <- NULL
-          showModal(modalDialog(title = "Error", "The file format of the selected kit is invalid.", easyClose = TRUE, footer = NULL))
-        }else{
-          rv_est_sr_result$dt_kit_mk <- dt_kit[Marker == select_mk]
-        }
+      output$warning_message <- renderUI({
+        req(rv_est_sr_result$warning_message)
+        HTML(rv_est_sr_result$warning_message)
       })
 
       output$dt_average_sr_display <- renderDataTable({
@@ -236,11 +337,242 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         datatable(
           dt_average_sr_display,
           selection = "none",
-          options = list(dom = "t", iDisplayLength = nrow(dt_average_sr_display), ordering = FALSE, autoWidth = TRUE, scrollY = "600px", fixedHeader = TRUE),
+          options = list(dom = "t", iDisplayLength = nrow(dt_average_sr_display), ordering = FALSE, autoWidth = TRUE, scrollY = "500px", fixedHeader = TRUE),
           rownames = FALSE
         ) %>%
           formatSignif(columns = c("Average BSR", "Average FSR", "Average DSR", "Average M2SR"), digits = 4) %>%
           formatStyle(names(dt_average_sr_display), lineHeight = "80%")
+      })
+
+      output$buttons_all_mle <- renderUI({
+        req(rv_est_sr_result$opt_list_all_mk_bsr)
+        req(rv_est_sr_result$opt_list_all_mk_fsr)
+        req(rv_est_sr_result$opt_list_all_mk_dsr)
+        req(rv_est_sr_result$opt_list_all_mk_m2sr)
+
+        tagList(
+          actionButton(session$ns("act_all_mle_bsr"), label = "BSR"),
+          actionButton(session$ns("act_all_mle_fsr"), label = "FSR"),
+          actionButton(session$ns("act_all_mle_dsr"), label = "DSR"),
+          actionButton(session$ns("act_all_mle_m2sr"), label = "M2SR")
+        )
+      })
+
+      observeEvent(input$act_all_mle_bsr, {
+        showModal(modalDialog(
+          title = "All MLE attempts (BSR)",
+          dataTableOutput(session$ns("dt_all_mle_bsr")),
+          easyClose = TRUE,
+          footer = NULL
+        ) %>% tagAppendAttributes(class = "edit-modal")
+        )
+      })
+
+      output$dt_all_mle_bsr <- renderDataTable({
+        req(rv_est_sr_result$dt_setting_est_sr)
+        req(rv_est_sr_result$opt_select_mk_bsr)
+        req(rv_est_sr_result$min_myu)
+        req(rv_est_sr_result$max_myu)
+        req(rv_est_sr_result$min_slope)
+        req(rv_est_sr_result$max_slope)
+        req(rv_est_sr_result$min_intercept)
+        req(rv_est_sr_result$max_intercept)
+        req(rv_est_sr_result$min_sigma)
+        req(rv_est_sr_result$max_sigma)
+        req(input$select_mk)
+
+        dt_setting_est_sr <- rv_est_sr_result$dt_setting_est_sr
+        opt_select_mk_sr <- rv_est_sr_result$opt_select_mk_bsr
+        min_myu <- rv_est_sr_result$min_myu
+        max_myu <- rv_est_sr_result$max_myu
+        min_slope <- rv_est_sr_result$min_slope
+        max_slope <- rv_est_sr_result$max_slope
+        min_intercept <- rv_est_sr_result$min_intercept
+        max_intercept <- rv_est_sr_result$max_intercept
+        min_sigma <- rv_est_sr_result$min_sigma
+        max_sigma <- rv_est_sr_result$max_sigma
+
+        select_mk <- input$select_mk
+
+        tmp <- create_dt_all_mle_sr("BSR", dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk)
+        dt_all_mle <- tmp$dt_all_mle
+        count_mle <- tmp$count_mle
+        name_converged <- tmp$name_converged
+
+        if(all(!is.null(dt_all_mle), !is.null(count_mle), !is.null(name_converged))){
+          datatable(
+            dt_all_mle,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
+            rownames = FALSE
+          ) %>%
+            formatSignif(columns = paste0("MLE ", 1:count_mle), digits = 6) %>%
+            formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
+            formatStyle(name_converged, backgroundColor = "lightblue")
+        }
+      })
+
+      observeEvent(input$act_all_mle_fsr, {
+        showModal(modalDialog(
+          title = "All MLE attempts (FSR)",
+          dataTableOutput(session$ns("dt_all_mle_fsr")),
+          easyClose = TRUE,
+          footer = NULL
+        ) %>% tagAppendAttributes(class = "edit-modal")
+        )
+      })
+
+      output$dt_all_mle_fsr <- renderDataTable({
+        req(rv_est_sr_result$dt_setting_est_sr)
+        req(rv_est_sr_result$opt_select_mk_fsr)
+        req(rv_est_sr_result$min_myu)
+        req(rv_est_sr_result$max_myu)
+        req(rv_est_sr_result$min_slope)
+        req(rv_est_sr_result$max_slope)
+        req(rv_est_sr_result$min_intercept)
+        req(rv_est_sr_result$max_intercept)
+        req(rv_est_sr_result$min_sigma)
+        req(rv_est_sr_result$max_sigma)
+        req(input$select_mk)
+
+        dt_setting_est_sr <- rv_est_sr_result$dt_setting_est_sr
+        opt_select_mk_sr <- rv_est_sr_result$opt_select_mk_fsr
+        min_myu <- rv_est_sr_result$min_myu
+        max_myu <- rv_est_sr_result$max_myu
+        min_slope <- rv_est_sr_result$min_slope
+        max_slope <- rv_est_sr_result$max_slope
+        min_intercept <- rv_est_sr_result$min_intercept
+        max_intercept <- rv_est_sr_result$max_intercept
+        min_sigma <- rv_est_sr_result$min_sigma
+        max_sigma <- rv_est_sr_result$max_sigma
+
+        select_mk <- input$select_mk
+
+        tmp <- create_dt_all_mle_sr("FSR", dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk)
+        dt_all_mle <- tmp$dt_all_mle
+        count_mle <- tmp$count_mle
+        name_converged <- tmp$name_converged
+
+        if(all(!is.null(dt_all_mle), !is.null(count_mle), !is.null(name_converged))){
+          datatable(
+            dt_all_mle,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
+            rownames = FALSE
+          ) %>%
+            formatSignif(columns = paste0("MLE ", 1:count_mle), digits = 6) %>%
+            formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
+            formatStyle(name_converged, backgroundColor = "lightblue")
+        }
+      })
+
+      observeEvent(input$act_all_mle_dsr, {
+        showModal(modalDialog(
+          title = "All MLE attempts (DSR)",
+          dataTableOutput(session$ns("dt_all_mle_dsr")),
+          easyClose = TRUE,
+          footer = NULL
+        ) %>% tagAppendAttributes(class = "edit-modal")
+        )
+      })
+
+      output$dt_all_mle_dsr <- renderDataTable({
+        req(rv_est_sr_result$dt_setting_est_sr)
+        req(rv_est_sr_result$opt_select_mk_dsr)
+        req(rv_est_sr_result$min_myu)
+        req(rv_est_sr_result$max_myu)
+        req(rv_est_sr_result$min_slope)
+        req(rv_est_sr_result$max_slope)
+        req(rv_est_sr_result$min_intercept)
+        req(rv_est_sr_result$max_intercept)
+        req(rv_est_sr_result$min_sigma)
+        req(rv_est_sr_result$max_sigma)
+        req(input$select_mk)
+
+        dt_setting_est_sr <- rv_est_sr_result$dt_setting_est_sr
+        opt_select_mk_sr <- rv_est_sr_result$opt_select_mk_dsr
+        min_myu <- rv_est_sr_result$min_myu
+        max_myu <- rv_est_sr_result$max_myu
+        min_slope <- rv_est_sr_result$min_slope
+        max_slope <- rv_est_sr_result$max_slope
+        min_intercept <- rv_est_sr_result$min_intercept
+        max_intercept <- rv_est_sr_result$max_intercept
+        min_sigma <- rv_est_sr_result$min_sigma
+        max_sigma <- rv_est_sr_result$max_sigma
+
+        select_mk <- input$select_mk
+
+        tmp <- create_dt_all_mle_sr("DSR", dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk)
+        dt_all_mle <- tmp$dt_all_mle
+        count_mle <- tmp$count_mle
+        name_converged <- tmp$name_converged
+
+        if(all(!is.null(dt_all_mle), !is.null(count_mle), !is.null(name_converged))){
+          datatable(
+            dt_all_mle,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
+            rownames = FALSE
+          ) %>%
+            formatSignif(columns = paste0("MLE ", 1:count_mle), digits = 6) %>%
+            formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
+            formatStyle(name_converged, backgroundColor = "lightblue")
+        }
+      })
+
+      observeEvent(input$act_all_mle_m2sr, {
+        showModal(modalDialog(
+          title = "All MLE attempts (M2SR)",
+          dataTableOutput(session$ns("dt_all_mle_m2sr")),
+          easyClose = TRUE,
+          footer = NULL
+        ) %>% tagAppendAttributes(class = "edit-modal")
+        )
+      })
+
+      output$dt_all_mle_m2sr <- renderDataTable({
+        req(rv_est_sr_result$dt_setting_est_sr)
+        req(rv_est_sr_result$opt_select_mk_m2sr)
+        req(rv_est_sr_result$min_myu)
+        req(rv_est_sr_result$max_myu)
+        req(rv_est_sr_result$min_slope)
+        req(rv_est_sr_result$max_slope)
+        req(rv_est_sr_result$min_intercept)
+        req(rv_est_sr_result$max_intercept)
+        req(rv_est_sr_result$min_sigma)
+        req(rv_est_sr_result$max_sigma)
+        req(input$select_mk)
+
+        dt_setting_est_sr <- rv_est_sr_result$dt_setting_est_sr
+        opt_select_mk_sr <- rv_est_sr_result$opt_select_mk_m2sr
+        min_myu <- rv_est_sr_result$min_myu
+        max_myu <- rv_est_sr_result$max_myu
+        min_slope <- rv_est_sr_result$min_slope
+        max_slope <- rv_est_sr_result$max_slope
+        min_intercept <- rv_est_sr_result$min_intercept
+        max_intercept <- rv_est_sr_result$max_intercept
+        min_sigma <- rv_est_sr_result$min_sigma
+        max_sigma <- rv_est_sr_result$max_sigma
+        select_mk <- input$select_mk
+
+        tmp <- create_dt_all_mle_sr("M2SR", dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk)
+        dt_all_mle <- tmp$dt_all_mle
+        count_mle <- tmp$count_mle
+        name_converged <- tmp$name_converged
+
+        if(all(!is.null(dt_all_mle), !is.null(count_mle), !is.null(name_converged))){
+          datatable(
+            dt_all_mle,
+            selection = "none",
+            options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
+            rownames = FALSE
+          ) %>%
+            formatSignif(columns = paste0("MLE ", 1:count_mle), digits = 6) %>%
+            formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
+            formatStyle(name_converged, backgroundColor = "lightblue")
+        }else{
+          return(NULL)
+        }
       })
 
       output$ui_plot_sr <- renderUI({

@@ -57,6 +57,79 @@ view_sr_ui <- function(id){
   )
 }
 
+#' create_dt_all_mle_sr
+#'
+#' @description The function to create the data.table of all MLE attempts for the stutter ratios
+#' @param sr_type The type of the stutter ratios: BSR, FSR, DSR, or M2SR
+#' @param dt_setting_est_sr The data.table for the stutter settings
+#' @param opt_select_mk_sr The list of the optimization results for the arbitrary type of the stutter ratios
+#' @param min_myu The minimum myu
+#' @param max_myu The maximum myu
+#' @param min_slope The minimum slope
+#' @param max_slope The maximum slope
+#' @param min_intercept The minimum intercept
+#' @param max_intercept The maximum intercept
+#' @param min_sigma The minimum sigma
+#' @param max_sigma The maximum sigma
+#' @param select_mk The selected marker
+create_dt_all_mle_sr <- function(sr_type, dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk){
+
+  dt_all_mle <- NULL
+  count_mle <- NULL
+  name_converged <- NULL
+
+  if(!is.null(select_mk)){
+
+    model_sr <- dt_setting_est_sr[[paste0(sr_type, " model")]][dt_setting_est_sr[["Marker"]] == select_mk]
+
+    if(!is.null(opt_select_mk_sr)){
+
+      if(is.element(model_sr, c("Linear (Allele)", "Linear (Corrected Allele)"))){
+        name_param <- c("Slope", "Intercept", "Sigma")
+      }else{
+        name_param <- c("Myu", "Sigma")
+      }
+
+      n_param <- length(name_param)
+      count_mle <- length(opt_select_mk_sr)
+
+      mat_all_mle <- matrix(NA, n_param + 1, count_mle)
+      all_scores <- rep(NA, count_mle)
+
+      for(i in 1:count_mle){
+        opt_one <- opt_select_mk_sr[[i]]
+        all_scores[i] <- score <- opt_one$value
+        est_params <- opt_one$par
+
+        vec_params <- rep(NA, n_param)
+        if(n_param == 3){
+          vec_params[1] <- est_params[1] * (max_slope - min_slope) + min_slope
+          vec_params[2] <- est_params[2] * (max_intercept - min_intercept) + min_intercept
+          vec_params[3] <- est_params[3] * (max_sigma - min_sigma) + min_sigma
+        }else{
+          vec_params[1] <- est_params[1] * (max_myu - min_myu) + min_myu
+          vec_params[2] <- est_params[2] * (max_sigma - min_sigma) + min_sigma
+        }
+
+        mat_all_mle[1, i] <- - score / log(10)
+        mat_all_mle[2:(n_param + 1), i] <- vec_params
+      }
+
+      dt_all_mle <- as.data.table(mat_all_mle)
+      names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
+
+      dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
+      setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
+
+      all_scores_round <- round(all_scores, 3)
+      index_converged <- which(all_scores_round == min(all_scores_round))
+      name_converged <- paste0("MLE ", index_converged)
+    }
+  }
+
+  return(list(dt_all_mle = dt_all_mle, count_mle = count_mle, name_converged = name_converged))
+}
+
 #' view_sr_server
 #'
 #' @description The function to create the server module for viewing stutter ratios
@@ -98,66 +171,6 @@ view_sr_server <- function(id, path_pack){
       rv_view_sr$opt_select_mk_fsr <- NULL
       rv_view_sr$opt_select_mk_dsr <- NULL
       rv_view_sr$opt_select_mk_m2sr <- NULL
-
-      # --- The function to create the data.table for all MLE attempts --- #
-
-      create_dt_all_mle_sr <- function(sr_type, dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk){
-
-        dt_all_mle <- NULL
-        count_mle <- NULL
-        name_converged <- NULL
-
-        if(!is.null(select_mk)){
-
-          model_sr <- dt_setting_est_sr[[paste0(sr_type, " model")]][dt_setting_est_sr[["Marker"]] == select_mk]
-
-          if(!is.null(opt_select_mk_sr)){
-
-            if(is.element(model_sr, c("Linear (Allele)", "Linear (Corrected Allele)"))){
-              name_param <- c("Slope", "Intercept", "Sigma")
-            }else{
-              name_param <- c("Myu", "Sigma")
-            }
-
-            n_param <- length(name_param)
-            count_mle <- length(opt_select_mk_sr)
-
-            mat_all_mle <- matrix(NA, n_param + 1, count_mle)
-            all_scores <- rep(NA, count_mle)
-
-            for(i in 1:count_mle){
-              opt_one <- opt_select_mk_sr[[i]]
-              all_scores[i] <- score <- opt_one$value
-              est_params <- opt_one$par
-
-              vec_params <- rep(NA, n_param)
-              if(n_param == 3){
-                vec_params[1] <- est_params[1] * (max_slope - min_slope) + min_slope
-                vec_params[2] <- est_params[2] * (max_intercept - min_intercept) + min_intercept
-                vec_params[3] <- est_params[3] * (max_sigma - min_sigma) + min_sigma
-              }else{
-                vec_params[1] <- est_params[1] * (max_myu - min_myu) + min_myu
-                vec_params[2] <- est_params[2] * (max_sigma - min_sigma) + min_sigma
-              }
-
-              mat_all_mle[1, i] <- - score / log(10)
-              mat_all_mle[2:(n_param + 1), i] <- vec_params
-            }
-
-            dt_all_mle <- as.data.table(mat_all_mle)
-            names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
-
-            dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
-            setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
-
-            all_scores_round <- round(all_scores, 3)
-            index_converged <- which(all_scores_round == min(all_scores_round))
-            name_converged <- paste0("MLE ", index_converged)
-          }
-        }
-
-        return(list(dt_all_mle = dt_all_mle, count_mle = count_mle, name_converged = name_converged))
-      }
 
       shinyFileChoose(input, "load_stutter_data", roots = c(documents = paste0(path_pack, "/extdata/stutter")), session = session, filetypes = c("RData"))
 
@@ -371,6 +384,7 @@ view_sr_server <- function(id, path_pack){
         req(rv_view_sr$max_intercept)
         req(rv_view_sr$min_sigma)
         req(rv_view_sr$max_sigma)
+        req(input$select_mk)
 
         dt_setting_est_sr <- rv_view_sr$dt_setting_est_sr
         opt_select_mk_sr <- rv_view_sr$opt_select_mk_bsr
@@ -424,6 +438,7 @@ view_sr_server <- function(id, path_pack){
         req(rv_view_sr$max_intercept)
         req(rv_view_sr$min_sigma)
         req(rv_view_sr$max_sigma)
+        req(input$select_mk)
 
         dt_setting_est_sr <- rv_view_sr$dt_setting_est_sr
         opt_select_mk_sr <- rv_view_sr$opt_select_mk_fsr
@@ -477,6 +492,7 @@ view_sr_server <- function(id, path_pack){
         req(rv_view_sr$max_intercept)
         req(rv_view_sr$min_sigma)
         req(rv_view_sr$max_sigma)
+        req(input$select_mk)
 
         dt_setting_est_sr <- rv_view_sr$dt_setting_est_sr
         opt_select_mk_sr <- rv_view_sr$opt_select_mk_dsr
