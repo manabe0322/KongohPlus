@@ -204,7 +204,8 @@ lr_server <- function(id, rv_input, rv_deconvo){
             showModal(modalDialog(title = "Error", HTML(error_message_hd), easyClose = TRUE, footer = NULL))
           }else{
             tmp <- calculate_lr(noc_hp, hp, noc_hd, hd, refs,
-                                markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_pg_list_hd, dt_ref)
+                                markers_use, peaks_list, pop_al_list, pop_prob_list, theta, dt_pg_list_hp, dt_pg_list_hd, dt_ref,
+                                waiter_ui)
 
             lr_data <- tmp$lr_data
             rv_lr$dt_lr_display <- lr_data$dt_lr

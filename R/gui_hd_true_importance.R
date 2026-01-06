@@ -223,7 +223,7 @@ hd_true_importance_server <- function(id, path_pack, rv_deconvo){
       )
 
       output$ui_download_dt_gt_non_contrib <- renderUI({
-        req(rv_hd_true_importance$dt_gt_non_contrib)
+        req(rv_hd_true_importance$dt_lr_importance)
         downloadButton(session$ns("download_dt_gt_non_contrib"), "Download genotypes")
       })
 

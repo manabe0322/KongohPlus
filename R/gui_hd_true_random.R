@@ -274,7 +274,7 @@ hd_true_random_server <- function(id, path_pack, rv_deconvo){
       )
 
       output$ui_download_dt_gt_non_contrib <- renderUI({
-        req(rv_hd_true_random$dt_gt_non_contrib)
+        req(rv_hd_true_random$dt_lr_rand)
         downloadButton(session$ns("download_dt_gt_non_contrib"), "Download genotypes")
       })
 
