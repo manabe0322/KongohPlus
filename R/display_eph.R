@@ -4,8 +4,9 @@
 #' @param dt_param The data.table for estimated parameters
 #' @param min_size The minimum size
 #' @param max_size The maximum size
+#' @param base_size The base size
 #' @export
-create_fig_eph <- function(dt_param, min_size, max_size){
+create_fig_eph <- function(dt_param, min_size, max_size, base_size){
   min_size_round <- round(min_size, 0)
   max_size_round <- round(max_size, 0)
   x_val <- min_size_round:max_size_round
@@ -21,7 +22,7 @@ create_fig_eph <- function(dt_param, min_size, max_size){
   if(n_rep == 1){
     y_list <- list()
     for(i in 1:hnc){
-      y_list[[i]] <- temp[i] * deg[i]^((x_val - min_size) / min_size)
+      y_list[[i]] <- temp[i] * deg[i]^((x_val - base_size) / 100)
     }
     names(y_list) <- paste0("U", 1:hnc)
     max_y_plot <- max(unlist(y_list))
@@ -50,8 +51,8 @@ create_fig_eph <- function(dt_param, min_size, max_size){
     y_max_all <- numeric(0)
     group_all <- character(0)
     for(i in 1:hnc){
-      y_min <- min(rep_ae) * temp[i] * deg[i]^((x_val - min_size) / min_size)
-      y_max <- max(rep_ae) * temp[i] * deg[i]^((x_val - min_size) / min_size)
+      y_min <- min(rep_ae) * temp[i] * deg[i]^((x_val - base_size) / 100)
+      y_max <- max(rep_ae) * temp[i] * deg[i]^((x_val - base_size) / 100)
 
       x_all <- c(x_all, x_val)
       y_min_all <- c(y_min_all, y_min)

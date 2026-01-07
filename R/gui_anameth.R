@@ -235,6 +235,11 @@ anameth_server <- function(id, path_pack){
                 rHandsontableOutput(session$ns("dt_edit_gtfltr"))
               ),
               tabPanel(
+                "Degradation",
+                br(),
+                rHandsontableOutput(session$ns("dt_edit_deg"))
+              ),
+              tabPanel(
                 "LSAE",
                 br(),
                 rHandsontableOutput(session$ns("dt_edit_lsae"))
@@ -376,6 +381,20 @@ anameth_server <- function(id, path_pack){
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
             hot_col("Filter", type = "text", readOnly = TRUE, width = 250) %>%
             hot_col("Value", type = "numeric", format = "0.00", width = 150)
+        }
+      })
+
+      output$dt_edit_deg <- renderRHandsontable({
+        dt_anameth_edit <- rv_anameth$dt_anameth_edit
+
+        if(!is.null(dt_anameth_edit)){
+          dt_edit_deg <- data.table(Filter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Degradation"],
+                                    Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Degradation"])
+
+          rhandsontable(dt_edit_deg, rowHeaders = FALSE) %>%
+            hot_table(fillHandle = FALSE, rowHeights = 30) %>%
+            hot_col("Filter", type = "text", readOnly = TRUE, width = 250) %>%
+            hot_col("Value", type = "numeric", format = "0", width = 150)
         }
       })
 
@@ -560,12 +579,41 @@ anameth_server <- function(id, path_pack){
 
         if(!is.null(input$dt_edit_at)){
           dt_edit_at <- hot_to_r(input$dt_edit_at)
-          dt_anameth_edit$Value[dt_anameth_edit$Category == "AT"] <- dt_edit_at$AT
+          options(warn = -1)
+          dt_edit_at$AT <- as.numeric(dt_edit_at$AT)
+          options(warn = 0)
+
+          if(any(is.na(dt_edit_at$AT))){
+            bool_alart_anameth <- TRUE
+          }else{
+            dt_anameth_edit$Value[dt_anameth_edit$Category == "AT"] <- dt_edit_at$AT
+          }
         }
 
         if(!is.null(input$dt_edit_gtfltr)){
           dt_edit_gtfltr <- hot_to_r(input$dt_edit_gtfltr)
-          dt_anameth_edit$Value[dt_anameth_edit$Category == "Genotype filter"] <- dt_edit_gtfltr$Value
+          options(warn = -1)
+          dt_edit_gtfltr$Value <- as.numeric(dt_edit_gtfltr$Value)
+          options(warn = 0)
+
+          if(any(is.na(dt_edit_gtfltr$Value))){
+            bool_alart_anameth <- TRUE
+          }else{
+            dt_anameth_edit$Value[dt_anameth_edit$Category == "Genotype filter"] <- dt_edit_gtfltr$Value
+          }
+        }
+
+        if(!is.null(input$dt_edit_deg)){
+          dt_edit_deg <- hot_to_r(input$dt_edit_deg)
+          options(warn = -1)
+          dt_edit_deg$Value <- as.numeric(dt_edit_deg$Value)
+          options(warn = 0)
+
+          if(any(is.na(dt_edit_deg$Value))){
+            bool_alart_anameth <- TRUE
+          }else{
+            dt_anameth_edit$Value[dt_anameth_edit$Category == "Degradation"] <- dt_edit_deg$Value
+          }
         }
 
         if(!is.null(input$dt_edit_lsae)){

@@ -111,7 +111,7 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
 #' @param peaks_list A list of the peaks
 #' @param sizes_list A list of the sizes
 #' @param heights_list A list of the heights
-#' @param min_size The minimum size in the selected kit
+#' @param base_size The base size
 #' @param pop_al_list A list of the alleles in the population database
 #' @param pop_prob_list A list of the allele probabilities in the population database
 #' @param theta The theta value for sub-population effect
@@ -138,7 +138,7 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param waiter_ui Information on UI for waiter
-perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
+perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, base_size,
                             pop_al_list, pop_prob_list, theta,
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, scale_di,
@@ -259,7 +259,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     # --- Prepare the scale of degradation corrected by sizes --- #
 
-    deg_size_base_use[[i]] <- c(rep((sizes - min_size) / min_size, 5), 0, -1)
+    deg_size_base_use[[i]] <- c(rep((sizes - base_size) / 100, 5), 0, -1)
 
     # --- Generate all possible genotype combinations --- #
 
@@ -603,6 +603,9 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
     n_dropin_fltr <- dt_anameth$Value[dt_anameth$Subcategory == "Maximum number of drop-in"]
     h_dropin_fltr <- dt_anameth$Value[dt_anameth$Subcategory == "Maximum height of drop-in"]
 
+    # Extract the base size
+    base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
+
     # Extract expected LSAE
     expect_ae <- dt_anameth$Value[dt_anameth$Category == "LSAE"]
     names(expect_ae) <- dt_anameth$Subcategory[dt_anameth$Category == "LSAE"]
@@ -631,7 +634,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
         )
       }
 
-      data_hnc <- try(perform_deconvo(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, min_size,
+      data_hnc <- try(perform_deconvo(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, base_size,
                                       pop_al_list, pop_prob_list, theta,
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, scale_di,

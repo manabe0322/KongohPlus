@@ -264,8 +264,9 @@ if(!is.null(data_hnc_list)){
       print(tb)
     
       cat("\n\n")
-    
-      graph_eph <- create_fig_eph(dt_param, min_size, max_size)
+      
+      base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
+      graph_eph <- create_fig_eph(dt_param, min_size, max_size, base_size)
       print(graph_eph)
     
       # --- Display likelihoods ---- #
@@ -661,6 +662,18 @@ if(!is.null(dt_anameth)){
                           B = dt_anameth$Value[dt_anameth$Category == "Genotype filter"])
   
   tb <- kable(dt_gtfltr, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
+  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
+  tb <- column_spec(tb, 1, width = "4.8cm")
+  tb <- column_spec(tb, 2, width = "11cm")
+  print(tb)
+  cat("\n\n")
+  
+  cat("\\subsection*{Degradation}")
+  
+  dt_deg <- data.table(A = dt_anameth$Subcategory[dt_anameth$Category == "Degradation"], 
+                       B = dt_anameth$Value[dt_anameth$Category == "Degradation"])
+  
+  tb <- kable(dt_deg, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
   tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
   tb <- column_spec(tb, 1, width = "4.8cm")
   tb <- column_spec(tb, 2, width = "11cm")

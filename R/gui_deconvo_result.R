@@ -75,6 +75,7 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       rv_deconvo_result$data_hnc_list <- NULL
       rv_deconvo_result$min_size <- NULL
       rv_deconvo_result$max_size <- NULL
+      rv_deconvo_result$base_size <- NULL
       rv_deconvo_result$min_temp <- NULL
       rv_deconvo_result$max_temp <- NULL
       rv_deconvo_result$min_deg <- NULL
@@ -96,6 +97,7 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         req(rv_deconvo$data_deconvo)
 
         data_deconvo <- rv_deconvo$data_deconvo
+        dt_anameth <- data_deconvo$dt_anameth
 
         rv_deconvo_result$dt_param <- NULL
         rv_deconvo_result$error_message <- NULL
@@ -105,6 +107,7 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         rv_deconvo_result$data_hnc_list <- data_deconvo$data_hnc_list
         rv_deconvo_result$min_size <- data_deconvo$min_size
         rv_deconvo_result$max_size <- data_deconvo$max_size
+        rv_deconvo_result$base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
         rv_deconvo_result$min_temp <- data_deconvo$min_temp
         rv_deconvo_result$max_temp <- data_deconvo$max_temp
         rv_deconvo_result$min_deg <- data_deconvo$min_deg
@@ -305,7 +308,12 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       })
 
       output$plot_ave_ph <- renderPlot({
-        create_fig_eph(rv_deconvo_result$dt_param, rv_deconvo_result$min_size, rv_deconvo_result$max_size)
+        req(rv_deconvo_result$dt_param)
+        req(rv_deconvo_result$min_size)
+        req(rv_deconvo_result$max_size)
+        req(rv_deconvo_result$base_size)
+
+        create_fig_eph(rv_deconvo_result$dt_param, rv_deconvo_result$min_size, rv_deconvo_result$max_size, rv_deconvo_result$base_size)
       })
 
       observeEvent(input$select_noc_param, {

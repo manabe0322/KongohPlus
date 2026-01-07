@@ -4,7 +4,7 @@
 \alias{create_fig_eph}
 \title{create_fig_eph}
 \usage{
-create_fig_eph(dt_param, min_size, max_size)
+create_fig_eph(dt_param, min_size, max_size, base_size)
 }
 \arguments{
 \item{dt_param}{The data.table for estimated parameters}
@@ -12,6 +12,8 @@ create_fig_eph(dt_param, min_size, max_size)
 \item{min_size}{The minimum size}
 
 \item{max_size}{The maximum size}
+
+\item{base_size}{The base size}
 }
 \description{
 The function to create the figure for expected peak heights in each contributor

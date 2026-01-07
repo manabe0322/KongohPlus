@@ -12,7 +12,7 @@ perform_deconvo(
   peaks_list,
   sizes_list,
   heights_list,
-  min_size,
+  base_size,
   pop_al_list,
   pop_prob_list,
   theta,
@@ -56,7 +56,7 @@ perform_deconvo(
 
 \item{heights_list}{A list of the heights}
 
-\item{min_size}{The minimum size in the selected kit}
+\item{base_size}{The base size}
 
 \item{pop_al_list}{A list of the alleles in the population database}
 

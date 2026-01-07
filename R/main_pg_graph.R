@@ -30,8 +30,8 @@ create_peaks_plot <- function(peaks, rep_unit_len, q_distance = 3){
 #' @param ae The locus-specific amplification efficiencies in each marker
 #' @param dt_average_sr The data.table for the average stutter ratios
 #' @param dt_size The data.table for sizes
-#' @param mean_size The mean size of the profile
-calc_eph <- function(gt_select_list, tph, mp, deg, ae, dt_average_sr, dt_size, mean_size){
+#' @param base_size The base size of the profile
+calc_eph <- function(gt_select_list, tph, mp, deg, ae, dt_average_sr, dt_size, base_size){
   # Extract SR
   al_contrib <- unlist(gt_select_list)
   index_sr <- match(al_contrib, dt_average_sr$Allele)
@@ -49,7 +49,7 @@ calc_eph <- function(gt_select_list, tph, mp, deg, ae, dt_average_sr, dt_size, m
   sizes <- dt_size$Size[index_size]
   sizes[is.na(sizes)] <- median(dt_size$Size)
 
-  eph_tmp <- ae * tph * as.vector(sapply(mp, rep, 2)) * as.vector(sapply(deg, rep, 2))^((sizes - mean_size) / mean_size)
+  eph_tmp <- ae * tph * as.vector(sapply(mp, rep, 2)) * as.vector(sapply(deg, rep, 2))^((sizes - base_size) / 100)
 
   bs_contrib <- calc_bs(al_contrib)
   fs_contrib <- calc_fs(al_contrib)

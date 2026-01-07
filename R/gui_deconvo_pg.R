@@ -48,7 +48,6 @@ deconvo_pg_server <- function(id, rv_deconvo){
       rv_deconvo_pg$peaks_list <- NULL
       rv_deconvo_pg$heights_list <- NULL
       rv_deconvo_pg$ae_use <- NULL
-      rv_deconvo_pg$min_size <- NULL
       rv_deconvo_pg$n_rep <- NULL
       rv_deconvo_pg$cand_contrib <- NULL
       rv_deconvo_pg$dt_pg_per_comb <- NULL
@@ -75,7 +74,6 @@ deconvo_pg_server <- function(id, rv_deconvo){
           rv_deconvo_pg$peaks_list <- data_deconvo$peaks_list
           rv_deconvo_pg$heights_list <- data_deconvo$heights_list
           rv_deconvo_pg$ae_use <- data_deconvo$ae_use
-          rv_deconvo_pg$min_size <- data_deconvo$min_size
           rv_deconvo_pg$n_rep <- length(rv_deconvo_pg$heights_list[[1]])
           rv_deconvo_pg$cand_contrib <- paste0("U", 1:(rv_deconvo_pg$hnc_all[1]))
         }
@@ -191,7 +189,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
         req(rv_deconvo_pg$peaks_list)
         req(rv_deconvo_pg$heights_list)
         req(rv_deconvo_pg$ae_use)
-        req(rv_deconvo_pg$min_size)
+        req(rv_deconvo_pg$dt_anameth)
         req(rv_deconvo_pg$n_rep)
         req(rv_deconvo_pg$dt_pg_per_comb)
 
@@ -203,9 +201,11 @@ deconvo_pg_server <- function(id, rv_deconvo){
         peaks_list <- rv_deconvo_pg$peaks_list
         heights_list <- rv_deconvo_pg$heights_list
         ae_use <- rv_deconvo_pg$ae_use
-        min_size <- rv_deconvo_pg$min_size
+        dt_anameth <- rv_deconvo_pg$dt_anameth
         n_rep <- rv_deconvo_pg$n_rep
         dt_pg_per_comb <- rv_deconvo_pg$dt_pg_per_comb
+
+        base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
 
         index_select <- input$dt_pg_per_comb_rows_selected
 
@@ -242,7 +242,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
           df_combined_list <- vector(mode = "list", length = n_rep)
           for(i in 1:n_rep){
             # Calculate expected peak heights under the selected genotype combination
-            eph <- calc_eph(gt_select_list, tphs[i], mp, deg, ae, dt_average_sr, dt_size, min_size)
+            eph <- calc_eph(gt_select_list, tphs[i], mp, deg, ae, dt_average_sr, dt_size, base_size)
             peaks_eph <- as.numeric(names(eph))
 
             if(i == 1){
@@ -286,7 +286,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
         req(rv_deconvo_pg$peaks_list)
         req(rv_deconvo_pg$heights_list)
         req(rv_deconvo_pg$ae_use)
-        req(rv_deconvo_pg$min_size)
+        req(rv_deconvo_pg$dt_anameth)
         req(rv_deconvo_pg$n_rep)
         req(rv_deconvo_pg$dt_pg_per_contrib)
 
@@ -298,9 +298,11 @@ deconvo_pg_server <- function(id, rv_deconvo){
         peaks_list <- rv_deconvo_pg$peaks_list
         heights_list <- rv_deconvo_pg$heights_list
         ae_use <- rv_deconvo_pg$ae_use
-        min_size <- rv_deconvo_pg$min_size
+        dt_anameth <- rv_deconvo_pg$dt_anameth
         n_rep <- rv_deconvo_pg$n_rep
         dt_pg_per_contrib <- rv_deconvo_pg$dt_pg_per_contrib
+
+        base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
 
         index_select <- input$dt_pg_per_contrib_rows_selected
 
@@ -340,7 +342,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
           df_combined_list <- vector(mode = "list", length = n_rep)
           for(i in 1:n_rep){
             # Calculate expected peak heights under the selected genotype combination
-            eph <- calc_eph(gt_select_list, tphs[i], mp_c1, deg_c1, ae, dt_average_sr, dt_size, min_size)
+            eph <- calc_eph(gt_select_list, tphs[i], mp_c1, deg_c1, ae, dt_average_sr, dt_size, base_size)
             peaks_eph <- as.numeric(names(eph))
 
             if(i == 1){

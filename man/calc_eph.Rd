@@ -4,7 +4,7 @@
 \alias{calc_eph}
 \title{calc_eph}
 \usage{
-calc_eph(gt_select_list, tph, mp, deg, ae, dt_average_sr, dt_size, mean_size)
+calc_eph(gt_select_list, tph, mp, deg, ae, dt_average_sr, dt_size, base_size)
 }
 \arguments{
 \item{gt_select_list}{A list of genotypes in each contributor}
@@ -21,7 +21,7 @@ calc_eph(gt_select_list, tph, mp, deg, ae, dt_average_sr, dt_size, mean_size)
 
 \item{dt_size}{The data.table for sizes}
 
-\item{mean_size}{The mean size of the profile}
+\item{base_size}{The base size of the profile}
 }
 \description{
 The function to calculate the expected peak heights under the selected genotype combination
