@@ -393,7 +393,8 @@ create_dt_sr_data <- function(peak_list, height_list, gt_list, sr_consider_auto,
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
-run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs){
+#' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
+run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
 
   # Likelihood function for the stutter ratio (locus-specific model with slope)
   like_fun_sr_gen <- function(par){
@@ -403,17 +404,17 @@ run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slo
 
     mean_sr <- slope * x_al + intercept
     if(any(mean_sr <= 0)){
-      loglike <- Inf
+      log10like <- Inf
     }else{
       dens <- dlnorm(y_sr, meanlog = log(mean_sr), sdlog = sqrt(sigma / tap))
-      loglike <- - sum(log(dens))
+      log10like <- - sum(log(dens)) / log(10)
 
-      if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
-        loglike <- Inf
+      if(is.na(log10like) || is.nan(log10like) || is.infinite(log10like)){
+        log10like <- Inf
       }
     }
 
-    return(loglike)
+    return(log10like)
   }
 
   lower_bounds <- c(0, 0, 0)
@@ -422,11 +423,11 @@ run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slo
   # Perform simulated annealing
   current_opt <- NULL
   current_score <- Inf
-  current_score_round <- Inf
   count_mle <- 0
   count_solution <- 0
   init_list <- list()
   opt_list <- list()
+  index_converged <- integer(0)
   repeat{
     count_mle <- count_mle + 1
 
@@ -446,12 +447,12 @@ run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slo
       current_score <- score
     }
 
-    score_round <- round(score, 3)
-    if(score_round < current_score_round){
-      current_score_round <- score_round
+    if(current_score - score > max_diff_like){
       count_solution <- 1
-    }else if(score_round == current_score_round){
+      index_converged <- count_mle
+    }else{
       count_solution <- count_solution + 1
+      index_converged <- c(index_converged, count_mle)
     }
 
     if(count_solution == num_converged){
@@ -479,7 +480,7 @@ run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slo
     est_param[3] <- tmp[3] * (max_sigma - min_sigma) + min_sigma
   }
 
-  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, warning_record = warning_record))
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, index_converged = index_converged, warning_record = warning_record))
 }
 
 #' run_mle_sr_uni
@@ -497,7 +498,8 @@ run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slo
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
-run_mle_sr_uni <- function(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs){
+#' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
+run_mle_sr_uni <- function(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
 
   # Likelihood function for the stutter ratio (uniform model)
   like_fun_sr_uni <- function(par){
@@ -505,13 +507,13 @@ run_mle_sr_uni <- function(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_si
     sigma <- par[2] * (max_sigma - min_sigma) + min_sigma
 
     dens <- dlnorm(y_sr, meanlog = log(myu), sdlog = sqrt(sigma / tap))
-    loglike <- - sum(log(dens))
+    log10like <- - sum(log(dens)) / log(10)
 
-    if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
-      loglike <- Inf
+    if(is.na(log10like) || is.nan(log10like) || is.infinite(log10like)){
+      log10like <- Inf
     }
 
-    return(loglike)
+    return(log10like)
   }
 
   lower_bounds <- c(0, 0)
@@ -520,11 +522,11 @@ run_mle_sr_uni <- function(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_si
   # Perform simulated annealing
   current_opt <- NULL
   current_score <- Inf
-  current_score_round <- Inf
   count_mle <- 0
   count_solution <- 0
   init_list <- list()
   opt_list <- list()
+  index_converged <- integer(0)
   repeat{
     count_mle <- count_mle + 1
 
@@ -544,12 +546,12 @@ run_mle_sr_uni <- function(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_si
       current_score <- score
     }
 
-    score_round <- round(score, 3)
-    if(score_round < current_score_round){
-      current_score_round <- score_round
+    if(current_score - score > max_diff_like){
       count_solution <- 1
-    }else if(score_round == current_score_round){
+      index_converged <- count_mle
+    }else{
       count_solution <- count_solution + 1
+      index_converged <- c(index_converged, count_mle)
     }
 
     if(count_solution == num_converged){
@@ -576,7 +578,7 @@ run_mle_sr_uni <- function(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_si
     est_param[2] <- tmp[2] * (max_sigma - min_sigma) + min_sigma
   }
 
-  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, warning_record = warning_record))
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, index_converged = index_converged, warning_record = warning_record))
 }
 
 #' calc_average_sr
@@ -609,10 +611,11 @@ calc_average_sr <- function(allele, slope, intercept){
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
+#' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
 perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto, meth_model_sr,
                                   min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
-                                  stop_iter, max_iter, num_converged, max_mle_runs,
+                                  stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                                   waiter_ui = NULL){
   # Extract data of the targeted stutter type
   if(stutter_type == "BS"){
@@ -645,6 +648,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
   tmp_alcor_multi_mk <- vector(mode = "list", length = n_mk)
   init_list_all_mk <- vector(mode = "list", length = n_mk)
   opt_list_all_mk <- vector(mode = "list", length = n_mk)
+  index_converged_list_all_mk <- vector(mode = "list", length = n_mk)
   warning_record_list_all_mk <- vector(mode = "list", length = n_mk)
 
   # Repeat for the number of markers
@@ -698,12 +702,13 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
             )
           }
 
-          tmp <- run_mle_sr_uni(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
+          tmp <- run_mle_sr_uni(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like)
           est_param <- tmp$est_param
           myu_all_mk[i] <- myu <- est_param["myu"]
           sigma_all_mk[i] <- est_param["sigma"]
           init_list_all_mk[[i]] <- tmp$init_list
           opt_list_all_mk[[i]] <- tmp$opt_list
+          index_converged_list_all_mk[[i]] <- tmp$index_converged
           warning_record_list_all_mk[[i]] <- tmp$warning_record
 
           # Set the average stutter ratios for each allele
@@ -728,13 +733,14 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
             )
           }
 
-          tmp <- run_mle_sr_gen(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
+          tmp <- run_mle_sr_gen(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like)
           est_param <- tmp$est_param
           slope_all_mk[i] <- slope <- est_param["slope"]
           intercept_all_mk[i] <- intercept <- est_param["intercept"]
           sigma_all_mk[i] <- est_param["sigma"]
           init_list_all_mk[[i]] <- tmp$init_list
           opt_list_all_mk[[i]] <- tmp$opt_list
+          index_converged_list_all_mk[[i]] <- tmp$index_converged
           warning_record_list_all_mk[[i]] <- tmp$warning_record
 
           # Set the average stutter ratios for each allele
@@ -781,12 +787,13 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
       )
     }
 
-    tmp <- run_mle_sr_uni("Multiple loci", stutter_type, y_sr_multi_mk, tap_multi_mk, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs)
+    tmp <- run_mle_sr_uni("Multiple loci", stutter_type, y_sr_multi_mk, tap_multi_mk, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like)
     est_param <- tmp$est_param
     myu_all_mk[index_multi_mk] <- est_param["myu"]
     sigma_all_mk[index_multi_mk] <- est_param["sigma"]
     init_list <- tmp$init_list
     opt_list <- tmp$opt_list
+    index_converged_list <- tmp$index_converged
     warning_record_list_all_mk[[index_multi_mk[1]]] <- tmp$warning_record
 
     # Set the average stutter ratios for each allele
@@ -795,6 +802,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
 
       init_list_all_mk[[index_mk]] <- init_list
       opt_list_all_mk[[index_mk]] <- opt_list
+      index_converged_list_all_mk[[index_mk]] <- index_converged_list
 
       myu <- myu_all_mk[index_mk]
       alname <- tmp_alname_multi_mk[[index_mk]]
@@ -821,6 +829,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
               "dt_average_sr_all_mk" = dt_average_sr_all_mk,
               "init_list_all_mk" = init_list_all_mk,
               "opt_list_all_mk" = opt_list_all_mk,
+              "index_converged_list_all_mk" = index_converged_list_all_mk,
               "warning_record_list_all_mk" = warning_record_list_all_mk))
 }
 
@@ -903,10 +912,11 @@ create_warning_sr <- function(warning_record_list_all_mk_bsr, warning_record_lis
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
+#' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
 estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
                                 min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
-                                stop_iter, max_iter, num_converged, max_mle_runs,
+                                stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                                 waiter_ui = NULL){
   # Extract information on setting
   markers_auto <- dt_setting_est_sr$Marker
@@ -949,45 +959,49 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   # --- Perform MLE for BSR --- #
 
   tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "BS", markers_auto, meth_model_bsr,
-                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs,
+                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                                waiter_ui)
   dt_result_est_bsr <- tmp$dt_result_est_sr
   list_dt_average_bsr <- tmp$dt_average_sr_all_mk
   init_list_all_mk_bsr <- tmp$init_list_all_mk
   opt_list_all_mk_bsr <- tmp$opt_list_all_mk
+  index_converged_list_all_mk_bsr <- tmp$index_converged_list_all_mk
   warning_record_list_all_mk_bsr <- tmp$warning_record_list_all_mk
 
   # --- Perform MLE for FSR --- #
 
   tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "FS", markers_auto, meth_model_fsr,
-                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs,
+                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                                waiter_ui)
   dt_result_est_fsr <- tmp$dt_result_est_sr
   list_dt_average_fsr <- tmp$dt_average_sr_all_mk
   init_list_all_mk_fsr <- tmp$init_list_all_mk
   opt_list_all_mk_fsr <- tmp$opt_list_all_mk
+  index_converged_list_all_mk_fsr <- tmp$index_converged_list_all_mk
   warning_record_list_all_mk_fsr <- tmp$warning_record_list_all_mk
 
   # --- Perform MLE for DSR --- #
 
   tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "DS", markers_auto, meth_model_dsr,
-                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs,
+                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                                waiter_ui)
   dt_result_est_dsr <- tmp$dt_result_est_sr
   list_dt_average_dsr <- tmp$dt_average_sr_all_mk
   init_list_all_mk_dsr <- tmp$init_list_all_mk
   opt_list_all_mk_dsr <- tmp$opt_list_all_mk
+  index_converged_list_all_mk_dsr <- tmp$index_converged_list_all_mk
   warning_record_list_all_mk_dsr <- tmp$warning_record_list_all_mk
 
   # --- Perform MLE for M2SR --- #
 
   tmp <- perform_mle_sr_all_mk(dt_sr_data, dt_kit, "M2S", markers_auto, meth_model_m2sr,
-                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs,
+                               min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                                waiter_ui)
   dt_result_est_m2sr <- tmp$dt_result_est_sr
   list_dt_average_m2sr <- tmp$dt_average_sr_all_mk
   init_list_all_mk_m2sr <- tmp$init_list_all_mk
   opt_list_all_mk_m2sr <- tmp$opt_list_all_mk
+  index_converged_list_all_mk_m2sr <- tmp$index_converged_list_all_mk
   warning_record_list_all_mk_m2sr <- tmp$warning_record_list_all_mk
 
   list_dt_average_sr <- full_join_average_sr(list_dt_average_bsr, list_dt_average_fsr, list_dt_average_dsr, list_dt_average_m2sr)
@@ -999,15 +1013,19 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
               "dt_result_est_bsr" = dt_result_est_bsr,
               "init_list_all_mk_bsr" = init_list_all_mk_bsr,
               "opt_list_all_mk_bsr" = opt_list_all_mk_bsr,
+              "index_converged_list_all_mk_bsr" = index_converged_list_all_mk_bsr,
               "dt_result_est_fsr" = dt_result_est_fsr,
               "init_list_all_mk_fsr" = init_list_all_mk_fsr,
               "opt_list_all_mk_fsr" = opt_list_all_mk_fsr,
+              "index_converged_list_all_mk_fsr" = index_converged_list_all_mk_fsr,
               "dt_result_est_dsr" = dt_result_est_dsr,
               "init_list_all_mk_dsr" = init_list_all_mk_dsr,
               "opt_list_all_mk_dsr" = opt_list_all_mk_dsr,
+              "index_converged_list_all_mk_dsr" = index_converged_list_all_mk_dsr,
               "dt_result_est_m2sr" = dt_result_est_m2sr,
               "init_list_all_mk_m2sr" = init_list_all_mk_m2sr,
               "opt_list_all_mk_m2sr" = opt_list_all_mk_m2sr,
+              "index_converged_list_all_mk_m2sr" = index_converged_list_all_mk_m2sr,
               "warning_message" = warning_message,
               "dt_sr_data" = dt_sr_data))
 }

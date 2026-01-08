@@ -137,13 +137,14 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
+#' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
 perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_list, heights_list, base_size,
                             pop_al_list, pop_prob_list, theta,
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, scale_di,
                             ae_use, scale_allele, scale_stutter, list_dt_average_sr,
-                            min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs,
+                            min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                             waiter_ui){
 
   # --- Start computation --- #
@@ -387,13 +388,13 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
       # Calculate log likelihood in each marker
       tmp <- calc_loglike_cpp(lpd_gtc_all_rep, gtc_logprob_use)
-      loglike <- - sum(tmp[[1]])
+      log10like <- - sum(tmp[[1]]) / log(10)
 
-      if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
-        loglike <- Inf
+      if(is.na(log10like) || is.nan(log10like) || is.infinite(log10like)){
+        log10like <- Inf
       }
 
-      return(loglike)
+      return(log10like)
     }
 
     lower_bounds <- c(rep(0, hnc), rep(0, hnc), rep(0, n_rep - 1))
@@ -402,11 +403,11 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     # Perform simulated annealing
     current_opt <- NULL
     current_score <- Inf
-    current_score_round <- Inf
     count_mle <- 0
     count_solution <- 0
     init_list <- list()
     opt_list <- list()
+    index_converged <- integer(0)
     repeat{
       count_mle <- count_mle + 1
 
@@ -437,12 +438,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         current_score <- score
       }
 
-      score_round <- round(score, 3)
-      if(score_round < current_score_round){
-        current_score_round <- score_round
+      if(current_score - score > max_diff_like){
         count_solution <- 1
-      }else if(score_round == current_score_round){
+        index_converged <- count_mle
+      }else{
         count_solution <- count_solution + 1
+        index_converged <- c(index_converged, count_mle)
       }
 
       if(count_solution == num_converged){
@@ -521,6 +522,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                 "comp_time" = comp_time,
                 "init_list" = init_list,
                 "opt_list" = opt_list,
+                "index_converged" = index_converged,
                 "warning_message" = warning_message,
                 "error_message" = NULL))
   }else{
@@ -541,6 +543,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                 "comp_time" = NULL,
                 "init_list" = NULL,
                 "opt_list" = NULL,
+                "index_converged" = NULL,
                 "warning_message" = NULL,
                 "error_message" = error_message))
   }
@@ -566,9 +569,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
+#' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
 perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
-                                    min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs,
+                                    min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                                     waiter_ui = NULL){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
@@ -639,7 +643,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, scale_di,
                                       ae_use, scale_allele, scale_stutter, list_dt_average_sr,
-                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs,
+                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                                       waiter_ui))
       if(!inherits(data_hnc, "try-error")){
         data_hnc_list[[i]] <- data_hnc
@@ -651,6 +655,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                    "comp_time" = NULL,
                                    "init_list" = NULL,
                                    "opt_list" = NULL,
+                                   "index_converged" = NULL,
                                    "warning_message" = NULL,
                                    "error_message" = "Unexpected error")
       }

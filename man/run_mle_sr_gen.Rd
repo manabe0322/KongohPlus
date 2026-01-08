@@ -19,7 +19,8 @@ run_mle_sr_gen(
   stop_iter,
   max_iter,
   num_converged,
-  max_mle_runs
+  max_mle_runs,
+  max_diff_like
 )
 }
 \arguments{
@@ -52,6 +53,8 @@ run_mle_sr_gen(
 \item{num_converged}{Number of converged MLE runs before stopping}
 
 \item{max_mle_runs}{Maximum number of MLE attempts}
+
+\item{max_diff_like}{Reproducibility threshold (log10-likelihood difference)}
 }
 \description{
 The function to perform MLE for the stutter ratio (locus-specific model with slope)

@@ -64,9 +64,11 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
       rv_est_lsae_setting$max_iter <- 5000
       rv_est_lsae_setting$num_converged <- 3
       rv_est_lsae_setting$max_mle_runs <- 10
+      rv_est_lsae_setting$max_diff_like <- 0.005
       rv_est_lsae_setting$bool_correct_mle_alpha <- TRUE
       rv_est_lsae_setting$bool_correct_advanced_1 <- TRUE
       rv_est_lsae_setting$bool_correct_advanced_2 <- TRUE
+      rv_est_lsae_setting$bool_correct_advanced_3 <- TRUE
 
       rv_est_lsae <- reactiveValues()
       rv_est_lsae$data_est_lsae <- NULL
@@ -163,12 +165,13 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
           fluidRow(
             column(6,
                    numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_lsae_setting$stop_iter),
+                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_lsae_setting$max_iter),
                    numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_est_lsae_setting$num_converged),
-                   numericInput(session$ns("min_alpha"), label = "Minimum alpha for LSAE", value = rv_est_lsae_setting$min_alpha)
+                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_lsae_setting$max_mle_runs),
+                   numericInput(session$ns("max_diff_like"), label = "Reproducibility threshold (log10-likelihood difference)", value = rv_est_lsae_setting$max_diff_like)
             ),
             column(6,
-                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_lsae_setting$max_iter),
-                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_lsae_setting$max_mle_runs),
+                   numericInput(session$ns("min_alpha"), label = "Minimum alpha for LSAE", value = rv_est_lsae_setting$min_alpha),
                    numericInput(session$ns("max_alpha"), label = "Maximum alpha for LSAE", value = rv_est_lsae_setting$max_alpha)
             )
           ),
@@ -259,12 +262,27 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
         rv_est_lsae_setting$bool_correct_advanced_2 <- bool_correct_advanced_2
       })
 
+      observeEvent(input$max_diff_like, {
+        max_diff_like <- input$max_diff_like
+
+        hideFeedback("max_diff_like")
+        bool_correct_advanced_3 <- TRUE
+
+        if(!is.numeric(max_diff_like) || max_diff_like < 0){
+          showFeedbackDanger(inputId = "max_diff_like", text = "Value must be a numeric value greater than zero.")
+          bool_correct_advanced_3 <- FALSE
+        }
+
+        rv_est_lsae_setting$bool_correct_advanced_3 <- bool_correct_advanced_3
+      })
+
       observe({
         req(rv_est_lsae)
 
         if(all(rv_est_lsae_setting$bool_correct_mle_alpha,
                rv_est_lsae_setting$bool_correct_advanced_1,
-               rv_est_lsae_setting$bool_correct_advanced_2)){
+               rv_est_lsae_setting$bool_correct_advanced_2,
+               rv_est_lsae_setting$bool_correct_advanced_3)){
           enable("act_advance_lsae_save")
         }else{
           disable("act_advance_lsae_save")
@@ -278,6 +296,7 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
         rv_est_lsae_setting$max_iter <- input$max_iter
         rv_est_lsae_setting$num_converged <- input$num_converged
         rv_est_lsae_setting$max_mle_runs <- input$max_mle_runs
+        rv_est_lsae_setting$max_diff_like <- input$max_diff_like
         removeModal()
       })
 
@@ -317,6 +336,7 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
         max_iter <- rv_est_lsae_setting$max_iter
         num_converged <- rv_est_lsae_setting$num_converged
         max_mle_runs <- rv_est_lsae_setting$max_mle_runs
+        max_diff_like <- rv_est_lsae_setting$max_diff_like
 
         # Check input files and setting
         error_message <- check_est_par(dt_exp_lsae, dt_gt_lsae, dt_setting_est_par)
@@ -326,7 +346,7 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
         }else{
           data_est_lsae <- try(estimate_lsae(dt_exp_lsae, dt_gt_lsae, list_dt_average_sr, dt_setting_est_par,
                                              min_alpha, max_alpha,
-                                             stop_iter, max_iter, num_converged, max_mle_runs,
+                                             stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                                              waiter_ui))
           if(inherits(data_est_lsae, "try-error")){
             waiter_ui$hide()
@@ -344,6 +364,7 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
             data_est_lsae$max_iter <- max_iter
             data_est_lsae$num_converged <- num_converged
             data_est_lsae$max_mle_runs <- max_mle_runs
+            data_est_lsae$max_diff_like <- max_diff_like
 
             rv_est_lsae$data_est_lsae <- data_est_lsae
 

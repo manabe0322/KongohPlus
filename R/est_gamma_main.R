@@ -280,7 +280,8 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
-run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs){
+#' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
+run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
 
   like_func_gamma <- function(par){
     scale_allele <- par[1] * (max_scale_allele - min_scale_allele) + min_scale_allele
@@ -314,13 +315,13 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_sca
       }
     }
 
-    loglike <- - sum(log(dens))
+    log10like <- - sum(log(dens)) / log(10)
 
-    if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
-      loglike <- Inf
+    if(is.na(log10like) || is.nan(log10like) || is.infinite(log10like)){
+      log10like <- Inf
     }
 
-    return(loglike)
+    return(log10like)
   }
 
   lower_bounds <- c(0, 0)
@@ -329,11 +330,11 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_sca
   # Perform simulated annealing
   current_opt <- NULL
   current_score <- Inf
-  current_score_round <- Inf
   count_mle <- 0
   count_solution <- 0
   init_list <- list()
   opt_list <- list()
+  index_converged <- integer(0)
   repeat{
     count_mle <- count_mle + 1
 
@@ -353,12 +354,12 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_sca
       current_score <- score
     }
 
-    score_round <- round(score, 3)
-    if(score_round < current_score_round){
-      current_score_round <- score_round
+    if(current_score - score > max_diff_like){
       count_solution <- 1
-    }else if(score_round == current_score_round){
+      index_converged <- count_mle
+    }else{
       count_solution <- count_solution + 1
+      index_converged <- c(index_converged, count_mle)
     }
 
     if(count_solution == num_converged){
@@ -385,7 +386,7 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_sca
     est_param[2] <- tmp[2] * (max_scale_stutter - min_scale_stutter) + min_scale_stutter
   }
 
-  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, warning_message = warning_message))
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, index_converged = index_converged, warning_message = warning_message))
 }
 
 #' create_dt_gamma_data
@@ -468,10 +469,11 @@ create_dt_gamma_data <- function(scale_allele, scale_stutter, samples_gamma, mar
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
+#' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
 estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par, dt_expect_ae,
                            min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
-                           stop_iter, max_iter, num_converged, max_mle_runs,
+                           stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                            waiter_ui = NULL){
 
   # Extract information on setting
@@ -538,12 +540,13 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
     )
   }
 
-  tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs)
+  tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like)
   est_param <- tmp$est_param
   scale_allele <- est_param["scale_allele"]
   scale_stutter <- est_param["scale_stutter"]
-  init_list_gamma <- tmp$init_list
-  opt_list_gamma <- tmp$opt_list
+  init_list <- tmp$init_list
+  opt_list <- tmp$opt_list
+  index_converged <- tmp$index_converged
   warning_message <- tmp$warning_message
 
   # --- Create the data.tables --- #
@@ -552,8 +555,9 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
   dt_est_gamma <- data.table(Parameter = c("Scale parameter (allele)", "Scale parameter (stutter)"), Value = c(scale_allele, scale_stutter))
 
   return(list("dt_est_gamma" = dt_est_gamma,
-              "init_list_gamma" = init_list_gamma,
-              "opt_list_gamma" = opt_list_gamma,
+              "init_list" = init_list,
+              "opt_list" = opt_list,
+              "index_converged" = index_converged,
               "warning_message" = warning_message,
               "dt_gamma_data" = dt_gamma_data))
 }

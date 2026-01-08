@@ -35,20 +35,21 @@ check_est_dropin <- function(dt_ntc, dt_kit){
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
-run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs){
+#' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
+run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
 
   like_func_dropin <- function(par){
     shape_di <- par[1] * (max_shape_di - min_shape_di) + min_shape_di
     scale_di <- par[2] * (max_scale_di - min_scale_di) + min_scale_di
 
     dens <- dgamma(heights, shape = shape_di, scale = scale_di)
-    loglike <- - sum(log(dens))
+    log10like <- - sum(log(dens)) / log(10)
 
-    if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
-      loglike <- Inf
+    if(is.na(log10like) || is.nan(log10like) || is.infinite(log10like)){
+      log10like <- Inf
     }
 
-    return(loglike)
+    return(log10like)
   }
 
   lower_bounds <- c(0, 0)
@@ -57,11 +58,11 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
   # Perform simulated annealing
   current_opt <- NULL
   current_score <- Inf
-  current_score_round <- Inf
   count_mle <- 0
   count_solution <- 0
   init_list <- list()
   opt_list <- list()
+  index_converged <- integer(0)
   repeat{
     count_mle <- count_mle + 1
 
@@ -81,12 +82,12 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
       current_score <- score
     }
 
-    score_round <- round(score, 3)
-    if(score_round < current_score_round){
-      current_score_round <- score_round
+    if(current_score - score > max_diff_like){
       count_solution <- 1
-    }else if(score_round == current_score_round){
+      index_converged <- count_mle
+    }else{
       count_solution <- count_solution + 1
+      index_converged <- c(index_converged, count_mle)
     }
 
     if(count_solution == num_converged){
@@ -113,7 +114,7 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
     est_param[2] <- tmp[2] * (max_scale_di - min_scale_di) + min_scale_di
   }
 
-  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, warning_message = warning_message))
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, index_converged = index_converged, warning_message = warning_message))
 }
 
 #' estimate_dropin_params
@@ -130,8 +131,9 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
+#' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
-estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs, waiter_ui){
+estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui){
 
     # --- Extract data for autosomal markers --- #
 
@@ -173,12 +175,13 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
   heights <- dt_dropin_data$Height
   n_dropin <- length(heights)
 
-  tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs)
+  tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like)
   est_param <- tmp$est_param
   shape_di <- est_param["shape_di"]
   scale_di <- est_param["scale_di"]
-  init_list_di <- tmp$init_list
-  opt_list_di <- tmp$opt_list
+  init_list <- tmp$init_list
+  opt_list <- tmp$opt_list
+  index_converged <- tmp$index_converged
   warning_message <- tmp$warning_message
 
   # --- Create the data.table for estimated parameters --- #
@@ -190,7 +193,8 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
 
   return(list("dt_dropin_data" = dt_dropin_data,
               "dt_est_dropin" = dt_est_dropin,
-              "init_list_di" = init_list_di,
-              "opt_list_di" = opt_list_di,
+              "init_list" = init_list,
+              "opt_list" = opt_list,
+              "index_converged" = index_converged,
               "warning_message" = warning_message))
 }

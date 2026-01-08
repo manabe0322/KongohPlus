@@ -77,6 +77,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$max_iter <- 5000
       rv_deconvo_setting$num_converged <- 3
       rv_deconvo_setting$max_mle_runs <- 10
+      rv_deconvo_setting$max_diff_like <- 0.005
       rv_deconvo_setting$bool_correct_noc <- TRUE
       rv_deconvo_setting$bool_correct_theta <- TRUE
       rv_deconvo_setting$bool_correct_advanced_temp <- TRUE
@@ -84,6 +85,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$bool_correct_advanced_deg <- TRUE
       rv_deconvo_setting$bool_correct_advanced_1 <- TRUE
       rv_deconvo_setting$bool_correct_advanced_2 <- TRUE
+      rv_deconvo_setting$bool_correct_advanced_3 <- TRUE
       rv_deconvo_setting$dt_ignore_mk <- NULL
 
       rv_deconvo <- reactiveValues()
@@ -261,15 +263,16 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           fluidRow(
             column(6,
                    numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_deconvo_setting$stop_iter),
+                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_deconvo_setting$max_iter),
                    numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_deconvo_setting$num_converged),
-                   numericInput(session$ns("min_temp"), label = "Minimum template amount", value = rv_deconvo_setting$min_temp),
-                   numericInput(session$ns("min_rep_ae"), label = "Minimum replicate amplification efficiency", value = rv_deconvo_setting$min_rep_ae),
-                   numericInput(session$ns("min_deg"), label = "Minimum degradation parameter", value = rv_deconvo_setting$min_deg)
+                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_deconvo_setting$max_mle_runs),
+                   numericInput(session$ns("max_diff_like"), label = "Reproducibility threshold (log10-likelihood difference)", value = rv_deconvo_setting$max_diff_like)
             ),
             column(6,
-                   numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_deconvo_setting$max_iter),
-                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_deconvo_setting$max_mle_runs),
+                   numericInput(session$ns("min_temp"), label = "Minimum template amount", value = rv_deconvo_setting$min_temp),
                    numericInput(session$ns("max_temp"), label = "Maximum template amount", value = rv_deconvo_setting$max_temp),
+                   numericInput(session$ns("min_deg"), label = "Minimum degradation parameter", value = rv_deconvo_setting$min_deg),
+                   numericInput(session$ns("min_rep_ae"), label = "Minimum replicate amplification efficiency", value = rv_deconvo_setting$min_rep_ae),
                    numericInput(session$ns("max_rep_ae"), label = "Maximum replicate amplification efficiency", value = rv_deconvo_setting$max_rep_ae)
             )
           ),
@@ -403,6 +406,20 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         rv_deconvo_setting$bool_correct_advanced_2 <- bool_correct_advanced_2
       })
 
+      observeEvent(input$max_diff_like, {
+        max_diff_like <- input$max_diff_like
+
+        hideFeedback("max_diff_like")
+        bool_correct_advanced_3 <- TRUE
+
+        if(!is.numeric(max_diff_like) || max_diff_like < 0){
+          showFeedbackDanger(inputId = "max_diff_like", text = "Value must be a numeric value greater than zero.")
+          bool_correct_advanced_3 <- FALSE
+        }
+
+        rv_deconvo_setting$bool_correct_advanced_3 <- bool_correct_advanced_3
+      })
+
       observe({
         req(rv_deconvo_setting)
 
@@ -410,7 +427,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
                rv_deconvo_setting$bool_correct_advanced_rep_ae,
                rv_deconvo_setting$bool_correct_advanced_deg,
                rv_deconvo_setting$bool_correct_advanced_1,
-               rv_deconvo_setting$bool_correct_advanced_2)){
+               rv_deconvo_setting$bool_correct_advanced_2,
+               rv_deconvo_setting$bool_correct_advanced_3)){
           enable("act_advance_deconvo_save")
         }else{
           disable("act_advance_deconvo_save")
@@ -427,6 +445,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         rv_deconvo_setting$max_iter <- input$max_iter
         rv_deconvo_setting$num_converged <- input$num_converged
         rv_deconvo_setting$max_mle_runs <- input$max_mle_runs
+        rv_deconvo_setting$max_diff_like <- input$max_diff_like
         removeModal()
       })
 
@@ -460,6 +479,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         max_iter <- rv_deconvo_setting$max_iter
         num_converged <- rv_deconvo_setting$num_converged
         max_mle_runs <- rv_deconvo_setting$max_mle_runs
+        max_diff_like <- rv_deconvo_setting$max_diff_like
 
         # Extract information on the kit
         dt_kit <- fread(paste0(path_pack, "/extdata/kit/", dt_anameth$Name[dt_anameth$Category == "Kit"], ".csv"))
@@ -488,7 +508,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             }else{
               hnc_all <- hnc_from:hnc_to
               data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
-                                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs,
+                                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                                                       waiter_ui)
               data_deconvo$hnc_all <- hnc_all
               data_deconvo$theta <- theta
@@ -511,6 +531,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
               data_deconvo$max_iter <- max_iter
               data_deconvo$num_converged <- num_converged
               data_deconvo$max_mle_runs <- max_mle_runs
+              data_deconvo$max_diff_like <- max_diff_like
               rv_deconvo$data_deconvo <- data_deconvo
 
               waiter_ui$hide()

@@ -72,7 +72,8 @@ view_sr_ui <- function(id){
 #' @param min_sigma The minimum sigma
 #' @param max_sigma The maximum sigma
 #' @param select_mk The selected marker
-create_dt_all_mle_sr <- function(sr_type, dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk){
+#' @param index_converged_select_mk_sr The indices of the converged MLE runs in the selected marker and the selected stutter type
+create_dt_all_mle_sr <- function(sr_type, dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk, index_converged_select_mk_sr){
 
   dt_all_mle <- NULL
   count_mle <- NULL
@@ -111,7 +112,7 @@ create_dt_all_mle_sr <- function(sr_type, dt_setting_est_sr, opt_select_mk_sr, m
           vec_params[2] <- est_params[2] * (max_sigma - min_sigma) + min_sigma
         }
 
-        mat_all_mle[1, i] <- - score / log(10)
+        mat_all_mle[1, i] <- - score
         mat_all_mle[2:(n_param + 1), i] <- vec_params
       }
 
@@ -121,9 +122,7 @@ create_dt_all_mle_sr <- function(sr_type, dt_setting_est_sr, opt_select_mk_sr, m
       dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
       setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
-      all_scores_round <- round(all_scores, 3)
-      index_converged <- which(all_scores_round == min(all_scores_round))
-      name_converged <- paste0("MLE ", index_converged)
+      name_converged <- paste0("MLE ", index_converged_select_mk_sr)
     }
   }
 
@@ -150,6 +149,10 @@ view_sr_server <- function(id, path_pack){
       rv_view_sr$opt_list_all_mk_fsr <- NULL
       rv_view_sr$opt_list_all_mk_dsr <- NULL
       rv_view_sr$opt_list_all_mk_m2sr <- NULL
+      rv_view_sr$index_converged_list_all_mk_bsr <- NULL
+      rv_view_sr$index_converged_list_all_mk_fsr <- NULL
+      rv_view_sr$index_converged_list_all_mk_dsr <- NULL
+      rv_view_sr$index_converged_list_all_mk_m2sr <- NULL
       rv_view_sr$min_myu <- NULL
       rv_view_sr$max_myu <- NULL
       rv_view_sr$min_slope <- NULL
@@ -193,6 +196,10 @@ view_sr_server <- function(id, path_pack){
           rv_view_sr$opt_list_all_mk_fsr <- data_est_sr$opt_list_all_mk_fsr
           rv_view_sr$opt_list_all_mk_dsr <- data_est_sr$opt_list_all_mk_dsr
           rv_view_sr$opt_list_all_mk_m2sr <- data_est_sr$opt_list_all_mk_m2sr
+          rv_view_sr$index_converged_list_all_mk_bsr <- data_est_sr$index_converged_list_all_mk_bsr
+          rv_view_sr$index_converged_list_all_mk_fsr <- data_est_sr$index_converged_list_all_mk_fsr
+          rv_view_sr$index_converged_list_all_mk_dsr <- data_est_sr$index_converged_list_all_mk_dsr
+          rv_view_sr$index_converged_list_all_mk_m2sr <- data_est_sr$index_converged_list_all_mk_m2sr
           rv_view_sr$min_myu <- data_est_sr$min_myu
           rv_view_sr$max_myu <- data_est_sr$max_myu
           rv_view_sr$min_slope <- data_est_sr$min_slope
@@ -248,6 +255,10 @@ view_sr_server <- function(id, path_pack){
         req(rv_view_sr$opt_list_all_mk_fsr)
         req(rv_view_sr$opt_list_all_mk_dsr)
         req(rv_view_sr$opt_list_all_mk_m2sr)
+        req(rv_view_sr$index_converged_list_all_mk_bsr)
+        req(rv_view_sr$index_converged_list_all_mk_fsr)
+        req(rv_view_sr$index_converged_list_all_mk_dsr)
+        req(rv_view_sr$index_converged_list_all_mk_m2sr)
 
         select_mk <- input$select_mk
         select_st_type <- input$select_st_type
@@ -261,6 +272,10 @@ view_sr_server <- function(id, path_pack){
         opt_list_all_mk_fsr <- rv_view_sr$opt_list_all_mk_fsr
         opt_list_all_mk_dsr <- rv_view_sr$opt_list_all_mk_dsr
         opt_list_all_mk_m2sr <- rv_view_sr$opt_list_all_mk_m2sr
+        index_converged_list_all_mk_bsr <- rv_view_sr$index_converged_list_all_mk_bsr
+        index_converged_list_all_mk_fsr <- rv_view_sr$index_converged_list_all_mk_fsr
+        index_converged_list_all_mk_dsr <- rv_view_sr$index_converged_list_all_mk_dsr
+        index_converged_list_all_mk_m2sr <- rv_view_sr$index_converged_list_all_mk_m2sr
 
         rv_view_sr$dt_average_sr <- NULL
         rv_view_sr$dt_st_type <- NULL
@@ -274,6 +289,10 @@ view_sr_server <- function(id, path_pack){
         rv_view_sr$opt_select_mk_fsr <- NULL
         rv_view_sr$opt_select_mk_dsr <- NULL
         rv_view_sr$opt_select_mk_m2sr <- NULL
+        rv_view_sr$index_converged_select_mk_bsr <- NULL
+        rv_view_sr$index_converged_select_mk_fsr <- NULL
+        rv_view_sr$index_converged_select_mk_dsr <- NULL
+        rv_view_sr$index_converged_select_mk_m2sr <- NULL
 
         if(!is.null(select_mk) && !is.null(select_st_type)){
           rv_view_sr$dt_average_sr <- list_dt_average_sr[[select_mk]]
@@ -317,6 +336,10 @@ view_sr_server <- function(id, path_pack){
           rv_view_sr$opt_select_mk_fsr <- opt_list_all_mk_fsr[[index_mk]]
           rv_view_sr$opt_select_mk_dsr <- opt_list_all_mk_dsr[[index_mk]]
           rv_view_sr$opt_select_mk_m2sr <- opt_list_all_mk_m2sr[[index_mk]]
+          rv_view_sr$index_converged_select_mk_bsr <- index_converged_list_all_mk_bsr[[index_mk]]
+          rv_view_sr$index_converged_select_mk_fsr <- index_converged_list_all_mk_fsr[[index_mk]]
+          rv_view_sr$index_converged_select_mk_dsr <- index_converged_list_all_mk_dsr[[index_mk]]
+          rv_view_sr$index_converged_select_mk_m2sr <- index_converged_list_all_mk_m2sr[[index_mk]]
 
           dt_kit <- fread(paste0(path_pack, "/extdata/kit/", name_kit_stutter, ".csv"))
           dt_kit <- try(change_data_type_kit(dt_kit))
@@ -354,6 +377,10 @@ view_sr_server <- function(id, path_pack){
         req(rv_view_sr$opt_list_all_mk_fsr)
         req(rv_view_sr$opt_list_all_mk_dsr)
         req(rv_view_sr$opt_list_all_mk_m2sr)
+        req(rv_view_sr$index_converged_select_mk_bsr)
+        req(rv_view_sr$index_converged_select_mk_fsr)
+        req(rv_view_sr$index_converged_select_mk_dsr)
+        req(rv_view_sr$index_converged_select_mk_m2sr)
 
         tagList(
           actionButton(session$ns("act_all_mle_bsr"), label = "BSR"),
@@ -376,6 +403,7 @@ view_sr_server <- function(id, path_pack){
       output$dt_all_mle_bsr <- renderDataTable({
         req(rv_view_sr$dt_setting_est_sr)
         req(rv_view_sr$opt_select_mk_bsr)
+        req(rv_view_sr$index_converged_select_mk_bsr)
         req(rv_view_sr$min_myu)
         req(rv_view_sr$max_myu)
         req(rv_view_sr$min_slope)
@@ -388,6 +416,7 @@ view_sr_server <- function(id, path_pack){
 
         dt_setting_est_sr <- rv_view_sr$dt_setting_est_sr
         opt_select_mk_sr <- rv_view_sr$opt_select_mk_bsr
+        index_converged_select_mk_sr <- rv_view_sr$index_converged_select_mk_bsr
         min_myu <- rv_view_sr$min_myu
         max_myu <- rv_view_sr$max_myu
         min_slope <- rv_view_sr$min_slope
@@ -399,7 +428,7 @@ view_sr_server <- function(id, path_pack){
 
         select_mk <- input$select_mk
 
-        tmp <- create_dt_all_mle_sr("BSR", dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk)
+        tmp <- create_dt_all_mle_sr("BSR", dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk, index_converged_select_mk_sr)
         dt_all_mle <- tmp$dt_all_mle
         count_mle <- tmp$count_mle
         name_converged <- tmp$name_converged
@@ -430,6 +459,7 @@ view_sr_server <- function(id, path_pack){
       output$dt_all_mle_fsr <- renderDataTable({
         req(rv_view_sr$dt_setting_est_sr)
         req(rv_view_sr$opt_select_mk_fsr)
+        req(rv_view_sr$index_converged_select_mk_fsr)
         req(rv_view_sr$min_myu)
         req(rv_view_sr$max_myu)
         req(rv_view_sr$min_slope)
@@ -442,6 +472,7 @@ view_sr_server <- function(id, path_pack){
 
         dt_setting_est_sr <- rv_view_sr$dt_setting_est_sr
         opt_select_mk_sr <- rv_view_sr$opt_select_mk_fsr
+        index_converged_select_mk_sr <- rv_view_sr$index_converged_select_mk_fsr
         min_myu <- rv_view_sr$min_myu
         max_myu <- rv_view_sr$max_myu
         min_slope <- rv_view_sr$min_slope
@@ -453,7 +484,7 @@ view_sr_server <- function(id, path_pack){
 
         select_mk <- input$select_mk
 
-        tmp <- create_dt_all_mle_sr("FSR", dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk)
+        tmp <- create_dt_all_mle_sr("FSR", dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk, index_converged_select_mk_sr)
         dt_all_mle <- tmp$dt_all_mle
         count_mle <- tmp$count_mle
         name_converged <- tmp$name_converged
@@ -484,6 +515,7 @@ view_sr_server <- function(id, path_pack){
       output$dt_all_mle_dsr <- renderDataTable({
         req(rv_view_sr$dt_setting_est_sr)
         req(rv_view_sr$opt_select_mk_dsr)
+        req(rv_view_sr$index_converged_select_mk_dsr)
         req(rv_view_sr$min_myu)
         req(rv_view_sr$max_myu)
         req(rv_view_sr$min_slope)
@@ -496,6 +528,7 @@ view_sr_server <- function(id, path_pack){
 
         dt_setting_est_sr <- rv_view_sr$dt_setting_est_sr
         opt_select_mk_sr <- rv_view_sr$opt_select_mk_dsr
+        index_converged_select_mk_sr <- rv_view_sr$index_converged_select_mk_dsr
         min_myu <- rv_view_sr$min_myu
         max_myu <- rv_view_sr$max_myu
         min_slope <- rv_view_sr$min_slope
@@ -507,7 +540,7 @@ view_sr_server <- function(id, path_pack){
 
         select_mk <- input$select_mk
 
-        tmp <- create_dt_all_mle_sr("DSR", dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk)
+        tmp <- create_dt_all_mle_sr("DSR", dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk, index_converged_select_mk_sr)
         dt_all_mle <- tmp$dt_all_mle
         count_mle <- tmp$count_mle
         name_converged <- tmp$name_converged
@@ -538,6 +571,7 @@ view_sr_server <- function(id, path_pack){
       output$dt_all_mle_m2sr <- renderDataTable({
         req(rv_view_sr$dt_setting_est_sr)
         req(rv_view_sr$opt_select_mk_m2sr)
+        req(rv_view_sr$index_converged_select_mk_m2sr)
         req(rv_view_sr$min_myu)
         req(rv_view_sr$max_myu)
         req(rv_view_sr$min_slope)
@@ -550,6 +584,7 @@ view_sr_server <- function(id, path_pack){
 
         dt_setting_est_sr <- rv_view_sr$dt_setting_est_sr
         opt_select_mk_sr <- rv_view_sr$opt_select_mk_m2sr
+        index_converged_select_mk_sr <- rv_view_sr$index_converged_select_mk_m2sr
         min_myu <- rv_view_sr$min_myu
         max_myu <- rv_view_sr$max_myu
         min_slope <- rv_view_sr$min_slope
@@ -560,7 +595,7 @@ view_sr_server <- function(id, path_pack){
         max_sigma <- rv_view_sr$max_sigma
         select_mk <- input$select_mk
 
-        tmp <- create_dt_all_mle_sr("M2SR", dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk)
+        tmp <- create_dt_all_mle_sr("M2SR", dt_setting_est_sr, opt_select_mk_sr, min_myu, max_myu, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, select_mk, index_converged_select_mk_sr)
         dt_all_mle <- tmp$dt_all_mle
         count_mle <- tmp$count_mle
         name_converged <- tmp$name_converged

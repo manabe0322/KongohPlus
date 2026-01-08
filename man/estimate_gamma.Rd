@@ -18,6 +18,7 @@ estimate_gamma(
   max_iter,
   num_converged,
   max_mle_runs,
+  max_diff_like,
   waiter_ui = NULL
 )
 }
@@ -47,6 +48,8 @@ estimate_gamma(
 \item{num_converged}{Number of converged MLE runs before stopping}
 
 \item{max_mle_runs}{Maximum number of MLE attempts}
+
+\item{max_diff_like}{Reproducibility threshold (log10-likelihood difference)}
 
 \item{waiter_ui}{Information on UI for waiter}
 }

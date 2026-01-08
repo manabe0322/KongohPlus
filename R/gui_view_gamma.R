@@ -77,7 +77,8 @@ view_gamma_server <- function(id, path_pack){
       rv_view_gamma$warning_message <- NULL
       rv_view_gamma$dt_gamma_data <- NULL
       rv_view_gamma$dt_est_gamma <- NULL
-      rv_view_gamma$opt_list_gamma <- NULL
+      rv_view_gamma$opt_list <- NULL
+      rv_view_gamma$index_converged <- NULL
       rv_view_gamma$min_scale_allele <- NULL
       rv_view_gamma$max_scale_allele <- NULL
       rv_view_gamma$min_scale_stutter <- NULL
@@ -101,7 +102,8 @@ view_gamma_server <- function(id, path_pack){
           rv_view_gamma$warning_message <- data_est_gamma$warning_message
           rv_view_gamma$dt_gamma_data <- data_est_gamma$dt_gamma_data
           rv_view_gamma$dt_est_gamma <- data_est_gamma$dt_est_gamma
-          rv_view_gamma$opt_list_gamma <- data_est_gamma$opt_list_gamma
+          rv_view_gamma$opt_list <- data_est_gamma$opt_list
+          rv_view_gamma$index_converged <- data_est_gamma$index_converged
           rv_view_gamma$min_scale_allele <- data_est_gamma$min_scale_allele
           rv_view_gamma$max_scale_allele <- data_est_gamma$max_scale_allele
           rv_view_gamma$min_scale_stutter <- data_est_gamma$min_scale_stutter
@@ -144,13 +146,15 @@ view_gamma_server <- function(id, path_pack){
       })
 
       output$dt_all_mle <- renderDataTable({
-        req(rv_view_gamma$opt_list_gamma)
+        req(rv_view_gamma$opt_list)
+        req(rv_view_gamma$index_converged)
         req(rv_view_gamma$min_scale_allele)
         req(rv_view_gamma$max_scale_allele)
         req(rv_view_gamma$min_scale_stutter)
         req(rv_view_gamma$max_scale_stutter)
 
-        opt_list <- rv_view_gamma$opt_list_gamma
+        opt_list <- rv_view_gamma$opt_list
+        index_converged <- rv_view_gamma$index_converged
         min_scale_allele <- rv_view_gamma$min_scale_allele
         max_scale_allele <- rv_view_gamma$max_scale_allele
         min_scale_stutter <- rv_view_gamma$min_scale_stutter
@@ -170,7 +174,7 @@ view_gamma_server <- function(id, path_pack){
           scale_allele <- est_params[1] * (max_scale_allele - min_scale_allele) + min_scale_allele
           scale_stutter <- est_params[2] * (max_scale_stutter - min_scale_stutter) + min_scale_stutter
 
-          mat_all_mle[1, i] <- - score / log(10)
+          mat_all_mle[1, i] <- - score
           mat_all_mle[2:(n_param + 1), i] <- c(scale_allele, scale_stutter)
         }
 
@@ -181,8 +185,6 @@ view_gamma_server <- function(id, path_pack){
         dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
         setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
-        all_scores_round <- round(all_scores, 3)
-        index_converged <- which(all_scores_round == min(all_scores_round))
         name_converged <- paste0("MLE ", index_converged)
 
         datatable(

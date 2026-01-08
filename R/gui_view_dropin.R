@@ -67,7 +67,8 @@ view_dropin_server <- function(id, path_pack){
       rv_view_dropin$fn_dropin_data <- NULL
       rv_view_dropin$dt_est_dropin <- NULL
       rv_view_dropin$dt_dropin_data <- NULL
-      rv_view_dropin$opt_list_di <- NULL
+      rv_view_dropin$opt_list <- NULL
+      rv_view_dropin$index_converged <- NULL
       rv_view_dropin$min_shape_di <- NULL
       rv_view_dropin$max_shape_di <- NULL
       rv_view_dropin$min_scale_di <- NULL
@@ -87,7 +88,8 @@ view_dropin_server <- function(id, path_pack){
           rv_view_dropin$warning_message <- data_est_dropin$warning_message
           rv_view_dropin$dt_est_dropin <- data_est_dropin$dt_est_dropin
           rv_view_dropin$dt_dropin_data <- data_est_dropin$dt_dropin_data
-          rv_view_dropin$opt_list_di <- data_est_dropin$opt_list_di
+          rv_view_dropin$opt_list <- data_est_dropin$opt_list
+          rv_view_dropin$index_converged <- data_est_dropin$index_converged
           rv_view_dropin$min_shape_di <- data_est_dropin$min_shape_di
           rv_view_dropin$max_shape_di <- data_est_dropin$max_shape_di
           rv_view_dropin$min_scale_di <- data_est_dropin$min_scale_di
@@ -127,13 +129,15 @@ view_dropin_server <- function(id, path_pack){
       })
 
       output$dt_all_mle <- renderDataTable({
-        req(rv_view_dropin$opt_list_di)
+        req(rv_view_dropin$opt_list)
+        req(rv_view_dropin$index_converged)
         req(rv_view_dropin$min_shape_di)
         req(rv_view_dropin$max_shape_di)
         req(rv_view_dropin$min_scale_di)
         req(rv_view_dropin$max_scale_di)
 
-        opt_list <- rv_view_dropin$opt_list_di
+        opt_list <- rv_view_dropin$opt_list
+        index_converged <- rv_view_dropin$index_converged
         min_shape_di <- rv_view_dropin$min_shape_di
         max_shape_di <- rv_view_dropin$max_shape_di
         min_scale_di <- rv_view_dropin$min_scale_di
@@ -153,7 +157,7 @@ view_dropin_server <- function(id, path_pack){
           shape <- est_params[1] * (max_shape_di - min_shape_di) + min_shape_di
           scale <- est_params[2] * (max_scale_di - min_scale_di) + min_scale_di
 
-          mat_all_mle[1, i] <- - score / log(10)
+          mat_all_mle[1, i] <- - score
           mat_all_mle[2:(n_param + 1), i] <- c(shape, scale)
         }
 
@@ -164,8 +168,6 @@ view_dropin_server <- function(id, path_pack){
         dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
         setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
-        all_scores_round <- round(all_scores, 3)
-        index_converged <- which(all_scores_round == min(all_scores_round))
         name_converged <- paste0("MLE ", index_converged)
 
         datatable(

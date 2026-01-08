@@ -53,7 +53,8 @@ create_dt_ae_data <- function(peak_list, height_list){
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
-run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs){
+#' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
+run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
 
   # Likelihood function for the locus-specific amplification efficiency
   like_fun_ae <- function(par){
@@ -66,13 +67,13 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
       dens[i] <- ddirichlet(prop_ae_data_use[, i], alpha)
     }
 
-    loglike <- - sum(log(dens))
+    log10like <- - sum(log(dens)) / log(10)
 
-    if(is.na(loglike) || is.nan(loglike) || is.infinite(loglike)){
-      loglike <- Inf
+    if(is.na(log10like) || is.nan(log10like) || is.infinite(log10like)){
+      log10like <- Inf
     }
 
-    return(loglike)
+    return(log10like)
   }
 
   n_mk <- nrow(prop_ae_data_use)
@@ -82,11 +83,11 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
   # Perform simulated annealing
   current_opt <- NULL
   current_score <- Inf
-  current_score_round <- Inf
   count_mle <- 0
   count_solution <- 0
   init_list <- list()
   opt_list <- list()
+  index_converged <- integer(0)
   repeat{
     count_mle <- count_mle + 1
 
@@ -106,12 +107,12 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
       current_score <- score
     }
 
-    score_round <- round(score, 3)
-    if(score_round < current_score_round){
-      current_score_round <- score_round
+    if(current_score - score > max_diff_like){
       count_solution <- 1
-    }else if(score_round == current_score_round){
+      index_converged <- count_mle
+    }else{
       count_solution <- count_solution + 1
+      index_converged <- c(index_converged, count_mle)
     }
 
     if(count_solution == num_converged){
@@ -137,7 +138,7 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
   }
   names(est_param) <- paste0("alpha[", 1:n_mk, "]")
 
-  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, warning_message = warning_message))
+  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, index_converged = index_converged, warning_message = warning_message))
 }
 
 #' estimate_lsae
@@ -153,10 +154,11 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
+#' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
 estimate_lsae <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
                           min_alpha, max_alpha,
-                          stop_iter, max_iter, num_converged, max_mle_runs,
+                          stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                           waiter_ui = NULL){
 
   # Extract information on setting
@@ -217,10 +219,11 @@ estimate_lsae <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
     )
   }
 
-  tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs)
+  tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like)
   alpha <- tmp$est_param
-  init_list_ae <- tmp$init_list
-  opt_list_ae <- tmp$opt_list
+  init_list <- tmp$init_list
+  opt_list <- tmp$opt_list
+  index_converged <- tmp$index_converged
   warning_message <- tmp$warning_message
 
   # --- Create the data.table for LSAE --- #
@@ -229,8 +232,9 @@ estimate_lsae <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
   dt_expect_ae <- data.table(Marker = markers_auto, Alpha = alpha, LSAE = expect_ae)
 
   return(list("dt_expect_ae" = dt_expect_ae,
-              "init_list_ae" = init_list_ae,
-              "opt_list_ae" = opt_list_ae,
+              "init_list" = init_list,
+              "opt_list" = opt_list,
+              "index_converged" = index_converged,
               "warning_message" = warning_message,
               "dt_prop_ae_data_use" = dt_prop_ae_data_use))
 }

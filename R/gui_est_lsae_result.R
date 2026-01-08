@@ -59,7 +59,8 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
       rv_est_lsae_result$warning_message <- NULL
       rv_est_lsae_result$dt_prop_ae_data_use <- NULL
       rv_est_lsae_result$dt_expect_ae <- NULL
-      rv_est_lsae_result$opt_list_ae <- NULL
+      rv_est_lsae_result$opt_list <- NULL
+      rv_est_lsae_result$index_converged <- NULL
       rv_est_lsae_result$min_alpha <- NULL
       rv_est_lsae_result$max_alpha <- NULL
       rv_est_lsae_result$df_select_lsae <- NULL
@@ -71,7 +72,8 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
         rv_est_lsae_result$warning_message <- NULL
         rv_est_lsae_result$dt_prop_ae_data_use <- NULL
         rv_est_lsae_result$dt_expect_ae <- NULL
-        rv_est_lsae_result$opt_list_ae <- NULL
+        rv_est_lsae_result$opt_list <- NULL
+        rv_est_lsae_result$index_converged <- NULL
         rv_est_lsae_result$min_alpha <- NULL
         rv_est_lsae_result$max_alpha <- NULL
         rv_est_lsae_result$df_select_lsae <- NULL
@@ -80,7 +82,8 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
           rv_est_lsae_result$warning_message <- data_est_lsae$warning_message
           rv_est_lsae_result$dt_prop_ae_data_use <- data_est_lsae$dt_prop_ae_data_use
           rv_est_lsae_result$dt_expect_ae <- data_est_lsae$dt_expect_ae
-          rv_est_lsae_result$opt_list_ae <- data_est_lsae$opt_list_ae
+          rv_est_lsae_result$opt_list <- data_est_lsae$opt_list
+          rv_est_lsae_result$index_converged <- data_est_lsae$index_converged
           rv_est_lsae_result$min_alpha <- data_est_lsae$min_alpha
           rv_est_lsae_result$max_alpha <- data_est_lsae$max_alpha
           enable("act_saveas_est_lsae_1")
@@ -173,12 +176,14 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
 
       output$dt_all_mle <- renderDataTable({
         req(rv_est_lsae_result$dt_expect_ae)
-        req(rv_est_lsae_result$opt_list_ae)
+        req(rv_est_lsae_result$opt_list)
+        req(rv_est_lsae_result$index_converged)
         req(rv_est_lsae_result$min_alpha)
         req(rv_est_lsae_result$max_alpha)
 
         dt_expect_ae <- rv_est_lsae_result$dt_expect_ae
-        opt_list <- rv_est_lsae_result$opt_list_ae
+        opt_list <- rv_est_lsae_result$opt_list
+        index_converged <- rv_est_lsae_result$index_converged
         min_alpha <- rv_est_lsae_result$min_alpha
         max_alpha <- rv_est_lsae_result$max_alpha
 
@@ -196,7 +201,7 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
           alpha <- est_params * (max_alpha - min_alpha) + min_alpha
           lsae <- n_mk * (alpha + 1) / (sum(alpha) + n_mk)
 
-          mat_all_mle[1, i] <- - score / log(10)
+          mat_all_mle[1, i] <- - score
           mat_all_mle[2:(n_mk + 1), i] <- lsae
         }
 
@@ -207,8 +212,6 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
         dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
         setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
-        all_scores_round <- round(all_scores, 3)
-        index_converged <- which(all_scores_round == min(all_scores_round))
         name_converged <- paste0("MLE ", index_converged)
 
         datatable(

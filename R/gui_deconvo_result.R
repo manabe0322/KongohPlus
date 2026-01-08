@@ -254,6 +254,7 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         if(length(index_hnc) != 0){
           data_hnc <- data_hnc_list[[index_hnc]]
           opt_list <- data_hnc$opt_list
+          index_converged <- data_hnc$index_converged
 
           n_rep <- length(which(dt_param$Parameter == "Replicate amplification efficiency"))
 
@@ -279,7 +280,7 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
             temp <- temp[index_order]
             deg <- deg[index_order]
 
-            mat_all_mle[1, i] <- - score / log(10)
+            mat_all_mle[1, i] <- - score
             mat_all_mle[2:(n_param + 1), i] <- c(temp, deg, rep_ae)
           }
 
@@ -291,8 +292,6 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
           dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
           setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
-          all_scores_round <- round(all_scores, 3)
-          index_converged <- which(all_scores_round == min(all_scores_round))
           name_converged <- paste0("MLE ", index_converged)
 
           datatable(

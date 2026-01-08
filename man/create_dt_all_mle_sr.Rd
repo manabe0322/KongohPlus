@@ -16,7 +16,8 @@ create_dt_all_mle_sr(
   max_intercept,
   min_sigma,
   max_sigma,
-  select_mk
+  select_mk,
+  index_converged_select_mk_sr
 )
 }
 \arguments{
@@ -43,6 +44,8 @@ create_dt_all_mle_sr(
 \item{max_sigma}{The maximum sigma}
 
 \item{select_mk}{The selected marker}
+
+\item{index_converged_select_mk_sr}{The indices of the converged MLE runs in the selected marker and the selected stutter type}
 }
 \description{
 The function to create the data.table of all MLE attempts for the stutter ratios
