@@ -24,14 +24,14 @@ create_peaks_plot <- function(peaks, rep_unit_len, q_distance = 3){
 #'
 #' @description The function to calculate the expected peak heights under the selected genotype combination
 #' @param gt_select_list A list of genotypes in each contributor
-#' @param tph The template amount
-#' @param mp The mixture proportions of each contributor
+#' @param temps The template amount of each contributor
 #' @param deg The degradation parameters of each contributor
+#' @param rep_ae_one The replication amplification efficiency in one replicate
 #' @param ae The locus-specific amplification efficiencies in each marker
 #' @param dt_average_sr The data.table for the average stutter ratios
 #' @param dt_size The data.table for sizes
 #' @param base_size The base size of the profile
-calc_eph <- function(gt_select_list, tph, mp, deg, ae, dt_average_sr, dt_size, base_size){
+calc_eph <- function(gt_select_list, temps, deg, rep_ae_one, ae, dt_average_sr, dt_size, base_size){
   # Extract SR
   al_contrib <- unlist(gt_select_list)
   index_sr <- match(al_contrib, dt_average_sr$Allele)
@@ -49,21 +49,29 @@ calc_eph <- function(gt_select_list, tph, mp, deg, ae, dt_average_sr, dt_size, b
   sizes <- dt_size$Size[index_size]
   sizes[is.na(sizes)] <- median(dt_size$Size)
 
-  eph_tmp <- ae * tph * as.vector(sapply(mp, rep, 2)) * as.vector(sapply(deg, rep, 2))^((sizes - base_size) / 100)
-
-  bs_contrib <- calc_bs(al_contrib)
-  fs_contrib <- calc_fs(al_contrib)
-  ds_contrib <- calc_ds(al_contrib)
-  m2s_contrib <- calc_m2s(al_contrib)
-  peaks_eph <- sort(unique(c(al_contrib, bs_contrib, fs_contrib, ds_contrib, m2s_contrib)))
-  ephs <- rep(0, length(peaks_eph))
-  names(ephs) <- peaks_eph
-
+  eph_tmp <- ae * as.vector(sapply(temps * rep_ae_one, rep, 2)) * as.vector(sapply(deg, rep, 2))^((sizes - base_size) / 100)
   eph_al <- eph_tmp / (1 + bsrs + fsrs + dsrs + m2srs)
   eph_bs <- eph_tmp * bsrs / (1 + bsrs + fsrs + dsrs + m2srs)
   eph_fs <- eph_tmp * fsrs / (1 + bsrs + fsrs + dsrs + m2srs)
   eph_ds <- eph_tmp * dsrs / (1 + bsrs + fsrs + dsrs + m2srs)
   eph_m2s <- eph_tmp * m2srs / (1 + bsrs + fsrs + dsrs + m2srs)
+
+  bs_contrib <- calc_bs(al_contrib)
+  fs_contrib <- calc_fs(al_contrib)
+  ds_contrib <- calc_ds(al_contrib)
+  m2s_contrib <- calc_m2s(al_contrib)
+  peaks_eph <- sort(unique(c(al_contrib, bs_contrib, fs_contrib, ds_contrib, m2s_contrib, 991, 992, 993, 994))) # 991, 992, 993, 994: temporary names of allele Q for each contributor
+  ephs <- rep(0, length(peaks_eph))
+  names(ephs) <- peaks_eph
+
+  hnc <- length(temps)
+  for(i in 1:hnc){
+    for(j in 1:2){
+
+    }
+  }
+
+  bool_99 <- al_contrib == 99
 
   for(i in 1:length(eph_al)){
     ephs[peaks_eph == al_contrib[i]] <- ephs[peaks_eph == al_contrib[i]] + eph_al[i]

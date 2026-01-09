@@ -3,6 +3,7 @@
 #' @description The function to create objects for genotype permutations
 #' @param cand_gt A list of all possible candidate genotypes
 #' @param index_gt_comb_adopt_cpp A list of the indices of the adopted genotype combinations (C++ index)
+#' @param log_gt_comb_prob_mk A list of the log genotype probabilities in each genotype combination
 #' @param bool_gt_comb_di_mk_rep A list of indicators for drop-in peaks in each genotype combination
 create_gt_perm_obj <- function(cand_gt, index_gt_comb_adopt_cpp, log_gt_comb_prob_mk, bool_gt_comb_di_mk_rep){
   list_gt_perm <- list()
@@ -378,11 +379,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         rep_ae <- c(1, par[(2 * hnc + 1):(2 * hnc + n_rep - 1)] * (max_rep_ae - min_rep_ae) + min_rep_ae)
       }
 
-      tph_all_rep <- sum(temp) * rep_ae
-      mp <- temp / sum(temp)
-
       # Calculate log probability densities of all genotype combinations
-      lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(tph_all_rep, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
+      lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(temp, deg, rep_ae, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
                                               rph_base_use, scale_base_use, deg_size_base_use, oph_base_use, loglike_di_list,
                                               index_dedup1_list_cpp, index_dedup2_list_cpp, n_gt_perm_use, n_peak_use)
 
@@ -463,7 +461,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       rep_ae <- c(1, est_params[(2 * hnc + 1):(2 * hnc + n_rep - 1)] * (max_rep_ae - min_rep_ae) + min_rep_ae)
     }
 
-    tph_all_rep <- sum(temp) * rep_ae
     mp <- temp / sum(temp)
 
     # Descending order for estimated mixture proportions
@@ -491,7 +488,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     }
 
     # Calculate log probability densities of all genotype combinations
-    lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(tph_all_rep, mp, deg, hnc, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
+    lpd_gtc_all_rep <- calc_lpd_gtc_all_rep(temp, deg, rep_ae, ats_use, n_general_list, n_dropout_list, n_dropin_list, n_ignore_list,
                                             rph_base_use, scale_base_use, deg_size_base_use, oph_base_use, loglike_di_list,
                                             index_dedup1_list_cpp, index_dedup2_list_cpp, n_gt_perm_use, n_peak_use)
 

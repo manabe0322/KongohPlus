@@ -4,16 +4,25 @@
 \alias{calc_eph}
 \title{calc_eph}
 \usage{
-calc_eph(gt_select_list, tph, mp, deg, ae, dt_average_sr, dt_size, base_size)
+calc_eph(
+  gt_select_list,
+  temps,
+  deg,
+  rep_ae_one,
+  ae,
+  dt_average_sr,
+  dt_size,
+  base_size
+)
 }
 \arguments{
 \item{gt_select_list}{A list of genotypes in each contributor}
 
-\item{tph}{The template amount}
-
-\item{mp}{The mixture proportions of each contributor}
+\item{temps}{The template amount of each contributor}
 
 \item{deg}{The degradation parameters of each contributor}
+
+\item{rep_ae_one}{The replication amplification efficiency in one replicate}
 
 \item{ae}{The locus-specific amplification efficiencies in each marker}
 

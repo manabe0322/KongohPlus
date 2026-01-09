@@ -227,10 +227,8 @@ deconvo_pg_server <- function(id, rv_deconvo){
           param_names <- dt_param[["Parameter"]]
           est_vals <- dt_param[["Estimated value"]]
           temps <- est_vals[param_names == "Template amount"]
-          rep_ae <- est_vals[param_names == "Replicate amplification efficiency"]
           deg <- est_vals[param_names == "Degradation"]
-          tphs <- sum(temps) * rep_ae
-          mp <- temps / sum(temps)
+          rep_ae <- est_vals[param_names == "Replicate amplification efficiency"]
           ae <- ae_use[markers_use == mk]
 
           dt_average_sr <- list_dt_average_sr[[mk]]
@@ -242,7 +240,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
           df_combined_list <- vector(mode = "list", length = n_rep)
           for(i in 1:n_rep){
             # Calculate expected peak heights under the selected genotype combination
-            eph <- calc_eph(gt_select_list, tphs[i], mp, deg, ae, dt_average_sr, dt_size, base_size)
+            eph <- calc_eph(gt_select_list, temps, deg, rep_ae[i], ae, dt_average_sr, dt_size, base_size)
             peaks_eph <- as.numeric(names(eph))
 
             if(i == 1){
@@ -325,13 +323,12 @@ deconvo_pg_server <- function(id, rv_deconvo){
           param_names <- dt_param[["Parameter"]]
           est_vals <- dt_param[["Estimated value"]]
           temps <- est_vals[param_names == "Template amount"]
-          rep_ae <- est_vals[param_names == "Replicate amplification efficiency"]
           deg <- est_vals[param_names == "Degradation"]
-          tphs <- sum(temps) * rep_ae
-          mp <- temps / sum(temps)
-          mp_c1 <- mp[index_contrib]
-          deg_c1 <- deg[index_contrib]
+          rep_ae <- est_vals[param_names == "Replicate amplification efficiency"]
           ae <- ae_use[markers_use == mk]
+
+          temp_c1 <- temps[index_contrib]
+          deg_c1 <- deg[index_contrib]
 
           dt_average_sr <- list_dt_average_sr[[mk]]
 
@@ -342,7 +339,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
           df_combined_list <- vector(mode = "list", length = n_rep)
           for(i in 1:n_rep){
             # Calculate expected peak heights under the selected genotype combination
-            eph <- calc_eph(gt_select_list, tphs[i], mp_c1, deg_c1, ae, dt_average_sr, dt_size, base_size)
+            eph <- calc_eph(gt_select_list, temp_c1, deg_c1, rep_ae[i], ae, dt_average_sr, dt_size, base_size)
             peaks_eph <- as.numeric(names(eph))
 
             if(i == 1){

@@ -16,6 +16,8 @@ create_gt_perm_obj(
 
 \item{index_gt_comb_adopt_cpp}{A list of the indices of the adopted genotype combinations (C++ index)}
 
+\item{log_gt_comb_prob_mk}{A list of the log genotype probabilities in each genotype combination}
+
 \item{bool_gt_comb_di_mk_rep}{A list of indicators for drop-in peaks in each genotype combination}
 }
 \description{
