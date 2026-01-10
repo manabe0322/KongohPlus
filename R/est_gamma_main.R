@@ -13,20 +13,21 @@ calc_ave_het_ph_all_data <- function(height_list){
   return(ave_het_ph_all_data)
 }
 
-#' calc_relative_ph
+#' calc_eph_per_component
 #'
 #' @description The function to calculate the relative peak heights in one locus
 #' @param cand_peaks A vector of the candidate detectable peaks
 #' @param gt A vector of the genotype in one locus
+#' @param temp The template amount
 #' @param ae The amplification efficiency in one locus
 #' @param allele_sr A vector of the alleles for stutter ratios
 #' @param bsr_average A vector of the average back stutter ratios
 #' @param fsr_average A vector of the average forward stutter ratios
 #' @param dsr_average A vector of the average double-back stutter ratios
 #' @param m2sr_average A vector of the average minus 2-nt stutter ratios
-calc_relative_ph <- function(cand_peaks, gt, ae, allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average){
-  rph_al_1 <- rph_bs_1 <- rph_fs_1 <- rph_ds_1 <- rph_m2s_1 <- rep(0, length(cand_peaks))
-  rph_al_2 <- rph_bs_2 <- rph_fs_2 <- rph_ds_2 <- rph_m2s_2 <- rep(0, length(cand_peaks))
+calc_eph_per_component <- function(cand_peaks, gt, temp, ae, allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average){
+  eph_al_1 <- eph_bs_1 <- eph_fs_1 <- eph_ds_1 <- eph_m2s_1 <- rep(0, length(cand_peaks))
+  eph_al_2 <- eph_bs_2 <- eph_fs_2 <- eph_ds_2 <- eph_m2s_2 <- rep(0, length(cand_peaks))
 
   for(i in 1:2){
     al <- gt[i]
@@ -54,37 +55,37 @@ calc_relative_ph <- function(cand_peaks, gt, ae, allele_sr, bsr_average, fsr_ave
     index_m2s <- which(is.element(cand_peaks, m2s))
 
     if(i == 1){
-      rph_al_1[index_al] <- ae / (1 + bsr + fsr + dsr + m2sr)
+      eph_al_1[index_al] <- temp * ae / (1 + bsr + fsr + dsr + m2sr)
       if(length(index_bs) == 1){
-        rph_bs_1[index_bs] <- ae * bsr / (1 + bsr + fsr + dsr + m2sr)
+        eph_bs_1[index_bs] <- temp * ae * bsr / (1 + bsr + fsr + dsr + m2sr)
       }
       if(length(index_fs) == 1){
-        rph_fs_1[index_fs] <- ae * fsr / (1 + bsr + fsr + dsr + m2sr)
+        eph_fs_1[index_fs] <- temp * ae * fsr / (1 + bsr + fsr + dsr + m2sr)
       }
       if(length(index_ds) == 1){
-        rph_ds_1[index_ds] <- ae * dsr / (1 + bsr + fsr + dsr + m2sr)
+        eph_ds_1[index_ds] <- temp * ae * dsr / (1 + bsr + fsr + dsr + m2sr)
       }
       if(length(index_m2s) == 1){
-        rph_m2s_1[index_m2s] <- ae * m2sr / (1 + bsr + fsr + dsr + m2sr)
+        eph_m2s_1[index_m2s] <- temp * ae * m2sr / (1 + bsr + fsr + dsr + m2sr)
       }
     }else{
-      rph_al_2[index_al] <- ae / (1 + bsr + fsr + dsr + m2sr)
+      eph_al_2[index_al] <- temp * ae / (1 + bsr + fsr + dsr + m2sr)
       if(length(index_bs) == 1){
-        rph_bs_2[index_bs] <- ae * bsr / (1 + bsr + fsr + dsr + m2sr)
+        eph_bs_2[index_bs] <- temp * ae * bsr / (1 + bsr + fsr + dsr + m2sr)
       }
       if(length(index_fs) == 1){
-        rph_fs_2[index_fs] <- ae * fsr / (1 + bsr + fsr + dsr + m2sr)
+        eph_fs_2[index_fs] <- temp * ae * fsr / (1 + bsr + fsr + dsr + m2sr)
       }
       if(length(index_ds) == 1){
-        rph_ds_2[index_ds] <- ae * dsr / (1 + bsr + fsr + dsr + m2sr)
+        eph_ds_2[index_ds] <- temp * ae * dsr / (1 + bsr + fsr + dsr + m2sr)
       }
       if(length(index_m2s) == 1){
-        rph_m2s_2[index_m2s] <- ae * m2sr / (1 + bsr + fsr + dsr + m2sr)
+        eph_m2s_2[index_m2s] <- temp * ae * m2sr / (1 + bsr + fsr + dsr + m2sr)
       }
     }
   }
 
-  return(rbind(rph_al_1, rph_al_2, rph_bs_1, rph_bs_2, rph_fs_1, rph_fs_2, rph_ds_1, rph_ds_2, rph_m2s_1, rph_m2s_2))
+  return(rbind(eph_al_1, eph_al_2, eph_bs_1, eph_bs_2, eph_fs_1, eph_fs_2, eph_ds_1, eph_ds_2, eph_m2s_1, eph_m2s_2))
 }
 
 #' prepare_gamma_data
@@ -105,8 +106,7 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
   n_mk <- length(markers_auto)
 
   sum_peaks_all <- length(unlist(peak_list))
-  rphs_gamma_list <- vector(mode = "list", length = n_sample)
-  tphs_gamma_list <- vector(mode = "list", length = n_sample)
+  ephs_gamma_list <- vector(mode = "list", length = n_sample)
   ophs_gamma_list <- vector(mode = "list", length = n_sample)
   ats_gamma_list <- vector(mode = "list", length = n_sample)
   samples_gamma_list <- vector(mode = "list", length = n_sample)
@@ -119,12 +119,10 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
     peak_s1 <- peak_list[[i]]
     height_s1 <- height_list[[i]]
     gt_s1 <- gt_list[[i]]
-    ave_het_ph_s1 <- ave_het_ph_all_data[i]
+    temp <- ave_het_ph_all_data[i]
 
-    rphs_gamma_list_s1 <- vector(mode = "list", length = n_mk)
-    names(rphs_gamma_list_s1) <- markers_auto
-    tphs_gamma_list_s1 <- vector(mode = "list", length = n_mk)
-    names(tphs_gamma_list_s1) <- markers_auto
+    ephs_gamma_list_s1 <- vector(mode = "list", length = n_mk)
+    names(ephs_gamma_list_s1) <- markers_auto
     ophs_gamma_list_s1 <- vector(mode = "list", length = n_mk)
     names(ophs_gamma_list_s1) <- markers_auto
     ats_gamma_list_s1 <- vector(mode = "list", length = n_mk)
@@ -159,24 +157,30 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
         m2sr_average <- dt_average_sr[["Average M2SR"]]
         at <- at_auto[mk]
 
+        # --- List all peaks that can be observed under the assumed genotype --- #
+
         cand_peaks <- make_cand_peak(gt, sr_consider_auto[mk, ])
 
-        rphs_per_component <- calc_relative_ph(cand_peaks, gt, ae, allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average)
-        rphs <- apply(rphs_per_component, 2, sum)
+        # --- Calculate the expected peak heights --- #
 
-        index_rph <- which(rphs != 0) # If the stutter ratio = 0, rph for the stutter product is zero.
-        if(length(index_rph) == 0){
-          rphs_gamma_list_s1[[j]] <- NULL
-          tphs_gamma_list_s1[[j]] <- numeric(0)
+        eph_per_component <- calc_eph_per_component(cand_peaks, gt, temp, ae, allele_sr, bsr_average, fsr_average, dsr_average, m2sr_average)
+        ephs <- apply(eph_per_component, 2, sum)
+
+        index_eph <- which(ephs != 0) # If the stutter ratio = 0, rph for the stutter product is zero.
+        if(length(index_eph) == 0){
+          ephs_gamma_list_s1[[j]] <- NULL
           ophs_gamma_list_s1[[j]] <- numeric(0)
           ats_gamma_list_s1[[j]] <- numeric(0)
           samples_gamma_list_s1[[j]] <- character(0)
           markers_gamma_list_s1[[j]] <- character(0)
           peaks_gamma_list_s1[[j]] <- numeric(0)
         }else{
-          rphs_per_component <- rphs_per_component[, index_rph, drop = FALSE]
-          rphs <- rphs[index_rph]
-          cand_peaks_tmp <- cand_peaks[index_rph]
+
+          # --- Keep data for the allele in the genotype and the stutter with the observed peak heights --- #
+
+          eph_per_component <- eph_per_component[, index_eph, drop = FALSE]
+          ephs <- ephs[index_eph]
+          cand_peaks_tmp <- cand_peaks[index_eph]
 
           index_gt <- which(is.element(cand_peaks_tmp, gt))
           index_height <- which(is.element(cand_peaks_tmp, peaks))
@@ -184,21 +188,17 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
           n_adopt <- length(index_adopt)
 
           if(n_adopt == 0){
-            rphs_gamma_list_s1[[j]] <- NULL
-            tphs_gamma_list_s1[[j]] <- numeric(0)
+            ephs_gamma_list_s1[[j]] <- NULL
             ophs_gamma_list_s1[[j]] <- numeric(0)
             ats_gamma_list_s1[[j]] <- numeric(0)
             samples_gamma_list_s1[[j]] <- character(0)
             markers_gamma_list_s1[[j]] <- character(0)
             peaks_gamma_list_s1[[j]] <- numeric(0)
           }else{
-            if(all(rphs_per_component[, index_adopt, drop = FALSE] == 0)){
-              print(paste0("Sample: ", i, ", Marker: ", j))
-            }
-
-            rphs_gamma_list_s1[[j]] <- rphs_per_component[, index_adopt, drop = FALSE]
-            tphs_gamma_list_s1[[j]] <- rep(ave_het_ph_s1, n_adopt)
+            ephs_gamma_list_s1[[j]] <- eph_per_component[, index_adopt, drop = FALSE]
             cand_peaks_adopt <- cand_peaks_tmp[index_adopt]
+
+            # --- Assign the observed peak heights --- #
 
             ophs <- rep(0, n_adopt)
             index_oph <- which(is.element(peaks, cand_peaks_adopt))
@@ -209,6 +209,8 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
             }
             ophs_gamma_list_s1[[j]] <- ophs
 
+            # --- Assign other data --- #
+
             ats_gamma_list_s1[[j]] <- rep(at, n_adopt)
             samples_gamma_list_s1[[j]] <- rep(samples[i], n_adopt)
             markers_gamma_list_s1[[j]] <- rep(mk, n_adopt)
@@ -218,8 +220,7 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
           }
         }
       }else{
-        rphs_gamma_list_s1[[j]] <- NULL
-        tphs_gamma_list_s1[[j]] <- numeric(0)
+        ephs_gamma_list_s1[[j]] <- NULL
         ophs_gamma_list_s1[[j]] <- numeric(0)
         ats_gamma_list_s1[[j]] <- numeric(0)
         samples_gamma_list_s1[[j]] <- character(0)
@@ -227,8 +228,7 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
         peaks_gamma_list_s1[[j]] <- numeric(0)
       }
     }
-    rphs_gamma_list[[i]] <- rphs_gamma_list_s1
-    tphs_gamma_list[[i]] <- tphs_gamma_list_s1
+    ephs_gamma_list[[i]] <- ephs_gamma_list_s1
     ophs_gamma_list[[i]] <- ophs_gamma_list_s1
     ats_gamma_list[[i]] <- ats_gamma_list_s1
     samples_gamma_list[[i]] <- samples_gamma_list_s1
@@ -236,28 +236,27 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
     peaks_gamma_list[[i]] <- peaks_gamma_list_s1
   }
 
-  # Bind rphs
-  rphs_gamma <- matrix(NA, 10, sum(n_adopt_all))
+  # --- Bind all eph data --- #
+
+  ephs_gamma <- matrix(NA, 10, sum(n_adopt_all))
   index_start <- 1
   for(i in 1:n_sample){
     for(j in 1:n_mk){
       n_adopt <- n_adopt_all[n_mk * (i - 1) + j]
       if(n_adopt != 0){
-        rphs_gamma[, index_start:(index_start + n_adopt - 1)] <- rphs_gamma_list[[i]][[j]]
+        ephs_gamma[, index_start:(index_start + n_adopt - 1)] <- ephs_gamma_list[[i]][[j]]
         index_start <- index_start + n_adopt
       }
     }
   }
 
-  tphs_gamma <- unlist(tphs_gamma_list)
   ophs_gamma <- unlist(ophs_gamma_list)
   ats_gamma <- unlist(ats_gamma_list)
   samples_gamma <- unlist(samples_gamma_list)
   markers_gamma <- unlist(markers_gamma_list)
   peaks_gamma <- unlist(peaks_gamma_list)
 
-  return(list("rphs_gamma" = rphs_gamma,
-              "tphs_gamma" = tphs_gamma,
+  return(list("ephs_gamma" = ephs_gamma,
               "ophs_gamma" = ophs_gamma,
               "ats_gamma" = ats_gamma,
               "samples_gamma" = samples_gamma,
@@ -268,8 +267,7 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
 #' run_mle_gamma
 #'
 #' @description The function to perform MLE for the gamma model
-#' @param rphs_gamma The relative peak heights for the gamma distribution
-#' @param tphs_gamma The total peak heights in one heterozygote allele for the gamma distribution
+#' @param ephs_gamma A matrix of the expected peak heights (per component) for the gamma distribution
 #' @param ophs_gamma The observed peak heights for the gamma distribution
 #' @param ats_gamma The analytical thresholds for the gamma distribution
 #' @param min_scale_allele The minimum scale parameter for alleles
@@ -281,7 +279,9 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
-run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
+run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
+
+  # --- Define the likelihood function --- #
 
   like_func_gamma <- function(par){
     scale_allele <- par[1] * (max_scale_allele - min_scale_allele) + min_scale_allele
@@ -291,7 +291,7 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_sca
     dens <- rep(Inf, n_data)
 
     for(i in 1:n_data){
-      tmp1 <- rphs_gamma[, i] * tphs_gamma[i]
+      tmp1 <- ephs_gamma[, i]
       tmp2 <- tmp1
       for(j in 1:2){
         tmp2[j] <- tmp2[j] * scale_allele
@@ -327,7 +327,8 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_sca
   lower_bounds <- c(0, 0)
   upper_bounds <- c(1, 1)
 
-  # Perform simulated annealing
+  # --- Perform MLE --- #
+
   current_opt <- NULL
   current_score <- Inf
   count_mle <- 0
@@ -370,14 +371,16 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_sca
     }
   }
 
-  # Warning
+  # --- Create the warning message --- #
+
   if(count_solution == num_converged){
     warning_message <- NULL
   }else{
     warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
   }
 
-  # Extract parameters
+  # --- Calculate the estimated parameters --- #
+
   est_param <- rep(NA, 2)
   names(est_param) <- c("scale_allele", "scale_stutter")
   if(!is.null(current_opt)){
@@ -397,52 +400,53 @@ run_mle_gamma <- function(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_sca
 #' @param samples_gamma A vector of the sample names for gamma data
 #' @param markers_gamma A vector of the markers for gamma data
 #' @param peaks_gamma A vector of the peaks for gamma data
-#' @param rphs_gamma A matrix of the relative peak heights for gamma data
-#' @param tphs_gamma A vector of the total peak heights for gamma data
+#' @param ephs_gamma A matrix of the expected peak heights (per component) for the gamma distribution
 #' @param ophs_gamma A vector of the observed peak heights for gamma data
 #' @param ats_gamma A vector of the ATs for gamma data
-create_dt_gamma_data <- function(scale_allele, scale_stutter, samples_gamma, markers_gamma, peaks_gamma, rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma){
+create_dt_gamma_data <- function(scale_allele, scale_stutter, samples_gamma, markers_gamma, peaks_gamma, ephs_gamma, ophs_gamma, ats_gamma){
+
   scale_base <- c(rep(scale_allele, 2), rep(scale_stutter, 8))
   index_cpp <- 0:9
   n_data <- length(samples_gamma)
   gamma_shape <- gamma_scale <- quantile95 <- quantile5 <- rep(NA, n_data)
   peak_type <- rep("", n_data)
-  for(i in 1:n_data){
-    rphs <- rphs_gamma[, i]
 
-    # Categorize peak type
-    if(rphs[1] == 0 && rphs[2] == 0){
+  for(i in 1:n_data){
+    ephs <- ephs_gamma[, i]
+
+    # --- Categorize the peak type --- #
+
+    if(ephs[1] == 0 && ephs[2] == 0){
       peak_type[i] <- "Stutter"
-    }else if(any(rphs[3:10] != 0)){
+    }else if(any(ephs[3:10] != 0)){
       peak_type[i] <- "Allele + Stutter"
     }else{
       peak_type[i] <- "Allele"
     }
 
-    # Calculate gamma parameters
-    gamma_param <- calc_gamma_param_cpp(rphs, scale_base, index_cpp, tphs_gamma[i])
+    # --- Calculate the gamma parameters --- #
+
+    gamma_param <- calc_gamma_param_cpp(ephs, scale_base, index_cpp)
     gamma_shape[i] <- gamma_param[1]
     gamma_scale[i] <- gamma_param[2]
 
-    # Calculate 95% and 5% quantiles
+    # --- Calculate the 95% and 5% quantiles --- #
+
     quantile95[i] <- qgamma(0.95, shape = gamma_param[1], scale = gamma_param[2])
     quantile5[i] <- qgamma(0.05, shape = gamma_param[1], scale = gamma_param[2])
   }
 
-  # Calculate relative peak heights
-  rphs_gamma_sum <- apply(rphs_gamma, 2, sum)
+  # --- Sum up all expected allelic and stutter products in each peak --- #
 
-  # Calculate expected peak heights
-  ephs_gamma <- rphs_gamma_sum * tphs_gamma
+  ephs_gamma <- apply(ephs_gamma, 2, sum)
 
-  # Create data.table
+  # --- Create the data.table for data of the gamma distribution --- #
+
   dt_gamma_data <- data.table("SampleName" = samples_gamma,
                               "Marker" = markers_gamma,
                               "Peak" = peaks_gamma,
                               "Observed peak height" = ophs_gamma,
                               "Expected peak height" = ephs_gamma,
-                              "Relative peak height" = rphs_gamma_sum,
-                              "Total peak height" = tphs_gamma,
                               "AT" = ats_gamma,
                               "Shape" = gamma_shape,
                               "Scale" = gamma_scale,
@@ -476,13 +480,15 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
                            stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                            waiter_ui = NULL){
 
-  # Extract information on setting
+  # --- Extract the specified conditions --- #
+
   markers_auto <- dt_setting_est_par$Marker
   n_mk_auto <- length(markers_auto)
   at_auto <- dt_setting_est_par$AT
   names(at_auto) <- markers_auto
 
-  # Information on considering stutter ratios
+  # --- Information on considering the stutter ratios --- #
+
   sr_consider_auto <- matrix(TRUE, n_mk_auto, 4)
   rownames(sr_consider_auto) <- markers_auto
   colnames(sr_consider_auto) <- c("BS", "FS", "DS", "M2S")
@@ -521,8 +527,7 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
   ave_het_ph_all_data <- calc_ave_het_ph_all_data(height_list)
 
   tmp <- prepare_gamma_data(markers_auto, peak_list, height_list, gt_list, expect_ae, ave_het_ph_all_data, list_dt_average_sr, sr_consider_auto, at_auto)
-  rphs_gamma <- tmp$rphs_gamma
-  tphs_gamma <- tmp$tphs_gamma
+  ephs_gamma <- tmp$ephs_gamma
   ophs_gamma <- tmp$ophs_gamma
   ats_gamma <- tmp$ats_gamma
   samples_gamma <- tmp$samples_gamma
@@ -540,7 +545,7 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
     )
   }
 
-  tmp <- run_mle_gamma(rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like)
+  tmp <- run_mle_gamma(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like)
   est_param <- tmp$est_param
   scale_allele <- est_param["scale_allele"]
   scale_stutter <- est_param["scale_stutter"]
@@ -551,7 +556,7 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
 
   # --- Create the data.tables --- #
 
-  dt_gamma_data <- create_dt_gamma_data(scale_allele, scale_stutter, samples_gamma, markers_gamma, peaks_gamma, rphs_gamma, tphs_gamma, ophs_gamma, ats_gamma)
+  dt_gamma_data <- create_dt_gamma_data(scale_allele, scale_stutter, samples_gamma, markers_gamma, peaks_gamma, ephs_gamma, ophs_gamma, ats_gamma)
   dt_est_gamma <- data.table(Parameter = c("Scale parameter (allele)", "Scale parameter (stutter)"), Value = c(scale_allele, scale_stutter))
 
   return(list("dt_est_gamma" = dt_est_gamma,
