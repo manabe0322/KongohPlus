@@ -79,14 +79,14 @@ KongohPlus <- function(num_threads = NULL){
 
   server <- function(input, output, session){
 
-    # --- Analysis --- #
+    # --- Define the modules for the analysis --- #
 
     rv_input <- file_server("file", session)
     rv_deconvo <- deconvo_server("deconvo", path_pack, session, rv_input)
     rv_lr <- lr_server("lr", rv_input, rv_deconvo)
     report_server("report", path_pack, rv_deconvo, rv_lr)
 
-    # --- Tools --- #
+    # --- Define the modules in Tools tab --- #
 
     example_file_server("example_file", path_pack)
     view_sr_server("view_sr", path_pack)
@@ -96,11 +96,11 @@ KongohPlus <- function(num_threads = NULL){
     rv_hd_true_random <- hd_true_random_server("hd_true_random", path_pack, rv_deconvo)
     rv_hd_true_importance <- hd_true_importance_server("hd_true_importance", path_pack, rv_deconvo)
 
-    # --- Manual --- #
+    # --- Define the modules for the manual --- #
 
     manual_server("manual", ver_soft, path_pack)
 
-    # --- Setting --- #
+    # --- Define the modules in Setting tab --- #
 
     kit_server("kit", path_pack)
     info_al_server("info_al", path_pack)
