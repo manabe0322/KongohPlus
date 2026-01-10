@@ -243,17 +243,25 @@ deconvo_pg_server <- function(id, rv_deconvo){
             eph <- calc_eph(gt_select_list, temps, deg, rep_ae[i], ae, dt_average_sr, dt_size, base_size)
             peaks_eph <- as.numeric(names(eph))
 
+            # Remove 99 from oph data
+            peaks_oph <- as.numeric(peaks_list[[mk]])
+            ophs_one_rep <- heights_all_rep[[i]]
+            ophs_one_rep <- ophs_one_rep[peaks_oph != 99]
+            peaks_oph <- peaks_oph[peaks_oph != 99]
+
             if(i == 1){
-              peaks_oph <- as.numeric(peaks_list[[mk]])
               peaks_all <- sort(unique(c(peaks_oph, peaks_eph)))
               peaks_plot <- create_peaks_plot(peaks_all, rep_unit_len)
               peaks_label <- peaks_all
-              peaks_label[peaks_label == 99] <- "Q"
+              peaks_label[peaks_label == 991] <- "Q (U1)"
+              peaks_label[peaks_label == 992] <- "Q (U2)"
+              peaks_label[peaks_label == 993] <- "Q (U3)"
+              peaks_label[peaks_label == 994] <- "Q (U4)"
             }
 
             eph_graph <- oph_graph <- rep(0, length(peaks_all))
             eph_graph[match(peaks_eph, peaks_all)] <- eph
-            oph_graph[match(peaks_oph, peaks_all)] <- heights_all_rep[[i]]
+            oph_graph[match(peaks_oph, peaks_all)] <- ophs_one_rep
 
             df_eph <- data.frame(peak = peaks_plot,
                                  height = eph_graph,
@@ -269,8 +277,8 @@ deconvo_pg_server <- function(id, rv_deconvo){
           rv_deconvo_pg$peaks_plot <- peaks_plot
           rv_deconvo_pg$peaks_label <- peaks_label
           rv_deconvo_pg$df_combined_list <- df_combined_list
-          rv_deconvo_pg$x_min <- floor(min(peaks_plot))
-          rv_deconvo_pg$x_max <- ceiling(max(peaks_plot))
+          rv_deconvo_pg$x_min <- floor(min(peaks_plot) - 1)
+          rv_deconvo_pg$x_max <- ceiling(max(peaks_plot) + 1)
           rv_deconvo_pg$plot_mk <- mk
         }
       })
@@ -342,17 +350,22 @@ deconvo_pg_server <- function(id, rv_deconvo){
             eph <- calc_eph(gt_select_list, temp_c1, deg_c1, rep_ae[i], ae, dt_average_sr, dt_size, base_size)
             peaks_eph <- as.numeric(names(eph))
 
+            # Remove 99 from oph data
+            peaks_oph <- as.numeric(peaks_list[[mk]])
+            ophs_one_rep <- heights_all_rep[[i]]
+            ophs_one_rep <- ophs_one_rep[peaks_oph != 99]
+            peaks_oph <- peaks_oph[peaks_oph != 99]
+
             if(i == 1){
-              peaks_oph <- as.numeric(peaks_list[[mk]])
               peaks_all <- sort(unique(c(peaks_oph, peaks_eph)))
               peaks_plot <- create_peaks_plot(peaks_all, rep_unit_len)
               peaks_label <- peaks_all
-              peaks_label[peaks_label == 99] <- "Q"
+              peaks_label[peaks_label == 991] <- paste0("Q (", contrib, ")")
             }
 
             eph_graph <- oph_graph <- rep(0, length(peaks_all))
             eph_graph[match(peaks_eph, peaks_all)] <- eph
-            oph_graph[match(peaks_oph, peaks_all)] <- heights_all_rep[[i]]
+            oph_graph[match(peaks_oph, peaks_all)] <- ophs_one_rep
 
             df_eph <- data.frame(peak = peaks_plot,
                                  height = eph_graph,
@@ -368,8 +381,8 @@ deconvo_pg_server <- function(id, rv_deconvo){
           rv_deconvo_pg$peaks_plot <- peaks_plot
           rv_deconvo_pg$peaks_label <- peaks_label
           rv_deconvo_pg$df_combined_list <- df_combined_list
-          rv_deconvo_pg$x_min <- floor(min(peaks_plot))
-          rv_deconvo_pg$x_max <- ceiling(max(peaks_plot))
+          rv_deconvo_pg$x_min <- floor(min(peaks_plot) - 1)
+          rv_deconvo_pg$x_max <- ceiling(max(peaks_plot) + 1)
           rv_deconvo_pg$plot_mk <- mk
         }
       })

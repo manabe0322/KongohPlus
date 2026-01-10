@@ -15,8 +15,26 @@ change_var_al_plot <- function(pk, rep_unit_len){
 #' @param q_distance The distance of the position Q from the maximum peak number
 create_peaks_plot <- function(peaks, rep_unit_len, q_distance = 3){
   peaks_plot <- change_var_al_plot(peaks, rep_unit_len)
-  pk_q <- max(setdiff(peaks_plot, 99)) + q_distance
-  peaks_plot[peaks_plot == 99] <- pk_q
+  pk_q <- max(setdiff(peaks_plot, c(99, 991, 992, 993, 994))) + q_distance
+
+  count_q <- 0
+  if(any(peaks_plot == 991)){
+    peaks_plot[peaks_plot == 991] <- pk_q + count_q
+    count_q <- count_q + 1
+  }
+  if(any(peaks_plot == 992)){
+    peaks_plot[peaks_plot == 992] <- pk_q + count_q
+    count_q <- count_q + 1
+  }
+  if(any(peaks_plot == 993)){
+    peaks_plot[peaks_plot == 993] <- pk_q + count_q
+    count_q <- count_q + 1
+  }
+  if(any(peaks_plot == 994)){
+    peaks_plot[peaks_plot == 994] <- pk_q + count_q
+    count_q <- count_q + 1
+  }
+
   return(peaks_plot)
 }
 
@@ -64,33 +82,23 @@ calc_eph <- function(gt_select_list, temps, deg, rep_ae_one, ae, dt_average_sr, 
   ephs <- rep(0, length(peaks_eph))
   names(ephs) <- peaks_eph
 
-  hnc <- length(temps)
+  hnc <- length(al_contrib) / 2
   for(i in 1:hnc){
     for(j in 1:2){
+      index <- 2 * (i - 1) + j
 
+      if(al_contrib[index] == 99){
+        if(ephs[peaks_eph == 990 + i] == 0){
+          ephs[peaks_eph == 990 + i] <- eph_al[index]
+        }
+      }else{
+        ephs[peaks_eph == al_contrib[index]] <- ephs[peaks_eph == al_contrib[index]] + eph_al[index]
+        ephs[peaks_eph == bs_contrib[index]] <- ephs[peaks_eph == bs_contrib[index]] + eph_bs[index]
+        ephs[peaks_eph == fs_contrib[index]] <- ephs[peaks_eph == fs_contrib[index]] + eph_fs[index]
+        ephs[peaks_eph == ds_contrib[index]] <- ephs[peaks_eph == ds_contrib[index]] + eph_ds[index]
+        ephs[peaks_eph == m2s_contrib[index]] <- ephs[peaks_eph == m2s_contrib[index]] + eph_m2s[index]
+      }
     }
-  }
-
-  bool_99 <- al_contrib == 99
-
-  for(i in 1:length(eph_al)){
-    ephs[peaks_eph == al_contrib[i]] <- ephs[peaks_eph == al_contrib[i]] + eph_al[i]
-  }
-
-  for(i in 1:length(eph_bs)){
-    ephs[peaks_eph == bs_contrib[i]] <- ephs[peaks_eph == bs_contrib[i]] + eph_bs[i]
-  }
-
-  for(i in 1:length(eph_fs)){
-    ephs[peaks_eph == fs_contrib[i]] <- ephs[peaks_eph == fs_contrib[i]] + eph_fs[i]
-  }
-
-  for(i in 1:length(eph_ds)){
-    ephs[peaks_eph == ds_contrib[i]] <- ephs[peaks_eph == ds_contrib[i]] + eph_ds[i]
-  }
-
-  for(i in 1:length(eph_m2s)){
-    ephs[peaks_eph == m2s_contrib[i]] <- ephs[peaks_eph == m2s_contrib[i]] + eph_m2s[i]
   }
 
   ephs <- ephs[ephs != 0]
