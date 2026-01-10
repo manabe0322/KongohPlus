@@ -24,7 +24,10 @@ deconvo_pg_ui <- function(id){
                     )
              ),
              column(6,
-                    uiOutput(ns("slider")),
+                    fluidRow(
+                      column(6, uiOutput(ns("slider_x"))),
+                      column(6, uiOutput(ns("slider_y")))
+                    ),
                     uiOutput(ns("ph_graph_ui"))
              )
            )
@@ -58,7 +61,9 @@ deconvo_pg_server <- function(id, rv_deconvo){
       rv_deconvo_pg$peaks_label <- NULL
       rv_deconvo_pg$x_min <- 0
       rv_deconvo_pg$x_max <- 50
+      rv_deconvo_pg$y_max <- 50000
       rv_deconvo_pg$plot_mk <- NULL
+      rv_deconvo_pg$at <- 0
 
       observe({
         req(rv_deconvo$data_deconvo)
@@ -205,6 +210,8 @@ deconvo_pg_server <- function(id, rv_deconvo){
         n_rep <- rv_deconvo_pg$n_rep
         dt_pg_per_comb <- rv_deconvo_pg$dt_pg_per_comb
 
+        at_all_mk <- dt_anameth$Value[dt_anameth$Category == "AT"]
+        markers_at <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
         base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
 
         index_select <- input$dt_pg_per_comb_rows_selected
@@ -215,6 +222,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
           index_hnc <- which(hnc_all == hnc)
           data_hnc <- data_hnc_list[[index_hnc]]
           heights_all_rep <- heights_list[[mk]]
+          at <- at_all_mk[markers_at == mk]
 
           gt_select_list <- vector(mode = "list", length = hnc)
           for(i in 1:hnc){
@@ -279,7 +287,9 @@ deconvo_pg_server <- function(id, rv_deconvo){
           rv_deconvo_pg$df_combined_list <- df_combined_list
           rv_deconvo_pg$x_min <- floor(min(peaks_plot) - 1)
           rv_deconvo_pg$x_max <- ceiling(max(peaks_plot) + 1)
+          rv_deconvo_pg$y_max <- max(c(eph_graph, oph_graph))
           rv_deconvo_pg$plot_mk <- mk
+          rv_deconvo_pg$at <- at
         }
       })
 
@@ -308,6 +318,8 @@ deconvo_pg_server <- function(id, rv_deconvo){
         n_rep <- rv_deconvo_pg$n_rep
         dt_pg_per_contrib <- rv_deconvo_pg$dt_pg_per_contrib
 
+        at_all_mk <- dt_anameth$Value[dt_anameth$Category == "AT"]
+        markers_at <- dt_anameth$Subcategory[dt_anameth$Category == "AT"]
         base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
 
         index_select <- input$dt_pg_per_contrib_rows_selected
@@ -319,6 +331,7 @@ deconvo_pg_server <- function(id, rv_deconvo){
           index_hnc <- which(hnc_all == hnc)
           data_hnc <- data_hnc_list[[index_hnc]]
           heights_all_rep <- heights_list[[mk]]
+          at <- at_all_mk[markers_at == mk]
 
           gt_select_list <- vector(mode = "list", length = 1)
           tmp <- strsplit(dt_pg_per_contrib[[contrib]][index_select], ", ")[[1]]
@@ -383,11 +396,13 @@ deconvo_pg_server <- function(id, rv_deconvo){
           rv_deconvo_pg$df_combined_list <- df_combined_list
           rv_deconvo_pg$x_min <- floor(min(peaks_plot) - 1)
           rv_deconvo_pg$x_max <- ceiling(max(peaks_plot) + 1)
+          rv_deconvo_pg$y_max <- max(c(eph_graph, oph_graph))
           rv_deconvo_pg$plot_mk <- mk
+          rv_deconvo_pg$at <- at
         }
       })
 
-      output$slider <- renderUI({
+      output$slider_x <- renderUI({
         x_min <- rv_deconvo_pg$x_min
         x_max <- rv_deconvo_pg$x_max
 
@@ -397,6 +412,17 @@ deconvo_pg_server <- function(id, rv_deconvo){
                     max = x_max,
                     value = c(x_min, x_max),
                     step = 1)
+      })
+
+      output$slider_y <- renderUI({
+        y_max <- rv_deconvo_pg$y_max
+
+        sliderInput(session$ns("y_range"),
+                    "Range of the y-axis (log10 scale)",
+                    min = 0,
+                    max = ceiling(log10(y_max)),
+                    value = round(log10(y_max), 2),
+                    step = 0.01)
       })
 
       output$ph_graph_ui <- renderUI({
@@ -416,11 +442,14 @@ deconvo_pg_server <- function(id, rv_deconvo){
         req(rv_deconvo_pg$peaks_label)
         req(rv_deconvo_pg$df_combined_list)
         req(rv_deconvo_pg$plot_mk)
+        req(rv_deconvo_pg$at)
+
         n_rep <- rv_deconvo_pg$n_rep
         peaks_plot <- rv_deconvo_pg$peaks_plot
         peaks_label <- rv_deconvo_pg$peaks_label
         df_combined_list <- rv_deconvo_pg$df_combined_list
         mk <- rv_deconvo_pg$plot_mk
+        at <- rv_deconvo_pg$at
 
         ggplot_list <- vector(mode = "list", length = n_rep)
         options(warn = -1)
@@ -429,11 +458,13 @@ deconvo_pg_server <- function(id, rv_deconvo){
 
           ggplot_list[[i]] <- ggplot(df_combined, aes(x = peak, y = height, fill = Label)) +
             geom_col(position = "dodge", width = 0.1) +
+            geom_hline(yintercept = at, linetype = "dashed", linewidth = 0.5) +
             scale_x_continuous(
               breaks = peaks_plot,
               labels = peaks_label,
               limits = c(input$x_range[1], input$x_range[2])
             ) +
+            coord_cartesian(ylim = c(0, 10^input$y_range)) +
             labs(title = paste0(mk, ", Replicate ", i), x = "Allele", y = "Peak height (RFU)", fill = NULL) +
             theme_minimal() +
             theme(
