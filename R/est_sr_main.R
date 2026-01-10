@@ -4,18 +4,22 @@
 #' @param dt The input data.table
 #' @param markers The target markers
 check_dt_mk <- function(dt, markers){
-  # Extract sample names
+
+  # --- Extract the sample names --- #
+
   setindex(dt, SampleName)
   sample_names <- unique(dt$SampleName)
   n_sample <- length(sample_names)
 
-  # Check sample names with inappropriate marker sets
+  # --- Check the sample names with the inappropriate marker sets --- #
+
   bool_sn_problem <- rep(FALSE, n_sample)
   for(i in 1:n_sample){
     dt_one_sample <- dt[SampleName == sample_names[i]]
     markers_one_sample <- dt_one_sample$Marker
     bool_sn_problem[i] <- !all(is.element(markers, markers_one_sample))
   }
+
   return(sample_names[bool_sn_problem])
 }
 
@@ -168,7 +172,6 @@ extract_sr_data <- function(peaks, heights, gt, sr_consider){
   stutter_ph <- parent_ph <- total_al_prod <- stutter_ratio <- rep(NA, n_peak)
   bool_al <- bool_bs <- bool_fs <- bool_ds <- bool_m2s <- bool_shared_allele <- bool_shared_stutter <- bool_allele_dropout <- rep(FALSE, n_peak)
 
-  # At least one peak
   if(n_peak > 0){
     bool_al <- is.element(peaks, gt)
 
@@ -214,8 +217,7 @@ extract_sr_data <- function(peaks, heights, gt, sr_consider){
           stutter[i] <- as.character(peak)
           stutter_ph[i] <- heights[i]
 
-          # The parent allele is above AT
-          if(length(index_al) == 1){
+          if(length(index_al) == 1){  # The parent allele is above AT
             parent_ph[i] <- heights[index_al]
             total_al_prod[i] <- stutter_ph[i] + parent_ph[i]
             stutter_ratio[i] <- stutter_ph[i] / parent_ph[i]
@@ -227,8 +229,7 @@ extract_sr_data <- function(peaks, heights, gt, sr_consider){
           }
         }
 
-        # Shared stutters
-        else{
+        else{ # Shared stutters
           parent_al[i] <- "Multiple"
           stutter[i] <- as.character(peak)
           stutter_ph[i] <- heights[i]
@@ -396,7 +397,8 @@ create_dt_sr_data <- function(peak_list, height_list, gt_list, sr_consider_auto,
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slope, min_intercept, max_intercept, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
 
-  # Likelihood function for the stutter ratio (locus-specific model with slope)
+  # --- Define the Likelihood function --- #
+
   like_fun_sr_gen <- function(par){
     slope <- par[1] * (max_slope - min_slope) + min_slope
     intercept <- par[2] * (max_intercept - min_intercept) + min_intercept
@@ -420,7 +422,8 @@ run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slo
   lower_bounds <- c(0, 0, 0)
   upper_bounds <- c(1, 1, 1)
 
-  # Perform simulated annealing
+  # --- Perform MLE --- #
+
   current_opt <- NULL
   current_score <- Inf
   count_mle <- 0
@@ -463,14 +466,16 @@ run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slo
     }
   }
 
-  # Warning
+  # --- Create the warning message --- #
+
   if(count_solution == num_converged){
     warning_record <- NULL
   }else{
     warning_record <- paste0("&nbsp; &nbsp; - ", mk, ", ", stutter_type, " (", count_solution, ")")
   }
 
-  # Extract parameters
+  # --- Calculate the estimated parameters --- #
+
   est_param <- rep(NA, 3)
   names(est_param) <- c("slope", "intercept", "sigma")
   if(!is.null(current_opt)){
@@ -501,7 +506,8 @@ run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slo
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 run_mle_sr_uni <- function(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_sigma, max_sigma, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
 
-  # Likelihood function for the stutter ratio (uniform model)
+  # --- Define the Likelihood function --- #
+
   like_fun_sr_uni <- function(par){
     myu <- par[1] * (max_myu - min_myu) + min_myu
     sigma <- par[2] * (max_sigma - min_sigma) + min_sigma
@@ -519,7 +525,8 @@ run_mle_sr_uni <- function(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_si
   lower_bounds <- c(0, 0)
   upper_bounds <- c(1, 1)
 
-  # Perform simulated annealing
+  # --- Perform MLE --- #
+
   current_opt <- NULL
   current_score <- Inf
   count_mle <- 0
@@ -562,14 +569,16 @@ run_mle_sr_uni <- function(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_si
     }
   }
 
-  # Warning
+  # --- Create the warning message --- #
+
   if(count_solution == num_converged){
     warning_record <- NULL
   }else{
     warning_record <- paste0("&nbsp; &nbsp; - ", mk, ", ", stutter_type, " (", count_solution, ")")
   }
 
-  # Extract parameters
+  # --- Calculate the estimated parameters --- #
+
   est_param <- rep(NA, 2)
   names(est_param) <- c("myu", "sigma")
   if(!is.null(current_opt)){
@@ -617,7 +626,9 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
                                   min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
                                   stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                                   waiter_ui = NULL){
-  # Extract data of the targeted stutter type
+
+  # --- Extract data of the targeted stutter type --- #
+
   if(stutter_type == "BS"){
     dt_st_type <- dt_sr_data[dt_sr_data$Bool_BS]
   }else if(stutter_type == "FS"){
@@ -630,7 +641,8 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
     dt_st_type <- dt_sr_data[rep(FALSE, nrow(dt_sr_data))]
   }
 
-  # Define objects
+  # --- Define objects --- #
+
   n_mk <- length(markers_auto)
   setindex(dt_st_type, Marker, Allele)
   setindex(dt_kit, Marker)
@@ -651,13 +663,15 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
   index_converged_list_all_mk <- vector(mode = "list", length = n_mk)
   warning_record_list_all_mk <- vector(mode = "list", length = n_mk)
 
-  # Repeat for the number of markers
+  # --- Repeat for the number of markers --- #
+
   for(i in 1:n_mk){
     mk <- markers_auto[i]
     meth <- meth_model_sr[i]
     if(meth != "Not consider"){
 
-      # Extract stutter data for the current marker
+      # --- Extract stutter data for the current marker --- #
+
       dt_st_mk <- dt_st_type[Marker == mk]
       dt_st_mk <- dt_st_mk[Allele != "Multiple"]
       dt_st_mk <- dt_st_mk[!dt_st_mk$Bool_SharedAllele]
@@ -672,7 +686,8 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
 
       if(nrow(dt_st_mk) != 0){
 
-        # Extract (corrected) allele repeat numbers
+        # --- Extract (corrected) allele repeat numbers --- #
+
         if(meth == "Linear (Corrected Allele)"){
           alcor <- dt_kit_mk[["Corrected Allele"]]
           x_al <- alcor[match(dt_st_mk$Allele, alname)]
@@ -681,7 +696,8 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
           x_al <- as.numeric(dt_st_mk$Allele)
         }
 
-        # Merge the data of the current marker with data from other markers where Uniform (Multiple loci) is selected.
+        # --- Merge the data of the current marker with data from other markers where Uniform (Multiple loci) is selected --- #
+
         if(meth == "Uniform (Multiple loci)"){
           index_multi_mk <- c(index_multi_mk, i)
           y_sr_multi_mk <- c(y_sr_multi_mk, y_sr)
@@ -690,7 +706,8 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
           tmp_alcor_multi_mk[[i]] <- alcor
         }
 
-        # Perform MLE for uniform model
+        # --- Perform MLE for uniform model --- #
+
         else if(meth == "Uniform"){
 
           if(!is.null(waiter_ui)){
@@ -711,7 +728,8 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
           index_converged_list_all_mk[[i]] <- tmp$index_converged
           warning_record_list_all_mk[[i]] <- tmp$warning_record
 
-          # Set the average stutter ratios for each allele
+          # --- Set the average stutter ratios for each allele --- #
+
           average_sr <- rep(myu, length(alcor))
           if(!is.na(myu)){
             average_sr[average_sr < 0] <- 0
@@ -721,7 +739,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
                                                   AveSR = average_sr)
         }
 
-        # Perform MLE for linear model
+        # --- Perform MLE for linear model --- #
         else{
 
           if(!is.null(waiter_ui)){
@@ -743,7 +761,8 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
           index_converged_list_all_mk[[i]] <- tmp$index_converged
           warning_record_list_all_mk[[i]] <- tmp$warning_record
 
-          # Set the average stutter ratios for each allele
+          # --- Set the average stutter ratios for each allele --- #
+
           if(any(is.na(slope), is.na(intercept))){
             average_sr <- rep(NA, length(alcor))
           }else{
@@ -775,7 +794,8 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
     }
   }
 
-  # Perform MLE for uniform model (multiple loci together)
+  # --- Perform MLE for uniform model (multiple loci together) --- #
+
   if(length(y_sr_multi_mk) != 0){
 
     if(!is.null(waiter_ui)){
@@ -796,7 +816,8 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
     index_converged_list <- tmp$index_converged
     warning_record_list_all_mk[[index_multi_mk[1]]] <- tmp$warning_record
 
-    # Set the average stutter ratios for each allele
+    # --- Set the average stutter ratios for each allele --- #
+
     for(i in 1:length(index_multi_mk)){
       index_mk <- index_multi_mk[i]
 
@@ -918,7 +939,9 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
                                 min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
                                 stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                                 waiter_ui = NULL){
-  # Extract information on setting
+
+  # --- Extract the specified conditions --- #
+
   markers_auto <- dt_setting_est_sr$Marker
   n_mk_auto <- length(markers_auto)
   at_auto <- dt_setting_est_sr$AT
@@ -928,7 +951,8 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   meth_model_dsr <- dt_setting_est_sr[["DSR model"]]
   meth_model_m2sr <- dt_setting_est_sr[["M2SR model"]]
 
-  # Information on considering stutter ratios
+  # --- Information on considering the stutter ratios --- #
+
   sr_consider_auto <- matrix(TRUE, n_mk_auto, 4)
   rownames(sr_consider_auto) <- markers_auto
   colnames(sr_consider_auto) <- c("BS", "FS", "DS", "M2S")
@@ -937,7 +961,7 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   sr_consider_auto[, 3] <- meth_model_dsr != "Not consider"
   sr_consider_auto[, 4] <- meth_model_m2sr != "Not consider"
 
-  # Arrange experimental data
+  # --- Arrange experimental data --- #
 
   if(!is.null(waiter_ui)){
     waiter_ui$update(
@@ -953,7 +977,8 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   height_list <- tmp$height_list
   gt_list <- tmp$gt_list
 
-  # Create a data.table for the stutter ratios
+  # --- Create the data.table for the stutter ratios --- #
+
   dt_sr_data <- create_dt_sr_data(peak_list, height_list, gt_list, sr_consider_auto, dt_kit)
 
   # --- Perform MLE for BSR --- #
@@ -1005,6 +1030,8 @@ estimate_average_sr <- function(dt_exp, dt_gt, dt_kit, dt_setting_est_sr,
   warning_record_list_all_mk_m2sr <- tmp$warning_record_list_all_mk
 
   list_dt_average_sr <- full_join_average_sr(list_dt_average_bsr, list_dt_average_fsr, list_dt_average_dsr, list_dt_average_m2sr)
+
+  # --- Create the warning message --- #
 
   warning_message <- create_warning_sr(warning_record_list_all_mk_bsr, warning_record_list_all_mk_fsr, warning_record_list_all_mk_dsr, warning_record_list_all_mk_m2sr,
                                        max_mle_runs, num_converged)

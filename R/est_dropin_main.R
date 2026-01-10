@@ -135,14 +135,14 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
 #' @param waiter_ui Information on UI for waiter
 estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui){
 
-    # --- Extract data for autosomal markers --- #
+  # --- Extract the specified conditions --- #
 
   dt_kit_auto <- extract_kit_auto(dt_kit)
   markers_auto <- unique(dt_kit_auto[, Marker])
   n_mk_di <- length(markers_auto)
   dt_ntc_auto <- dt_ntc[which(is.element(dt_ntc$Marker, markers_auto)), ]
 
-  # --- Create the data.table for experimental drop-in data --- #
+  # --- Create the data.table for the experimental drop-in data --- #
 
   mat_alleles <- as.matrix(dt_ntc_auto[, grep("Allele", names(dt_ntc_auto)), with = FALSE])
   mat_heights <- as.matrix(dt_ntc_auto[, grep("Height", names(dt_ntc_auto)), with = FALSE])

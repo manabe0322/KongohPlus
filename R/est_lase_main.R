@@ -56,7 +56,8 @@ create_dt_ae_data <- function(peak_list, height_list){
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
 
-  # Likelihood function for the locus-specific amplification efficiency
+  # --- Define the likelihood function --- #
+
   like_fun_ae <- function(par){
     alpha <- par * (max_alpha - min_alpha) + min_alpha
 
@@ -80,7 +81,8 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
   lower_bounds <- rep(0, n_mk)
   upper_bounds <- rep(1, n_mk)
 
-  # Perform simulated annealing
+  # --- Perform MLE --- #
+
   current_opt <- NULL
   current_score <- Inf
   count_mle <- 0
@@ -123,14 +125,16 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
     }
   }
 
-  # Warning
+  # --- Create the warning message --- #
+
   if(count_solution == num_converged){
     warning_message <- NULL
   }else{
     warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
   }
 
-  # Extract parameters
+  # --- Calculate the estimated parameters --- #
+
   if(!is.null(current_opt)){
     est_param <- current_opt$par * (max_alpha - min_alpha) + min_alpha
   }else{
@@ -161,13 +165,15 @@ estimate_lsae <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
                           stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
                           waiter_ui = NULL){
 
-  # Extract information on setting
+  # --- Extract the specified conditions --- #
+
   markers_auto <- dt_setting_est_par$Marker
   n_mk_auto <- length(markers_auto)
   at_auto <- dt_setting_est_par$AT
   names(at_auto) <- markers_auto
 
-  # Information on considering stutter ratios
+  # --- Information on considering the stutter ratios --- #
+
   sr_consider_auto <- matrix(TRUE, n_mk_auto, 4)
   rownames(sr_consider_auto) <- markers_auto
   colnames(sr_consider_auto) <- c("BS", "FS", "DS", "M2S")
