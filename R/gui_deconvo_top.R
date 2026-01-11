@@ -22,7 +22,7 @@ deconvo_ui <- function(id){
 #' @param path_pack The path of the package KongohPlus
 #' @param session_top The top session
 #' @param rv_input The reactive values derived from the input file server
-deconvo_server <- function(id, path_pack, session_top, rv_file){
+deconvo_server <- function(id, path_pack, session_top, rv_input){
   moduleServer(
     id,
     function(input, output, session){
