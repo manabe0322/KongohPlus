@@ -4,16 +4,12 @@
 \alias{correct_af_dirichlet}
 \title{correct_af_dirichlet}
 \usage{
-correct_af_dirichlet(pop_al, pop_freq, unobs_al = numeric(0), add_unobs = TRUE)
+correct_af_dirichlet(pop_al, pop_freq)
 }
 \arguments{
 \item{pop_al}{A vector of the alleles in the population database}
 
 \item{pop_freq}{A vector of the allele frequencies in the population database}
-
-\item{unobs_al}{A vector of the unobserved alleles in the population database}
-
-\item{add_unobs}{Whether unobserved alleles are added to the allele list or not}
 }
 \description{
 The function to correct allele frequencies based on the Dirichlet distribution
