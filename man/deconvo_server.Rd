@@ -4,7 +4,7 @@
 \alias{deconvo_server}
 \title{deconvo_server}
 \usage{
-deconvo_server(id, path_pack, session_top, rv_file)
+deconvo_server(id, path_pack, session_top, rv_input)
 }
 \arguments{
 \item{id}{The server ID}
