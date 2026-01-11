@@ -6,6 +6,13 @@
 \usage{
 file_server(id, session_top, bool_load_proj)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{session_top}{The top session}
+
+\item{bool_load_proj}{TRUE/FALSE: Whether a project is loaded}
+}
 \description{
 The function to create the server module for loading files
 }

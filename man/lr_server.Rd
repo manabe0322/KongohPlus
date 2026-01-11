@@ -6,6 +6,13 @@
 \usage{
 lr_server(id, rv_input, rv_deconvo)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{rv_input}{The reactive values derived from the input file server}
+
+\item{rv_deconvo}{The reactive values derived from the setting server for deconvolution}
+}
 \description{
 The function to create the server module for the likelihood ratio
 }

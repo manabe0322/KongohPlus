@@ -5,8 +5,7 @@
 \title{run_mle_gamma}
 \usage{
 run_mle_gamma(
-  rphs_gamma,
-  tphs_gamma,
+  ephs_gamma,
   ophs_gamma,
   ats_gamma,
   min_scale_allele,
@@ -17,13 +16,12 @@ run_mle_gamma(
   max_iter,
   num_converged,
   max_mle_runs,
-  max_diff_like
+  max_diff_like,
+  waiter_ui = NULL
 )
 }
 \arguments{
-\item{rphs_gamma}{The relative peak heights for the gamma distribution}
-
-\item{tphs_gamma}{The total peak heights in one heterozygote allele for the gamma distribution}
+\item{ephs_gamma}{A matrix of the expected peak heights (per component) for the gamma distribution}
 
 \item{ophs_gamma}{The observed peak heights for the gamma distribution}
 
@@ -46,6 +44,8 @@ run_mle_gamma(
 \item{max_mle_runs}{Maximum number of MLE attempts}
 
 \item{max_diff_like}{Reproducibility threshold (log10-likelihood difference)}
+
+\item{waiter_ui}{Information on UI for waiter}
 }
 \description{
 The function to perform MLE for the gamma model

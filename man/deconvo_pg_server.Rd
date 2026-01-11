@@ -6,6 +6,11 @@
 \usage{
 deconvo_pg_server(id, rv_deconvo)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{rv_deconvo}{The reactive values derived from the deconvolution server}
+}
 \description{
 The function to create the server module for probabilistic genotyping
 }

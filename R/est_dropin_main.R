@@ -6,13 +6,16 @@
 check_est_dropin <- function(dt_ntc, dt_kit){
   error_message <- ""
 
-  # Whether all required data is loaded or not
+  # --- Check whether all required data is loaded --- #
+
   if(is.null(dt_ntc)){
     error_message <- paste0(error_message, "Load non template control data!<br>")
   }
 
   if(!is.null(dt_ntc)){
-    # Check the marker set of the experimental data
+
+    # --- Check the marker set of the experimental data --- #
+
     sn_mk_problem_dropin <- check_dt_mk(dt_ntc, unique(dt_kit$Marker)) # The function is defined in est_sr_main.R
     if(length(sn_mk_problem_dropin) > 0){
       error_message <- paste0(error_message, "Inappropriate marker set of the following sample(s) in the non template control data: ", paste0(sn_mk_problem_dropin, collapse = ", "), ".<br>")
@@ -36,7 +39,8 @@ check_est_dropin <- function(dt_ntc, dt_kit){
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
-run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
+#' @param waiter_ui Information on UI for waiter
+run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui = NULL){
 
   like_func_dropin <- function(par){
     shape_di <- par[1] * (max_shape_di - min_shape_di) + min_shape_di
@@ -65,6 +69,15 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
   index_converged <- integer(0)
   repeat{
     count_mle <- count_mle + 1
+
+    if(!is.null(waiter_ui)){
+      waiter_ui$update(
+        html = tagList(
+          spin_3k(),
+          h3("Performing MLE for drop-in parameters...")
+        )
+      )
+    }
 
     init_list[[count_mle]] <- init <- c(runif(1, min = min_shape_di, max = max_shape_di), runif(1, min = min_scale_di, max = max_scale_di))
 
@@ -98,14 +111,16 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
     }
   }
 
-  # Warning
+  # --- Create the warning message --- #
+
   if(count_solution == num_converged){
     warning_message <- NULL
   }else{
     warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
   }
 
-  # Extract parameters
+  # --- Calculate the estimated parameters --- #
+
   est_param <- rep(NA, 2)
   names(est_param) <- c("shape_di", "scale_di")
   if(!is.null(current_opt)){
@@ -151,7 +166,8 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
   al_tmp <- mat_alleles[index_tmp]
   ph_tmp <- mat_heights[index_tmp]
 
-  # Extract data above AT
+  # --- Extract data above AT --- #
+
   index_tmp <- which(ph_tmp >= at_dropin)
   sn_tmp <- sn_tmp[index_tmp]
   al_tmp <- al_tmp[index_tmp]
@@ -163,19 +179,10 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
 
   # --- Perform MLE --- #
 
-  if(!is.null(waiter_ui)){
-    waiter_ui$update(
-      html = tagList(
-        spin_3k(),
-        h3("Performing MLE for drop-in parameters...")
-      )
-    )
-  }
-
   heights <- dt_dropin_data$Height
   n_dropin <- length(heights)
 
-  tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like)
+  tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui)
   est_param <- tmp$est_param
   shape_di <- est_param["shape_di"]
   scale_di <- est_param["scale_di"]

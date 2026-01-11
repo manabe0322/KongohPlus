@@ -1,6 +1,7 @@
 #' deconvo_pg_ui
 #'
 #' @description The function to create the ui module for probabilistic genotyping
+#' @param id The ui ID
 deconvo_pg_ui <- function(id){
   ns <- NS(id)
 
@@ -37,6 +38,8 @@ deconvo_pg_ui <- function(id){
 #' deconvo_pg_server
 #'
 #' @description The function to create the server module for probabilistic genotyping
+#' @param id The server ID
+#' @param rv_deconvo The reactive values derived from the deconvolution server
 deconvo_pg_server <- function(id, rv_deconvo){
   moduleServer(
     id,

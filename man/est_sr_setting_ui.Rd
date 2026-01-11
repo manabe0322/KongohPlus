@@ -6,6 +6,9 @@
 \usage{
 est_sr_setting_ui(id)
 }
+\arguments{
+\item{id}{The ui ID}
+}
 \description{
-The function to create the ui module to create the setting tab for estimating average stutter ratios
+The function to create the ui module to create the setting tab for estimating the average stutter ratios
 }

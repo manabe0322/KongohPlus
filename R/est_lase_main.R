@@ -54,7 +54,8 @@ create_dt_ae_data <- function(peak_list, height_list){
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
-run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
+#' @param waiter_ui Information on UI for waiter
+run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui = NULL){
 
   # --- Define the likelihood function --- #
 
@@ -92,6 +93,17 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
   index_converged <- integer(0)
   repeat{
     count_mle <- count_mle + 1
+
+    if(!is.null(waiter_ui)){
+      waiter_ui$update(
+        html = tagList(
+          spin_3k(),
+          h3("Performing MLE for LSAE..."),
+          h3(paste0("Running MLE #", count_mle, " of ", max_mle_runs)),
+          h3(paste0("Number of convergences so far: ", count_solution))
+        )
+      )
+    }
 
     init_list[[count_mle]] <- init <- rdirichlet(1, rep(1, n_mk))
 
@@ -216,16 +228,7 @@ estimate_lsae <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
 
   # --- Perform MLE for LSAE --- #
 
-  if(!is.null(waiter_ui)){
-    waiter_ui$update(
-      html = tagList(
-        spin_3k(),
-        h3("Performing MLE for LSAE...")
-      )
-    )
-  }
-
-  tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like)
+  tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui)
   alpha <- tmp$est_param
   init_list <- tmp$init_list
   opt_list <- tmp$opt_list

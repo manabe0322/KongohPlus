@@ -1,6 +1,7 @@
 #' est_sr_setting_ui
 #'
-#' @description The function to create the ui module to create the setting tab for estimating average stutter ratios
+#' @description The function to create the ui module to create the setting tab for estimating the average stutter ratios
+#' @param id The ui ID
 est_sr_setting_ui <- function(id){
   ns <- NS(id)
 
@@ -77,7 +78,10 @@ create_init_dt_setting_est_sr <- function(dt_kit){
 
 #' est_sr_setting_server
 #'
-#' @description The function to create the server module to create the setting tab for estimating average stutter ratios
+#' @description The function to create the server module to create the setting tab for estimating the average stutter ratios
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
+#' @param session_top The top session for estimating the stutter ratios
 est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
   moduleServer(
     id,

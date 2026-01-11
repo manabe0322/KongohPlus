@@ -1,6 +1,7 @@
 #' est_lsae_result_ui
 #'
 #' @description The function to create the ui module to create the result tab for estimating the locus-specific amplification efficiencies
+#' @param id The ui ID
 est_lsae_result_ui <- function(id){
   ns <- NS(id)
 
@@ -51,6 +52,9 @@ est_lsae_result_ui <- function(id){
 #' est_lsae_result_server
 #'
 #' @description The function to create the server module to create the result tab for estimating the locus-specific amplification efficiencies
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
+#' @param rv_est_lsae The reactive values derived from the server for estimating the LSAE
 est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
   moduleServer(
     id,

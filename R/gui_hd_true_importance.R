@@ -1,6 +1,7 @@
 #' hd_true_importance_ui
 #'
 #' @description The function to create the ui module for the Hd true test
+#' @param id The ui ID
 hd_true_importance_ui <- function(id){
   ns <- NS(id)
 
@@ -45,6 +46,9 @@ hd_true_importance_ui <- function(id){
 #' hd_true_importance_server
 #'
 #' @description The function to create the server module for the Hd true test
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
+#' @param rv_deconvo The reactive values derived from the setting server for deconvolution
 hd_true_importance_server <- function(id, path_pack, rv_deconvo){
   moduleServer(
     id,

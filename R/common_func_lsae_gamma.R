@@ -23,7 +23,8 @@ create_init_dt_setting_est_par <- function(dt_kit){
 check_est_par <- function(dt_exp, dt_gt, dt_setting_est_par){
   error_message <- ""
 
-  # Whether all required data is loaded or not
+  # --- Check whether all required data is loaded --- #
+
   if(is.null(dt_exp)){
     error_message <- paste0(error_message, "Load experimental data!<br>")
   }
@@ -31,7 +32,8 @@ check_est_par <- function(dt_exp, dt_gt, dt_setting_est_par){
     error_message <- paste0(error_message, "Load genotype data!<br>")
   }
 
-  # Check the analytical thresholds
+  # --- Check the analytical thresholds --- #
+
   markers_est_par <- dt_setting_est_par$Marker
   at_all_mk <- dt_setting_est_par$AT
   bool_without_at <- is.na(at_all_mk)
@@ -40,19 +42,23 @@ check_est_par <- function(dt_exp, dt_gt, dt_setting_est_par){
   }
 
   if(all(!is.null(dt_exp), !is.null(dt_gt))){
-    # Check the marker set of the experimental data
+
+    # --- Check the marker set of the experimental data --- #
+
     sn_mk_problem_exp <- check_dt_mk(dt_exp, markers_est_par) # The function is defined in est_sr_main.R
     if(length(sn_mk_problem_exp) > 0){
       error_message <- paste0(error_message, "Inappropriate marker set of the following sample(s) in the experimental data: ", paste0(sn_mk_problem_exp, collapse = ", "), ".<br>")
     }
 
-    # Check the marker set of the genotype data
+    # --- Check the marker set of the genotype data --- #
+
     sn_mk_problem_gt <- check_dt_mk(dt_gt, markers_est_par) # The function is defined in est_sr_main.R
     if(length(sn_mk_problem_gt) > 0){
       error_message <- paste0(error_message, "Inappropriate marker set of the following sample(s) in the genotype data: ", paste0(sn_mk_problem_gt, collapse = ", "), ".<br>")
     }
 
-    # Check the sample names
+    # --- Check the sample names --- #
+
     sn_exp <- unique(dt_exp$SampleName)
     sn_gt <- unique(dt_gt$SampleName)
     sn_without_gt <- setdiff(sn_exp, sn_gt)
@@ -94,20 +100,24 @@ arrange_exp_data <- function(dt_exp, dt_gt, markers_auto, sr_consider_auto, at_a
     setindex(dt_exp_one, Marker)
     setindex(dt_gt_one, Marker)
 
-    # Define objects for one sample
+    # --- Define objects for one sample --- #
+
     peak_list_one <- height_list_one <- list()
     gt_one <- matrix(NA, nrow = n_mk_auto, ncol = 2)
     rownames(gt_one) <- markers_auto
     colnames(gt_one) <- c("Allele1", "Allele2")
 
     for(j in 1:n_mk_auto){
-      # Extract data of one marker
+
+      # --- Extract data of one marker --- #
+
       mk <- markers_auto[j]
       dt_exp_one_mk <- dt_exp_one[Marker == mk]
       peaks <- as.character(dt_exp_one_mk[, index_exp_peak, with = FALSE])
       heights <- as.numeric(dt_exp_one_mk[, index_exp_height, with = FALSE])
 
-      # Remove NA
+      # --- Remove NA --- #
+
       index_not_na <- which(!is.na(peaks))
       if(length(index_not_na) == 0){
         peak_list_one[[j]] <- character(0)
@@ -116,7 +126,8 @@ arrange_exp_data <- function(dt_exp, dt_gt, markers_auto, sr_consider_auto, at_a
         peaks <- peaks[index_not_na]
         heights <- heights[index_not_na]
 
-        # Remove peaks below AT
+        # --- Remove peaks below AT --- #
+
         index_above_at <- which(heights >= at_auto[mk])
         if(length(index_above_at) == 0){
           peak_list_one[[j]] <- character(0)
@@ -125,12 +136,14 @@ arrange_exp_data <- function(dt_exp, dt_gt, markers_auto, sr_consider_auto, at_a
           peaks <- peaks[index_above_at]
           heights <- heights[index_above_at]
 
-          # Extract the genotype of one marker
+          # --- Extract the genotype of one marker --- #
+
           dt_gt_one_mk <- dt_gt_one[Marker == mk]
           gt <- as.character(dt_gt_one_mk[, index_gt_allele, with = FALSE])
           gt_one[j, ] <- gt
 
-          # Make detectable peaks in the profile under the genotype
+          # --- Make detectable peaks in the profile under the genotype --- #
+
           cand_peak <- make_cand_peak(as.numeric(gt), c(sr_consider_auto[mk, ]))
 
           index_use <- which(is.element(peaks, as.character(cand_peak)))

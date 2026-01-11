@@ -1,6 +1,7 @@
 #' kit_ui
 #'
 #' @description The function to create the ui module for the kit
+#' @param id The ui ID
 kit_ui <- function(id){
   ns <- NS(id)
 
@@ -35,6 +36,8 @@ kit_ui <- function(id){
 #' kit_server
 #'
 #' @description The function to create the server module for the kit
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
 kit_server <- function(id, path_pack){
   moduleServer(
     id,

@@ -15,6 +15,9 @@ manual_ui <- function(id){
 #' manual_server
 #'
 #' @description The function to create the server module for the manual
+#' @param id The server ID
+#' @param ver_soft The package version
+#' @param path_pack The path of the package KongohPlus
 manual_server <- function(id, ver_soft, path_pack){
   moduleServer(
     id,

@@ -1,6 +1,7 @@
 #' anameth_ui
 #'
 #' @description The function to create the ui module for the analysis method
+#' @param id The ui ID
 anameth_ui <- function(id){
   ns <- NS(id)
 
@@ -31,6 +32,8 @@ anameth_ui <- function(id){
 #' anameth_server
 #'
 #' @description The function to create the server module for the analysis method
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
 anameth_server <- function(id, path_pack){
   moduleServer(
     id,
@@ -158,7 +161,8 @@ anameth_server <- function(id, path_pack){
         }
       })
 
-      # Check the name of the analysis method
+      # --- Check the name of the analysis method --- #
+
       observeEvent(input$name_copy_anameth, {
         name_copy_anameth <- input$name_copy_anameth
         dt_info_anameth <- rv_anameth$dt_info_anameth
@@ -310,8 +314,8 @@ anameth_server <- function(id, path_pack){
         }
       })
 
+      # Reset reactive values for editing the analysis method
       observeEvent(input$act_anameth_edit_cancel, {
-        # Reset reactive values for editing the analysis method
         rv_anameth$dt_anameth_edit <- NULL
         rv_anameth$anameth_edit <- NULL
         rv_anameth$list_dt_average_sr_origin <- NULL
@@ -625,6 +629,7 @@ anameth_server <- function(id, path_pack){
           if(any(is.na(dt_edit_lsae$LSAE))){
             bool_alart_anameth <- TRUE
           }else{
+
             # Mark as edited when the LSAE parameters or gamma parameters are changed.
             if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "LSAE"], 6) != round(dt_edit_lsae$LSAE, 6))){
               name_lsae <- dt_anameth_edit$Name[dt_anameth_edit$Category == "LSAE data"]
@@ -648,6 +653,7 @@ anameth_server <- function(id, path_pack){
           if(any(is.na(dt_edit_gamma$Value))){
             bool_alart_anameth <- TRUE
           }else{
+
             # Mark as edited when the LSAE parameters or gamma parameters are changed.
             if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "Peak height"], 6) != round(dt_edit_gamma$Value, 6))){
               name_gamma <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Gamma data"]
@@ -671,6 +677,7 @@ anameth_server <- function(id, path_pack){
           if(any(is.na(dt_edit_dropin$Value))){
             bool_alart_anameth <- TRUE
           }else{
+
             # Mark as edited when the drop-in parameters are changed.
             if(any(round(dt_anameth_edit$Value[dt_anameth_edit$Category == "Drop-in"], 6) != round(dt_edit_dropin$Value, 6))){
               name_dropin <- dt_anameth_edit$Name[dt_anameth_edit$Category == "Drop-in data"]

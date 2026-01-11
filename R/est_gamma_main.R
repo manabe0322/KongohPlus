@@ -279,7 +279,8 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
-run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like){
+#' @param waiter_ui Information on UI for waiter
+run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui = NULL){
 
   # --- Define the likelihood function --- #
 
@@ -287,7 +288,7 @@ run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, m
     scale_allele <- par[1] * (max_scale_allele - min_scale_allele) + min_scale_allele
     scale_stutter <- par[2] * (max_scale_stutter - min_scale_stutter) + min_scale_stutter
 
-    n_data <- length(tphs_gamma)
+    n_data <- length(ophs_gamma)
     dens <- rep(Inf, n_data)
 
     for(i in 1:n_data){
@@ -338,6 +339,17 @@ run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, m
   index_converged <- integer(0)
   repeat{
     count_mle <- count_mle + 1
+
+    if(!is.null(waiter_ui)){
+      waiter_ui$update(
+        html = tagList(
+          spin_3k(),
+          h3("Performing MLE for the gamma scale parameter..."),
+          h3(paste0("Running MLE #", count_mle, " of ", max_mle_runs)),
+          h3(paste0("Number of convergences so far: ", count_solution))
+        )
+      )
+    }
 
     init_list[[count_mle]] <- init <- c(runif(1, min = min_scale_allele, max = max_scale_allele), runif(1, min = min_scale_stutter, max = max_scale_stutter))
 
@@ -536,16 +548,7 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
 
   # --- Perform MLE for the gamma scale parameter --- #
 
-  if(!is.null(waiter_ui)){
-    waiter_ui$update(
-      html = tagList(
-        spin_3k(),
-        h3("Performing MLE for peak height parameters...")
-      )
-    )
-  }
-
-  tmp <- run_mle_gamma(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like)
+  tmp <- run_mle_gamma(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui)
   est_param <- tmp$est_param
   scale_allele <- est_param["scale_allele"]
   scale_stutter <- est_param["scale_stutter"]

@@ -6,6 +6,11 @@
 \usage{
 load_proj_server(id, session_top)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{session_top}{The top session}
+}
 \description{
 The function to create the server module for loading the project
 }

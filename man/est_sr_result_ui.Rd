@@ -6,6 +6,9 @@
 \usage{
 est_sr_result_ui(id)
 }
+\arguments{
+\item{id}{The ui ID}
+}
 \description{
-The function to create the ui module to create the result tab for estimating average stutter ratios
+The function to create the ui module to create the result tab for estimating the average stutter ratios
 }

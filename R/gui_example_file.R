@@ -1,6 +1,7 @@
 #' example_file_ui
 #'
 #' @description The function to create the ui module for the example files
+#' @param id The ui ID
 example_file_ui <- function(id){
   ns <- NS(id)
 
@@ -21,6 +22,8 @@ example_file_ui <- function(id){
 #' example_file
 #'
 #' @description The function to create the server module for the example files
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
 example_file_server <- function(id, path_pack){
   moduleServer(
     id,

@@ -1,6 +1,7 @@
 #' deconvo_result_ui
 #'
 #' @description The function to create the ui module for results of deconvolution
+#' @param id The ui ID
 deconvo_result_ui <- function(id){
   ns <- NS(id)
 
@@ -62,6 +63,9 @@ deconvo_result_ui <- function(id){
 #' deconvo_result_server
 #'
 #' @description The function to create the server module for results of deconvolution
+#' @param id The server ID
+#' @param session_top The top session
+#' @param rv_deconvo The reactive values derived from the setting server for deconvolution
 deconvo_result_server <- function(id, session_top, rv_deconvo){
   moduleServer(
     id,

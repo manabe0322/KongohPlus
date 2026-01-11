@@ -1,6 +1,7 @@
 #' view_sr_ui
 #'
 #' @description The function to create the ui module for viewing stutter ratios
+#' @param id The ui ID
 view_sr_ui <- function(id){
   ns <- NS(id)
 
@@ -132,6 +133,8 @@ create_dt_all_mle_sr <- function(sr_type, dt_setting_est_sr, opt_select_mk_sr, m
 #' view_sr_server
 #'
 #' @description The function to create the server module for viewing stutter ratios
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
 view_sr_server <- function(id, path_pack){
   moduleServer(
     id,
@@ -377,10 +380,10 @@ view_sr_server <- function(id, path_pack){
         req(rv_view_sr$opt_list_all_mk_fsr)
         req(rv_view_sr$opt_list_all_mk_dsr)
         req(rv_view_sr$opt_list_all_mk_m2sr)
-        req(rv_view_sr$index_converged_select_mk_bsr)
-        req(rv_view_sr$index_converged_select_mk_fsr)
-        req(rv_view_sr$index_converged_select_mk_dsr)
-        req(rv_view_sr$index_converged_select_mk_m2sr)
+        req(rv_view_sr$index_converged_list_all_mk_bsr)
+        req(rv_view_sr$index_converged_list_all_mk_fsr)
+        req(rv_view_sr$index_converged_list_all_mk_dsr)
+        req(rv_view_sr$index_converged_list_all_mk_m2sr)
 
         tagList(
           actionButton(session$ns("act_all_mle_bsr"), label = "BSR"),

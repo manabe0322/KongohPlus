@@ -6,6 +6,13 @@
 \usage{
 hd_true_importance_server(id, path_pack, rv_deconvo)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{path_pack}{The path of the package KongohPlus}
+
+\item{rv_deconvo}{The reactive values derived from the setting server for deconvolution}
+}
 \description{
 The function to create the server module for the Hd true test
 }

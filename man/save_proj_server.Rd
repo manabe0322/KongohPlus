@@ -12,6 +12,17 @@ save_proj_server(
   rv_hd_true_importance
 )
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{rv_deconvo}{The reactive values derived from the setting server for deconvolution}
+
+\item{rv_lr}{The reactive values derived from the LR server}
+
+\item{rv_hd_true_random}{The reactive values derived from the Hd-true test (random) server}
+
+\item{rv_hd_true_importance}{The reactive values derived from the Hd-true test (importance) server}
+}
 \description{
 The function to create the server module for saving the project
 }

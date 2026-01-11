@@ -6,6 +6,9 @@
 \usage{
 est_gamma_setting_ui(id)
 }
+\arguments{
+\item{id}{The ui ID}
+}
 \description{
 The function to create the ui module for setting to estimate the gamma scale parameter
 }

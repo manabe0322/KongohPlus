@@ -1,6 +1,7 @@
 #' lr_ui
 #'
 #' @description The function to create the ui module for the likelihood ratio
+#' @param id The ui ID
 lr_ui <- function(id){
   ns <- NS(id)
 
@@ -38,6 +39,9 @@ lr_ui <- function(id){
 #' lr_server
 #'
 #' @description The function to create the server module for the likelihood ratio
+#' @param id The server ID
+#' @param rv_input The reactive values derived from the input file server
+#' @param rv_deconvo The reactive values derived from the setting server for deconvolution
 lr_server <- function(id, rv_input, rv_deconvo){
   moduleServer(
     id,

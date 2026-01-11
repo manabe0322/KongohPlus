@@ -6,6 +6,13 @@
 \usage{
 deconvo_setting_server(id, path_pack, rv_input)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{path_pack}{The path of the package KongohPlus}
+
+\item{rv_input}{rv_deconvo The reactive values derived from the input file server}
+}
 \description{
 The function to create the server module for setting conditions of deconvolution
 }

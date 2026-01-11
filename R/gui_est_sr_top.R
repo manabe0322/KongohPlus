@@ -1,6 +1,7 @@
 #' est_sr_ui
 #'
 #' @description The function to create the ui module for estimating the average stutter ratios
+#' @param id The ui ID
 est_sr_ui <- function(id){
   ns <- NS(id)
 
@@ -18,6 +19,8 @@ est_sr_ui <- function(id){
 #' est_sr_server
 #'
 #' @description The function to create the server module for estimating the average stutter ratios
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
 est_sr_server <- function(id, path_pack){
   moduleServer(
     id,

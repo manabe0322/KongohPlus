@@ -6,6 +6,11 @@
 \usage{
 anameth_server(id, path_pack)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{path_pack}{The path of the package KongohPlus}
+}
 \description{
 The function to create the server module for the analysis method
 }

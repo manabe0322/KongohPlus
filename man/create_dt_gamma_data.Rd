@@ -10,8 +10,7 @@ create_dt_gamma_data(
   samples_gamma,
   markers_gamma,
   peaks_gamma,
-  rphs_gamma,
-  tphs_gamma,
+  ephs_gamma,
   ophs_gamma,
   ats_gamma
 )
@@ -27,9 +26,7 @@ create_dt_gamma_data(
 
 \item{peaks_gamma}{A vector of the peaks for gamma data}
 
-\item{rphs_gamma}{A matrix of the relative peak heights for gamma data}
-
-\item{tphs_gamma}{A vector of the total peak heights for gamma data}
+\item{ephs_gamma}{A matrix of the expected peak heights (per component) for the gamma distribution}
 
 \item{ophs_gamma}{A vector of the observed peak heights for gamma data}
 

@@ -1,6 +1,7 @@
 #' load_proj_ui
 #'
 #' @description The function to create the ui module for loading the project
+#' @param id The ui ID
 load_proj_ui <- function(id){
   ns <- NS(id)
 
@@ -17,6 +18,8 @@ load_proj_ui <- function(id){
 #' load_proj_server
 #'
 #' @description The function to create the server module for loading the project
+#' @param id The server ID
+#' @param session_top The top session
 load_proj_server <- function(id, session_top){
   moduleServer(
     id,

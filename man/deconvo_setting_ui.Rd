@@ -6,6 +6,9 @@
 \usage{
 deconvo_setting_ui(id)
 }
+\arguments{
+\item{id}{The ui ID}
+}
 \description{
 The function to create the ui module for setting conditions of deconvolution
 }

@@ -1,6 +1,7 @@
 #' est_lsae_setting_ui
 #'
 #' @description The function to create the ui module for setting to estimate locus-specific amplification efficiencies
+#' @param id The ui ID
 est_lsae_setting_ui <- function(id){
   ns <- NS(id)
 
@@ -42,6 +43,9 @@ est_lsae_setting_ui <- function(id){
 #' est_lsae_setting_server
 #'
 #' @description The function to create the server module for setting to estimate locus-specific amplification efficiencies
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
+#' @param session_lsae_top The top session for estimating the LSAE
 est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
   moduleServer(
     id,

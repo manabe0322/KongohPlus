@@ -1,6 +1,7 @@
 #' est_gamma_result_ui
 #'
 #' @description The function to create the ui module to create the result tab for the gamma scale parameter
+#' @param id The ui ID
 est_gamma_result_ui <- function(id){
   ns <- NS(id)
 
@@ -64,6 +65,9 @@ est_gamma_result_ui <- function(id){
 #' est_gamma_result_server
 #'
 #' @description The function to create the server module to create the result tab for the gamma scale parameter
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
+#' @param rv_est_gamma The reactive values derived from the setting server for estimating the gamma scale parameter
 est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
   moduleServer(
     id,

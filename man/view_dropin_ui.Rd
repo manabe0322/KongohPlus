@@ -6,6 +6,9 @@
 \usage{
 view_dropin_ui(id)
 }
+\arguments{
+\item{id}{The ui ID}
+}
 \description{
 The function to create the ui module for viewing drop-in parameters
 }

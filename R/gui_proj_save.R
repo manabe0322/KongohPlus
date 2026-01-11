@@ -1,6 +1,7 @@
 #' save_proj_ui
 #'
 #' @description The function to create the ui module for saving the project
+#' @param id The ui ID
 save_proj_ui <- function(id){
   ns <- NS(id)
 
@@ -18,6 +19,11 @@ save_proj_ui <- function(id){
 #' save_proj_server
 #'
 #' @description The function to create the server module for saving the project
+#' @param id The server ID
+#' @param rv_deconvo The reactive values derived from the setting server for deconvolution
+#' @param rv_lr The reactive values derived from the LR server
+#' @param rv_hd_true_random The reactive values derived from the Hd-true test (random) server
+#' @param rv_hd_true_importance The reactive values derived from the Hd-true test (importance) server
 save_proj_server <- function(id, rv_deconvo, rv_lr, rv_hd_true_random, rv_hd_true_importance){
   moduleServer(
     id,

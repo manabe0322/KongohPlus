@@ -6,6 +6,13 @@
 \usage{
 manual_server(id, ver_soft, path_pack)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{ver_soft}{The package version}
+
+\item{path_pack}{The path of the package KongohPlus}
+}
 \description{
 The function to create the server module for the manual
 }

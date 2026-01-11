@@ -6,6 +6,13 @@
 \usage{
 est_gamma_result_server(id, path_pack, rv_est_gamma)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{path_pack}{The path of the package KongohPlus}
+
+\item{rv_est_gamma}{The reactive values derived from the setting server for estimating the gamma scale parameter}
+}
 \description{
 The function to create the server module to create the result tab for the gamma scale parameter
 }

@@ -1,6 +1,7 @@
 #' report_ui
 #'
 #' @description The function to create the ui module for generating a report
+#' @param id The ui ID
 report_ui <- function(id){
   ns <- NS(id)
 
@@ -16,6 +17,10 @@ report_ui <- function(id){
 #' report_server
 #'
 #' @description The function to create the server module for generating a report
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
+#' @param rv_deconvo The reactive values derived from the setting server for deconvolution
+#' @param rv_lr The reactive values derived from the LR server
 report_server <- function(id, path_pack, rv_deconvo, rv_lr){
   moduleServer(
     id,

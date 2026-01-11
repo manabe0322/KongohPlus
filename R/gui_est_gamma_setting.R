@@ -1,6 +1,7 @@
 #' est_gamma_setting_ui
 #'
 #' @description The function to create the ui module for setting to estimate the gamma scale parameter
+#' @param id The ui ID
 est_gamma_setting_ui <- function(id){
   ns <- NS(id)
 
@@ -47,6 +48,9 @@ est_gamma_setting_ui <- function(id){
 #' est_gamma_setting_server
 #'
 #' @description The function to create the server module for setting to estimate the gamma scale parameter
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
+#' @param session_gamma_top The top session for estimating the gamma scale parameters
 est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
   moduleServer(
     id,

@@ -1,6 +1,7 @@
 #' file_ui
 #'
 #' @description The function to create the ui module for loading files
+#' @param id The ui ID
 file_ui <- function(id){
   ns <- NS(id)
 
@@ -41,6 +42,9 @@ file_ui <- function(id){
 #' file_server
 #'
 #' @description The function to create the server module for loading files
+#' @param id The server ID
+#' @param session_top The top session
+#' @param bool_load_proj TRUE/FALSE: Whether a project is loaded
 file_server <- function(id, session_top, bool_load_proj){
   moduleServer(
     id,

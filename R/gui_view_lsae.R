@@ -1,6 +1,7 @@
 #' view_lsae_ui
 #'
 #' @description The function to create the ui module for viewing the locus-specific amplification efficiencies
+#' @param id The ui ID
 view_lsae_ui <- function(id){
   ns <- NS(id)
 
@@ -55,6 +56,8 @@ view_lsae_ui <- function(id){
 #' view_lsae_server
 #'
 #' @description The function to create the server module for viewing the locus-specific amplification efficiencies
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
 view_lsae_server <- function(id, path_pack){
   moduleServer(
     id,

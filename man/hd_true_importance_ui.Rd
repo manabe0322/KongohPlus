@@ -6,6 +6,9 @@
 \usage{
 hd_true_importance_ui(id)
 }
+\arguments{
+\item{id}{The ui ID}
+}
 \description{
 The function to create the ui module for the Hd true test
 }

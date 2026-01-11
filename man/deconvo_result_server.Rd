@@ -6,6 +6,13 @@
 \usage{
 deconvo_result_server(id, session_top, rv_deconvo)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{session_top}{The top session}
+
+\item{rv_deconvo}{The reactive values derived from the setting server for deconvolution}
+}
 \description{
 The function to create the server module for results of deconvolution
 }

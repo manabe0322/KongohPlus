@@ -1,6 +1,7 @@
 #' est_sr_result_ui
 #'
-#' @description The function to create the ui module to create the result tab for estimating average stutter ratios
+#' @description The function to create the ui module to create the result tab for estimating the average stutter ratios
+#' @param id The ui ID
 est_sr_result_ui <- function(id){
   ns <- NS(id)
 
@@ -55,7 +56,10 @@ est_sr_result_ui <- function(id){
 
 #' est_sr_setting_server
 #'
-#' @description The function to create the server module to create the result tab for estimating average stutter ratios
+#' @description The function to create the server module to create the result tab for estimating the average stutter ratios
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
+#' @param rv_est_sr The reactive values derived from the server for estimating the stutter ratios
 est_sr_result_server <- function(id, path_pack, rv_est_sr){
   moduleServer(
     id,
@@ -377,10 +381,10 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         req(rv_est_sr_result$opt_list_all_mk_fsr)
         req(rv_est_sr_result$opt_list_all_mk_dsr)
         req(rv_est_sr_result$opt_list_all_mk_m2sr)
-        req(rv_est_sr_result$index_converged_select_mk_bsr)
-        req(rv_est_sr_result$index_converged_select_mk_fsr)
-        req(rv_est_sr_result$index_converged_select_mk_dsr)
-        req(rv_est_sr_result$index_converged_select_mk_m2sr)
+        req(rv_est_sr_result$index_converged_list_all_mk_bsr)
+        req(rv_est_sr_result$index_converged_list_all_mk_fsr)
+        req(rv_est_sr_result$index_converged_list_all_mk_dsr)
+        req(rv_est_sr_result$index_converged_list_all_mk_m2sr)
 
         tagList(
           actionButton(session$ns("act_all_mle_bsr"), label = "BSR"),

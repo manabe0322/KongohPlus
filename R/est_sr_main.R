@@ -813,7 +813,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
     sigma_all_mk[index_multi_mk] <- est_param["sigma"]
     init_list <- tmp$init_list
     opt_list <- tmp$opt_list
-    index_converged_list <- tmp$index_converged
+    index_converged <- tmp$index_converged
     warning_record_list_all_mk[[index_multi_mk[1]]] <- tmp$warning_record
 
     # --- Set the average stutter ratios for each allele --- #
@@ -823,7 +823,7 @@ perform_mle_sr_all_mk <- function(dt_sr_data, dt_kit, stutter_type, markers_auto
 
       init_list_all_mk[[index_mk]] <- init_list
       opt_list_all_mk[[index_mk]] <- opt_list
-      index_converged_list_all_mk[[index_mk]] <- index_converged_list
+      index_converged_list_all_mk[[index_mk]] <- index_converged
 
       myu <- myu_all_mk[index_mk]
       alname <- tmp_alname_multi_mk[[index_mk]]

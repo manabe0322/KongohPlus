@@ -6,6 +6,13 @@
 \usage{
 est_lsae_setting_server(id, path_pack, session_lsae_top)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{path_pack}{The path of the package KongohPlus}
+
+\item{session_lsae_top}{The top session for estimating the LSAE}
+}
 \description{
 The function to create the server module for setting to estimate locus-specific amplification efficiencies
 }

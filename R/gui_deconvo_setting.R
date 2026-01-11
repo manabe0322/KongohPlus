@@ -1,6 +1,7 @@
 #' deconvo_setting_ui
 #'
 #' @description The function to create the ui module for setting conditions of deconvolution
+#' @param id The ui ID
 deconvo_setting_ui <- function(id){
   ns <- NS(id)
 
@@ -54,6 +55,9 @@ deconvo_setting_ui <- function(id){
 #' deconvo_setting_server
 #'
 #' @description The function to create the server module for setting conditions of deconvolution
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
+#' @param rv_input rv_deconvo The reactive values derived from the input file server
 deconvo_setting_server <- function(id, path_pack, rv_input){
   moduleServer(
     id,

@@ -6,6 +6,13 @@
 \usage{
 est_sr_result_server(id, path_pack, rv_est_sr)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{path_pack}{The path of the package KongohPlus}
+
+\item{rv_est_sr}{The reactive values derived from the server for estimating the stutter ratios}
+}
 \description{
-The function to create the server module to create the result tab for estimating average stutter ratios
+The function to create the server module to create the result tab for estimating the average stutter ratios
 }

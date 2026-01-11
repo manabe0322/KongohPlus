@@ -1,6 +1,7 @@
 #' info_al_ui
 #'
 #' @description The function to create the ui module for information on the alleles
+#' @param id The ui ID
 info_al_ui <- function(id){
   ns <- NS(id)
 
@@ -39,6 +40,8 @@ info_al_ui <- function(id){
 #' info_al_server
 #'
 #' @description The function to create the server module for information on the alleles
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
 info_al_server <- function(id, path_pack){
   moduleServer(
     id,

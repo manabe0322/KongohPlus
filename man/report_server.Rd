@@ -6,6 +6,15 @@
 \usage{
 report_server(id, path_pack, rv_deconvo, rv_lr)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{path_pack}{The path of the package KongohPlus}
+
+\item{rv_deconvo}{The reactive values derived from the setting server for deconvolution}
+
+\item{rv_lr}{The reactive values derived from the LR server}
+}
 \description{
 The function to create the server module for generating a report
 }

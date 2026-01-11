@@ -6,6 +6,13 @@
 \usage{
 est_lsae_result_server(id, path_pack, rv_est_lsae)
 }
+\arguments{
+\item{id}{The server ID}
+
+\item{path_pack}{The path of the package KongohPlus}
+
+\item{rv_est_lsae}{The reactive values derived from the server for estimating the LSAE}
+}
 \description{
 The function to create the server module to create the result tab for estimating the locus-specific amplification efficiencies
 }

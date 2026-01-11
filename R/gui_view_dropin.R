@@ -1,6 +1,7 @@
 #' view_dropin_ui
 #'
 #' @description The function to create the ui module for viewing drop-in parameters
+#' @param id The ui ID
 view_dropin_ui <- function(id){
   ns <- NS(id)
 
@@ -58,6 +59,8 @@ view_dropin_ui <- function(id){
 #' view_dropin_server
 #'
 #' @description The function to create the server module for viewing drop-in parameters
+#' @param id The server ID
+#' @param path_pack The path of the package KongohPlus
 view_dropin_server <- function(id, path_pack){
   moduleServer(
     id,
