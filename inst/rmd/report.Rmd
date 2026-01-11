@@ -40,6 +40,7 @@ params:
   max_iter: NA
   num_converged: NA
   max_mle_runs: NA
+  max_diff_like: NA
   theta: NA
   dt_ref: NA
   fn_ref: NA
@@ -78,6 +79,7 @@ stop_iter <- params$stop_iter
 max_iter <- params$max_iter
 num_converged <- params$num_converged
 max_mle_runs <- params$max_mle_runs
+max_diff_like <- params$max_diff_like
 theta <- params$theta
 dt_ref <- params$dt_ref
 fn_ref <- params$fn_ref
@@ -138,7 +140,7 @@ print(tb)
 
 # ---- Create the data.table for settings ---- #
 
-setting_vals <- rep(NA, 11)
+setting_vals <- rep(NA, 12)
 
 if(!is.null(fn_anameth)){
   setting_vals[1] <- fn_anameth
@@ -158,20 +160,23 @@ if(!is.null(num_converged)){
 if(!is.null(max_mle_runs)){
   setting_vals[6] <- max_mle_runs
 }
+if(!is.null(max_diff_like)){
+  setting_vals[7] <- max_diff_like
+}
 if(!is.null(min_temp)){
-  setting_vals[7] <- min_temp
+  setting_vals[8] <- min_temp
 }
 if(!is.null(max_temp)){
-  setting_vals[8] <- max_temp
+  setting_vals[9] <- max_temp
 }
 if(!is.null(min_rep_ae)){
-  setting_vals[9] <- min_rep_ae
+  setting_vals[10] <- min_rep_ae
 }
 if(!is.null(max_rep_ae)){
-  setting_vals[10] <- max_rep_ae
+  setting_vals[11] <- max_rep_ae
 }
 if(!is.null(min_deg)){
-  setting_vals[11] <- min_deg
+  setting_vals[12] <- min_deg
 }
 
 dt_setting <- data.table(A = c("Analysis method", 
@@ -180,6 +185,7 @@ dt_setting <- data.table(A = c("Analysis method",
                                "Maximum number of iterations", 
                                "Minimum number of MLE attempts", 
                                "Maximum number of MLE attempts", 
+                               "Reproducibility threshold (log10-likelihood difference)", 
                                "Minimum template amount", 
                                "Maximum template amount", 
                                "Minimum replicate amplification efficiency", 

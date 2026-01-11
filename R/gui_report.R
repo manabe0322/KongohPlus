@@ -47,6 +47,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
       rv_report$max_iter <- 5000
       rv_report$num_converged <- 3
       rv_report$max_mle_runs <- 10
+      rv_report$max_diff_like <- 0.005
       rv_report$theta <- NULL
       rv_report$dt_ref <- NULL
       rv_report$fn_ref <- NULL
@@ -80,6 +81,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
           rv_report$max_iter <- data_deconvo$max_iter
           rv_report$num_converged <- data_deconvo$num_converged
           rv_report$max_mle_runs <- data_deconvo$max_mle_runs
+          rv_report$max_diff_like <- data_deconvo$max_diff_like
           rv_report$theta <- data_deconvo$theta
 
           enable("download_report")
@@ -141,6 +143,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
                 max_iter = rv_report$max_iter,
                 num_converged = rv_report$num_converged,
                 max_mle_runs = rv_report$max_mle_runs,
+                max_diff_like = rv_report$max_diff_like,
                 theta = rv_report$theta,
                 dt_ref = rv_report$dt_ref,
                 fn_ref = rv_report$fn_ref,
