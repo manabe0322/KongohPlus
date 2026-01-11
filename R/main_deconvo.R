@@ -296,11 +296,18 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
       # --- Create objects for genotype permutations --- #
 
-      tmp <- create_gt_perm_obj(cand_gt, index_gt_comb_adopt_cpp, log_gt_comb_prob_mk, bool_gt_comb_di_mk_rep)
-      gt_perm_use[[i]] <- gt_perm <- tmp$gt_perm
-      n_gt_perm_use[i] <- n_gt_perm <- length(gt_perm)
-      gtc_logprob_use[[i]] <- tmp$log_gt_perm_prob_mk
-      bool_gt_perm_di_mk_rep <- tmp$bool_gt_perm_di_mk_rep
+      if(hnc == 1){
+        gt_perm_use[[i]] <- gt_perm <- gt_comb
+        n_gt_perm_use[i] <- n_gt_perm <- length(gt_comb)
+        gtc_logprob_use[[i]] <- log_gt_comb_prob_mk
+        bool_gt_perm_di_mk_rep <- bool_gt_comb_di_mk_rep
+      }else{
+        tmp <- create_gt_perm_obj(cand_gt, index_gt_comb_adopt_cpp, log_gt_comb_prob_mk, bool_gt_comb_di_mk_rep)
+        gt_perm_use[[i]] <- gt_perm <- tmp$gt_perm
+        n_gt_perm_use[i] <- n_gt_perm <- length(gt_perm)
+        gtc_logprob_use[[i]] <- tmp$log_gt_perm_prob_mk
+        bool_gt_perm_di_mk_rep <- tmp$bool_gt_perm_di_mk_rep
+      }
 
       for(j in 1:n_rep){
 
