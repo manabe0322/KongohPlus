@@ -3,11 +3,20 @@
 #' @description The function to correct allele frequencies based on the Dirichlet distribution
 #' @param pop_al A vector of the alleles in the population database
 #' @param pop_freq A vector of the allele frequencies in the population database
-correct_af_dirichlet <- function(pop_al, pop_freq){
+#' @param unobs_al A vector of the unobserved alleles in the population database
+#' @param add_unobs Whether unobserved alleles are added to the allele list or not
+correct_af_dirichlet <- function(pop_al, pop_freq, unobs_al = numeric(0), add_unobs = TRUE){
+  n_unobs <- length(unobs_al)
 
-  # Add a dimension for an unobserved allele named allele '0'
-  pop_al <- c(pop_al, 0)
-  pop_freq <- c(pop_freq, 0)
+  if(add_unobs){
+    if(n_unobs == 0){
+      pop_al <- c(pop_al, 0) # Add a dimension for an unobserved allele named allele '0'
+      pop_freq <- c(pop_freq, 0)
+    }else{
+      pop_al <- c(pop_al, unobs_al)
+      pop_freq <- c(pop_freq, rep(0, n_unobs))
+    }
+  }
 
   pop_prob <- (pop_freq + 1) / (sum(pop_freq) + length(pop_al))
 
