@@ -362,15 +362,22 @@ run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, m
     )
 
     score <- opt$value
-    if(score < current_score){
+
+    if(score <= current_score){
+
+      if(current_score - score > max_diff_like){
+        count_solution <- 1
+        index_converged <- count_mle
+      }else{
+        count_solution <- count_solution + 1
+        index_converged <- c(index_converged, count_mle)
+      }
+
       current_opt <- opt
       current_score <- score
     }
 
-    if(current_score - score > max_diff_like){
-      count_solution <- 1
-      index_converged <- count_mle
-    }else{
+    else if(score - current_score <= max_diff_like){
       count_solution <- count_solution + 1
       index_converged <- c(index_converged, count_mle)
     }

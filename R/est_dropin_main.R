@@ -92,15 +92,22 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
     )
 
     score <- opt$value
-    if(score < current_score){
+
+    if(score <= current_score){
+
+      if(current_score - score > max_diff_like){
+        count_solution <- 1
+        index_converged <- count_mle
+      }else{
+        count_solution <- count_solution + 1
+        index_converged <- c(index_converged, count_mle)
+      }
+
       current_opt <- opt
       current_score <- score
     }
 
-    if(current_score - score > max_diff_like){
-      count_solution <- 1
-      index_converged <- count_mle
-    }else{
+    else if(score - current_score <= max_diff_like){
       count_solution <- count_solution + 1
       index_converged <- c(index_converged, count_mle)
     }

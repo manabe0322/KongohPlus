@@ -445,15 +445,22 @@ run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slo
     )
 
     score <- opt$value
-    if(score < current_score){
+
+    if(score <= current_score){
+
+      if(current_score - score > max_diff_like){
+        count_solution <- 1
+        index_converged <- count_mle
+      }else{
+        count_solution <- count_solution + 1
+        index_converged <- c(index_converged, count_mle)
+      }
+
       current_opt <- opt
       current_score <- score
     }
 
-    if(current_score - score > max_diff_like){
-      count_solution <- 1
-      index_converged <- count_mle
-    }else{
+    else if(score - current_score <= max_diff_like){
       count_solution <- count_solution + 1
       index_converged <- c(index_converged, count_mle)
     }
@@ -548,15 +555,22 @@ run_mle_sr_uni <- function(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_si
     )
 
     score <- opt$value
-    if(score < current_score){
+
+    if(score <= current_score){
+
+      if(current_score - score > max_diff_like){
+        count_solution <- 1
+        index_converged <- count_mle
+      }else{
+        count_solution <- count_solution + 1
+        index_converged <- c(index_converged, count_mle)
+      }
+
       current_opt <- opt
       current_score <- score
     }
 
-    if(current_score - score > max_diff_like){
-      count_solution <- 1
-      index_converged <- count_mle
-    }else{
+    else if(score - current_score <= max_diff_like){
       count_solution <- count_solution + 1
       index_converged <- c(index_converged, count_mle)
     }
