@@ -25,12 +25,12 @@ AT,D10S1248,,60,NA,NA,NA,NA,NA,NA,NA,NA,NA
 AT,D1S1656,,60,NA,NA,NA,NA,NA,NA,NA,NA,NA
 AT,D12S391,,60,NA,NA,NA,NA,NA,NA,NA,NA,NA
 AT,D2S1338,,60,NA,NA,NA,NA,NA,NA,NA,NA,NA
-Genotype filter,Maximum BSR,,0.3,NA,NA,NA,NA,NA,NA,NA,NA,NA
-Genotype filter,Maximum FSR,,0.2,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Genotype filter,Maximum BSR,,0.35,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Genotype filter,Maximum FSR,,0.25,NA,NA,NA,NA,NA,NA,NA,NA,NA
 Genotype filter,Maximum DSR,,0.05,NA,NA,NA,NA,NA,NA,NA,NA,NA
 Genotype filter,Maximum M2SR,,0.1,NA,NA,NA,NA,NA,NA,NA,NA,NA
 Genotype filter,Maximum number of drop-in,,2,NA,NA,NA,NA,NA,NA,NA,NA,NA
-Genotype filter,Maximum height of drop-in,,150,NA,NA,NA,NA,NA,NA,NA,NA,NA
+Genotype filter,Maximum height of drop-in,,180,NA,NA,NA,NA,NA,NA,NA,NA,NA
 Degradation,Base size,,100,NA,NA,NA,NA,NA,NA,NA,NA,NA
 LSAE,D3S1358,,1.061267229,NA,NA,NA,NA,NA,NA,NA,NA,NA
 LSAE,vWA,,0.813446448,NA,NA,NA,NA,NA,NA,NA,NA,NA

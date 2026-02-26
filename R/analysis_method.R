@@ -125,7 +125,7 @@ create_default_dt_anameth <- function(path_pack, kit_name, stutter_name, lsae_na
                                    Name = c(kit_name, stutter_name, lsae_name, gamma_name, dropin_name, rep("", 2 * n_mk + 12)),
                                    Value = c(rep(NA, 5),
                                              rep(100, n_mk),
-                                             0.3, 0.2, 0.05, 0.1, 2, 150,
+                                             0.35, 0.25, 0.05, 0.1, 2, 180,
                                              100,
                                              dt_expect_ae$LSAE,
                                              dt_est_gamma$Value,
