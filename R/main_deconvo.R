@@ -374,12 +374,17 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     # --- Optimization --- #
 
+    # log10 scaling
+    log10_min_temp <- log10(min_temp)
+    log10_max_temp <- log10(max_temp)
+
     # likelihood function
     like_func <- function(par){
 
       # Prepare parameters
-      temp <- par[1:hnc] * (max_temp - min_temp) + min_temp
+      temp <- 10^(log10_min_temp + par[1:hnc] * (log10_max_temp - log10_min_temp))  # log10 scaling
       deg <- par[(hnc + 1):(2 * hnc)] * (1 - min_deg) + min_deg
+
       if(n_rep == 1){
         rep_ae <- 1
       }else{
@@ -467,8 +472,9 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     # Extract estimated parameters
     est_params <- current_opt$par
-    temp <- est_params[1:hnc] * (max_temp - min_temp) + min_temp
+    temp <- 10^(log10_min_temp + est_params[1:hnc] * (log10_max_temp - log10_min_temp))  # log10 scaling
     deg <- est_params[(hnc + 1):(2 * hnc)] * (1 - min_deg) + min_deg
+
     if(n_rep == 1){
       rep_ae <- 1
     }else{
