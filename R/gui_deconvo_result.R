@@ -262,9 +262,11 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
 
           n_rep <- length(which(dt_param$Parameter == "Replicate amplification efficiency"))
 
+          log10_min_temp <- log10(min_temp)
+          log10_max_temp <- log10(max_temp)
+
           n_param <- nrow(dt_param) - hnc
           count_mle <- length(opt_list)
-
           mat_all_mle <- matrix(NA, n_param + 1, count_mle)
           all_scores <- rep(NA, count_mle)
           for(i in 1:count_mle){
@@ -272,7 +274,7 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
             all_scores[i] <- score <- opt_one$value
             est_params <- opt_one$par
 
-            temp <- est_params[1:hnc] * (max_temp - min_temp) + min_temp
+            temp <- 10^(log10_min_temp + est_params[1:hnc] * (log10_max_temp - log10_min_temp))  # log10 scaling
             deg <- est_params[(hnc + 1):(2 * hnc)] * (1 - min_deg) + min_deg
             if(n_rep == 1){
               rep_ae <- 1
