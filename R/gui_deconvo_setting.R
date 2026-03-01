@@ -77,7 +77,6 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$min_rep_ae <- 0.2
       rv_deconvo_setting$max_rep_ae <- 5
       rv_deconvo_setting$min_deg <- 0.001
-      rv_deconvo_setting$stop_iter <- 500
       rv_deconvo_setting$max_iter <- 500
       rv_deconvo_setting$num_converged <- 3
       rv_deconvo_setting$max_mle_runs <- 10
@@ -266,7 +265,6 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           title = "MLE conditions",
           fluidRow(
             column(6,
-                   numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_deconvo_setting$stop_iter),
                    numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_deconvo_setting$max_iter),
                    numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_deconvo_setting$num_converged),
                    numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_deconvo_setting$max_mle_runs),
@@ -356,27 +354,14 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         rv_deconvo_setting$bool_correct_advanced_deg <- bool_correct_advanced_deg
       })
 
-      observeEvent(input$stop_iter | input$max_iter, {
-        stop_iter <- input$stop_iter
+      observeEvent(input$max_iter, {
         max_iter <- input$max_iter
 
-        hideFeedback("stop_iter")
         hideFeedback("max_iter")
         bool_correct_advanced_1 <- TRUE
 
-        if(!is.integer(stop_iter) || stop_iter <= 0){
-          showFeedbackDanger(inputId = "stop_iter", text = "Value must be an integer greater than zero.")
-          bool_correct_advanced_1 <- FALSE
-        }
-
         if(!is.integer(max_iter) || max_iter <= 0){
           showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
-          bool_correct_advanced_1 <- FALSE
-        }
-
-        if(is.integer(stop_iter) && is.integer(max_iter) && stop_iter > max_iter){
-          showFeedbackDanger(inputId = "stop_iter", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_iter", text = "Minimum value cannot be greater than maximum value.")
           bool_correct_advanced_1 <- FALSE
         }
 
@@ -445,7 +430,6 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         rv_deconvo_setting$min_rep_ae <- input$min_rep_ae
         rv_deconvo_setting$max_rep_ae <- input$max_rep_ae
         rv_deconvo_setting$min_deg <- input$min_deg
-        rv_deconvo_setting$stop_iter <- input$stop_iter
         rv_deconvo_setting$max_iter <- input$max_iter
         rv_deconvo_setting$num_converged <- input$num_converged
         rv_deconvo_setting$max_mle_runs <- input$max_mle_runs
@@ -479,7 +463,6 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         min_rep_ae <- rv_deconvo_setting$min_rep_ae
         max_rep_ae <- rv_deconvo_setting$max_rep_ae
         min_deg <- rv_deconvo_setting$min_deg
-        stop_iter <- rv_deconvo_setting$stop_iter
         max_iter <- rv_deconvo_setting$max_iter
         num_converged <- rv_deconvo_setting$num_converged
         max_mle_runs <- rv_deconvo_setting$max_mle_runs
@@ -512,7 +495,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             }else{
               hnc_all <- hnc_from:hnc_to
               data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
-                                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
+                                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_converged, max_mle_runs, max_diff_like,
                                                       waiter_ui)
               data_deconvo$hnc_all <- hnc_all
               data_deconvo$theta <- theta
@@ -531,7 +514,6 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
               data_deconvo$min_rep_ae <- min_rep_ae
               data_deconvo$max_rep_ae <- max_rep_ae
               data_deconvo$min_deg <- min_deg
-              data_deconvo$stop_iter <- stop_iter
               data_deconvo$max_iter <- max_iter
               data_deconvo$num_converged <- num_converged
               data_deconvo$max_mle_runs <- max_mle_runs

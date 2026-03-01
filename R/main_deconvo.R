@@ -134,8 +134,6 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
 #' @param min_rep_ae Minimum replicate amplification efficiency
 #' @param max_rep_ae Maximum replicate amplification efficiency
 #' @param min_deg Minimum degradation parameter
-#' @param stop_iter Number of iterations without improvement before stopping one MLE run
-#' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
@@ -145,7 +143,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, scale_di,
                             ae_use, scale_allele, scale_stutter, list_dt_average_sr,
-                            min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
+                            min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_converged, max_mle_runs, max_diff_like,
                             waiter_ui){
 
   # --- Start computation --- #
@@ -623,14 +621,13 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param min_rep_ae Minimum replicate amplification efficiency
 #' @param max_rep_ae Maximum replicate amplification efficiency
 #' @param min_deg Minimum degradation parameter
-#' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
 perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
-                                    min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
+                                    min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_converged, max_mle_runs, max_diff_like,
                                     waiter_ui = NULL){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
@@ -701,7 +698,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, scale_di,
                                       ae_use, scale_allele, scale_stutter, list_dt_average_sr,
-                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
+                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_converged, max_mle_runs, max_diff_like,
                                       waiter_ui))
       if(!inherits(data_hnc, "try-error")){
         data_hnc_list[[i]] <- data_hnc
