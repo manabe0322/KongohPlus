@@ -379,16 +379,23 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     log10_max_temp <- log10(max_temp)
 
     # likelihood function
-    like_func <- function(par){
+    like_func <- function(z){
 
-      # Prepare parameters
-      temp <- 10^(log10_min_temp + par[1:hnc] * (log10_max_temp - log10_min_temp))  # log10 scaling
-      deg <- par[(hnc + 1):(2 * hnc)] * (1 - min_deg) + min_deg
+      # temp
+      u_temp <- plogis(z[1:hnc])
+      log10temp <- log10_min_temp + u_temp * (log10_max_temp - log10_min_temp)
+      temp <- 10^log10temp
 
+      # deg
+      u_deg <- plogis(z[(hnc + 1):(2 * hnc)])
+      deg <- min_deg + (1 - min_deg) * u_deg
+
+      # rep_ae
       if(n_rep == 1){
         rep_ae <- 1
       }else{
-        rep_ae <- c(1, par[(2 * hnc + 1):(2 * hnc + n_rep - 1)] * (max_rep_ae - min_rep_ae) + min_rep_ae)
+        u_rep <- plogis(z[(2 * hnc + 1):(2 * hnc + n_rep - 1)])
+        rep_ae <- c(1, min_rep_ae + (max_rep_ae - min_rep_ae) * u_rep)
       }
 
       # Calculate log probability densities of all genotype combinations
@@ -401,22 +408,20 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       log10like <- - sum(tmp[[1]]) / log(10)
 
       if(is.na(log10like) || is.nan(log10like) || is.infinite(log10like)){
-        log10like <- Inf
+        log10like <- 1e12
       }
 
       return(log10like)
     }
 
-    lower_bounds <- c(rep(0, hnc), rep(0, hnc), rep(0, n_rep - 1))
-    upper_bounds <- c(rep(1, hnc), rep(1, hnc), rep(1, n_rep - 1))
-
     # Perform simulated annealing
     current_opt <- NULL
-    current_score <- Inf
+    current_score <- 1e12
     count_mle <- 0
     count_solution <- 0
     init_list <- list()
     opt_list <- list()
+    est_par_list <- list()
     index_converged <- integer(0)
     repeat{
       count_mle <- count_mle + 1
@@ -432,18 +437,56 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         )
       }
 
-      init_list[[count_mle]] <- init <- rbeta(2 * hnc + n_rep - 1, 1, 1)
+      dim <- 2 * hnc + (n_rep - 1)
 
-      opt_list[[count_mle]] <- opt <- GenSA(
-        par = init,
+      # Initial values in (0,1) from a Beta(1,1) distribution
+      u0 <- rbeta(dim, 1, 1)
+
+      # Avoid exact 0 or 1 to prevent divergence in the logit transform since qlogis(0) = -Inf and qlogis(1) = +Inf
+      u0 <- pmin(pmax(u0, 1e-6), 1-1e-6)
+
+      # Transform to the unconstrained real space for CMA-ES
+      init_z <- qlogis(u0)
+      init_list[[count_mle]] <- init_z
+
+      # Perform optimization
+      opt_list[[count_mle]] <- opt <- cma_es(
+        par = init_z,
         fn = like_func,
-        lower = lower_bounds,
-        upper = upper_bounds,
-        control = list(verbose = TRUE, nb.stop.improvement = stop_iter, maxit = max_iter)
+        control = list(maxit = max_iter)
       )
+
+      print(opt)
 
       score <- opt$value
 
+      # Extract unconstrained parameters
+      est_z <- opt$par
+
+      # Back-transform to the original scales for temp
+      u_temp <- plogis(est_z[1:hnc])  # 0-1 scale via logistic transform
+      temp <- 10^(log10_min_temp + u_temp * (log10_max_temp - log10_min_temp))  # back-transform to the original scales
+
+      # Back-transform to the original scales for deg
+      u_deg  <- plogis(est_z[(hnc + 1):(2 * hnc)])  # 0-1 scale via logistic transform
+      deg  <- min_deg + (1 - min_deg) * u_deg  # back-transform to the original scales
+
+      # Back-transform to the original scales for rep_ae
+      if(n_rep == 1){
+        rep_ae <- 1
+      }else{
+        u_rep <- plogis(est_z[(2 * hnc + 1):(2 * hnc + n_rep - 1)])  # 0-1 scale via logistic transform
+        rep_ae <- c(1, min_rep_ae + (max_rep_ae - min_rep_ae) * u_rep)  # back-transform to the original scales
+      }
+
+      # Descending order for estimated temp
+      index_order <- order(temp, decreasing = TRUE)
+      temp <- temp[index_order]
+      deg <- deg[index_order]
+
+      est_par_list[[count_mle]] <- c(- score, temp, deg, rep_ae)
+
+      # Convergence diagnosis
       if(score <= current_score){
 
         if(current_score - score > max_diff_like){
@@ -471,23 +514,19 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     }
 
     # Extract estimated parameters
-    est_params <- current_opt$par
-    temp <- 10^(log10_min_temp + est_params[1:hnc] * (log10_max_temp - log10_min_temp))  # log10 scaling
-    deg <- est_params[(hnc + 1):(2 * hnc)] * (1 - min_deg) + min_deg
+    dt_all_mle <- as.data.table(est_par_list)
+    mle_best <- dt_all_mle[[which.max(as.numeric(dt_all_mle[1, ]))]]
+    temp <- mle_best[2:(hnc + 1)]
+    deg <- mle_best[(hnc + 2):(2 * hnc + 1)]
+    rep_ae <- mle_best[(2 * hnc + 2):(2 * hnc + n_rep + 1)]
 
-    if(n_rep == 1){
-      rep_ae <- 1
-    }else{
-      rep_ae <- c(1, est_params[(2 * hnc + 1):(2 * hnc + n_rep - 1)] * (max_rep_ae - min_rep_ae) + min_rep_ae)
-    }
-
+    # Calculate mixture proportions
     mp <- temp / sum(temp)
 
-    # Descending order for estimated mixture proportions
-    index_order <- order(mp, decreasing = TRUE)
-    temp <- temp[index_order]
-    mp <- mp[index_order]
-    deg <- deg[index_order]
+    # Arrange dt_all_mle
+    names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
+    dt_all_mle[, Parameter := c("Log10 (likelihood)", rep("Template amount", hnc), rep("Degradation", hnc), rep("Replicate amplification efficiency", n_rep))]
+    setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
     if(count_solution == num_converged){
       warning_message <- NULL
@@ -532,7 +571,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     end_time <- proc.time()
     comp_time <- end_time[3] - start_time[3]
 
-    return(list("dt_pg_list" = dt_pg_list,
+    return(list("dt_all_mle" = dt_all_mle,
+                "dt_pg_list" = dt_pg_list,
                 "dt_log10like" = dt_log10like,
                 "dt_param" = dt_param,
                 "logprob_di_use" = logprob_di_use,
@@ -553,7 +593,8 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       error_message <- paste0(error_message, "  - ", markers_unexplainable[i], "<br>")
     }
 
-    return(list("dt_pg_list" = NULL,
+    return(list("dt_all_mle" = NULL,
+                "dt_pg_list" = NULL,
                 "dt_log10like" = NULL,
                 "dt_param" = NULL,
                 "logprob_di_use" = NULL,
@@ -665,7 +706,8 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
       if(!inherits(data_hnc, "try-error")){
         data_hnc_list[[i]] <- data_hnc
       }else{
-        data_hnc_list[[i]] <- list("dt_pg_list" = NULL,
+        data_hnc_list[[i]] <- list("dt_all_mle" = NULL,
+                                   "dt_pg_list" = NULL,
                                    "dt_log10like" = NULL,
                                    "dt_param" = NULL,
                                    "logprob_di_use" = NULL,

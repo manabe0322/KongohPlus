@@ -1,5 +1,6 @@
 #' KongohPlus: Probabilistic genotyping software based on a quantitative continuous model
 #'
+#' @importFrom cmaes cma_es
 #' @importFrom combinat permn
 #' @importFrom data.table as.data.table data.table copy fread setcolorder setDT setindex
 #' @importFrom dplyr arrange desc full_join group_by_at summarise

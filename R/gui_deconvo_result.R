@@ -71,6 +71,8 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
     id,
     function(input, output, session){
       rv_deconvo_result <- reactiveValues()
+      rv_deconvo_result$index_converged <- NULL
+      rv_deconvo_result$dt_all_mle <- NULL
       rv_deconvo_result$dt_param <- NULL
       rv_deconvo_result$error_message <- NULL
       rv_deconvo_result$markers_use <- NULL
@@ -80,11 +82,6 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       rv_deconvo_result$min_size <- NULL
       rv_deconvo_result$max_size <- NULL
       rv_deconvo_result$base_size <- NULL
-      rv_deconvo_result$min_temp <- NULL
-      rv_deconvo_result$max_temp <- NULL
-      rv_deconvo_result$min_deg <- NULL
-      rv_deconvo_result$min_rep_ae <- NULL
-      rv_deconvo_result$max_rep_ae <- NULL
 
       rowCallback <- c(
         "function(row, data){",
@@ -103,6 +100,8 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         data_deconvo <- rv_deconvo$data_deconvo
         dt_anameth <- data_deconvo$dt_anameth
 
+        rv_deconvo_result$index_converged <- NULL
+        rv_deconvo_result$dt_all_mle <- NULL
         rv_deconvo_result$dt_param <- NULL
         rv_deconvo_result$error_message <- NULL
         rv_deconvo_result$markers_use <- data_deconvo$markers_use
@@ -112,11 +111,6 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         rv_deconvo_result$min_size <- data_deconvo$min_size
         rv_deconvo_result$max_size <- data_deconvo$max_size
         rv_deconvo_result$base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
-        rv_deconvo_result$min_temp <- data_deconvo$min_temp
-        rv_deconvo_result$max_temp <- data_deconvo$max_temp
-        rv_deconvo_result$min_deg <- data_deconvo$min_deg
-        rv_deconvo_result$min_rep_ae <- data_deconvo$min_rep_ae
-        rv_deconvo_result$max_rep_ae <- data_deconvo$max_rep_ae
       })
 
       output$title_warnings <- renderText({
@@ -234,82 +228,23 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       })
 
       output$dt_all_mle <- renderDataTable({
-        req(rv_deconvo_result$hnc_all)
-        req(rv_deconvo_result$data_hnc_list)
-        req(rv_deconvo_result$dt_param)
-        req(rv_deconvo_result$min_temp)
-        req(rv_deconvo_result$max_temp)
-        req(rv_deconvo_result$min_deg)
-        req(rv_deconvo_result$min_rep_ae)
-        req(rv_deconvo_result$max_rep_ae)
+        req(rv_deconvo_result$index_converged)
+        req(rv_deconvo_result$dt_all_mle)
 
-        hnc_all <- rv_deconvo_result$hnc_all
-        data_hnc_list <- rv_deconvo_result$data_hnc_list
-        dt_param <- rv_deconvo_result$dt_param
-        min_temp <- rv_deconvo_result$min_temp
-        max_temp <- rv_deconvo_result$max_temp
-        min_deg <- rv_deconvo_result$min_deg
-        min_rep_ae <- rv_deconvo_result$min_rep_ae
-        max_rep_ae <- rv_deconvo_result$max_rep_ae
+        index_converged <- rv_deconvo_result$index_converged
+        dt_all_mle <- rv_deconvo_result$dt_all_mle
 
-        hnc <- as.integer(input$select_noc_param)
-        index_hnc <- which(hnc_all == hnc)
+        name_converged <- paste0("MLE ", index_converged)
 
-        if(length(index_hnc) != 0){
-          data_hnc <- data_hnc_list[[index_hnc]]
-          opt_list <- data_hnc$opt_list
-          index_converged <- data_hnc$index_converged
-
-          n_rep <- length(which(dt_param$Parameter == "Replicate amplification efficiency"))
-
-          log10_min_temp <- log10(min_temp)
-          log10_max_temp <- log10(max_temp)
-
-          n_param <- nrow(dt_param) - hnc
-          count_mle <- length(opt_list)
-          mat_all_mle <- matrix(NA, n_param + 1, count_mle)
-          all_scores <- rep(NA, count_mle)
-          for(i in 1:count_mle){
-            opt_one <- opt_list[[i]]
-            all_scores[i] <- score <- opt_one$value
-            est_params <- opt_one$par
-
-            temp <- 10^(log10_min_temp + est_params[1:hnc] * (log10_max_temp - log10_min_temp))  # log10 scaling
-            deg <- est_params[(hnc + 1):(2 * hnc)] * (1 - min_deg) + min_deg
-            if(n_rep == 1){
-              rep_ae <- 1
-            }else{
-              rep_ae <- c(1, est_params[(2 * hnc + 1):(2 * hnc + n_rep - 1)] * (max_rep_ae - min_rep_ae) + min_rep_ae)
-            }
-
-            index_order <- order(temp, decreasing = TRUE)
-            temp <- temp[index_order]
-            deg <- deg[index_order]
-
-            mat_all_mle[1, i] <- - score
-            mat_all_mle[2:(n_param + 1), i] <- c(temp, deg, rep_ae)
-          }
-
-          dt_all_mle <- as.data.table(mat_all_mle)
-          names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
-
-          name_param <- dt_param$Parameter
-          name_param <- name_param[name_param != "Mixture proportion"]
-          dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
-          setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
-
-          name_converged <- paste0("MLE ", index_converged)
-
-          datatable(
-            dt_all_mle,
-            selection = "none",
-            options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
-            rownames = FALSE
-          ) %>%
-            formatSignif(columns = paste0("MLE ", 1:count_mle), digits = 6) %>%
-            formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
-            formatStyle(name_converged, backgroundColor = "lightblue")
-        }
+        datatable(
+          dt_all_mle,
+          selection = "none",
+          options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
+          rownames = FALSE
+        ) %>%
+          formatSignif(columns = paste0("MLE ", 1:(ncol(dt_all_mle) - 1)), digits = 6) %>%
+          formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
+          formatStyle(name_converged, backgroundColor = "lightblue")
       })
 
       output$plot_ave_ph <- renderPlot({
@@ -335,9 +270,13 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
           data_hnc <- data_hnc_list[[index_hnc]]
           error_message <- data_hnc$error_message
           if(is.null(data_hnc$error_message)){
+            rv_deconvo_result$index_converged <- data_hnc$index_converged
+            rv_deconvo_result$dt_all_mle <- data_hnc$dt_all_mle
             rv_deconvo_result$dt_param <- data_hnc$dt_param
             rv_deconvo_result$error_message <- NULL
           }else{
+            rv_deconvo_result$index_converged <- NULL
+            rv_deconvo_result$dt_all_mle <- NULL
             rv_deconvo_result$dt_param <- NULL
             rv_deconvo_result$error_message <- error_message
           }

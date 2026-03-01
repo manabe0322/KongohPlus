@@ -78,7 +78,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$max_rep_ae <- 5
       rv_deconvo_setting$min_deg <- 0.001
       rv_deconvo_setting$stop_iter <- 500
-      rv_deconvo_setting$max_iter <- 5000
+      rv_deconvo_setting$max_iter <- 500
       rv_deconvo_setting$num_converged <- 3
       rv_deconvo_setting$max_mle_runs <- 10
       rv_deconvo_setting$max_diff_like <- 0.005
