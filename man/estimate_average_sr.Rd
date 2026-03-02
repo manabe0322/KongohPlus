@@ -17,7 +17,6 @@ estimate_average_sr(
   max_myu,
   min_sigma,
   max_sigma,
-  stop_iter,
   max_iter,
   num_converged,
   max_mle_runs,
@@ -49,8 +48,6 @@ estimate_average_sr(
 \item{min_sigma}{The minimum sigma}
 
 \item{max_sigma}{The maximum sigma}
-
-\item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
 
 \item{max_iter}{Maximum number of iterations in one MLE run}
 

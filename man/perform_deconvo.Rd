@@ -34,7 +34,6 @@ perform_deconvo(
   min_rep_ae,
   max_rep_ae,
   min_deg,
-  stop_iter,
   max_iter,
   num_converged,
   max_mle_runs,
@@ -100,10 +99,6 @@ perform_deconvo(
 \item{max_rep_ae}{Maximum replicate amplification efficiency}
 
 \item{min_deg}{Minimum degradation parameter}
-
-\item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
-
-\item{max_iter}{Maximum number of iterations in one MLE run}
 
 \item{num_converged}{Number of converged MLE runs before stopping}
 

@@ -8,7 +8,6 @@ run_mle_ae(
   prop_ae_data_use,
   min_alpha,
   max_alpha,
-  stop_iter,
   max_iter,
   num_converged,
   max_mle_runs,
@@ -22,8 +21,6 @@ run_mle_ae(
 \item{min_alpha}{The minimum alpha}
 
 \item{max_alpha}{The maximum alpha}
-
-\item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
 
 \item{max_iter}{Maximum number of iterations in one MLE run}
 

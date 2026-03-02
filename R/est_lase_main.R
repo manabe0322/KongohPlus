@@ -49,18 +49,20 @@ create_dt_ae_data <- function(peak_list, height_list){
 #' @param prop_ae_data_use A matrix of the proportion of the amplification efficiencies (only data used for MLE)
 #' @param min_alpha The minimum alpha
 #' @param max_alpha The maximum alpha
-#' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
-run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui = NULL){
+run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui = NULL){
 
   # --- Define the likelihood function --- #
 
-  like_fun_ae <- function(par){
-    alpha <- par * (max_alpha - min_alpha) + min_alpha
+  like_fun_ae <- function(z){
+
+    # alpha
+    u_alpha <- plogis(z)
+    alpha <- min_alpha + u_alpha * (max_alpha - min_alpha)
 
     n_data <- ncol(prop_ae_data_use)
     dens <- rep(Inf, n_data)
@@ -78,18 +80,16 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
     return(log10like)
   }
 
-  n_mk <- nrow(prop_ae_data_use)
-  lower_bounds <- rep(0, n_mk)
-  upper_bounds <- rep(1, n_mk)
-
   # --- Perform MLE --- #
 
+  n_mk <- nrow(prop_ae_data_use)
   current_opt <- NULL
   current_score <- Inf
   count_mle <- 0
   count_solution <- 0
   init_list <- list()
   opt_list <- list()
+  est_par_list <- list()
   index_converged <- integer(0)
   repeat{
     count_mle <- count_mle + 1
@@ -105,17 +105,35 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
       )
     }
 
-    init_list[[count_mle]] <- init <- rdirichlet(1, rep(1, n_mk))
+    # Initial values in (0,1) from a Dirichlet distribution
+    u0 <- rdirichlet(1, rep(1, n_mk))[1, ]
 
-    opt_list[[count_mle]] <- opt <- GenSA(
-      par = init,
+    # Avoid exact 0 or 1 to prevent divergence in the logit transform since qlogis(0) = -Inf and qlogis(1) = +Inf
+    u0 <- pmin(pmax(u0, 1e-6), 1-1e-6)
+
+    # Transform to the unconstrained real space for CMA-ES
+    init_z <- qlogis(u0)
+    init_list[[count_mle]] <- init_z
+
+    # Perform optimization
+    opt_list[[count_mle]] <- opt <- cma_es(
+      par = init_z,
       fn = like_fun_ae,
-      lower = lower_bounds,
-      upper = upper_bounds,
-      control = list(verbose = TRUE, nb.stop.improvement = stop_iter, maxit = max_iter)
+      control = list(maxit = max_iter)
     )
 
+    print(opt)
+
     score <- opt$value
+
+    # Extract unconstrained parameters
+    est_z <- opt$par
+
+    # Back-transform to the original scales for alpha
+    u_alpha <- plogis(est_z)  # 0-1 scale via logistic transform
+    alpha <- min_alpha + u_alpha * (max_alpha - min_alpha)  # back-transform to the original scales
+
+    est_par_list[[count_mle]] <- c(- score, alpha)
 
     if(score <= current_score){
 
@@ -152,16 +170,20 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
     warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
   }
 
-  # --- Calculate the estimated parameters --- #
+  # --- Extract the estimated parameters --- #
 
-  if(!is.null(current_opt)){
-    est_param <- current_opt$par * (max_alpha - min_alpha) + min_alpha
-  }else{
-    est_param <- rep(NA, n_mk)
-  }
+  dt_all_mle <- as.data.table(est_par_list)
+  mle_best <- dt_all_mle[[which.max(as.numeric(dt_all_mle[1, ]))]]
+  est_param <- mle_best[2:(n_mk + 1)]
   names(est_param) <- paste0("alpha[", 1:n_mk, "]")
 
-  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, index_converged = index_converged, warning_message = warning_message))
+  # --- Arrange dt_all_mle --- #
+
+  names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
+  dt_all_mle[, Parameter := c("Log10 (likelihood)", paste0("alpha[", 1:n_mk, "]"))]
+  setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
+
+  return(list(dt_all_mle = dt_all_mle, est_param = est_param, init_list = init_list, opt_list = opt_list, index_converged = index_converged, warning_message = warning_message))
 }
 
 #' estimate_lsae
@@ -173,7 +195,6 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
 #' @param dt_setting_est_par The data.table for the parameter settings
 #' @param min_alpha The minimum alpha
 #' @param max_alpha The maximum alpha
-#' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
@@ -181,7 +202,7 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_it
 #' @param waiter_ui Information on UI for waiter
 estimate_lsae <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
                           min_alpha, max_alpha,
-                          stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
+                          max_iter, num_converged, max_mle_runs, max_diff_like,
                           waiter_ui = NULL){
 
   # --- Extract the specified conditions --- #
@@ -235,7 +256,8 @@ estimate_lsae <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
 
   # --- Perform MLE for LSAE --- #
 
-  tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui)
+  tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui)
+  dt_all_mle <- tmp$dt_all_mle
   alpha <- tmp$est_param
   init_list <- tmp$init_list
   opt_list <- tmp$opt_list
@@ -248,6 +270,7 @@ estimate_lsae <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
   dt_expect_ae <- data.table(Marker = markers_auto, Alpha = alpha, LSAE = expect_ae)
 
   return(list("dt_expect_ae" = dt_expect_ae,
+              "dt_all_mle" = dt_all_mle,
               "init_list" = init_list,
               "opt_list" = opt_list,
               "index_converged" = index_converged,

@@ -18,7 +18,6 @@ perform_mle_sr_all_mk(
   max_myu,
   min_sigma,
   max_sigma,
-  stop_iter,
   max_iter,
   num_converged,
   max_mle_runs,
@@ -52,8 +51,6 @@ perform_mle_sr_all_mk(
 \item{min_sigma}{The minimum sigma}
 
 \item{max_sigma}{The maximum sigma}
-
-\item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
 
 \item{max_iter}{Maximum number of iterations in one MLE run}
 

@@ -11,7 +11,6 @@ run_mle_dropin(
   max_shape_di,
   min_scale_di,
   max_scale_di,
-  stop_iter,
   max_iter,
   num_converged,
   max_mle_runs,
@@ -31,8 +30,6 @@ run_mle_dropin(
 \item{min_scale_di}{The minimum scale}
 
 \item{max_scale_di}{The maximum scale}
-
-\item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
 
 \item{max_iter}{Maximum number of iterations in one MLE run}
 

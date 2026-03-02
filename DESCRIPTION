@@ -12,11 +12,11 @@ Depends:
     R (>= 4.5.2), 
     shiny
 Imports:
+    cmaes, 
     combinat, 
     data.table, 
     dplyr, 
     DT, 
-    GenSA, 
     ggplot2, 
     gridExtra, 
     gtools, 

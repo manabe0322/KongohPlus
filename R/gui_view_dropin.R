@@ -70,12 +70,8 @@ view_dropin_server <- function(id, path_pack){
       rv_view_dropin$fn_dropin_data <- NULL
       rv_view_dropin$dt_est_dropin <- NULL
       rv_view_dropin$dt_dropin_data <- NULL
-      rv_view_dropin$opt_list <- NULL
+      rv_view_dropin$dt_all_mle <- NULL
       rv_view_dropin$index_converged <- NULL
-      rv_view_dropin$min_shape_di <- NULL
-      rv_view_dropin$max_shape_di <- NULL
-      rv_view_dropin$min_scale_di <- NULL
-      rv_view_dropin$max_scale_di <- NULL
 
       shinyFileChoose(input, "load_dropin_data", roots = c(documents = paste0(path_pack, "/extdata/dropin")), session = session, filetypes = c("RData"))
 
@@ -91,12 +87,8 @@ view_dropin_server <- function(id, path_pack){
           rv_view_dropin$warning_message <- data_est_dropin$warning_message
           rv_view_dropin$dt_est_dropin <- data_est_dropin$dt_est_dropin
           rv_view_dropin$dt_dropin_data <- data_est_dropin$dt_dropin_data
-          rv_view_dropin$opt_list <- data_est_dropin$opt_list
+          rv_view_dropin$dt_all_mle <- data_est_dropin$dt_all_mle
           rv_view_dropin$index_converged <- data_est_dropin$index_converged
-          rv_view_dropin$min_shape_di <- data_est_dropin$min_shape_di
-          rv_view_dropin$max_shape_di <- data_est_dropin$max_shape_di
-          rv_view_dropin$min_scale_di <- data_est_dropin$min_scale_di
-          rv_view_dropin$max_scale_di <- data_est_dropin$max_scale_di
         }
       })
 
@@ -117,7 +109,7 @@ view_dropin_server <- function(id, path_pack){
       })
 
       output$button_all_mle <- renderUI({
-        req(rv_view_dropin$dt_est_dropin)
+        req(rv_view_dropin$dt_all_mle)
         actionButton(session$ns("act_all_mle"), label = "View all MLE attempts")
       })
 
@@ -132,44 +124,11 @@ view_dropin_server <- function(id, path_pack){
       })
 
       output$dt_all_mle <- renderDataTable({
-        req(rv_view_dropin$opt_list)
+        req(rv_view_dropin$dt_all_mle)
         req(rv_view_dropin$index_converged)
-        req(rv_view_dropin$min_shape_di)
-        req(rv_view_dropin$max_shape_di)
-        req(rv_view_dropin$min_scale_di)
-        req(rv_view_dropin$max_scale_di)
 
-        opt_list <- rv_view_dropin$opt_list
+        dt_all_mle <- rv_view_dropin$dt_all_mle
         index_converged <- rv_view_dropin$index_converged
-        min_shape_di <- rv_view_dropin$min_shape_di
-        max_shape_di <- rv_view_dropin$max_shape_di
-        min_scale_di <- rv_view_dropin$min_scale_di
-        max_scale_di <- rv_view_dropin$max_scale_di
-
-        n_param <- length(opt_list[[1]][["par"]])
-        count_mle <- length(opt_list)
-
-        mat_all_mle <- matrix(NA, n_param + 1, count_mle)
-        all_scores <- rep(NA, count_mle)
-
-        for(i in 1:count_mle){
-          opt_one <- opt_list[[i]]
-          all_scores[i] <- score <- opt_one$value
-          est_params <- opt_one$par
-
-          shape <- est_params[1] * (max_shape_di - min_shape_di) + min_shape_di
-          scale <- est_params[2] * (max_scale_di - min_scale_di) + min_scale_di
-
-          mat_all_mle[1, i] <- - score
-          mat_all_mle[2:(n_param + 1), i] <- c(shape, scale)
-        }
-
-        dt_all_mle <- as.data.table(mat_all_mle)
-        names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
-
-        name_param <- c("Shape parameter", "Scale parameter")
-        dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
-        setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
         name_converged <- paste0("MLE ", index_converged)
 
@@ -179,7 +138,7 @@ view_dropin_server <- function(id, path_pack){
           options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
           rownames = FALSE
         ) %>%
-          formatSignif(columns = paste0("MLE ", 1:count_mle), digits = 6) %>%
+          formatSignif(columns = paste0("MLE ", 1:(ncol(dt_all_mle) - 1)), digits = 6) %>%
           formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
           formatStyle(name_converged, backgroundColor = "lightblue")
       })

@@ -11,7 +11,6 @@ estimate_lsae(
   dt_setting_est_par,
   min_alpha,
   max_alpha,
-  stop_iter,
   max_iter,
   num_converged,
   max_mle_runs,
@@ -31,8 +30,6 @@ estimate_lsae(
 \item{min_alpha}{The minimum alpha}
 
 \item{max_alpha}{The maximum alpha}
-
-\item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
 
 \item{max_iter}{Maximum number of iterations in one MLE run}
 

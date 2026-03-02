@@ -12,7 +12,6 @@ estimate_dropin_params(
   max_shape_di,
   min_scale_di,
   max_scale_di,
-  stop_iter,
   max_iter,
   num_converged,
   max_mle_runs,
@@ -34,8 +33,6 @@ estimate_dropin_params(
 \item{min_scale_di}{The minimum scale}
 
 \item{max_scale_di}{The maximum scale}
-
-\item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
 
 \item{max_iter}{Maximum number of iterations in one MLE run}
 

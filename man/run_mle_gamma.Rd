@@ -12,7 +12,6 @@ run_mle_gamma(
   max_scale_allele,
   min_scale_stutter,
   max_scale_stutter,
-  stop_iter,
   max_iter,
   num_converged,
   max_mle_runs,
@@ -34,8 +33,6 @@ run_mle_gamma(
 \item{min_scale_stutter}{The minimum scale parameter for stutters}
 
 \item{max_scale_stutter}{The maximum scale parameter for stutters}
-
-\item{stop_iter}{Number of iterations without improvement before stopping one MLE run}
 
 \item{max_iter}{Maximum number of iterations in one MLE run}
 

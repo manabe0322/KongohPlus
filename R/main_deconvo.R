@@ -406,15 +406,15 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       log10like <- - sum(tmp[[1]]) / log(10)
 
       if(is.na(log10like) || is.nan(log10like) || is.infinite(log10like)){
-        log10like <- 1e12
+        log10like <- Inf
       }
 
       return(log10like)
     }
 
-    # Perform simulated annealing
+    # Perform MLE
     current_opt <- NULL
-    current_score <- 1e12
+    current_score <- Inf
     count_mle <- 0
     count_solution <- 0
     init_list <- list()

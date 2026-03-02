@@ -274,19 +274,24 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
 #' @param max_scale_allele The maximum scale parameter for alleles
 #' @param min_scale_stutter The minimum scale parameter for stutters
 #' @param max_scale_stutter The maximum scale parameter for stutters
-#' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
-run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui = NULL){
+run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui = NULL){
 
   # --- Define the likelihood function --- #
 
-  like_func_gamma <- function(par){
-    scale_allele <- par[1] * (max_scale_allele - min_scale_allele) + min_scale_allele
-    scale_stutter <- par[2] * (max_scale_stutter - min_scale_stutter) + min_scale_stutter
+  like_func_gamma <- function(z){
+
+    # scale_allele
+    u_scale_allele <- plogis(z[1])
+    scale_allele <- min_scale_allele + u_scale_allele * (max_scale_allele - min_scale_allele)
+
+    # scale_stutter
+    u_scale_stutter <- plogis(z[2])
+    scale_stutter <- min_scale_stutter + u_scale_stutter * (max_scale_stutter - min_scale_stutter)
 
     n_data <- length(ophs_gamma)
     dens <- rep(Inf, n_data)
@@ -325,9 +330,6 @@ run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, m
     return(log10like)
   }
 
-  lower_bounds <- c(0, 0)
-  upper_bounds <- c(1, 1)
-
   # --- Perform MLE --- #
 
   current_opt <- NULL
@@ -336,6 +338,7 @@ run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, m
   count_solution <- 0
   init_list <- list()
   opt_list <- list()
+  est_par_list <- list()
   index_converged <- integer(0)
   repeat{
     count_mle <- count_mle + 1
@@ -351,17 +354,39 @@ run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, m
       )
     }
 
-    init_list[[count_mle]] <- init <- c(runif(1, min = min_scale_allele, max = max_scale_allele), runif(1, min = min_scale_stutter, max = max_scale_stutter))
+    # Initial values in (0,1) from a Beta(1,1) distribution
+    u0 <- rbeta(2, 1, 1)
 
-    opt_list[[count_mle]] <- opt <- GenSA(
-      par = init,
+    # Avoid exact 0 or 1 to prevent divergence in the logit transform since qlogis(0) = -Inf and qlogis(1) = +Inf
+    u0 <- pmin(pmax(u0, 1e-6), 1-1e-6)
+
+    # Transform to the unconstrained real space for CMA-ES
+    init_z <- qlogis(u0)
+    init_list[[count_mle]] <- init_z
+
+    # Perform optimization
+    opt_list[[count_mle]] <- opt <- cma_es(
+      par = init_z,
       fn = like_func_gamma,
-      lower = lower_bounds,
-      upper = upper_bounds,
-      control = list(verbose = TRUE, nb.stop.improvement = stop_iter, maxit = max_iter)
+      control = list(maxit = max_iter)
     )
 
+    print(opt)
+
     score <- opt$value
+
+    # Extract unconstrained parameters
+    est_z <- opt$par
+
+    # Back-transform to the original scales for scale_allele
+    u_scale_allele <- plogis(est_z[1])  # 0-1 scale via logistic transform
+    scale_allele <- min_scale_allele + u_scale_allele * (max_scale_allele - min_scale_allele)  # back-transform to the original scales
+
+    # Back-transform to the original scales for scale_stutter
+    u_scale_stutter  <- plogis(est_z[2])  # 0-1 scale via logistic transform
+    scale_stutter <- min_scale_stutter + u_scale_stutter * (max_scale_stutter - min_scale_stutter)  # back-transform to the original scales
+
+    est_par_list[[count_mle]] <- c(- score, scale_allele, scale_stutter)
 
     if(score <= current_score){
 
@@ -398,17 +423,20 @@ run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, m
     warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
   }
 
-  # --- Calculate the estimated parameters --- #
+  # --- Extract the estimated parameters --- #
 
-  est_param <- rep(NA, 2)
-  names(est_param) <- c("scale_allele", "scale_stutter")
-  if(!is.null(current_opt)){
-    tmp <- current_opt$par
-    est_param[1] <- tmp[1] * (max_scale_allele - min_scale_allele) + min_scale_allele
-    est_param[2] <- tmp[2] * (max_scale_stutter - min_scale_stutter) + min_scale_stutter
-  }
+  dt_all_mle <- as.data.table(est_par_list)
+  mle_best <- dt_all_mle[[which.max(as.numeric(dt_all_mle[1, ]))]]
+  est_param <- mle_best[2:3]
+  names(est_param) <- c("Scale parameter (allele)", "Scale parameter (stutter)")
 
-  return(list(est_param = est_param, init_list = init_list, opt_list = opt_list, index_converged = index_converged, warning_message = warning_message))
+  # --- Arrange dt_all_mle --- #
+
+  names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
+  dt_all_mle[, Parameter := c("Log10 (likelihood)", "Scale parameter (allele)", "Scale parameter (stutter)")]
+  setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
+
+  return(list(dt_all_mle = dt_all_mle, est_param = est_param, init_list = init_list, opt_list = opt_list, index_converged = index_converged, warning_message = warning_message))
 }
 
 #' create_dt_gamma_data
@@ -488,7 +516,6 @@ create_dt_gamma_data <- function(scale_allele, scale_stutter, samples_gamma, mar
 #' @param max_scale_allele The maximum scale parameter for alleles
 #' @param min_scale_stutter The minimum scale parameter for stutters
 #' @param max_scale_stutter The maximum scale parameter for stutters
-#' @param stop_iter Number of iterations without improvement before stopping one MLE run
 #' @param max_iter Maximum number of iterations in one MLE run
 #' @param num_converged Number of converged MLE runs before stopping
 #' @param max_mle_runs Maximum number of MLE attempts
@@ -496,7 +523,7 @@ create_dt_gamma_data <- function(scale_allele, scale_stutter, samples_gamma, mar
 #' @param waiter_ui Information on UI for waiter
 estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par, dt_expect_ae,
                            min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
-                           stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
+                           max_iter, num_converged, max_mle_runs, max_diff_like,
                            waiter_ui = NULL){
 
   # --- Extract the specified conditions --- #
@@ -555,10 +582,11 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
 
   # --- Perform MLE for the gamma scale parameter --- #
 
-  tmp <- run_mle_gamma(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui)
+  tmp <- run_mle_gamma(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui)
+  dt_all_mle <- tmp$dt_all_mle
   est_param <- tmp$est_param
-  scale_allele <- est_param["scale_allele"]
-  scale_stutter <- est_param["scale_stutter"]
+  scale_allele <- est_param["Scale parameter (allele)"]
+  scale_stutter <- est_param["Scale parameter (stutter)"]
   init_list <- tmp$init_list
   opt_list <- tmp$opt_list
   index_converged <- tmp$index_converged
@@ -569,7 +597,8 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
   dt_gamma_data <- create_dt_gamma_data(scale_allele, scale_stutter, samples_gamma, markers_gamma, peaks_gamma, ephs_gamma, ophs_gamma, ats_gamma)
   dt_est_gamma <- data.table(Parameter = c("Scale parameter (allele)", "Scale parameter (stutter)"), Value = c(scale_allele, scale_stutter))
 
-  return(list("dt_est_gamma" = dt_est_gamma,
+  return(list("dt_all_mle" = dt_all_mle,
+              "dt_est_gamma" = dt_est_gamma,
               "init_list" = init_list,
               "opt_list" = opt_list,
               "index_converged" = index_converged,

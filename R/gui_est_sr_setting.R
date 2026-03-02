@@ -102,8 +102,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       rv_est_sr_setting$max_myu <- 1
       rv_est_sr_setting$min_sigma <- 1
       rv_est_sr_setting$max_sigma <- 10000
-      rv_est_sr_setting$stop_iter <- 500
-      rv_est_sr_setting$max_iter <- 5000
+      rv_est_sr_setting$max_iter <- 500
       rv_est_sr_setting$num_converged <- 3
       rv_est_sr_setting$max_mle_runs <- 10
       rv_est_sr_setting$max_diff_like <- 0.005
@@ -183,7 +182,6 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           title = "MLE conditions",
           fluidRow(
             column(6,
-                   numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_sr_setting$stop_iter),
                    numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_sr_setting$max_iter),
                    numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_est_sr_setting$num_converged),
                    numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_sr_setting$max_mle_runs),
@@ -308,27 +306,14 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         }
       })
 
-      observeEvent(input$stop_iter | input$max_iter, {
-        stop_iter <- input$stop_iter
+      observeEvent(input$max_iter, {
         max_iter <- input$max_iter
 
-        hideFeedback("stop_iter")
         hideFeedback("max_iter")
         bool_correct_advanced_1 <- TRUE
 
-        if(!is.integer(stop_iter) || stop_iter <= 0){
-          showFeedbackDanger(inputId = "stop_iter", text = "Value must be an integer greater than zero.")
-          bool_correct_advanced_1 <- FALSE
-        }
-
         if(!is.integer(max_iter) || max_iter <= 0){
           showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
-          bool_correct_advanced_1 <- FALSE
-        }
-
-        if(is.integer(stop_iter) && is.integer(max_iter) && stop_iter > max_iter){
-          showFeedbackDanger(inputId = "stop_iter", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_iter", text = "Minimum value cannot be greater than maximum value.")
           bool_correct_advanced_1 <- FALSE
         }
 
@@ -401,7 +386,6 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         rv_est_sr_setting$max_myu <- input$max_myu
         rv_est_sr_setting$min_sigma <- input$min_sigma
         rv_est_sr_setting$max_sigma <- input$max_sigma
-        rv_est_sr_setting$stop_iter <- input$stop_iter
         rv_est_sr_setting$max_iter <- input$max_iter
         rv_est_sr_setting$num_converged <- input$num_converged
         rv_est_sr_setting$max_mle_runs <- input$max_mle_runs
@@ -442,7 +426,6 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         max_myu <- rv_est_sr_setting$max_myu
         min_sigma <- rv_est_sr_setting$min_sigma
         max_sigma <- rv_est_sr_setting$max_sigma
-        stop_iter <- rv_est_sr_setting$stop_iter
         max_iter <- rv_est_sr_setting$max_iter
         num_converged <- rv_est_sr_setting$num_converged
         max_mle_runs <- rv_est_sr_setting$max_mle_runs
@@ -455,7 +438,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         }else{
           data_est_sr <- try(estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr,
                                                  min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
-                                                 stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
+                                                 max_iter, num_converged, max_mle_runs, max_diff_like,
                                                  waiter_ui))
           if(inherits(data_est_sr, "try-error")){
             waiter_ui$hide()
@@ -473,7 +456,6 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
             data_est_sr$max_myu <- max_myu
             data_est_sr$min_sigma <- min_sigma
             data_est_sr$max_sigma <- max_sigma
-            data_est_sr$stop_iter <- stop_iter
             data_est_sr$max_iter <- max_iter
             data_est_sr$num_converged <- num_converged
             data_est_sr$max_mle_runs <- max_mle_runs

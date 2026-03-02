@@ -43,8 +43,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
       rv_report$min_rep_ae <- 0.2
       rv_report$max_rep_ae <- 5
       rv_report$min_deg <- 0.0001
-      rv_report$stop_iter <- 500
-      rv_report$max_iter <- 5000
+      rv_report$max_iter <- 500
       rv_report$num_converged <- 3
       rv_report$max_mle_runs <- 10
       rv_report$max_diff_like <- 0.005
@@ -77,7 +76,6 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
           rv_report$min_rep_ae <- data_deconvo$min_rep_ae
           rv_report$max_rep_ae <- data_deconvo$max_rep_ae
           rv_report$min_deg <- data_deconvo$min_deg
-          rv_report$stop_iter <- data_deconvo$stop_iter
           rv_report$max_iter <- data_deconvo$max_iter
           rv_report$num_converged <- data_deconvo$num_converged
           rv_report$max_mle_runs <- data_deconvo$max_mle_runs
@@ -139,7 +137,6 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
                 min_rep_ae = rv_report$min_rep_ae,
                 max_rep_ae = rv_report$max_rep_ae,
                 min_deg = rv_report$min_deg,
-                stop_iter = rv_report$stop_iter,
                 max_iter = rv_report$max_iter,
                 num_converged = rv_report$num_converged,
                 max_mle_runs = rv_report$max_mle_runs,

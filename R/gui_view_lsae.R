@@ -67,10 +67,8 @@ view_lsae_server <- function(id, path_pack){
       rv_view_lsae$fn_lsae_data <- NULL
       rv_view_lsae$dt_prop_ae_data_use <- NULL
       rv_view_lsae$dt_expect_ae <- NULL
-      rv_view_lsae$opt_list <- NULL
+      rv_view_lsae$dt_all_mle <- NULL
       rv_view_lsae$index_converged <- NULL
-      rv_view_lsae$min_alpha <- NULL
-      rv_view_lsae$max_alpha <- NULL
       rv_view_lsae$df_select_lsae <- NULL
 
       shinyFileChoose(input, "load_lsae_data", roots = c(documents = paste0(path_pack, "/extdata/lsae")), session = session, filetypes = c("RData"))
@@ -87,10 +85,8 @@ view_lsae_server <- function(id, path_pack){
           rv_view_lsae$warning_message <- data_est_lsae$warning_message
           rv_view_lsae$dt_prop_ae_data_use <- data_est_lsae$dt_prop_ae_data_use
           rv_view_lsae$dt_expect_ae <- data_est_lsae$dt_expect_ae
-          rv_view_lsae$opt_list <- data_est_lsae$opt_list
+          rv_view_lsae$dt_all_mle <- data_est_lsae$dt_all_mle
           rv_view_lsae$index_converged <- data_est_lsae$index_converged
-          rv_view_lsae$min_alpha <- data_est_lsae$min_alpha
-          rv_view_lsae$max_alpha <- data_est_lsae$max_alpha
         }
       })
 
@@ -114,7 +110,7 @@ view_lsae_server <- function(id, path_pack){
       })
 
       output$button_all_mle <- renderUI({
-        req(rv_view_lsae$dt_expect_ae)
+        req(rv_view_lsae$dt_all_mle)
         actionButton(session$ns("act_all_mle"), label = "View all MLE attempts")
       })
 
@@ -129,42 +125,11 @@ view_lsae_server <- function(id, path_pack){
       })
 
       output$dt_all_mle <- renderDataTable({
-        req(rv_view_lsae$dt_expect_ae)
-        req(rv_view_lsae$opt_list)
+        req(rv_view_lsae$dt_all_mle)
         req(rv_view_lsae$index_converged)
-        req(rv_view_lsae$min_alpha)
-        req(rv_view_lsae$max_alpha)
 
-        dt_expect_ae <- rv_view_lsae$dt_expect_ae
-        opt_list <- rv_view_lsae$opt_list
+        dt_all_mle <- rv_view_lsae$dt_all_mle
         index_converged <- rv_view_lsae$index_converged
-        min_alpha <- rv_view_lsae$min_alpha
-        max_alpha <- rv_view_lsae$max_alpha
-
-        n_mk <- length(opt_list[[1]][["par"]])
-        count_mle <- length(opt_list)
-
-        mat_all_mle <- matrix(NA, n_mk + 1, count_mle)
-        all_scores <- rep(NA, count_mle)
-
-        for(i in 1:count_mle){
-          opt_one <- opt_list[[i]]
-          all_scores[i] <- score <- opt_one$value
-          est_params <- opt_one$par
-
-          alpha <- est_params * (max_alpha - min_alpha) + min_alpha
-          lsae <- n_mk * (alpha + 1) / (sum(alpha) + n_mk)
-
-          mat_all_mle[1, i] <- - score
-          mat_all_mle[2:(n_mk + 1), i] <- lsae
-        }
-
-        dt_all_mle <- as.data.table(mat_all_mle)
-        names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
-
-        name_param <- paste0("LSAE ", dt_expect_ae$Marker)
-        dt_all_mle[, Parameter := c("Log10 (likelihood)", name_param)]
-        setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
         name_converged <- paste0("MLE ", index_converged)
 
@@ -174,7 +139,7 @@ view_lsae_server <- function(id, path_pack){
           options = list(dom = "t", iDisplayLength = nrow(dt_all_mle), ordering = FALSE, autowidth = TRUE),
           rownames = FALSE
         ) %>%
-          formatSignif(columns = paste0("MLE ", 1:count_mle), digits = 6) %>%
+          formatSignif(columns = paste0("MLE ", 1:(ncol(dt_all_mle) - 1)), digits = 6) %>%
           formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
           formatStyle(name_converged, backgroundColor = "lightblue")
       })

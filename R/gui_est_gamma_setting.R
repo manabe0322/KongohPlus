@@ -75,8 +75,7 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
       rv_est_gamma_setting$max_scale_allele <- 400
       rv_est_gamma_setting$min_scale_stutter <- 0.01
       rv_est_gamma_setting$max_scale_stutter <- 400
-      rv_est_gamma_setting$stop_iter <- 500
-      rv_est_gamma_setting$max_iter <- 5000
+      rv_est_gamma_setting$max_iter <- 500
       rv_est_gamma_setting$num_converged <- 3
       rv_est_gamma_setting$max_mle_runs <- 10
       rv_est_gamma_setting$max_diff_like <- 0.005
@@ -212,7 +211,6 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
           title = "MLE conditions",
           fluidRow(
             column(6,
-                   numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_gamma_setting$stop_iter),
                    numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_gamma_setting$max_iter),
                    numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_est_gamma_setting$num_converged),
                    numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_gamma_setting$max_mle_runs),
@@ -283,27 +281,14 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         }
       })
 
-      observeEvent(input$stop_iter | input$max_iter, {
-        stop_iter <- input$stop_iter
+      observeEvent(input$max_iter, {
         max_iter <- input$max_iter
 
-        hideFeedback("stop_iter")
         hideFeedback("max_iter")
         bool_correct_advanced_1 <- TRUE
 
-        if(!is.integer(stop_iter) || stop_iter <= 0){
-          showFeedbackDanger(inputId = "stop_iter", text = "Value must be an integer greater than zero.")
-          bool_correct_advanced_1 <- FALSE
-        }
-
         if(!is.integer(max_iter) || max_iter <= 0){
           showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
-          bool_correct_advanced_1 <- FALSE
-        }
-
-        if(is.integer(stop_iter) && is.integer(max_iter) && stop_iter > max_iter){
-          showFeedbackDanger(inputId = "stop_iter", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_iter", text = "Minimum value cannot be greater than maximum value.")
           bool_correct_advanced_1 <- FALSE
         }
 
@@ -370,7 +355,6 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         rv_est_gamma_setting$max_scale_allele <- input$max_scale_allele
         rv_est_gamma_setting$min_scale_stutter <- input$min_scale_stutter
         rv_est_gamma_setting$max_scale_stutter <- input$max_scale_stutter
-        rv_est_gamma_setting$stop_iter <- input$stop_iter
         rv_est_gamma_setting$max_iter <- input$max_iter
         rv_est_gamma_setting$num_converged <- input$num_converged
         rv_est_gamma_setting$max_mle_runs <- input$max_mle_runs
@@ -412,7 +396,6 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         max_scale_allele <- rv_est_gamma_setting$max_scale_allele
         min_scale_stutter <- rv_est_gamma_setting$min_scale_stutter
         max_scale_stutter <- rv_est_gamma_setting$max_scale_stutter
-        stop_iter <- rv_est_gamma_setting$stop_iter
         max_iter <- rv_est_gamma_setting$max_iter
         num_converged <- rv_est_gamma_setting$num_converged
         max_mle_runs <- rv_est_gamma_setting$max_mle_runs
@@ -426,7 +409,7 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         }else{
           data_est_gamma <- try(estimate_gamma(dt_exp_gamma, dt_gt_gamma, list_dt_average_sr, dt_setting_est_par, dt_expect_ae,
                                                min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
-                                               stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
+                                               max_iter, num_converged, max_mle_runs, max_diff_like,
                                                waiter_ui))
           if(inherits(data_est_gamma, "try-error")){
             waiter_ui$hide()
@@ -443,7 +426,6 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
             data_est_gamma$max_scale_allele <- max_scale_allele
             data_est_gamma$min_scale_stutter <- min_scale_stutter
             data_est_gamma$max_scale_stutter <- max_scale_stutter
-            data_est_gamma$stop_iter <- stop_iter
             data_est_gamma$max_iter <- max_iter
             data_est_gamma$num_converged <- num_converged
             data_est_gamma$max_mle_runs <- max_mle_runs

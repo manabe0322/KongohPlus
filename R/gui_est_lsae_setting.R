@@ -64,8 +64,7 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
       rv_est_lsae_setting$name_sr <- NULL
       rv_est_lsae_setting$min_alpha <- 0.01
       rv_est_lsae_setting$max_alpha <- 100
-      rv_est_lsae_setting$stop_iter <- 500
-      rv_est_lsae_setting$max_iter <- 5000
+      rv_est_lsae_setting$max_iter <- 500
       rv_est_lsae_setting$num_converged <- 3
       rv_est_lsae_setting$max_mle_runs <- 10
       rv_est_lsae_setting$max_diff_like <- 0.005
@@ -168,7 +167,6 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
           title = "MLE conditions",
           fluidRow(
             column(6,
-                   numericInput(session$ns("stop_iter"), label = "Minimum number of iterations", value = rv_est_lsae_setting$stop_iter),
                    numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_lsae_setting$max_iter),
                    numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_est_lsae_setting$num_converged),
                    numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_lsae_setting$max_mle_runs),
@@ -212,27 +210,14 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
         }
       })
 
-      observeEvent(input$stop_iter | input$max_iter, {
-        stop_iter <- input$stop_iter
+      observeEvent(input$max_iter, {
         max_iter <- input$max_iter
 
-        hideFeedback("stop_iter")
         hideFeedback("max_iter")
         bool_correct_advanced_1 <- TRUE
 
-        if(!is.integer(stop_iter) || stop_iter <= 0){
-          showFeedbackDanger(inputId = "stop_iter", text = "Value must be an integer greater than zero.")
-          bool_correct_advanced_1 <- FALSE
-        }
-
         if(!is.integer(max_iter) || max_iter <= 0){
           showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
-          bool_correct_advanced_1 <- FALSE
-        }
-
-        if(is.integer(stop_iter) && is.integer(max_iter) && stop_iter > max_iter){
-          showFeedbackDanger(inputId = "stop_iter", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_iter", text = "Minimum value cannot be greater than maximum value.")
           bool_correct_advanced_1 <- FALSE
         }
 
@@ -296,7 +281,6 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
       observeEvent(input$act_advance_lsae_save, {
         rv_est_lsae_setting$min_alpha <- input$min_alpha
         rv_est_lsae_setting$max_alpha <- input$max_alpha
-        rv_est_lsae_setting$stop_iter <- input$stop_iter
         rv_est_lsae_setting$max_iter <- input$max_iter
         rv_est_lsae_setting$num_converged <- input$num_converged
         rv_est_lsae_setting$max_mle_runs <- input$max_mle_runs
@@ -336,7 +320,6 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
         name_sr <- rv_est_lsae_setting$name_sr
         min_alpha <- rv_est_lsae_setting$min_alpha
         max_alpha <- rv_est_lsae_setting$max_alpha
-        stop_iter <- rv_est_lsae_setting$stop_iter
         max_iter <- rv_est_lsae_setting$max_iter
         num_converged <- rv_est_lsae_setting$num_converged
         max_mle_runs <- rv_est_lsae_setting$max_mle_runs
@@ -350,7 +333,7 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
         }else{
           data_est_lsae <- try(estimate_lsae(dt_exp_lsae, dt_gt_lsae, list_dt_average_sr, dt_setting_est_par,
                                              min_alpha, max_alpha,
-                                             stop_iter, max_iter, num_converged, max_mle_runs, max_diff_like,
+                                             max_iter, num_converged, max_mle_runs, max_diff_like,
                                              waiter_ui))
           if(inherits(data_est_lsae, "try-error")){
             waiter_ui$hide()
@@ -364,7 +347,6 @@ est_lsae_setting_server <- function(id, path_pack, session_lsae_top){
             data_est_lsae$name_sr <- name_sr
             data_est_lsae$min_alpha <- min_alpha
             data_est_lsae$max_alpha <- max_alpha
-            data_est_lsae$stop_iter <- stop_iter
             data_est_lsae$max_iter <- max_iter
             data_est_lsae$num_converged <- num_converged
             data_est_lsae$max_mle_runs <- max_mle_runs
