@@ -9,6 +9,8 @@ report_ui <- function(id){
            useWaiter(),
            textInput(ns("case_name"), label = h4("Case name")),
            textInput(ns("user_name"), label = h4("User name")),
+           numericInput(ns("min_gt_prob_display"), label = h4("Minimum genotype probability to display"), value = 0.001, step = 0.001),
+           numericInput(ns("max_gtc_display"), label = h4("Maximum number of genotypes to display"), value = 20),
            br(),
            disabled(downloadButton(ns("download_report"), "Report", class = "btn btn-primary btn-lg"))
   )
@@ -52,7 +54,8 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
       rv_report$fn_ref <- NULL
       rv_report$dt_lr_calc_record <- NULL
       rv_report$lr_list <- NULL
-      rv_report$gt_prob_sum <- 0.99
+      rv_report$bool_correct_min_gt_prob_display <- TRUE
+      rv_report$bool_correct_max_gtc_display <- TRUE
 
       observe({
         req(rv_deconvo)
@@ -96,63 +99,121 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
         rv_report$lr_list <- rv_lr$lr_list
       })
 
+      observeEvent(input$min_gt_prob_display, {
+        min_gt_prob_display <- input$min_gt_prob_display
+
+        hideFeedback("min_gt_prob_display")
+        bool_correct_min_gt_prob_display <- TRUE
+
+        if(!is.numeric(min_gt_prob_display) || min_gt_prob_display < 0 || min_gt_prob_display > 1){
+          showFeedbackDanger(inputId = "min_gt_prob_display", text = "Value must be between 0 and 1.")
+          bool_correct_min_gt_prob_display <- FALSE
+        }
+
+        rv_report$bool_correct_min_gt_prob_display <- bool_correct_min_gt_prob_display
+      })
+
+      observeEvent(input$max_gtc_display, {
+        max_gtc_display <- input$max_gtc_display
+
+        hideFeedback("max_gtc_display")
+        bool_correct_max_gtc_display <- TRUE
+
+        if(!is.integer(max_gtc_display) || max_gtc_display < 1){
+          showFeedbackDanger(inputId = "max_gtc_display", text = "Value must be a positive integer.")
+          bool_correct_max_gtc_display <- FALSE
+        }
+
+        rv_report$bool_correct_max_gtc_display <- bool_correct_max_gtc_display
+      })
+
+      observe({
+        req(rv_report)
+        req(rv_deconvo)
+        data_deconvo <- rv_deconvo$data_deconvo
+
+        if(!is.null(data_deconvo)){
+          if(all(rv_report$bool_correct_min_gt_prob_display, rv_report$bool_correct_max_gtc_display)){
+            enable("download_report")
+          }else{
+            disable("download_report")
+          }
+        }else{
+          disable("download_report")
+        }
+      })
+
       output$download_report <- downloadHandler(
         filename = function() {
-          paste0("report_", gsub(" ", "_", format(as.POSIXct(Sys.time()), "%Y-%m-%d %H%M%S")), "_", input$case_name, "_", input$user_name, ".pdf")
+          paste0("report_", gsub(" ", "_", format(as.POSIXct(Sys.time()), "%Y-%m-%d %H%M%S")), "_", input$case_name, "_", input$user_name, ".html")
         },
         content = function(file){
           req(rv_deconvo$data_deconvo)
 
-          message_pdf_env <- check_pdf_env()
-          if(nzchar(message_pdf_env)){
-            showModal(modalDialog(title = "Error", HTML(message_pdf_env), easyClose = TRUE, footer = NULL))
-          }else{
-            waiter_ui <- Waiter$new(html = tagList(spin_3k(),
-                                                   h3("Generating the report...")),
-                                    color = transparent(.5))
-            waiter_ui$show()
+          waiter_ui <- Waiter$new(html = tagList(spin_3k(),
+                                                 h3("Generating the report...")),
+                                  color = transparent(.5))
 
-            report_tmp <- file.path(tempdir(), "report.Rmd")
-            file.copy(paste0(path_pack, "/rmd/report.Rmd"), report_tmp, overwrite = TRUE)
-            render(
-              input = report_tmp,
-              output_file = file,
-              params = list(
-                case_name = input$case_name,
-                user_name = input$user_name,
-                dt_csp = rv_report$dt_csp,
-                fn_csp = rv_report$fn_csp,
-                fn_af = rv_report$fn_af,
-                dt_anameth = rv_report$dt_anameth,
-                fn_anameth = rv_report$fn_anameth,
-                markers_use = rv_report$markers_use,
-                data_hnc_list = rv_report$data_hnc_list,
-                dt_ignore_mk = rv_report$dt_ignore_mk,
-                hnc_all = rv_report$hnc_all,
-                message_sr = rv_report$message_sr,
-                min_size = rv_report$min_size,
-                max_size = rv_report$max_size,
-                min_temp = rv_report$min_temp,
-                max_temp = rv_report$max_temp,
-                min_rep_ae = rv_report$min_rep_ae,
-                max_rep_ae = rv_report$max_rep_ae,
-                min_deg = rv_report$min_deg,
-                max_iter = rv_report$max_iter,
-                num_converged = rv_report$num_converged,
-                max_mle_runs = rv_report$max_mle_runs,
-                max_diff_like = rv_report$max_diff_like,
-                theta = rv_report$theta,
-                dt_ref = rv_report$dt_ref,
-                fn_ref = rv_report$fn_ref,
-                dt_lr_calc_record = rv_report$dt_lr_calc_record,
-                lr_list = rv_report$lr_list,
-                gt_prob_sum = rv_report$gt_prob_sum
-              ),
-              envir = new.env(parent = globalenv())
-            )
+          waiter_ui$show()
 
-            waiter_ui$hide()
+          # Temporary directory for work
+          tmpdir <- tempfile("report_")
+          dir.create(tmpdir, recursive = TRUE)
+
+          # Copy Rmd to a temporary directory (render requires the working directory)
+          rmd_tmp <- file.path(tmpdir, "report.Rmd")
+          file.copy(paste0(path_pack, "/rmd/report.Rmd"), rmd_tmp, overwrite = TRUE)
+
+          # Define params
+          params <- list(
+            case_name = input$case_name,
+            user_name = input$user_name,
+            min_gt_prob_display = input$min_gt_prob_display,
+            max_gtc_display = input$max_gtc_display,
+            dt_csp = rv_report$dt_csp,
+            fn_csp = rv_report$fn_csp,
+            fn_af = rv_report$fn_af,
+            dt_anameth = rv_report$dt_anameth,
+            fn_anameth = rv_report$fn_anameth,
+            markers_use = rv_report$markers_use,
+            data_hnc_list = rv_report$data_hnc_list,
+            dt_ignore_mk = rv_report$dt_ignore_mk,
+            hnc_all = rv_report$hnc_all,
+            message_sr = rv_report$message_sr,
+            min_size = rv_report$min_size,
+            max_size = rv_report$max_size,
+            min_temp = rv_report$min_temp,
+            max_temp = rv_report$max_temp,
+            min_rep_ae = rv_report$min_rep_ae,
+            max_rep_ae = rv_report$max_rep_ae,
+            min_deg = rv_report$min_deg,
+            max_iter = rv_report$max_iter,
+            num_converged = rv_report$num_converged,
+            max_mle_runs = rv_report$max_mle_runs,
+            max_diff_like = rv_report$max_diff_like,
+            theta = rv_report$theta,
+            dt_ref = rv_report$dt_ref,
+            fn_ref = rv_report$fn_ref,
+            dt_lr_calc_record = rv_report$dt_lr_calc_record,
+            lr_list = rv_report$lr_list
+          )
+
+          # Generate HTML
+          css_path <- system.file("rmd/report.css", package = "KongohPlus")
+          out_html <- render(
+            input = rmd_tmp,
+            output_format = html_document(self_contained = TRUE, css = css_path),
+            params = params,
+            envir = new.env(parent = globalenv()),
+            quiet = TRUE
+          )
+
+          ok <- file.copy(out_html, file, overwrite = TRUE)
+          if(!ok){
+            stop("Failed to copy rendered HTML to download target.")
           }
+
+          waiter_ui$hide()
         }
       )
     }

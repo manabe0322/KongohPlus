@@ -1,24 +1,16 @@
 ---
+title: "Report"
 output: 
-  pdf_document:
-    latex_engine: xelatex
-    includes: null
+  html_document:
     toc: false
     number_sections: false
     df_print: default
-    keep_tex: true
-    extra_dependencies: ["booktabs", "array", "longtable"]
-geometry: top=25mm,bottom=25mm,left=25mm,right=25mm
-documentclass: report
-fontsize: 10pt
-header-includes:
-  - \usepackage{sourcesanspro}
-  - \renewcommand{\familydefault}{\sfdefault}
-  - \usepackage[hidelinks]{hyperref}
-  - \setlength{\tabcolsep}{2mm}  # Space between columns
+    self_contained: true
 params:
   case_name: NA
   user_name: NA
+  min_gt_prob_display: NA
+  max_gtc_display: NA
   dt_csp: NA
   fn_csp: NA
   fn_af: NA
@@ -45,18 +37,21 @@ params:
   fn_ref: NA
   dt_lr_calc_record: NA
   lr_list: NA
-  gt_prob_sum: NA
 ---
 
 ```{r setup, include = FALSE}
-library(knitr)
-library(kableExtra)
-library(dplyr) # for mutate, full_join
 library(data.table)
+library(DT)
+library(ggplot2)
+library(htmltools)
+library(knitr)
 library(KongohPlus)
+library(magrittr)
 
 case_name <- params$case_name
 user_name <- params$user_name
+min_gt_prob_display <- params$min_gt_prob_display
+max_gtc_display <- params$max_gtc_display
 dt_csp <- params$dt_csp
 fn_csp <- params$fn_csp
 fn_af <- params$fn_af
@@ -83,40 +78,42 @@ dt_ref <- params$dt_ref
 fn_ref <- params$fn_ref
 dt_lr_calc_record <- params$dt_lr_calc_record
 lr_list <- params$lr_list
-gt_prob_sum <- params$gt_prob_sum
 ```
 
-\begin{center}
-{\LARGE \textbf{Report}}
-\end{center}
-
-```{r top, echo = FALSE, results='asis'}
+```{r top, echo = FALSE, results = 'asis'}
 
 # ---- Create the data.table for top ---- #
 
 dt_top <- data.table(A = c("Case Name", "User", "Date", "KongohPlus version"), 
                      B = c(case_name, user_name, format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), as.character(packageVersion("KongohPlus"))))
 
-# ---- Display the created data.table ---- #
-
-tb <- kable(dt_top, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
-tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-tb <- column_spec(tb, 1, width = "4.8cm")
-tb <- column_spec(tb, 2, width = "11cm")
-print(tb)
+datatable(
+  dt_top,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = 't', 
+    ordering = FALSE, 
+    paging = FALSE, 
+    searching = FALSE
+  )
+) %>%
+  formatStyle(names(dt_top), lineHeight = "80%")
 ```
 
-```{r files, echo = FALSE, results='asis'}
+---
+
+```{r files, echo = FALSE, results = 'asis'}
 
 # ---- Create the data.table for input files ---- #
 
-if(is.null(fn_csp)){
+if(is.null(fn_csp) || is.na(fn_csp)){
   fn_csp <- ""
 }
-if(is.null(fn_ref)){
+if(is.null(fn_ref) || is.na(fn_ref)){
   fn_ref <- ""
 }
-if(is.null(fn_af)){
+if(is.null(fn_af) || is.na(fn_af)){
   fn_af <- ""
 }
 
@@ -125,53 +122,72 @@ dt_file <- data.table(A = c("Crime stain profile", "Reference profile", "Allele 
 
 # ---- Display the created data.table ---- #
 
-cat("\\section*{Input files}")
+cat("## Input files\n\n")
 
-tb <- kable(dt_file, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
-tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-tb <- column_spec(tb, 1, width = "4.8cm")
-tb <- column_spec(tb, 2, width = "11cm")
-print(tb)
+datatable(
+  dt_file,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = 't',
+    ordering = FALSE, 
+    paging = FALSE, 
+    searching = FALSE
+  )
+) %>%
+  formatStyle(names(dt_file), lineHeight = "80%")
 ```
 
-```{r setting, echo = FALSE, results='asis'}
+---
+
+```{r setting, echo = FALSE, results = 'asis'}
 
 # ---- Create the data.table for settings ---- #
 
 setting_vals <- rep(NA, 11)
 
-if(!is.null(fn_anameth)){
-  setting_vals[1] <- fn_anameth
+if(is.null(fn_anameth) || is.na(fn_anameth)){
+  fn_anameth <- ""
 }
-if(!is.null(theta)){
-  setting_vals[2] <- theta
+if(is.null(theta) || is.na(theta)){
+  theta <- ""
 }
-if(!is.null(max_iter)){
-  setting_vals[3] <- max_iter
+if(is.null(max_iter) || is.na(max_iter)){
+  max_iter <- ""
 }
-if(!is.null(num_converged)){
-  setting_vals[4] <- num_converged
+if(is.null(num_converged) || is.na(num_converged)){
+  num_converged <- ""
 }
-if(!is.null(max_mle_runs)){
-  setting_vals[5] <- max_mle_runs
+if(is.null(max_mle_runs) || is.na(max_mle_runs)){
+  max_mle_runs <- ""
 }
-if(!is.null(max_diff_like)){
-  setting_vals[6] <- max_diff_like
+if(is.null(max_diff_like) || is.na(max_diff_like)){
+  max_diff_like <- ""
 }
-if(!is.null(min_temp)){
-  setting_vals[7] <- min_temp
+if(is.null(min_temp) || is.na(min_temp)){
+  min_temp <- ""
 }
-if(!is.null(max_temp)){
-  setting_vals[8] <- max_temp
+if(is.null(max_temp) || is.na(max_temp)){
+  max_temp <- ""
 }
-if(!is.null(min_rep_ae)){
-  setting_vals[9] <- min_rep_ae
+if(is.null(min_deg) || is.na(min_deg)){
+  min_deg <- ""
 }
-if(!is.null(max_rep_ae)){
-  setting_vals[10] <- max_rep_ae
+if(is.null(min_rep_ae) || is.na(min_rep_ae)){
+  min_rep_ae <- ""
 }
-if(!is.null(min_deg)){
-  setting_vals[11] <- min_deg
+if(is.null(max_rep_ae) || is.na(max_rep_ae)){
+  max_rep_ae <- ""
+}
+
+ignored_markers <- dt_ignore_mk$Marker[dt_ignore_mk$Ignore]
+n_ignore_mk <- length(ignored_markers)
+if(n_ignore_mk == 0){
+  ignore_mk <- "None"
+}else if(n_ignore_mk == 1){
+  ignore_mk <- ignored_markers
+}else{
+  ignore_mk <- paste0(n_ignore_mk, " loci")
 }
 
 dt_setting <- data.table(A = c("Analysis method", 
@@ -182,40 +198,38 @@ dt_setting <- data.table(A = c("Analysis method",
                                "Reproducibility threshold (log10-likelihood difference)", 
                                "Minimum template amount", 
                                "Maximum template amount", 
+                               "Minimum degradation parameter", 
                                "Minimum replicate amplification efficiency", 
                                "Maximum replicate amplification efficiency", 
-                               "Minimum degradation parameter"), 
-                         B = setting_vals)
+                               "Ignored markers"), 
+                         B = c(fn_anameth, theta, max_iter, num_converged, max_mle_runs, max_diff_like, min_temp, max_temp, min_deg, min_rep_ae, max_rep_ae, ignore_mk))
 
 # ---- Display the created data.table ---- #
 
-cat("\\section*{Settings}")
+cat("## Settings\n\n")
 
-tb <- kable(dt_setting, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
-tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-tb <- column_spec(tb, 1, width = "8.8cm")
-tb <- column_spec(tb, 2, width = "7cm")
-print(tb)
+datatable(
+  dt_setting,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = 't', 
+    ordering = FALSE, 
+    paging = FALSE, 
+    searching = FALSE
+  )
+) %>%
+  formatStyle(names(dt_setting), lineHeight = "80%")
 ```
 
-```{r ignore_mk, echo = FALSE, results='asis'}
+<div class="pagebreak"></div>
 
-cat("\\section*{Ignored markers}")
+---
 
-ignored_markers <- dt_ignore_mk$Marker[dt_ignore_mk$Ignore]
+```{r deconvo, echo = FALSE, results ='asis'}
 
-if(length(ignored_markers) == 0){
-  cat("None")
-}else{
-  cat(paste0("- ", ignored_markers), sep = "\n")
-}
-```
-
-```{r deconvo, echo = FALSE, results='asis'}
-
-if(!is.null(data_hnc_list)){
-  cat("\\clearpage")
-  cat("\\section*{Deconvolution}")
+if (!is.null(data_hnc_list)) {
+  cat("## Deconvolution\n\n")
   
   for(i in 1:length(hnc_all)){
     
@@ -224,17 +238,12 @@ if(!is.null(data_hnc_list)){
     dt_log10like <- data_hnc$dt_log10like
     dt_param <- data_hnc$dt_param
     
-    cat(sprintf("\\subsection*{Number of contributors: %s}\n", hnc))
+    cat(paste0("### Number of contributors: ", hnc, "\n\n"))
     
     if(!is.null(dt_log10like) && !is.null(dt_param)){
-      warning_message <- data_hnc$warning_message
-      if(is.null(warning_message)){
-        warning_message <- ""
-      }
-      warning_message <- paste0(warning_message, message_sr)
-    
-      # --- Display parameters --- #
-
+      
+      # --- Data Processing (Parameters) --- #
+      
       dt_param_display <- copy(dt_param)
       dt_param_display[, Formatted := ifelse(Parameter == "Template amount", 
                                              sprintf("%.0f", `Estimated value`), 
@@ -243,118 +252,117 @@ if(!is.null(data_hnc_list)){
       dt_param_display <- dt_param_display[, .(Parameter, Contributor, Replicate, `Estimated value`)]
       dt_param_display$Contributor[is.na(dt_param_display$Contributor)] <- ""
       dt_param_display$Replicate[is.na(dt_param_display$Replicate)] <- ""
-  
-      cat("\\subsubsection*{Parameters}")
-    
-      tb <- kable(
-        dt_param_display, 
-        format = "latex", 
-        booktabs = TRUE, 
-        row.names = FALSE, 
-        align = c("l", "l", "l", "r"),
-        escape = TRUE, 
-        float = FALSE, 
-        linesep = "", 
-        na = "")
-      tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-      tb <- column_spec(tb, 1, width = "7.2cm")
-      tb <- column_spec(tb, 2, width = "2.4cm")
-      tb <- column_spec(tb, 3, width = "2.4cm")
-      tb <- column_spec(tb, 4, width = "3.6cm")
-      print(tb)
-    
+      
+      # --- Output: Parameters Table --- #
+      
+      cat("#### Parameters\n\n")
+      
+      tbl_param <- datatable(
+        dt_param_display,
+        rownames = FALSE,
+        options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+      ) %>% formatStyle(names(dt_param_display), lineHeight = "80%")
+      
+      print(tagList(tbl_param))
       cat("\n\n")
+      
+      # --- Output: Figure --- #
       
       base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
       graph_eph <- create_fig_eph(dt_param, min_size, max_size, base_size)
       print(graph_eph)
-    
-      # --- Display likelihoods ---- #
-    
-      dt_log10like[, `Log10 (Likelihood)` := formatC(Log10_Likelihood, format = "f", digits = 4)]
-    
-      cat("\\clearpage")
-      cat("\\subsubsection*{Likelihood}")
-    
-      tb <- kable(
-        dt_log10like[, .(Marker, `Log10 (Likelihood)`)], 
-        format = "latex", 
-        booktabs = TRUE, 
-        longtable = TRUE, 
-        row.names = FALSE, 
-        align = c("l", "r"),
-        escape = TRUE, 
-        float = FALSE, 
-        linesep = ""
-      )
-      tb <- kable_styling(tb, latex_options = c("HOLD_position", "repeat_header"), position = "left", full_width = FALSE)
-      tb <- column_spec(tb, 1, width = "4.8cm")
-      tb <- column_spec(tb, 2, width = "4.8cm")
-      print(tb)
-    
-      # --- Display warning messages --- #
-    
-      cat("\\subsubsection*{Warnings}")
-    
-      if(warning_message == ""){
-        cat("None")
-      }else{
-        warning_message <- gsub("<br>", "\\\\\n", warning_message)
-        warning_message <- gsub("&nbsp; &nbsp; ", "\\\\hspace{2em}", warning_message)
-        cat(warning_message)
+      cat("\n\n")
+      
+      # --- Output: Likelihood Table ---
+      
+      cat("<div class=\"pagebreak\"></div>\n\n")
+      cat("#### Likelihood\n\n")
+      
+      dt_log10like_display <- copy(dt_log10like)
+      dt_log10like_display[, `Log10 (Likelihood)` := formatC(Log10_Likelihood, format = "f", digits = 4)]
+      dt_log10like_display <- dt_log10like_display[, .(Marker, `Log10 (Likelihood)`)]
+      
+      tbl_like <- datatable(
+        dt_log10like_display,
+        rownames = FALSE,
+        options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+      ) %>% formatStyle(names(dt_log10like_display), lineHeight = "80%")
+      
+      print(tagList(tbl_like))
+      cat("\n\n")
+      
+      # --- Output: Warnings --- #
+      
+      warning_message <- data_hnc$warning_message
+      if(is.null(warning_message)){
+        warning_message <- ""
       }
-    }
-    
-    else{
+      warning_message <- paste0(warning_message, message_sr)
+      
+      if(identical(warning_message, "")){
+        warning_text <- "None" 
+      }else{
+        warning_text <- gsub("&nbsp; &nbsp; ", "&nbsp;&nbsp;&nbsp;&nbsp;", warning_message, fixed = TRUE)
+      }
+      
+      cat("#### Warnings\n\n")
+      cat("<div class='warnings'>", warning_text, "</div>\n\n")
+    }else{
+      
+      # --- Output: Error Message --- #
+      
       error_message <- data_hnc$error_message
-      error_message <- gsub("<br>", "\\\\\n", error_message)
-      cat(error_message)
+      cat("#### Error\n\n")
+      cat("<div class='error'>", error_message, "</div>\n\n")
     }
     
-    if(i != length(hnc_all)){
-      cat("\\clearpage")
-    }
+    cat("<div class=\"pagebreak\"></div>\n\n")
   }
 }
 ```
 
+---
+
 ```{r lr, echo = FALSE, results='asis'}
 
 if(!is.null(lr_list)){
-  cat("\\clearpage")
-  cat("\\section*{Summary of LR}")
+  cat("## Summary of LR\n\n")
   
-  tb <- kable(dt_lr_calc_record, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
-  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-  tb <- column_spec(tb, 1, width = "5.8cm")
-  tb <- column_spec(tb, 2, width = "5.8cm")
-  tb <- column_spec(tb, 3, width = "3.6cm")
-  print(tb)
+  tbl_lr_calc_record <- datatable(
+    dt_lr_calc_record,
+    rownames = FALSE,
+    options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+  ) %>%
+    formatSignif(columns = c("LR"), digits = 3) %>%
+    formatStyle(names(dt_lr_calc_record), lineHeight = "80%")
   
-  cat("\\clearpage")
-  cat("\\section*{LR per marker}")
+  print(tagList(tbl_lr_calc_record))
+  cat("\n\n")
+  
+  cat("<div class=\"pagebreak\"></div>\n\n")
+  cat("## LR per marker\n\n")
   
   for(i in 1:length(lr_list)){
-    cat(sprintf("\\subsection*{Calculation %s}\n", i))
+    
+    cat(paste0("### Calculation", i, "\n\n"))
     
     lr_data <- lr_list[[i]]
-    dt_hyp <- data.table(Hp = lr_data$hp, Hd = lr_data$hd)
-    tb <- kable(dt_hyp, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
-    tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-    tb <- column_spec(tb, c(1, 2), width = "7.2cm")
-    print(tb)
-    
-    cat("\n\n")
+    cat(paste0("- Hp : ", lr_data$hp, "\n\n"))
+    cat(paste0("- Hd : ", lr_data$hd, "\n\n"))
     
     dt_lr <- lr_data$dt_lr
-    tb <- kable(dt_lr, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
-    tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-    tb <- column_spec(tb, 1:4, width = "3.6cm")
-    print(tb)
     
-    if(i != length(lr_list)){
-      cat("\\clearpage")
-    }
+    tbl_lr <- datatable(
+      dt_lr,
+      rownames = FALSE,
+      options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+    ) %>%
+      formatSignif(columns = c("log10 (f(E | Hp))", "log10 (f(E | Hd))", "LR"), digits = 3) %>%
+      formatStyle(names(dt_lr), lineHeight = "80%")
+    
+    print(tagList(tbl_lr))
+    
+    cat("<div class=\"pagebreak\"></div>\n\n")
   }
 }
 ```
@@ -362,8 +370,7 @@ if(!is.null(lr_list)){
 ```{r pg_per_comb, echo = FALSE, results='asis'}
 
 if(!is.null(data_hnc_list)){
-  cat("\\clearpage")
-  cat("\\section*{Probabilistic genotyping (per combination)}")
+  cat("## Probabilistic genotyping (per combination)\n\n")
   
   n_mk_use <- length(markers_use)
 
@@ -373,26 +380,19 @@ if(!is.null(data_hnc_list)){
     dt_pg_list <- data_hnc$dt_pg_list
     
     if(!is.null(dt_pg_list)){
-      cat(sprintf("\\subsection*{Number of contributors: %s}\n", hnc))
-      
+      cat(paste0("### Number of contributors: ", hnc, "\n\n"))
+
       for(j in 1:n_mk_use){
         mk <- markers_use[j]
         dt_pg_per_comb <- dt_pg_list[[mk]]
-    
-        # --- Extract up to the point where the total probability exceeds 'gt_prob_sum' --- #
-    
-        cumprob <- cumsum(dt_pg_per_comb$Probability)
-    
-        # Get the first row number where the total exceeds 'gt_prob_sum'
-        cutoff_index <- which.max(cumprob > gt_prob_sum)
-    
-        # If there are no values exceeding 'gt_prob_sum', use all rows.
-        if(cutoff_index == 0){
-          cutoff_index <- nrow(dt_pg_per_comb$Probability)
+        
+        # --- Extract displayed data --- #
+        
+        dt_pg_per_comb <- dt_pg_per_comb[dt_pg_per_comb$Probability >= min_gt_prob_display]
+        
+        if(nrow(dt_pg_per_comb) > max_gtc_display){
+          dt_pg_per_comb <- dt_pg_per_comb[1:max_gtc_display, ]
         }
-    
-        # Extract
-        dt_pg_per_comb <- dt_pg_per_comb[1:cutoff_index]
     
         # --- Extract displayed columns --- #
     
@@ -400,13 +400,18 @@ if(!is.null(data_hnc_list)){
     
         # --- Display the table --- #
     
-        cat(sprintf("\\subsubsection*{%s}\n", mk))
+        cat(paste0("#### ", mk, "\n\n"))
+        
+        tbl_pg_per_comb <- datatable(
+          dt_pg_per_comb,
+          rownames = FALSE,
+          options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+        ) %>%
+          formatSignif(columns = c("Probability"), digits = 3) %>%
+          formatStyle(names(dt_pg_per_comb), lineHeight = "80%")
     
-        tb <- kable(dt_pg_per_comb, format = "latex", booktabs = TRUE, longtable = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
-        tb <- kable_styling(tb, latex_options = c("HOLD_position", "repeat_header"), position = "left", full_width = FALSE)
-        tb <- column_spec(tb, 1:ncol(dt_pg_per_comb), width = "2.4cm")
-        print(tb)
-    
+        print(tagList(tbl_pg_per_comb))
+        
         cat("\n\n")
       }
     }
@@ -414,11 +419,12 @@ if(!is.null(data_hnc_list)){
 }
 ```
 
+<div class="pagebreak"></div>
+
 ```{r pg_per_contrib, echo = FALSE, results='asis'}
 
 if(!is.null(data_hnc_list)){
-  cat("\\clearpage")
-  cat("\\section*{Probabilistic genotyping (per contributor)}")
+  cat("## Probabilistic genotyping (per contributor)\n\n")
   
   n_mk_use <- length(markers_use)
 
@@ -428,315 +434,62 @@ if(!is.null(data_hnc_list)){
     dt_pg_list <- data_hnc$dt_pg_list
     
     if(!is.null(dt_pg_list)){
-      cat(sprintf("\\subsection*{Number of contributors: %s}\n", hnc))
-  
+      cat(paste0("### Number of contributors: ", hnc, "\n\n"))
+      
       for(j in 1:hnc){
     
         dt_pg_per_contrib_all <- NULL
-        cut_positions <- rep(NA, n_mk_use)
+        # cut_positions <- rep(NA, n_mk_use)
+        
+        cat(paste0("#### U", j, "\n\n"))
       
-        cat(sprintf("\\subsubsection*{Contributor %s (U%s)}\n", j, j))
-    
         for(k in 1:n_mk_use){
       
           mk <- markers_use[k]
           dt_pg_per_contrib <- aggregate_pg_contrib(dt_pg_list[[mk]], paste0("U", j))
+          setDT(dt_pg_per_contrib)
+          
+          # --- Extract displayed data --- #
+          
+          dt_pg_per_contrib <- dt_pg_per_contrib[dt_pg_per_contrib$Probability >= min_gt_prob_display]
         
-          # --- Extract up to the point where the total probability exceeds 'gt_prob_sum' --- #
-    
-          cumprob <- cumsum(dt_pg_per_contrib$Probability)
-        
-          # Get the first row number where the total exceeds 'gt_prob_sum'
-          cutoff_index <- which.max(cumprob > gt_prob_sum)
-    
-          # If there are no values exceeding 'gt_prob_sum', use all rows.
-          if(cutoff_index == 0){
-            cutoff_index <- nrow(dt_pg_per_contrib$Probability)
+          if(nrow(dt_pg_per_contrib) > max_gtc_display){
+            dt_pg_per_contrib <- dt_pg_per_contrib[1:max_gtc_display, ]
           }
     
-          # Extract
-          dt_pg_per_contrib <- dt_pg_per_contrib[1:cutoff_index, ]
-
           # --- Add a column for the marker --- #
         
           col_mk <- rep("", nrow(dt_pg_per_contrib))
           col_mk[1] <- mk
-      
-          dt_pg_per_contrib <- cbind(col_mk, dt_pg_per_contrib)
-          names(dt_pg_per_contrib)[1] <- "Marker"
+          
+          names(dt_pg_per_contrib) <- c("Genotype", "Probability")
+          dt_pg_per_contrib[, Marker := col_mk]
+          setcolorder(dt_pg_per_contrib, c("Marker", "Genotype", "Probability"))
         
           dt_pg_per_contrib_all <- rbind(dt_pg_per_contrib_all, dt_pg_per_contrib)
         
-          cut_positions[k] <- nrow(dt_pg_per_contrib_all)
+          # cut_positions[k] <- nrow(dt_pg_per_contrib_all)
         }
       
         names(dt_pg_per_contrib_all) <- c("Marker", "Genotype", "Probability")
-      
-        cut_positions <- cut_positions[-n_mk_use]
+
+        # cut_positions <- cut_positions[-n_mk_use]
       
         # --- Display the table --- #  
+        
+        tbl_pg_per_contrib_all <- datatable(
+          dt_pg_per_contrib_all,
+          rownames = FALSE,
+          options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+        ) %>%
+          formatSignif(columns = c("Probability"), digits = 3) %>%
+          formatStyle(names(dt_pg_per_contrib_all), lineHeight = "80%")
     
-        tb <- kable(dt_pg_per_contrib_all, format = "latex", booktabs = TRUE, longtable = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
-        tb <- kable_styling(tb, latex_options = c("HOLD_position", "repeat_header"), position = "left", full_width = FALSE)
-        tb <- column_spec(tb, 1:ncol(dt_pg_per_contrib_all), width = "2.4cm")
-        tb <- row_spec(tb, cut_positions, extra_latex_after = "\\midrule")
-        print(tb)
-    
+        print(tagList(tbl_pg_per_contrib_all))
+        
         cat("\n\n")
       }
     }
-  }
-}
-```
-
-```{r csp, echo = FALSE, results='asis'}
-
-if(!is.null(dt_csp)){
-  cat("\\clearpage")
-  cat("\\section*{Crime stain profile}")
-  
-  sn_csp_all <- unique(dt_csp[, SampleName])
-  n_rep <- length(sn_csp_all)
-  df_csp_rep <- data.frame("Replicate" = as.character(1:n_rep), 
-                           "Sample Name" = sn_csp_all, 
-                           check.names = FALSE)
-
-  tb <- kable(df_csp_rep, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
-  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-  tb <- column_spec(tb, 1, width = "2.4cm")
-  tb <- column_spec(tb, 2, width = "13.4cm")
-  print(tb)
-  cat("\n\n")
-
-  dt_display_csp <- create_dt_display_csp(dt_csp)
-
-  dt_display_csp[, g := cumsum(!is.na(Marker))]
-
-  tmp_markers <- dt_display_csp$Marker
-  tmp_markers[is.na(tmp_markers)] <- ""
-  dt_display_csp$Marker <- tmp_markers
-
-  ends <- dt_display_csp[g > 0, .(end = .I[.N]), by = g]$end
-  cut_positions <- if (length(ends) > 1) ends[-length(ends)] else integer(0)
-
-  n_table_csp <- (n_rep - 1) %/% 4 + 1
-  for(i in 1:n_table_csp){
-    cand_height_label <- paste0("Height", (4 * (i - 1) + 1):(4 * i))
-    index_display <- which(is.element(names(dt_display_csp), c("Marker", "Allele", cand_height_label)))
-  
-    tb <- kable(
-      dt_display_csp[, index_display, with = FALSE], 
-      format = "latex", 
-      booktabs = TRUE, 
-      longtable = TRUE, 
-      row.names = FALSE, 
-      align = c("l", rep("r", length(index_display) - 1)), 
-      escape = TRUE, 
-      float = FALSE, 
-      linesep = ""
-    )
-    tb <- kable_styling(
-      tb, 
-      latex_options = c("HOLD_position", "repeat_header"), 
-      position = "left", 
-      full_width = FALSE
-    )
-    tb <- row_spec(
-      tb,
-      cut_positions, 
-      extra_latex_after = "\\midrule"
-    )
-    tb <- column_spec(
-      tb, 
-      1:length(index_display), 
-      width = "2.4cm"
-    )
-    print(tb)
-    cat("\n\n")
-  }
-}
-```
-
-```{r ref, echo = FALSE, results='asis'}
-
-if(!is.null(dt_ref)){
-  cat("\\clearpage")
-  cat("\\section*{Reference profile}")
-  
-  dt_ref_display <- NULL
-  samples <- unique(dt_ref$SampleName)
-  n_sample <- length(samples)
-  for(i in 1:n_sample){
-    dt_tmp <- dt_ref[dt_ref$SampleName == samples[i]]
-
-    gts <- rep(NA, nrow(dt_tmp))
-    for(j in 1:nrow(dt_tmp)){
-      gt1 <- c(dt_tmp$Allele1[j], dt_tmp$Allele2[j])
-      gt1 <- gt1[!is.na(gt1)]
-      gts[j] <- paste0(gt1, collapse = ", ")
-    }
-
-    dt_tmp2 <- data.table(Marker = dt_tmp$Marker,
-                          Gt = gts)
-    names(dt_tmp2) <- c("Marker", samples[i])
-
-    if(i == 1){
-      dt_ref_display <- dt_tmp2
-    }else{
-      dt_ref_display <- full_join(dt_ref_display, dt_tmp2, by = c("Marker"))
-    }
-  }
-  
-  n_table_ref <- (n_sample - 1) %/% 5 + 1
-  for(i in 1:n_table_ref){
-    if(i == n_table_ref){
-      samples_display <- samples[(5 * (i - 1) + 1):length(samples)]
-    }else{
-      samples_display <- samples[(5 * (i - 1) + 1):(5 * i)]
-    }
-    index_display <- which(is.element(names(dt_ref_display), c("Marker", samples_display)))
-    
-    tb <- kable(
-      dt_ref_display[, index_display, with = FALSE], 
-      format = "latex", 
-      booktabs = TRUE, 
-      longtable = TRUE, 
-      row.names = FALSE, 
-      escape = TRUE, 
-      float = FALSE, 
-      linesep = ""
-    )
-    tb <- kable_styling(
-      tb, 
-      latex_options = c("HOLD_position", "repeat_header"), 
-      position = "left", 
-      full_width = FALSE
-    )
-    tb <- column_spec(
-      tb, 
-      1:length(index_display), 
-      width = "2.4cm"
-    )
-    print(tb)
-    cat("\n\n")
-  }
-}
-```
-
-```{r anameth, echo = FALSE, results='asis'}
-if(!is.null(dt_anameth)){
-  cat("\\clearpage")
-  cat("\\section*{Analysis method}")
-  
-  cat("\\subsection*{General}")
-  
-  dt_general <- data.table(A = c("Method", "Kit", "Stutter data", "LSAE data", "Gamma data", "Drop-in data"), 
-                           B = c(fn_anameth, 
-                                 dt_anameth$Name[dt_anameth$Category == "Kit"], 
-                                 dt_anameth$Name[dt_anameth$Category == "Stutter data"], 
-                                 dt_anameth$Name[dt_anameth$Category == "LSAE data"], 
-                                 dt_anameth$Name[dt_anameth$Category == "Gamma data"], 
-                                 dt_anameth$Name[dt_anameth$Category == "Drop-in data"]))
-  
-  tb <- kable(dt_general, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
-  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-  tb <- column_spec(tb, 1, width = "4.8cm")
-  tb <- column_spec(tb, 2, width = "11cm")
-  print(tb)
-  cat("\n\n")
-  
-  cat("\\subsection*{Analytical threshold}")
-  
-  dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"], 
-                      AT = dt_anameth$Value[dt_anameth$Category == "AT"])
-  
-  tb <- kable(dt_at, format = "latex", booktabs = TRUE, longtable = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
-  tb <- kable_styling(tb, latex_options = c("HOLD_position", "repeat_header"), position = "left", full_width = FALSE)
-  tb <- column_spec(tb, 1, width = "4.8cm")
-  tb <- column_spec(tb, 2, width = "11cm")
-  print(tb)
-  cat("\n\n")
-  
-  cat("\\subsection*{Genotype filter}")
-  
-  dt_gtfltr <- data.table(A = dt_anameth$Subcategory[dt_anameth$Category == "Genotype filter"], 
-                          B = dt_anameth$Value[dt_anameth$Category == "Genotype filter"])
-  
-  tb <- kable(dt_gtfltr, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
-  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-  tb <- column_spec(tb, 1, width = "4.8cm")
-  tb <- column_spec(tb, 2, width = "11cm")
-  print(tb)
-  cat("\n\n")
-  
-  cat("\\subsection*{Degradation}")
-  
-  dt_deg <- data.table(A = dt_anameth$Subcategory[dt_anameth$Category == "Degradation"], 
-                       B = dt_anameth$Value[dt_anameth$Category == "Degradation"])
-  
-  tb <- kable(dt_deg, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
-  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-  tb <- column_spec(tb, 1, width = "4.8cm")
-  tb <- column_spec(tb, 2, width = "11cm")
-  print(tb)
-  cat("\n\n")
-  
-  cat("\\subsection*{Locus specific amplification efficiency}")
-  
-  dt_lsae <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "LSAE"], 
-                        LSAE = dt_anameth$Value[dt_anameth$Category == "LSAE"])
-  
-  tb <- kable(dt_lsae, format = "latex", booktabs = TRUE, longtable = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
-  tb <- kable_styling(tb, latex_options = c("HOLD_position", "repeat_header"), position = "left", full_width = FALSE)
-  tb <- column_spec(tb, 1, width = "4.8cm")
-  tb <- column_spec(tb, 2, width = "11cm")
-  print(tb)
-  cat("\n\n")
-  
-  cat("\\subsection*{Peak height parameter}")
-  
-  dt_gamma <- data.table(A = dt_anameth$Subcategory[dt_anameth$Category == "Peak height"], 
-                         B = dt_anameth$Value[dt_anameth$Category == "Peak height"])
-  
-  tb <- kable(dt_gamma, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
-  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-  tb <- column_spec(tb, 1, width = "4.8cm")
-  tb <- column_spec(tb, 2, width = "11cm")
-  print(tb)
-  cat("\n\n")
-  
-  cat("\\subsection*{Drop-in parameter}")
-  
-  dt_dropin <- data.table(A = dt_anameth$Subcategory[dt_anameth$Category == "Drop-in"], 
-                          B = dt_anameth$Value[dt_anameth$Category == "Drop-in"])
-  
-  tb <- kable(dt_dropin, format = "latex", booktabs = TRUE, row.names = FALSE, col.names = NULL, escape = TRUE, float = FALSE, linesep = "")
-  tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
-  tb <- column_spec(tb, 1, width = "4.8cm")
-  tb <- column_spec(tb, 2, width = "11cm")
-  print(tb)
-  cat("\n\n")
-  
-  cat("\\subsection*{Stutter ratio}")
-  
-  dt_sr <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "SR"], 
-                      Allele = dt_anameth$Allele[dt_anameth$Category == "SR"], 
-                      BSR = dt_anameth[["Average BSR"]][dt_anameth$Category == "SR"], 
-                      FSR = dt_anameth[["Average FSR"]][dt_anameth$Category == "SR"], 
-                      DSR = dt_anameth[["Average DSR"]][dt_anameth$Category == "SR"], 
-                      M2SR = dt_anameth[["Average M2SR"]][dt_anameth$Category == "SR"])
-  markers_sr <- unique(dt_sr$Marker)
-  for(i in 1:length(markers_sr)){
-    cat(sprintf("\\subsubsection*{%s}\n", markers_sr[i]))
-    
-    dt_sr_mk <- dt_sr[dt_sr$Marker == markers_sr[i]]
-    dt_sr_mk[, c("Marker") := NULL]
-    
-    tb <- kable(dt_sr_mk, format = "latex", booktabs = TRUE, longtable = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
-    tb <- kable_styling(tb, latex_options = c("HOLD_position", "repeat_header"), position = "left", full_width = FALSE)
-    tb <- column_spec(tb, 1:5, width = "2.4cm")
-    print(tb)
-    cat("\n\n")
   }
 }
 ```

@@ -1,0 +1,722 @@
+---
+title: "Report"
+output: 
+  html_document:
+    toc: false
+    number_sections: false
+    df_print: default
+    self_contained: true
+params:
+  case_name: NA
+  user_name: NA
+  dt_csp: NA
+  fn_csp: NA
+  fn_af: NA
+  dt_anameth: NA
+  fn_anameth: NA
+  markers_use: NA
+  data_hnc_list: NA
+  dt_ignore_mk: NA
+  hnc_all: NA
+  message_sr: NA
+  min_size: NA
+  max_size: NA
+  min_temp: NA
+  max_temp: NA
+  min_rep_ae: NA
+  max_rep_ae: NA
+  min_deg: NA
+  max_iter: NA
+  num_converged: NA
+  max_mle_runs: NA
+  max_diff_like: NA
+  theta: NA
+  dt_ref: NA
+  fn_ref: NA
+  dt_lr_calc_record: NA
+  lr_list: NA
+  gt_prob_sum: NA
+---
+
+```{r setup, include = FALSE}
+library(data.table)
+library(DT)
+library(ggplot2)
+library(knitr)
+library(magrittr)
+
+case_name <- params$case_name
+user_name <- params$user_name
+dt_csp <- params$dt_csp
+fn_csp <- params$fn_csp
+fn_af <- params$fn_af
+dt_anameth <- params$dt_anameth
+fn_anameth <- params$fn_anameth
+markers_use <- params$markers_use
+data_hnc_list <- params$data_hnc_list
+dt_ignore_mk <- params$dt_ignore_mk
+hnc_all <- params$hnc_all
+message_sr <- params$message_sr
+min_size <- params$min_size
+max_size <- params$max_size
+min_temp <- params$min_temp
+max_temp <- params$max_temp
+min_rep_ae <- params$min_rep_ae
+max_rep_ae <- params$max_rep_ae
+min_deg <- params$min_deg
+max_iter <- params$max_iter
+num_converged <- params$num_converged
+max_mle_runs <- params$max_mle_runs
+max_diff_like <- params$max_diff_like
+theta <- params$theta
+dt_ref <- params$dt_ref
+fn_ref <- params$fn_ref
+dt_lr_calc_record <- params$dt_lr_calc_record
+lr_list <- params$lr_list
+gt_prob_sum <- params$gt_prob_sum
+```
+
+```{r top, echo = FALSE, results = 'asis'}
+
+# ---- Create the data.table for top ---- #
+
+dt_top <- data.table(A = c("Case Name", "User", "Date", "KongohPlus version"), 
+                     B = c(case_name, user_name, format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), as.character(packageVersion("KongohPlus"))))
+
+datatable(
+  dt_top,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = 't', 
+    ordering = FALSE, 
+    paging = FALSE, 
+    searching = FALSE
+  )
+) %>%
+  formatStyle(names(dt_top), lineHeight = "80%")
+```
+
+---
+
+```{r files, echo = FALSE, results = 'asis'}
+
+# ---- Create the data.table for input files ---- #
+
+if(is.null(fn_csp) || is.na(fn_csp)){
+  fn_csp <- ""
+}
+if(is.null(fn_ref) || is.na(fn_ref)){
+  fn_ref <- ""
+}
+if(is.null(fn_af) || is.na(fn_af)){
+  fn_af <- ""
+}
+
+dt_file <- data.table(A = c("Crime stain profile", "Reference profile", "Allele frequency"), 
+                      B = c(fn_csp, fn_ref, fn_af))
+
+# ---- Display the created data.table ---- #
+
+cat("## Input files\n\n")
+
+datatable(
+  dt_file,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = 't',
+    ordering = FALSE, 
+    paging = FALSE, 
+    searching = FALSE
+  )
+) %>%
+  formatStyle(names(dt_file), lineHeight = "80%")
+```
+
+---
+
+```{r setting, echo = FALSE, results = 'asis'}
+
+# ---- Create the data.table for settings ---- #
+
+setting_vals <- rep(NA, 11)
+
+if(is.null(fn_anameth) || is.na(fn_anameth)){
+  fn_anameth <- ""
+}
+if(is.null(theta) || is.na(theta)){
+  theta <- ""
+}
+if(is.null(max_iter) || is.na(max_iter)){
+  max_iter <- ""
+}
+if(is.null(num_converged) || is.na(num_converged)){
+  num_converged <- ""
+}
+if(is.null(max_mle_runs) || is.na(max_mle_runs)){
+  max_mle_runs <- ""
+}
+if(is.null(max_diff_like) || is.na(max_diff_like)){
+  max_diff_like <- ""
+}
+if(is.null(min_temp) || is.na(min_temp)){
+  min_temp <- ""
+}
+if(is.null(max_temp) || is.na(max_temp)){
+  max_temp <- ""
+}
+if(is.null(min_deg) || is.na(min_deg)){
+  min_deg <- ""
+}
+if(is.null(min_rep_ae) || is.na(min_rep_ae)){
+  min_rep_ae <- ""
+}
+if(is.null(max_rep_ae) || is.na(max_rep_ae)){
+  max_rep_ae <- ""
+}
+
+ignored_markers <- dt_ignore_mk$Marker[dt_ignore_mk$Ignore]
+n_ignore_mk <- length(ignored_markers)
+if(n_ignore_mk == 0){
+  ignore_mk <- "None"
+}else if(n_ignore_mk == 1){
+  ignore_mk <- ignored_markers
+}else{
+  ignore_mk <- paste0(n_ignore_mk, " loci")
+}
+
+dt_setting <- data.table(A = c("Analysis method", 
+                               "Theta", 
+                               "Maximum number of iterations", 
+                               "Minimum number of MLE attempts", 
+                               "Maximum number of MLE attempts", 
+                               "Reproducibility threshold (log10-likelihood difference)", 
+                               "Minimum template amount", 
+                               "Maximum template amount", 
+                               "Minimum degradation parameter", 
+                               "Minimum replicate amplification efficiency", 
+                               "Maximum replicate amplification efficiency", 
+                               "Ignored markers"), 
+                         B = c(fn_anameth, theta, max_iter, num_converged, max_mle_runs, max_diff_like, min_temp, max_temp, min_deg, min_rep_ae, max_rep_ae, ignore_mk))
+
+# ---- Display the created data.table ---- #
+
+cat("## Settings\n\n")
+
+datatable(
+  dt_setting,
+  rownames = FALSE,
+  colnames = NULL,
+  options = list(
+    dom = 't', 
+    ordering = FALSE, 
+    paging = FALSE, 
+    searching = FALSE
+  )
+) %>%
+  formatStyle(names(dt_setting), lineHeight = "80%")
+```
+
+<div class="pagebreak"></div>
+
+---
+
+```{r deconvo_1, echo = FALSE, results ='asis', eval = !is.null(data_hnc_list)}
+cat("## Deconvolution\n\n")
+dt_log10like <- NULL
+dt_param <- NULL
+```
+
+```{r deconvo_1_calc, echo = FALSE, results ='asis', eval = !is.null(data_hnc_list) && length(which(hnc_all == 1)) == 1}
+
+index_hnc <- which(hnc_all == 1)
+
+data_hnc <- data_hnc_list[[index_hnc]]
+dt_log10like <- data_hnc$dt_log10like
+dt_param <- data_hnc$dt_param
+
+warning_message <- ""
+dt_param_display <- NULL
+graph_eph <- NULL
+dt_log10like_display <- NULL
+error_message <- ""
+
+if(!is.null(dt_log10like) && !is.null(dt_param)){
+
+  # --- Parameters --- #
+  
+  dt_param_display <- copy(dt_param)
+  dt_param_display[, Formatted := ifelse(Parameter == "Template amount", 
+                                         sprintf("%.0f", `Estimated value`), 
+                                         sprintf("%.4f", `Estimated value`))]
+  names(dt_param_display) <- c("Parameter", "Contributor", "Replicate", "DNU", "Estimated value")
+  dt_param_display <- dt_param_display[, .(Parameter, Contributor, Replicate, `Estimated value`)]
+  dt_param_display$Contributor[is.na(dt_param_display$Contributor)] <- ""
+  dt_param_display$Replicate[is.na(dt_param_display$Replicate)] <- ""
+  
+  # --- Figure --- #
+      
+  base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
+  graph_eph <- create_fig_eph(dt_param, min_size, max_size, base_size)
+  
+  # --- Likelihoods ---- #
+      
+  dt_log10like_display <- copy(dt_log10like)
+  dt_log10like_display[, `Log10 (Likelihood)` := formatC(Log10_Likelihood, format = "f", digits = 4)]
+  dt_log10like_display <- dt_log10like_display[, .(Marker, `Log10 (Likelihood)`)]
+  
+  # --- Warning message ---- #
+  
+  warning_message <- data_hnc$warning_message
+  if(is.null(warning_message)){
+    warning_message <- ""
+  }
+  warning_message <- paste0(warning_message, message_sr)
+  if(identical(warning_message, "")){
+    warning_message <- "None"
+  }else{
+    warning_message <- gsub("&nbsp; &nbsp; ", "&nbsp;&nbsp;&nbsp;&nbsp;", warning_message, fixed = TRUE)
+  }
+  
+}else{
+  
+  # --- Error message ---- #
+  
+  error_message <- data_hnc$error_message
+}
+
+```
+
+```{r deconvo_1_top, echo = FALSE, results ='asis', eval = !is.null(data_hnc_list) && length(which(hnc_all == 1)) == 1}
+cat("### Number of contributors: 1\n\n")
+```
+
+```{r deconvo_1_a, echo = FALSE, results ='asis', eval = !is.null(dt_log10like) && !is.null(dt_param)}
+cat("#### Parameters\n\n")
+```
+
+```{r deconvo_1_b, echo = FALSE, eval = !is.null(dt_log10like) && !is.null(dt_param)}
+datatable(
+  dt_param_display,
+  rownames = FALSE,
+  options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+) %>%
+formatStyle(names(dt_param_display), lineHeight = "80%")
+```
+
+```{r deconvo_1_c, echo = FALSE, eval = !is.null(dt_log10like) && !is.null(dt_param)}
+print(graph_eph)
+```
+
+```{r deconvo_1_d, echo = FALSE, results ='asis', eval = !is.null(dt_log10like) && !is.null(dt_param)}
+cat("\n\n<div class=\"pagebreak\"></div>\n\n")
+cat("#### Likelihood\n\n")
+```
+
+```{r deconvo_1_e, echo = FALSE, eval = !is.null(dt_log10like) && !is.null(dt_param)}
+datatable(
+  dt_log10like_display,
+  rownames = FALSE,
+  options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+) %>%
+formatStyle(names(dt_log10like_display), lineHeight = "80%")
+```
+
+```{r deconvo_1_f, echo = FALSE, results ='asis', eval = !is.null(dt_log10like) && !is.null(dt_param)}
+cat("#### Warnings\n\n")
+cat("<div class='warnings'>", warning_message, "</div>\n\n")
+```
+
+```{r deconvo_1_g, echo = FALSE, results ='asis', eval = (!is.null(data_hnc_list) && length(which(hnc_all == 1)) == 1) && (is.null(dt_log10like) || is.null(dt_param))}
+cat("#### Error\n\n")
+cat("<div class='error'>", error_message, "</div>\n\n")
+```
+
+```{r deconvo_2, echo = FALSE, results ='asis', eval = !is.null(data_hnc_list)}
+dt_log10like <- NULL
+dt_param <- NULL
+```
+
+```{r deconvo_2_calc, echo = FALSE, results ='asis', eval = !is.null(data_hnc_list) && length(which(hnc_all == 2)) == 1}
+
+index_hnc <- which(hnc_all == 2)
+
+data_hnc <- data_hnc_list[[index_hnc]]
+dt_log10like <- data_hnc$dt_log10like
+dt_param <- data_hnc$dt_param
+
+warning_message <- ""
+dt_param_display <- NULL
+graph_eph <- NULL
+dt_log10like_display <- NULL
+error_message <- ""
+
+if(!is.null(dt_log10like) && !is.null(dt_param)){
+
+  # --- Parameters --- #
+  
+  dt_param_display <- copy(dt_param)
+  dt_param_display[, Formatted := ifelse(Parameter == "Template amount", 
+                                         sprintf("%.0f", `Estimated value`), 
+                                         sprintf("%.4f", `Estimated value`))]
+  names(dt_param_display) <- c("Parameter", "Contributor", "Replicate", "DNU", "Estimated value")
+  dt_param_display <- dt_param_display[, .(Parameter, Contributor, Replicate, `Estimated value`)]
+  dt_param_display$Contributor[is.na(dt_param_display$Contributor)] <- ""
+  dt_param_display$Replicate[is.na(dt_param_display$Replicate)] <- ""
+  
+  # --- Figure --- #
+      
+  base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
+  graph_eph <- create_fig_eph(dt_param, min_size, max_size, base_size)
+  
+  # --- Likelihoods ---- #
+      
+  dt_log10like_display <- copy(dt_log10like)
+  dt_log10like_display[, `Log10 (Likelihood)` := formatC(Log10_Likelihood, format = "f", digits = 4)]
+  dt_log10like_display <- dt_log10like_display[, .(Marker, `Log10 (Likelihood)`)]
+  
+  # --- Warning message ---- #
+  
+  warning_message <- data_hnc$warning_message
+  if(is.null(warning_message)){
+    warning_message <- ""
+  }
+  warning_message <- paste0(warning_message, message_sr)
+  if(identical(warning_message, "")){
+    warning_message <- "None"
+  }else{
+    warning_message <- gsub("&nbsp; &nbsp; ", "&nbsp;&nbsp;&nbsp;&nbsp;", warning_message, fixed = TRUE)
+  }
+  
+}else{
+  
+  # --- Error message ---- #
+  
+  error_message <- data_hnc$error_message
+}
+
+```
+
+```{r deconvo_2_top, echo = FALSE, results ='asis', eval = !is.null(data_hnc_list) && length(which(hnc_all == 2)) == 1}
+cat("### Number of contributors: 2\n\n")
+```
+
+```{r deconvo_2_a, echo = FALSE, results ='asis', eval = !is.null(dt_log10like) && !is.null(dt_param)}
+cat("#### Parameters\n\n")
+```
+
+```{r deconvo_2_b, echo = FALSE, eval = !is.null(dt_log10like) && !is.null(dt_param)}
+datatable(
+  dt_param_display,
+  rownames = FALSE,
+  options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+) %>%
+formatStyle(names(dt_param_display), lineHeight = "80%")
+```
+
+```{r deconvo_2_c, echo = FALSE, eval = !is.null(dt_log10like) && !is.null(dt_param)}
+print(graph_eph)
+```
+
+```{r deconvo_2_d, echo = FALSE, results ='asis', eval = !is.null(dt_log10like) && !is.null(dt_param)}
+cat("\n\n<div class=\"pagebreak\"></div>\n\n")
+cat("#### Likelihood\n\n")
+```
+
+```{r deconvo_2_e, echo = FALSE, eval = !is.null(dt_log10like) && !is.null(dt_param)}
+datatable(
+  dt_log10like_display,
+  rownames = FALSE,
+  options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+) %>%
+formatStyle(names(dt_log10like_display), lineHeight = "80%")
+```
+
+```{r deconvo_2_f, echo = FALSE, results ='asis', eval = !is.null(dt_log10like) && !is.null(dt_param)}
+cat("#### Warnings\n\n")
+cat("<div class='warnings'>", warning_message, "</div>\n\n")
+```
+
+```{r deconvo_2_g, echo = FALSE, results ='asis', eval = (!is.null(data_hnc_list) && length(which(hnc_all == 2)) == 1) && (is.null(dt_log10like) || is.null(dt_param))}
+cat("#### Error\n\n")
+cat("<div class='error'>", error_message, "</div>\n\n")
+```
+
+```{r deconvo_3, echo = FALSE, results ='asis', eval = !is.null(data_hnc_list)}
+dt_log10like <- NULL
+dt_param <- NULL
+```
+
+```{r deconvo_3_calc, echo = FALSE, results ='asis', eval = !is.null(data_hnc_list) && length(which(hnc_all == 3)) == 1}
+
+index_hnc <- which(hnc_all == 3)
+
+data_hnc <- data_hnc_list[[index_hnc]]
+dt_log10like <- data_hnc$dt_log10like
+dt_param <- data_hnc$dt_param
+
+warning_message <- ""
+dt_param_display <- NULL
+graph_eph <- NULL
+dt_log10like_display <- NULL
+error_message <- ""
+
+if(!is.null(dt_log10like) && !is.null(dt_param)){
+
+  # --- Parameters --- #
+  
+  dt_param_display <- copy(dt_param)
+  dt_param_display[, Formatted := ifelse(Parameter == "Template amount", 
+                                         sprintf("%.0f", `Estimated value`), 
+                                         sprintf("%.4f", `Estimated value`))]
+  names(dt_param_display) <- c("Parameter", "Contributor", "Replicate", "DNU", "Estimated value")
+  dt_param_display <- dt_param_display[, .(Parameter, Contributor, Replicate, `Estimated value`)]
+  dt_param_display$Contributor[is.na(dt_param_display$Contributor)] <- ""
+  dt_param_display$Replicate[is.na(dt_param_display$Replicate)] <- ""
+  
+  # --- Figure --- #
+      
+  base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
+  graph_eph <- create_fig_eph(dt_param, min_size, max_size, base_size)
+  
+  # --- Likelihoods ---- #
+      
+  dt_log10like_display <- copy(dt_log10like)
+  dt_log10like_display[, `Log10 (Likelihood)` := formatC(Log10_Likelihood, format = "f", digits = 4)]
+  dt_log10like_display <- dt_log10like_display[, .(Marker, `Log10 (Likelihood)`)]
+  
+  # --- Warning message ---- #
+  
+  warning_message <- data_hnc$warning_message
+  if(is.null(warning_message)){
+    warning_message <- ""
+  }
+  warning_message <- paste0(warning_message, message_sr)
+  if(identical(warning_message, "")){
+    warning_message <- "None"
+  }else{
+    warning_message <- gsub("&nbsp; &nbsp; ", "&nbsp;&nbsp;&nbsp;&nbsp;", warning_message, fixed = TRUE)
+  }
+  
+}else{
+  
+  # --- Error message ---- #
+  
+  error_message <- data_hnc$error_message
+}
+
+```
+
+```{r deconvo_3_top, echo = FALSE, results ='asis', eval = !is.null(data_hnc_list) && length(which(hnc_all == 3)) == 1}
+cat("### Number of contributors: 3\n\n")
+```
+
+```{r deconvo_3_a, echo = FALSE, results ='asis', eval = !is.null(dt_log10like) && !is.null(dt_param)}
+cat("#### Parameters\n\n")
+```
+
+```{r deconvo_3_b, echo = FALSE, eval = !is.null(dt_log10like) && !is.null(dt_param)}
+datatable(
+  dt_param_display,
+  rownames = FALSE,
+  options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+) %>%
+formatStyle(names(dt_param_display), lineHeight = "80%")
+```
+
+```{r deconvo_3_c, echo = FALSE, eval = !is.null(dt_log10like) && !is.null(dt_param)}
+print(graph_eph)
+```
+
+```{r deconvo_3_d, echo = FALSE, results ='asis', eval = !is.null(dt_log10like) && !is.null(dt_param)}
+cat("\n\n<div class=\"pagebreak\"></div>\n\n")
+cat("#### Likelihood\n\n")
+```
+
+```{r deconvo_3_e, echo = FALSE, eval = !is.null(dt_log10like) && !is.null(dt_param)}
+datatable(
+  dt_log10like_display,
+  rownames = FALSE,
+  options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+) %>%
+formatStyle(names(dt_log10like_display), lineHeight = "80%")
+```
+
+```{r deconvo_3_f, echo = FALSE, results ='asis', eval = !is.null(dt_log10like) && !is.null(dt_param)}
+cat("#### Warnings\n\n")
+cat("<div class='warnings'>", warning_message, "</div>\n\n")
+```
+
+```{r deconvo_3_g, echo = FALSE, results ='asis', eval = (!is.null(data_hnc_list) && length(which(hnc_all == 3)) == 1) && (is.null(dt_log10like) || is.null(dt_param))}
+cat("#### Error\n\n")
+cat("<div class='error'>", error_message, "</div>\n\n")
+```
+
+```{r deconvo_4, echo = FALSE, results ='asis', eval = !is.null(data_hnc_list)}
+dt_log10like <- NULL
+dt_param <- NULL
+```
+
+```{r deconvo_4_calc, echo = FALSE, results ='asis', eval = !is.null(data_hnc_list) && length(which(hnc_all == 4)) == 1}
+
+index_hnc <- which(hnc_all == 4)
+
+data_hnc <- data_hnc_list[[index_hnc]]
+dt_log10like <- data_hnc$dt_log10like
+dt_param <- data_hnc$dt_param
+
+warning_message <- ""
+dt_param_display <- NULL
+graph_eph <- NULL
+dt_log10like_display <- NULL
+error_message <- ""
+
+if(!is.null(dt_log10like) && !is.null(dt_param)){
+
+  # --- Parameters --- #
+  
+  dt_param_display <- copy(dt_param)
+  dt_param_display[, Formatted := ifelse(Parameter == "Template amount", 
+                                         sprintf("%.0f", `Estimated value`), 
+                                         sprintf("%.4f", `Estimated value`))]
+  names(dt_param_display) <- c("Parameter", "Contributor", "Replicate", "DNU", "Estimated value")
+  dt_param_display <- dt_param_display[, .(Parameter, Contributor, Replicate, `Estimated value`)]
+  dt_param_display$Contributor[is.na(dt_param_display$Contributor)] <- ""
+  dt_param_display$Replicate[is.na(dt_param_display$Replicate)] <- ""
+  
+  # --- Figure --- #
+      
+  base_size <- dt_anameth$Value[dt_anameth$Subcategory == "Base size"]
+  graph_eph <- create_fig_eph(dt_param, min_size, max_size, base_size)
+  
+  # --- Likelihoods ---- #
+      
+  dt_log10like_display <- copy(dt_log10like)
+  dt_log10like_display[, `Log10 (Likelihood)` := formatC(Log10_Likelihood, format = "f", digits = 4)]
+  dt_log10like_display <- dt_log10like_display[, .(Marker, `Log10 (Likelihood)`)]
+  
+  # --- Warning message ---- #
+  
+  warning_message <- data_hnc$warning_message
+  if(is.null(warning_message)){
+    warning_message <- ""
+  }
+  warning_message <- paste0(warning_message, message_sr)
+  if(identical(warning_message, "")){
+    warning_message <- "None"
+  }else{
+    warning_message <- gsub("&nbsp; &nbsp; ", "&nbsp;&nbsp;&nbsp;&nbsp;", warning_message, fixed = TRUE)
+  }
+  
+}else{
+  
+  # --- Error message ---- #
+  
+  error_message <- data_hnc$error_message
+}
+
+```
+
+```{r deconvo_4_top, echo = FALSE, results ='asis', eval = !is.null(data_hnc_list) && length(which(hnc_all == 4)) == 1}
+cat("### Number of contributors: 4\n\n")
+```
+
+```{r deconvo_4_a, echo = FALSE, results ='asis', eval = !is.null(dt_log10like) && !is.null(dt_param)}
+cat("#### Parameters\n\n")
+```
+
+```{r deconvo_4_b, echo = FALSE, eval = !is.null(dt_log10like) && !is.null(dt_param)}
+datatable(
+  dt_param_display,
+  rownames = FALSE,
+  options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+) %>%
+formatStyle(names(dt_param_display), lineHeight = "80%")
+```
+
+```{r deconvo_4_c, echo = FALSE, eval = !is.null(dt_log10like) && !is.null(dt_param)}
+print(graph_eph)
+```
+
+```{r deconvo_4_d, echo = FALSE, results ='asis', eval = !is.null(dt_log10like) && !is.null(dt_param)}
+cat("\n\n<div class=\"pagebreak\"></div>\n\n")
+cat("#### Likelihood\n\n")
+```
+
+```{r deconvo_4_e, echo = FALSE, eval = !is.null(dt_log10like) && !is.null(dt_param)}
+datatable(
+  dt_log10like_display,
+  rownames = FALSE,
+  options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+) %>%
+formatStyle(names(dt_log10like_display), lineHeight = "80%")
+```
+
+```{r deconvo_4_f, echo = FALSE, results ='asis', eval = !is.null(dt_log10like) && !is.null(dt_param)}
+cat("#### Warnings\n\n")
+cat("<div class='warnings'>", warning_message, "</div>\n\n")
+```
+
+```{r deconvo_4_g, echo = FALSE, results ='asis', eval = (!is.null(data_hnc_list) && length(which(hnc_all == 4)) == 1) && (is.null(dt_log10like) || is.null(dt_param))}
+cat("#### Error\n\n")
+cat("<div class='error'>", error_message, "</div>\n\n")
+```
+
+<div class="pagebreak"></div>
+
+---
+
+```{r lr_summary_top, results ='asis', echo = FALSE, eval = !is.null(lr_list)}
+cat("## Summary of LR\n\n")
+```
+
+```{r lr_summary_table, echo = FALSE, eval = !is.null(lr_list)}
+datatable(
+  dt_lr_calc_record,
+  rownames = FALSE,
+  options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+) %>%
+formatStyle(names(dt_lr_calc_record), lineHeight = "80%")
+```
+
+<div class="pagebreak"></div>
+
+---
+
+```{r lr_detail_top, results ='asis', echo = FALSE, eval = !is.null(lr_list)}
+cat("## LR per marker\n\n")
+```
+
+
+
+```{r lr, echo = FALSE, results='asis'}
+
+if(!is.null(lr_list)){
+  
+  cat("\\section*{LR per marker}")
+  
+  for(i in 1:length(lr_list)){
+    cat(sprintf("\\subsection*{Calculation %s}\n", i))
+    
+    lr_data <- lr_list[[i]]
+    dt_hyp <- data.table(Hp = lr_data$hp, Hd = lr_data$hd)
+    tb <- kable(dt_hyp, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
+    tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
+    tb <- column_spec(tb, c(1, 2), width = "7.2cm")
+    print(tb)
+    
+    cat("\n\n")
+    
+    dt_lr <- lr_data$dt_lr
+    tb <- kable(dt_lr, format = "latex", booktabs = TRUE, row.names = FALSE, escape = TRUE, float = FALSE, linesep = "")
+    tb <- kable_styling(tb, latex_options = c("HOLD_position"), position = "left", full_width = FALSE)
+    tb <- column_spec(tb, 1:4, width = "3.6cm")
+    print(tb)
+    
+    if(i != length(lr_list)){
+      cat("\\clearpage")
+    }
+  }
+}
+```

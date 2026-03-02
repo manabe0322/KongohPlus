@@ -1,0 +1,23 @@
+h1.title {
+  text-align: center;
+}
+
+table.dataTable {
+  border-top: none !important;
+}
+
+.dataTables_wrapper .dataTables_paginate,
+.dataTables_wrapper .dataTables_info {
+  display: none;
+}
+
+table.dataTable thead th {
+  border-top: none !important;
+}
+
+@media print {
+  .pagebreak {
+    break-before: page;
+    page-break-before: always;
+  }
+}
