@@ -21,7 +21,6 @@ Imports:
     gridExtra, 
     gtools, 
     htmltools, 
-    kableExtra, 
     knitr,
     magrittr, 
     parallel, 
