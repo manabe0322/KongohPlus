@@ -13,7 +13,7 @@
 #' @importFrom parallel detectCores
 #' @importFrom Rcpp sourceCpp
 #' @importFrom rhandsontable hot_cell hot_col hot_table hot_to_r renderRHandsontable rhandsontable rHandsontableOutput
-#' @importFrom rmarkdown html_document render
+#' @importFrom rmarkdown find_pandoc html_document render
 #' @importFrom shinyFeedback showFeedbackDanger hideFeedback useShinyFeedback
 #' @importFrom shinyFiles parseFilePaths shinyFilesButton shinyFileChoose
 #' @importFrom shinyjs disable disabled enable refresh useShinyjs

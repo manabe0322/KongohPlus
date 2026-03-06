@@ -19,3 +19,16 @@ install.packages(c("shiny", "cmaes", "combinat", "data.table", "dplyr", "DT", "g
 library(KongohPlus)
 KongohPlus()
 ```
+## Settings Required to Enable Report Output
+
+Run this application from RStudio or install Pandoc manually. 
+
+How to install Pandoc (for Windows):
+
+1. Visit https://pandoc.org/installing.html
+
+2. Click 'Download the latest installer'
+
+3. Download the Windows installer (*.msi)
+
+4. Double-click the downloaded file and follow the installation wizard.
