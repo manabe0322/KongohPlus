@@ -41,6 +41,7 @@ params:
 
 ```{r setup, include = FALSE}
 library(data.table)
+library(dplyr)
 library(DT)
 library(ggplot2)
 library(htmltools)
@@ -490,6 +491,267 @@ if(!is.null(data_hnc_list)){
         cat("\n\n")
       }
     }
+  }
+}
+```
+
+<div class="pagebreak"></div>
+
+```{r csp, echo = FALSE, results='asis'}
+
+if(!is.null(dt_csp)){
+  cat("## Crime stain profile\n\n")
+  
+  sn_csp_all <- unique(dt_csp[, SampleName])
+  n_rep <- length(sn_csp_all)
+  dt_csp_rep <- data.table("Replicate" = as.character(1:n_rep), 
+                           "Sample Name" = sn_csp_all)
+  
+  tbl_csp_rep <- datatable(
+    dt_csp_rep,
+    rownames = FALSE,
+    options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+  ) %>% 
+    formatStyle(names(dt_csp_rep), lineHeight = "80%")
+    
+  print(tagList(tbl_csp_rep))
+  cat("\n\n")
+
+  dt_display_csp <- create_dt_display_csp(dt_csp)
+
+  dt_display_csp[, g := cumsum(!is.na(Marker))]
+
+  tmp_markers <- dt_display_csp$Marker
+  tmp_markers[is.na(tmp_markers)] <- ""
+  dt_display_csp$Marker <- tmp_markers
+
+  # ends <- dt_display_csp[g > 0, .(end = .I[.N]), by = g]$end
+  # cut_positions <- if (length(ends) > 1) ends[-length(ends)] else integer(0)
+
+  n_table_csp <- (n_rep - 1) %/% 4 + 1
+  for(i in 1:n_table_csp){
+    cand_height_label <- paste0("Height", (4 * (i - 1) + 1):(4 * i))
+    index_display <- which(is.element(names(dt_display_csp), c("Marker", "Allele", cand_height_label)))
+    
+    dt_display_csp_ext <- dt_display_csp[, index_display, with = FALSE]
+    
+    tbl_display_csp <- datatable(
+      dt_display_csp_ext,
+      rownames = FALSE,
+      options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+    ) %>% 
+      formatStyle(names(dt_display_csp_ext), lineHeight = "80%")
+    
+    print(tagList(tbl_display_csp))
+    cat("\n\n")
+  }
+}
+```
+
+<div class="pagebreak"></div>
+
+```{r ref, echo = FALSE, results='asis'}
+
+if(!is.null(dt_ref)){
+  cat("## Reference profile\n\n")
+  
+  dt_ref_display <- NULL
+  samples <- unique(dt_ref$SampleName)
+  n_sample <- length(samples)
+  for(i in 1:n_sample){
+    dt_tmp <- dt_ref[dt_ref$SampleName == samples[i]]
+
+    gts <- rep(NA, nrow(dt_tmp))
+    for(j in 1:nrow(dt_tmp)){
+      gt1 <- c(dt_tmp$Allele1[j], dt_tmp$Allele2[j])
+      gt1 <- gt1[!is.na(gt1)]
+      gts[j] <- paste0(gt1, collapse = ", ")
+    }
+
+    dt_tmp2 <- data.table(Marker = dt_tmp$Marker,
+                          Gt = gts)
+    names(dt_tmp2) <- c("Marker", samples[i])
+
+    if(i == 1){
+      dt_ref_display <- dt_tmp2
+    }else{
+      dt_ref_display <- full_join(dt_ref_display, dt_tmp2, by = c("Marker"))
+    }
+  }
+  
+  n_table_ref <- (n_sample - 1) %/% 5 + 1
+  for(i in 1:n_table_ref){
+    if(i == n_table_ref){
+      samples_display <- samples[(5 * (i - 1) + 1):length(samples)]
+    }else{
+      samples_display <- samples[(5 * (i - 1) + 1):(5 * i)]
+    }
+    index_display <- which(is.element(names(dt_ref_display), c("Marker", samples_display)))
+    
+    dt_ref_display_part <- dt_ref_display[, index_display, with = FALSE]
+    
+    tbl_ref_display_part <- datatable(
+      dt_ref_display_part,
+      rownames = FALSE,
+      options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+    ) %>% 
+      formatStyle(names(dt_ref_display_part), lineHeight = "80%")
+    
+    print(tagList(tbl_ref_display_part))
+    cat("\n\n")
+  }
+}
+```
+
+<div class="pagebreak"></div>
+
+```{r anameth, echo = FALSE, results='asis'}
+if(!is.null(dt_anameth)){
+  cat("## Analysis method\n\n")
+  
+  cat("### General\n\n")
+  
+  dt_general <- data.table(A = c("Method", "Kit", "Stutter data", "LSAE data", "Gamma data", "Drop-in data"), 
+                           B = c(fn_anameth, 
+                                 dt_anameth$Name[dt_anameth$Category == "Kit"], 
+                                 dt_anameth$Name[dt_anameth$Category == "Stutter data"], 
+                                 dt_anameth$Name[dt_anameth$Category == "LSAE data"], 
+                                 dt_anameth$Name[dt_anameth$Category == "Gamma data"], 
+                                 dt_anameth$Name[dt_anameth$Category == "Drop-in data"]))
+  
+  tbl_general <- datatable(
+    dt_general,
+    rownames = FALSE,
+    colnames = NULL,
+    options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+  ) %>%
+    formatStyle(names(dt_general), lineHeight = "80%")
+  
+  print(tagList(tbl_general))
+  cat("\n\n")
+  
+  cat("### Analytical threshold\n\n")
+  
+  dt_at <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "AT"], 
+                      AT = dt_anameth$Value[dt_anameth$Category == "AT"])
+  
+  tbl_at <- datatable(
+    dt_at,
+    rownames = FALSE,
+    options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+  ) %>% 
+    formatStyle(names(dt_at), lineHeight = "80%")
+  
+  print(tagList(tbl_at))
+  cat("\n\n")
+  
+  cat("### Genotype filter\n\n")
+  
+  dt_gtfltr <- data.table(A = dt_anameth$Subcategory[dt_anameth$Category == "Genotype filter"], 
+                          B = dt_anameth$Value[dt_anameth$Category == "Genotype filter"])
+  
+  tbl_gtfltr <- datatable(
+    dt_gtfltr,
+    rownames = FALSE,
+    colnames = NULL,
+    options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+  ) %>% 
+    formatStyle(names(dt_gtfltr), lineHeight = "80%")
+  
+  print(tagList(tbl_gtfltr))
+  cat("\n\n")
+  
+  cat("### Degradation\n\n")
+  
+  dt_deg <- data.table(A = dt_anameth$Subcategory[dt_anameth$Category == "Degradation"], 
+                       B = dt_anameth$Value[dt_anameth$Category == "Degradation"])
+  
+  tbl_deg <- datatable(
+    dt_deg,
+    rownames = FALSE,
+    colnames = NULL,
+    options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+  ) %>% 
+    formatStyle(names(dt_deg), lineHeight = "80%")
+  
+  print(tagList(tbl_deg))
+  cat("\n\n")
+  
+  cat("### Locus specific amplification efficiency\n\n")
+  
+  dt_lsae <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "LSAE"], 
+                        LSAE = dt_anameth$Value[dt_anameth$Category == "LSAE"])
+  
+  tbl_lsae <- datatable(
+    dt_lsae,
+    rownames = FALSE,
+    options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+  ) %>% 
+    formatSignif(columns = c("LSAE"), digits = 4) %>%
+    formatStyle(names(dt_lsae), lineHeight = "80%")
+  
+  print(tagList(tbl_lsae))
+  cat("\n\n")
+  
+  cat("### Peak height parameter\n\n")
+  
+  dt_gamma <- data.table(A = dt_anameth$Subcategory[dt_anameth$Category == "Peak height"], 
+                         B = dt_anameth$Value[dt_anameth$Category == "Peak height"])
+  
+  tbl_gamma <- datatable(
+    dt_gamma,
+    rownames = FALSE,
+    colnames = NULL,
+    options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+  ) %>% 
+    formatSignif(columns = c("B"), digits = 4) %>%
+    formatStyle(names(dt_gamma), lineHeight = "80%")
+  
+  print(tagList(tbl_gamma))
+  cat("\n\n")
+  
+  cat("### Drop-in parameter\n\n")
+  
+  dt_dropin <- data.table(A = dt_anameth$Subcategory[dt_anameth$Category == "Drop-in"], 
+                          B = dt_anameth$Value[dt_anameth$Category == "Drop-in"])
+  
+  tbl_dropin <- datatable(
+    dt_dropin,
+    rownames = FALSE,
+    colnames = NULL,
+    options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+  ) %>% 
+    formatSignif(columns = c("B"), digits = 4) %>%
+    formatStyle(names(dt_dropin), lineHeight = "80%")
+  
+  print(tagList(tbl_dropin))
+  cat("\n\n")
+  
+  cat("### Stutter ratio\n\n")
+  
+  dt_sr <- data.table(Marker = dt_anameth$Subcategory[dt_anameth$Category == "SR"], 
+                      Allele = dt_anameth$Allele[dt_anameth$Category == "SR"], 
+                      BSR = dt_anameth[["Average BSR"]][dt_anameth$Category == "SR"], 
+                      FSR = dt_anameth[["Average FSR"]][dt_anameth$Category == "SR"], 
+                      DSR = dt_anameth[["Average DSR"]][dt_anameth$Category == "SR"], 
+                      M2SR = dt_anameth[["Average M2SR"]][dt_anameth$Category == "SR"])
+  markers_sr <- unique(dt_sr$Marker)
+  for(i in 1:length(markers_sr)){
+    cat(paste0("#### ", markers_sr[i], "\n\n"))
+    
+    dt_sr_mk <- dt_sr[dt_sr$Marker == markers_sr[i]]
+    dt_sr_mk[, c("Marker") := NULL]
+    
+    tbl_sr_mk <- datatable(
+      dt_sr_mk,
+      rownames = FALSE,
+      options = list(dom = 't', ordering = FALSE, paging = FALSE, searching = FALSE, info = FALSE, autoWidth = FALSE)
+    ) %>% 
+      formatSignif(columns = c("BSR", "FSR", "DSR", "M2SR"), digits = 4) %>%
+      formatStyle(names(dt_sr_mk), lineHeight = "80%")
+    
+    print(tagList(tbl_sr_mk))
+    cat("\n\n")
   }
 }
 ```
