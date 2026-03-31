@@ -76,7 +76,7 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
       rv_est_gamma_setting$min_scale_stutter <- 0.01
       rv_est_gamma_setting$max_scale_stutter <- 400
       rv_est_gamma_setting$max_iter <- 500
-      rv_est_gamma_setting$num_converged <- 3
+      rv_est_gamma_setting$num_consistent <- 3
       rv_est_gamma_setting$max_mle_runs <- 10
       rv_est_gamma_setting$max_diff_like <- 0.005
       rv_est_gamma_setting$bool_correct_mle_scale_allele <- TRUE
@@ -212,8 +212,8 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
           fluidRow(
             column(6,
                    numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_gamma_setting$max_iter),
-                   numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_est_gamma_setting$num_converged),
-                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_gamma_setting$max_mle_runs),
+                   numericInput(session$ns("max_mle_runs"), label = "Number of MLE attempts", value = rv_est_gamma_setting$max_mle_runs),
+                   numericInput(session$ns("num_consistent"), label = "Minimum number of consistent runs", value = rv_est_gamma_setting$num_consistent),
                    numericInput(session$ns("max_diff_like"), label = "Reproducibility threshold (log10-likelihood difference)", value = rv_est_gamma_setting$max_diff_like)
             ),
             column(6,
@@ -240,18 +240,18 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         rv_est_gamma_setting$bool_correct_mle_scale_allele <- TRUE
 
         if(!is.numeric(min_scale_allele) || min_scale_allele <= 0){
-          showFeedbackDanger(inputId = "min_scale_allele", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "min_scale_allele", text = "Value must be a positive number.")
           rv_est_gamma_setting$bool_correct_mle_scale_allele <- FALSE
         }
 
         if(!is.numeric(max_scale_allele) || max_scale_allele <= 0){
-          showFeedbackDanger(inputId = "max_scale_allele", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "max_scale_allele", text = "Value must be a positive number.")
           rv_est_gamma_setting$bool_correct_mle_scale_allele <- FALSE
         }
 
         if(is.numeric(min_scale_allele) && is.numeric(max_scale_allele) && max_scale_allele < min_scale_allele){
-          showFeedbackDanger(inputId = "min_scale_allele", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_scale_allele", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "min_scale_allele", text = "The minimum value cannot exceed the maximum value.")
+          showFeedbackDanger(inputId = "max_scale_allele", text = "The minimum value cannot exceed the maximum value.")
           rv_est_gamma_setting$bool_correct_mle_scale_allele <- FALSE
         }
       })
@@ -265,18 +265,18 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         rv_est_gamma_setting$bool_correct_mle_scale_stutter <- TRUE
 
         if(!is.numeric(min_scale_stutter) || min_scale_stutter <= 0){
-          showFeedbackDanger(inputId = "min_scale_stutter", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "min_scale_stutter", text = "Value must be a positive number.")
           rv_est_gamma_setting$bool_correct_mle_scale_stutter <- FALSE
         }
 
         if(!is.numeric(max_scale_stutter) || max_scale_stutter <= 0){
-          showFeedbackDanger(inputId = "max_scale_stutter", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "max_scale_stutter", text = "Value must be a positive number.")
           rv_est_gamma_setting$bool_correct_mle_scale_stutter <- FALSE
         }
 
         if(is.numeric(min_scale_stutter) && is.numeric(max_scale_stutter) && max_scale_stutter < min_scale_stutter){
-          showFeedbackDanger(inputId = "min_scale_stutter", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_scale_stutter", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "min_scale_stutter", text = "The minimum value cannot exceed the maximum value.")
+          showFeedbackDanger(inputId = "max_scale_stutter", text = "The minimum value cannot exceed the maximum value.")
           rv_est_gamma_setting$bool_correct_mle_scale_stutter <- FALSE
         }
       })
@@ -288,34 +288,34 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         bool_correct_advanced_1 <- TRUE
 
         if(!is.integer(max_iter) || max_iter <= 0){
-          showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
+          showFeedbackDanger(inputId = "max_iter", text = "Value must be a positive integer.")
           bool_correct_advanced_1 <- FALSE
         }
 
         rv_est_gamma_setting$bool_correct_advanced_1 <- bool_correct_advanced_1
       })
 
-      observeEvent(input$num_converged | input$max_mle_runs, {
-        num_converged <- input$num_converged
+      observeEvent(input$num_consistent | input$max_mle_runs, {
+        num_consistent <- input$num_consistent
         max_mle_runs <- input$max_mle_runs
 
-        hideFeedback("num_converged")
+        hideFeedback("num_consistent")
         hideFeedback("max_mle_runs")
         bool_correct_advanced_2 <- TRUE
 
-        if(!is.integer(num_converged) || num_converged <= 0){
-          showFeedbackDanger(inputId = "num_converged", text = "Value must be an integer greater than zero.")
+        if(!is.integer(num_consistent) || num_consistent <= 0){
+          showFeedbackDanger(inputId = "num_consistent", text = "Value must be a positive integer.")
           bool_correct_advanced_2 <- FALSE
         }
 
         if(!is.integer(max_mle_runs) || max_mle_runs <= 0){
-          showFeedbackDanger(inputId = "max_mle_runs", text = "Value must be an integer greater than zero.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "Value must be a positive integer.")
           bool_correct_advanced_2 <- FALSE
         }
 
-        if(is.integer(num_converged) && is.integer(max_mle_runs) && num_converged > max_mle_runs){
-          showFeedbackDanger(inputId = "num_converged", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_mle_runs", text = "Minimum value cannot be greater than maximum value.")
+        if(is.integer(num_consistent) && is.integer(max_mle_runs) && num_consistent > max_mle_runs){
+          showFeedbackDanger(inputId = "num_consistent", text = "The minimum number of consistent runs cannot exceed the number of MLE attempts.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "The minimum number of consistent runs cannot exceed the number of MLE attempts.")
           bool_correct_advanced_2 <- FALSE
         }
 
@@ -329,7 +329,7 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         bool_correct_advanced_3 <- TRUE
 
         if(!is.numeric(max_diff_like) || max_diff_like < 0){
-          showFeedbackDanger(inputId = "max_diff_like", text = "Value must be a numeric value greater than zero.")
+          showFeedbackDanger(inputId = "max_diff_like", text = "Value must be a positive number.")
           bool_correct_advanced_3 <- FALSE
         }
 
@@ -356,7 +356,7 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         rv_est_gamma_setting$min_scale_stutter <- input$min_scale_stutter
         rv_est_gamma_setting$max_scale_stutter <- input$max_scale_stutter
         rv_est_gamma_setting$max_iter <- input$max_iter
-        rv_est_gamma_setting$num_converged <- input$num_converged
+        rv_est_gamma_setting$num_consistent <- input$num_consistent
         rv_est_gamma_setting$max_mle_runs <- input$max_mle_runs
         rv_est_gamma_setting$max_diff_like <- input$max_diff_like
         removeModal()
@@ -397,7 +397,7 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         min_scale_stutter <- rv_est_gamma_setting$min_scale_stutter
         max_scale_stutter <- rv_est_gamma_setting$max_scale_stutter
         max_iter <- rv_est_gamma_setting$max_iter
-        num_converged <- rv_est_gamma_setting$num_converged
+        num_consistent <- rv_est_gamma_setting$num_consistent
         max_mle_runs <- rv_est_gamma_setting$max_mle_runs
         max_diff_like <- rv_est_gamma_setting$max_diff_like
 
@@ -409,7 +409,7 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
         }else{
           data_est_gamma <- try(estimate_gamma(dt_exp_gamma, dt_gt_gamma, list_dt_average_sr, dt_setting_est_par, dt_expect_ae,
                                                min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
-                                               max_iter, num_converged, max_mle_runs, max_diff_like,
+                                               max_iter, num_consistent, max_mle_runs, max_diff_like,
                                                waiter_ui))
           if(inherits(data_est_gamma, "try-error")){
             waiter_ui$hide()
@@ -427,7 +427,7 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
             data_est_gamma$min_scale_stutter <- min_scale_stutter
             data_est_gamma$max_scale_stutter <- max_scale_stutter
             data_est_gamma$max_iter <- max_iter
-            data_est_gamma$num_converged <- num_converged
+            data_est_gamma$num_consistent <- num_consistent
             data_est_gamma$max_mle_runs <- max_mle_runs
             data_est_gamma$max_diff_like <- max_diff_like
 

@@ -35,11 +35,11 @@ check_est_dropin <- function(dt_ntc, dt_kit){
 #' @param min_scale_di The minimum scale
 #' @param max_scale_di The maximum scale
 #' @param max_iter Maximum number of iterations in one MLE run
-#' @param num_converged Number of converged MLE runs before stopping
+#' @param num_consistent Minimum number of consistent runs
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
-run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui = NULL){
+run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, max_iter, num_consistent, max_mle_runs, max_diff_like, waiter_ui = NULL){
 
   like_func_dropin <- function(z){
 
@@ -64,14 +64,13 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
   # Perform simulated annealing
   current_opt <- NULL
   current_score <- Inf
-  count_mle <- 0
   count_solution <- 0
   init_list <- list()
   opt_list <- list()
   est_par_list <- list()
   index_converged <- integer(0)
-  repeat{
-    count_mle <- count_mle + 1
+
+  for(count_mle in 1:max_mle_runs){
 
     if(!is.null(waiter_ui)){
       waiter_ui$update(
@@ -100,8 +99,6 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
       fn = like_func_dropin,
       control = list(maxit = max_iter)
     )
-
-    print(opt)
 
     score <- opt$value
 
@@ -136,27 +133,21 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
       count_solution <- count_solution + 1
       index_converged <- c(index_converged, count_mle)
     }
-
-    if(count_solution == num_converged){
-      break
-    }else if(count_mle == max_mle_runs){
-      current_opt <- NULL
-      break
-    }
   }
 
   # --- Create the warning message --- #
 
-  if(count_solution == num_converged){
+  if(length(index_converged) >= num_consistent){
     warning_message <- NULL
   }else{
-    warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
+    warning_message <- paste0("- The number of consistent runs is below ", num_consistent, ". This may indicate the presence of local optima.<br>")
   }
 
   # --- Extract the estimated parameters --- #
 
   dt_all_mle <- as.data.table(est_par_list)
-  mle_best <- dt_all_mle[[which.max(as.numeric(dt_all_mle[1, ]))]]
+  index_mle_best <- which.max(as.numeric(dt_all_mle[1, ]))
+  mle_best <- dt_all_mle[[index_mle_best]]
   est_param <- mle_best[2:3]
   names(est_param) <- c("Shape parameter", "Scale parameter")
 
@@ -166,7 +157,13 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
   dt_all_mle[, Parameter := c("Log10 (likelihood)", "Shape parameter", "Scale parameter")]
   setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
-  return(list(dt_all_mle = dt_all_mle, est_param = est_param, init_list = init_list, opt_list = opt_list, index_converged = index_converged, warning_message = warning_message))
+  return(list("dt_all_mle" = dt_all_mle,
+              "est_param" = est_param,
+              "init_list" = init_list,
+              "opt_list" = opt_list,
+              "index_mle_best" = index_mle_best,
+              "index_converged" = index_converged,
+              "warning_message" = warning_message))
 }
 
 #' estimate_dropin_params
@@ -180,11 +177,11 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
 #' @param min_scale_di The minimum scale
 #' @param max_scale_di The maximum scale
 #' @param max_iter Maximum number of iterations in one MLE run
-#' @param num_converged Number of converged MLE runs before stopping
+#' @param num_consistent Minimum number of consistent runs
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
-estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui){
+estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, max_iter, num_consistent, max_mle_runs, max_diff_like, waiter_ui){
 
   # --- Extract the specified conditions --- #
 
@@ -218,13 +215,14 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
   heights <- dt_dropin_data$Height
   n_dropin <- length(heights)
 
-  tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui)
+  tmp <- run_mle_dropin(n_dropin, heights, min_shape_di, max_shape_di, min_scale_di, max_scale_di, max_iter, num_consistent, max_mle_runs, max_diff_like, waiter_ui)
   dt_all_mle <- tmp$dt_all_mle
   est_param <- tmp$est_param
   shape_di <- est_param["Shape parameter"]
   scale_di <- est_param["Scale parameter"]
   init_list <- tmp$init_list
   opt_list <- tmp$opt_list
+  index_mle_best <- tmp$index_mle_best
   index_converged <- tmp$index_converged
   warning_message <- tmp$warning_message
 
@@ -240,6 +238,7 @@ estimate_dropin_params <- function(dt_ntc, dt_kit, at_dropin, min_shape_di, max_
               "dt_est_dropin" = dt_est_dropin,
               "init_list" = init_list,
               "opt_list" = opt_list,
+              "index_mle_best" = index_mle_best,
               "index_converged" = index_converged,
               "warning_message" = warning_message))
 }

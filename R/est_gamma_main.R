@@ -275,11 +275,11 @@ prepare_gamma_data <- function(markers_auto, peak_list, height_list, gt_list, ex
 #' @param min_scale_stutter The minimum scale parameter for stutters
 #' @param max_scale_stutter The maximum scale parameter for stutters
 #' @param max_iter Maximum number of iterations in one MLE run
-#' @param num_converged Number of converged MLE runs before stopping
+#' @param num_consistent Minimum number of consistent runs
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
-run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui = NULL){
+run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, max_iter, num_consistent, max_mle_runs, max_diff_like, waiter_ui = NULL){
 
   # --- Define the likelihood function --- #
 
@@ -334,14 +334,13 @@ run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, m
 
   current_opt <- NULL
   current_score <- Inf
-  count_mle <- 0
   count_solution <- 0
   init_list <- list()
   opt_list <- list()
   est_par_list <- list()
   index_converged <- integer(0)
-  repeat{
-    count_mle <- count_mle + 1
+
+  for(count_mle in 1:max_mle_runs){
 
     if(!is.null(waiter_ui)){
       waiter_ui$update(
@@ -370,8 +369,6 @@ run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, m
       fn = like_func_gamma,
       control = list(maxit = max_iter)
     )
-
-    print(opt)
 
     score <- opt$value
 
@@ -406,27 +403,21 @@ run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, m
       count_solution <- count_solution + 1
       index_converged <- c(index_converged, count_mle)
     }
-
-    if(count_solution == num_converged){
-      break
-    }else if(count_mle == max_mle_runs){
-      current_opt <- NULL
-      break
-    }
   }
 
   # --- Create the warning message --- #
 
-  if(count_solution == num_converged){
+  if(length(index_converged) >= num_consistent){
     warning_message <- NULL
   }else{
-    warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
+    warning_message <- paste0("- The number of consistent runs is below ", num_consistent, ". This may indicate the presence of local optima.<br>")
   }
 
   # --- Extract the estimated parameters --- #
 
   dt_all_mle <- as.data.table(est_par_list)
-  mle_best <- dt_all_mle[[which.max(as.numeric(dt_all_mle[1, ]))]]
+  index_mle_best <- which.max(as.numeric(dt_all_mle[1, ]))
+  mle_best <- dt_all_mle[[index_mle_best]]
   est_param <- mle_best[2:3]
   names(est_param) <- c("Scale parameter (allele)", "Scale parameter (stutter)")
 
@@ -436,7 +427,13 @@ run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, m
   dt_all_mle[, Parameter := c("Log10 (likelihood)", "Scale parameter (allele)", "Scale parameter (stutter)")]
   setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
-  return(list(dt_all_mle = dt_all_mle, est_param = est_param, init_list = init_list, opt_list = opt_list, index_converged = index_converged, warning_message = warning_message))
+  return(list("dt_all_mle" = dt_all_mle,
+              "est_param" = est_param,
+              "init_list" = init_list,
+              "opt_list" = opt_list,
+              "index_mle_best" = index_mle_best,
+              "index_converged" = index_converged,
+              "warning_message" = warning_message))
 }
 
 #' create_dt_gamma_data
@@ -517,13 +514,13 @@ create_dt_gamma_data <- function(scale_allele, scale_stutter, samples_gamma, mar
 #' @param min_scale_stutter The minimum scale parameter for stutters
 #' @param max_scale_stutter The maximum scale parameter for stutters
 #' @param max_iter Maximum number of iterations in one MLE run
-#' @param num_converged Number of converged MLE runs before stopping
+#' @param num_consistent Minimum number of consistent runs
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
 estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par, dt_expect_ae,
                            min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter,
-                           max_iter, num_converged, max_mle_runs, max_diff_like,
+                           max_iter, num_consistent, max_mle_runs, max_diff_like,
                            waiter_ui = NULL){
 
   # --- Extract the specified conditions --- #
@@ -582,13 +579,14 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
 
   # --- Perform MLE for the gamma scale parameter --- #
 
-  tmp <- run_mle_gamma(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui)
+  tmp <- run_mle_gamma(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, max_scale_allele, min_scale_stutter, max_scale_stutter, max_iter, num_consistent, max_mle_runs, max_diff_like, waiter_ui)
   dt_all_mle <- tmp$dt_all_mle
   est_param <- tmp$est_param
   scale_allele <- est_param["Scale parameter (allele)"]
   scale_stutter <- est_param["Scale parameter (stutter)"]
   init_list <- tmp$init_list
   opt_list <- tmp$opt_list
+  index_mle_best <- tmp$index_mle_best
   index_converged <- tmp$index_converged
   warning_message <- tmp$warning_message
 
@@ -601,6 +599,7 @@ estimate_gamma <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par
               "dt_est_gamma" = dt_est_gamma,
               "init_list" = init_list,
               "opt_list" = opt_list,
+              "index_mle_best" = index_mle_best,
               "index_converged" = index_converged,
               "warning_message" = warning_message,
               "dt_gamma_data" = dt_gamma_data))

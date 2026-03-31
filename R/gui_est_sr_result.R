@@ -72,10 +72,20 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
       rv_est_sr_result$dt_sr_data <- NULL
       rv_est_sr_result$name_kit_stutter <- NULL
 
+      rv_est_sr_result$dt_result_est_bsr <- NULL
+      rv_est_sr_result$dt_result_est_fsr <- NULL
+      rv_est_sr_result$dt_result_est_dsr <- NULL
+      rv_est_sr_result$dt_result_est_m2sr <- NULL
+
       rv_est_sr_result$list_dt_all_mle_bsr <- NULL
       rv_est_sr_result$list_dt_all_mle_fsr <- NULL
       rv_est_sr_result$list_dt_all_mle_dsr <- NULL
       rv_est_sr_result$list_dt_all_mle_m2sr <- NULL
+
+      rv_est_sr_result$index_mle_best_all_mk_bsr <- NULL
+      rv_est_sr_result$index_mle_best_all_mk_fsr <- NULL
+      rv_est_sr_result$index_mle_best_all_mk_dsr <- NULL
+      rv_est_sr_result$index_mle_best_all_mk_m2sr <- NULL
 
       rv_est_sr_result$index_converged_list_all_mk_bsr <- NULL
       rv_est_sr_result$index_converged_list_all_mk_fsr <- NULL
@@ -91,10 +101,18 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
       rv_est_sr_result$df_select_sr <- NULL
       rv_est_sr_result$dt_sr_data_display <- NULL
 
+      rv_est_sr_result$slope <- NULL
+      rv_est_sr_result$intercept <- NULL
+
       rv_est_sr_result$dt_all_mle_select_mk_bsr <- NULL
       rv_est_sr_result$dt_all_mle_select_mk_fsr <- NULL
       rv_est_sr_result$dt_all_mle_select_mk_dsr <- NULL
       rv_est_sr_result$dt_all_mle_select_mk_m2sr <- NULL
+
+      rv_est_sr_result$index_mle_best_select_mk_bsr <- NULL
+      rv_est_sr_result$index_mle_best_select_mk_fsr <- NULL
+      rv_est_sr_result$index_mle_best_select_mk_dsr <- NULL
+      rv_est_sr_result$index_mle_best_select_mk_m2sr <- NULL
 
       rv_est_sr_result$index_converged_select_mk_bsr <- NULL
       rv_est_sr_result$index_converged_select_mk_fsr <- NULL
@@ -112,10 +130,20 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         rv_est_sr_result$dt_sr_data <- NULL
         rv_est_sr_result$name_kit_stutter <- NULL
 
+        rv_est_sr_result$dt_result_est_bsr <- NULL
+        rv_est_sr_result$dt_result_est_fsr <- NULL
+        rv_est_sr_result$dt_result_est_dsr <- NULL
+        rv_est_sr_result$dt_result_est_m2sr <- NULL
+
         rv_est_sr_result$list_dt_all_mle_bsr <- NULL
         rv_est_sr_result$list_dt_all_mle_fsr <- NULL
         rv_est_sr_result$list_dt_all_mle_dsr <- NULL
         rv_est_sr_result$list_dt_all_mle_m2sr <- NULL
+
+        rv_est_sr_result$index_mle_best_all_mk_bsr <- NULL
+        rv_est_sr_result$index_mle_best_all_mk_fsr <- NULL
+        rv_est_sr_result$index_mle_best_all_mk_dsr <- NULL
+        rv_est_sr_result$index_mle_best_all_mk_m2sr <- NULL
 
         rv_est_sr_result$index_converged_list_all_mk_bsr <- NULL
         rv_est_sr_result$index_converged_list_all_mk_fsr <- NULL
@@ -131,10 +159,18 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         rv_est_sr_result$df_select_sr <- NULL
         rv_est_sr_result$dt_sr_data_display <- NULL
 
+        rv_est_sr_result$slope <- NULL
+        rv_est_sr_result$intercept <- NULL
+
         rv_est_sr_result$dt_all_mle_select_mk_bsr <- NULL
         rv_est_sr_result$dt_all_mle_select_mk_fsr <- NULL
         rv_est_sr_result$dt_all_mle_select_mk_dsr <- NULL
         rv_est_sr_result$dt_all_mle_select_mk_m2sr <- NULL
+
+        rv_est_sr_result$index_mle_best_select_mk_bsr <- NULL
+        rv_est_sr_result$index_mle_best_select_mk_fsr <- NULL
+        rv_est_sr_result$index_mle_best_select_mk_dsr <- NULL
+        rv_est_sr_result$index_mle_best_select_mk_m2sr <- NULL
 
         rv_est_sr_result$index_converged_select_mk_bsr <- NULL
         rv_est_sr_result$index_converged_select_mk_fsr <- NULL
@@ -149,10 +185,20 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           rv_est_sr_result$dt_sr_data <- data_est_sr$dt_sr_data
           rv_est_sr_result$name_kit_stutter <- data_est_sr$name_kit_stutter
 
+          rv_est_sr_result$dt_result_est_bsr <- data_est_sr$dt_result_est_bsr
+          rv_est_sr_result$dt_result_est_fsr <- data_est_sr$dt_result_est_fsr
+          rv_est_sr_result$dt_result_est_dsr <- data_est_sr$dt_result_est_dsr
+          rv_est_sr_result$dt_result_est_m2sr <- data_est_sr$dt_result_est_m2sr
+
           rv_est_sr_result$list_dt_all_mle_bsr <- data_est_sr$list_dt_all_mle_bsr
           rv_est_sr_result$list_dt_all_mle_fsr <- data_est_sr$list_dt_all_mle_fsr
           rv_est_sr_result$list_dt_all_mle_dsr <- data_est_sr$list_dt_all_mle_dsr
           rv_est_sr_result$list_dt_all_mle_m2sr <- data_est_sr$list_dt_all_mle_m2sr
+
+          rv_est_sr_result$index_mle_best_all_mk_bsr <- data_est_sr$index_mle_best_all_mk_bsr
+          rv_est_sr_result$index_mle_best_all_mk_fsr <- data_est_sr$index_mle_best_all_mk_fsr
+          rv_est_sr_result$index_mle_best_all_mk_dsr <- data_est_sr$index_mle_best_all_mk_dsr
+          rv_est_sr_result$index_mle_best_all_mk_m2sr <- data_est_sr$index_mle_best_all_mk_m2sr
 
           rv_est_sr_result$index_converged_list_all_mk_bsr <- data_est_sr$index_converged_list_all_mk_bsr
           rv_est_sr_result$index_converged_list_all_mk_fsr <- data_est_sr$index_converged_list_all_mk_fsr
@@ -246,10 +292,20 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         req(rv_est_sr_result$dt_sr_data)
         req(rv_est_sr_result$name_kit_stutter)
 
+        req(rv_est_sr_result$dt_result_est_bsr)
+        req(rv_est_sr_result$dt_result_est_fsr)
+        req(rv_est_sr_result$dt_result_est_dsr)
+        req(rv_est_sr_result$dt_result_est_m2sr)
+
         req(rv_est_sr_result$list_dt_all_mle_bsr)
         req(rv_est_sr_result$list_dt_all_mle_fsr)
         req(rv_est_sr_result$list_dt_all_mle_dsr)
         req(rv_est_sr_result$list_dt_all_mle_m2sr)
+
+        req(rv_est_sr_result$index_mle_best_all_mk_bsr)
+        req(rv_est_sr_result$index_mle_best_all_mk_fsr)
+        req(rv_est_sr_result$index_mle_best_all_mk_dsr)
+        req(rv_est_sr_result$index_mle_best_all_mk_m2sr)
 
         req(rv_est_sr_result$index_converged_list_all_mk_bsr)
         req(rv_est_sr_result$index_converged_list_all_mk_fsr)
@@ -265,10 +321,20 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         dt_sr_data <- rv_est_sr_result$dt_sr_data
         name_kit_stutter <- rv_est_sr_result$name_kit_stutter
 
+        dt_result_est_bsr <- rv_est_sr_result$dt_result_est_bsr
+        dt_result_est_fsr <- rv_est_sr_result$dt_result_est_fsr
+        dt_result_est_dsr <- rv_est_sr_result$dt_result_est_dsr
+        dt_result_est_m2sr <- rv_est_sr_result$dt_result_est_m2sr
+
         list_dt_all_mle_bsr <- rv_est_sr_result$list_dt_all_mle_bsr
         list_dt_all_mle_fsr <- rv_est_sr_result$list_dt_all_mle_fsr
         list_dt_all_mle_dsr <- rv_est_sr_result$list_dt_all_mle_dsr
         list_dt_all_mle_m2sr <- rv_est_sr_result$list_dt_all_mle_m2sr
+
+        index_mle_best_all_mk_bsr <- rv_est_sr_result$index_mle_best_all_mk_bsr
+        index_mle_best_all_mk_fsr <- rv_est_sr_result$index_mle_best_all_mk_fsr
+        index_mle_best_all_mk_dsr <- rv_est_sr_result$index_mle_best_all_mk_dsr
+        index_mle_best_all_mk_m2sr <- rv_est_sr_result$index_mle_best_all_mk_m2sr
 
         index_converged_list_all_mk_bsr <- rv_est_sr_result$index_converged_list_all_mk_bsr
         index_converged_list_all_mk_fsr <- rv_est_sr_result$index_converged_list_all_mk_fsr
@@ -284,10 +350,18 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         rv_est_sr_result$df_select_sr <- NULL
         rv_est_sr_result$dt_sr_data_display <- NULL
 
+        rv_est_sr_result$slope <- NULL
+        rv_est_sr_result$intercept <- NULL
+
         rv_est_sr_result$dt_all_mle_select_mk_bsr <- NULL
         rv_est_sr_result$dt_all_mle_select_mk_fsr <- NULL
         rv_est_sr_result$dt_all_mle_select_mk_dsr <- NULL
         rv_est_sr_result$dt_all_mle_select_mk_m2sr <- NULL
+
+        rv_est_sr_result$index_mle_best_select_mk_bsr <- NULL
+        rv_est_sr_result$index_mle_best_select_mk_fsr <- NULL
+        rv_est_sr_result$index_mle_best_select_mk_dsr <- NULL
+        rv_est_sr_result$index_mle_best_select_mk_m2sr <- NULL
 
         rv_est_sr_result$index_converged_select_mk_bsr <- NULL
         rv_est_sr_result$index_converged_select_mk_fsr <- NULL
@@ -298,22 +372,27 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
           rv_est_sr_result$dt_average_sr <- list_dt_average_sr[[select_mk]]
 
           if(select_st_type == "Back stutter"){
+            dt_result_est <- dt_result_est_bsr
             dt_st_type <- dt_sr_data[dt_sr_data$Bool_BS]
             meth_all_mk <- dt_setting_est_sr[["BSR model"]]
             meth <- meth_all_mk[dt_setting_est_sr$Marker == select_mk]
           }else if(select_st_type == "Forward stutter"){
+            dt_result_est <- dt_result_est_fsr
             dt_st_type <- dt_sr_data[dt_sr_data$Bool_FS]
             meth_all_mk <- dt_setting_est_sr[["FSR model"]]
             meth <- meth_all_mk[dt_setting_est_sr$Marker == select_mk]
           }else if(select_st_type == "Double-back stutter"){
+            dt_result_est <- dt_result_est_dsr
             dt_st_type <- dt_sr_data[dt_sr_data$Bool_DS]
             meth_all_mk <- dt_setting_est_sr[["DSR model"]]
             meth <- meth_all_mk[dt_setting_est_sr$Marker == select_mk]
           }else if(select_st_type == "Minus 2-nt stutter"){
+            dt_result_est <- dt_result_est_m2sr
             dt_st_type <- dt_sr_data[dt_sr_data$Bool_M2S]
             meth_all_mk <- dt_setting_est_sr[["M2SR model"]]
             meth <- meth_all_mk[dt_setting_est_sr$Marker == select_mk]
           }else{
+            dt_result_est <- NULL
             dt_st_type <- dt_sr_data[rep(FALSE, nrow(dt_sr_data))]
             meth_all_mk <- NULL
             meth <- NULL
@@ -333,10 +412,32 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
 
           index_mk <- which(markers_auto == select_mk)
 
+          if(nrow(dt_result_est) > 0){
+            myu <- dt_result_est$Myu[index_mk]
+            slope <- dt_result_est$Slope[index_mk]
+            intercept <- dt_result_est$Intercept[index_mk]
+
+            if(!is.na(slope) && !is.na(intercept)){
+              rv_est_sr_result$slope <- slope
+              rv_est_sr_result$intercept <- intercept
+            }else if(!is.na(myu)){
+              rv_est_sr_result$slope <- 0
+              rv_est_sr_result$intercept <- myu
+            }else{
+              rv_est_sr_result$slope <- NULL
+              rv_est_sr_result$intercept <- NULL
+            }
+          }
+
           rv_est_sr_result$dt_all_mle_select_mk_bsr <- list_dt_all_mle_bsr[[index_mk]]
           rv_est_sr_result$dt_all_mle_select_mk_fsr <- list_dt_all_mle_fsr[[index_mk]]
           rv_est_sr_result$dt_all_mle_select_mk_dsr <- list_dt_all_mle_dsr[[index_mk]]
           rv_est_sr_result$dt_all_mle_select_mk_m2sr <- list_dt_all_mle_m2sr[[index_mk]]
+
+          rv_est_sr_result$index_mle_best_select_mk_bsr <- index_mle_best_all_mk_bsr[index_mk]
+          rv_est_sr_result$index_mle_best_select_mk_fsr <- index_mle_best_all_mk_fsr[index_mk]
+          rv_est_sr_result$index_mle_best_select_mk_dsr <- index_mle_best_all_mk_dsr[index_mk]
+          rv_est_sr_result$index_mle_best_select_mk_m2sr <- index_mle_best_all_mk_m2sr[index_mk]
 
           rv_est_sr_result$index_converged_select_mk_bsr <- index_converged_list_all_mk_bsr[[index_mk]]
           rv_est_sr_result$index_converged_select_mk_fsr <- index_converged_list_all_mk_fsr[[index_mk]]
@@ -397,6 +498,12 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
       observeEvent(input$act_all_mle_bsr, {
         showModal(modalDialog(
           title = "All MLE attempts (BSR)",
+
+          div(
+            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+          ),
+
           dataTableOutput(session$ns("dt_all_mle_bsr")),
           easyClose = TRUE,
           footer = NULL
@@ -405,13 +512,16 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
       })
 
       output$dt_all_mle_bsr <- renderDataTable({
+        req(rv_est_sr_result$index_mle_best_select_mk_bsr)
         req(rv_est_sr_result$index_converged_select_mk_bsr)
         req(rv_est_sr_result$dt_all_mle_select_mk_bsr)
 
+        index_mle_best <- rv_est_sr_result$index_mle_best_select_mk_bsr
         index_converged <- rv_est_sr_result$index_converged_select_mk_bsr
         dt_all_mle <- rv_est_sr_result$dt_all_mle_select_mk_bsr
 
-        name_converged <- paste0("MLE ", index_converged)
+        name_best <- paste0("MLE ", index_mle_best)
+        name_converged <- setdiff(paste0("MLE ", index_converged), name_best)
 
         datatable(
           dt_all_mle,
@@ -421,12 +531,19 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         ) %>%
           formatSignif(columns = paste0("MLE ", 1:(ncol(dt_all_mle) - 1)), digits = 6) %>%
           formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
-          formatStyle(name_converged, backgroundColor = "lightblue")
+          formatStyle(name_best, backgroundColor = "#BFEFFF") %>%
+          formatStyle(name_converged, backgroundColor = "#ADD8E6")
       })
 
       observeEvent(input$act_all_mle_fsr, {
         showModal(modalDialog(
           title = "All MLE attempts (FSR)",
+
+          div(
+            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+          ),
+
           dataTableOutput(session$ns("dt_all_mle_fsr")),
           easyClose = TRUE,
           footer = NULL
@@ -435,13 +552,16 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
       })
 
       output$dt_all_mle_fsr <- renderDataTable({
+        req(rv_est_sr_result$index_mle_best_select_mk_fsr)
         req(rv_est_sr_result$index_converged_select_mk_fsr)
         req(rv_est_sr_result$dt_all_mle_select_mk_fsr)
 
+        index_mle_best <- rv_est_sr_result$index_mle_best_select_mk_fsr
         index_converged <- rv_est_sr_result$index_converged_select_mk_fsr
         dt_all_mle <- rv_est_sr_result$dt_all_mle_select_mk_fsr
 
-        name_converged <- paste0("MLE ", index_converged)
+        name_best <- paste0("MLE ", index_mle_best)
+        name_converged <- setdiff(paste0("MLE ", index_converged), name_best)
 
         datatable(
           dt_all_mle,
@@ -451,12 +571,19 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         ) %>%
           formatSignif(columns = paste0("MLE ", 1:(ncol(dt_all_mle) - 1)), digits = 6) %>%
           formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
-          formatStyle(name_converged, backgroundColor = "lightblue")
+          formatStyle(name_best, backgroundColor = "#BFEFFF") %>%
+          formatStyle(name_converged, backgroundColor = "#ADD8E6")
       })
 
       observeEvent(input$act_all_mle_dsr, {
         showModal(modalDialog(
           title = "All MLE attempts (DSR)",
+
+          div(
+            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+          ),
+
           dataTableOutput(session$ns("dt_all_mle_dsr")),
           easyClose = TRUE,
           footer = NULL
@@ -465,13 +592,16 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
       })
 
       output$dt_all_mle_dsr <- renderDataTable({
+        req(rv_est_sr_result$index_mle_best_select_mk_dsr)
         req(rv_est_sr_result$index_converged_select_mk_dsr)
         req(rv_est_sr_result$dt_all_mle_select_mk_dsr)
 
+        index_mle_best <- rv_est_sr_result$index_mle_best_select_mk_dsr
         index_converged <- rv_est_sr_result$index_converged_select_mk_dsr
         dt_all_mle <- rv_est_sr_result$dt_all_mle_select_mk_dsr
 
-        name_converged <- paste0("MLE ", index_converged)
+        name_best <- paste0("MLE ", index_mle_best)
+        name_converged <- setdiff(paste0("MLE ", index_converged), name_best)
 
         datatable(
           dt_all_mle,
@@ -481,12 +611,19 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         ) %>%
           formatSignif(columns = paste0("MLE ", 1:(ncol(dt_all_mle) - 1)), digits = 6) %>%
           formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
-          formatStyle(name_converged, backgroundColor = "lightblue")
+          formatStyle(name_best, backgroundColor = "#BFEFFF") %>%
+          formatStyle(name_converged, backgroundColor = "#ADD8E6")
       })
 
       observeEvent(input$act_all_mle_m2sr, {
         showModal(modalDialog(
           title = "All MLE attempts (M2SR)",
+
+          div(
+            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+          ),
+
           dataTableOutput(session$ns("dt_all_mle_m2sr")),
           easyClose = TRUE,
           footer = NULL
@@ -495,13 +632,16 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
       })
 
       output$dt_all_mle_m2sr <- renderDataTable({
+        req(rv_est_sr_result$index_mle_best_select_mk_m2sr)
         req(rv_est_sr_result$index_converged_select_mk_m2sr)
         req(rv_est_sr_result$dt_all_mle_select_mk_m2sr)
 
+        index_mle_best <- rv_est_sr_result$index_mle_best_select_mk_m2sr
         index_converged <- rv_est_sr_result$index_converged_select_mk_m2sr
         dt_all_mle <- rv_est_sr_result$dt_all_mle_select_mk_m2sr
 
-        name_converged <- paste0("MLE ", index_converged)
+        name_best <- paste0("MLE ", index_mle_best)
+        name_converged <- setdiff(paste0("MLE ", index_converged), name_best)
 
         datatable(
           dt_all_mle,
@@ -511,7 +651,8 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         ) %>%
           formatSignif(columns = paste0("MLE ", 1:(ncol(dt_all_mle) - 1)), digits = 6) %>%
           formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
-          formatStyle(name_converged, backgroundColor = "lightblue")
+          formatStyle(name_best, backgroundColor = "#BFEFFF") %>%
+          formatStyle(name_converged, backgroundColor = "#ADD8E6")
       })
 
       output$ui_plot_sr <- renderUI({
@@ -521,6 +662,8 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         req(rv_est_sr_result$dt_st_mk)
         req(rv_est_sr_result$dt_kit_mk)
         req(rv_est_sr_result$markers_auto)
+        req(rv_est_sr_result$slope)
+        req(rv_est_sr_result$intercept)
 
         plotOutput(session$ns("plot_sr"), width = "100%", height = "300px")
       })
@@ -532,6 +675,9 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         req(rv_est_sr_result$dt_st_mk)
         req(rv_est_sr_result$dt_kit_mk)
         req(rv_est_sr_result$markers_auto)
+        req(rv_est_sr_result$slope)
+        req(rv_est_sr_result$intercept)
+
         dt_st_type <- rv_est_sr_result$dt_st_type
         meth_all_mk <- rv_est_sr_result$meth_all_mk
         meth <- rv_est_sr_result$meth
@@ -539,6 +685,8 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         dt_kit_mk <- rv_est_sr_result$dt_kit_mk
         markers_auto <- rv_est_sr_result$markers_auto
         df_select_sr <- rv_est_sr_result$df_select_sr  # It can be either null or not.
+        slope <- rv_est_sr_result$slope
+        intercept <- rv_est_sr_result$intercept
 
         select_mk <- input$select_mk
         select_st_type <- input$select_st_type
@@ -621,6 +769,7 @@ est_sr_result_server <- function(id, path_pack, rv_est_sr){
         }
 
         base_plot +
+          geom_abline(slope = slope, intercept = intercept, linetype = "solid", color = "#6C7B8B") +
           labs(x = x_lab, y = ylab, color = NULL) +
           scale_color_manual(values = color_values) +
           theme_minimal() +

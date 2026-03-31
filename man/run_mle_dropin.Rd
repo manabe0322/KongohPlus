@@ -12,7 +12,7 @@ run_mle_dropin(
   min_scale_di,
   max_scale_di,
   max_iter,
-  num_converged,
+  num_consistent,
   max_mle_runs,
   max_diff_like,
   waiter_ui = NULL
@@ -33,7 +33,7 @@ run_mle_dropin(
 
 \item{max_iter}{Maximum number of iterations in one MLE run}
 
-\item{num_converged}{Number of converged MLE runs before stopping}
+\item{num_consistent}{Minimum number of consistent runs}
 
 \item{max_mle_runs}{Maximum number of MLE attempts}
 

@@ -88,7 +88,7 @@ est_dropin_server <- function(id, path_pack){
       rv_est_dropin_setting$min_scale_di <- 0.01
       rv_est_dropin_setting$max_scale_di <- 100
       rv_est_dropin_setting$max_iter <- 500
-      rv_est_dropin_setting$num_converged <- 3
+      rv_est_dropin_setting$num_consistent <- 3
       rv_est_dropin_setting$max_mle_runs <- 10
       rv_est_dropin_setting$max_diff_like <- 0.005
       rv_est_dropin_setting$bool_correct_mle_shape_di <- TRUE
@@ -153,8 +153,8 @@ est_dropin_server <- function(id, path_pack){
           fluidRow(
             column(6,
                    numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_dropin_setting$max_iter),
-                   numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", rv_est_dropin_setting$num_converged),
-                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_dropin_setting$max_mle_runs),
+                   numericInput(session$ns("max_mle_runs"), label = "Number of MLE attempts", value = rv_est_dropin_setting$max_mle_runs),
+                   numericInput(session$ns("num_consistent"), label = "Minimum number of consistent runs", rv_est_dropin_setting$num_consistent),
                    numericInput(session$ns("max_diff_like"), label = "Reproducibility threshold (log10-likelihood difference)", value = rv_est_dropin_setting$max_diff_like)
             ),
             column(6,
@@ -181,12 +181,12 @@ est_dropin_server <- function(id, path_pack){
         rv_est_dropin_setting$bool_correct_mle_shape_di <- TRUE
 
         if(!is.numeric(min_shape_di) || min_shape_di <= 0){
-          showFeedbackDanger(inputId = "min_shape_di", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "min_shape_di", text = "Value must be a positive number.")
           rv_est_dropin_setting$bool_correct_mle_shape_di <- FALSE
         }
 
         if(!is.numeric(max_shape_di) || max_shape_di <= 0){
-          showFeedbackDanger(inputId = "max_shape_di", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "max_shape_di", text = "Value must be a positive number.")
           rv_est_dropin_setting$bool_correct_mle_shape_di <- FALSE
         }
 
@@ -206,12 +206,12 @@ est_dropin_server <- function(id, path_pack){
         rv_est_dropin_setting$bool_correct_mle_scale_di <- TRUE
 
         if(!is.numeric(min_scale_di) || min_scale_di <= 0){
-          showFeedbackDanger(inputId = "min_scale_di", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "min_scale_di", text = "Value must be a positive number.")
           rv_est_dropin_setting$bool_correct_mle_scale_di <- FALSE
         }
 
         if(!is.numeric(max_scale_di) || max_scale_di <= 0){
-          showFeedbackDanger(inputId = "max_scale_di", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "max_scale_di", text = "Value must be a positive number.")
           rv_est_dropin_setting$bool_correct_mle_scale_di <- FALSE
         }
 
@@ -229,34 +229,34 @@ est_dropin_server <- function(id, path_pack){
         bool_correct_advanced_1 <- TRUE
 
         if(!is.integer(max_iter) || max_iter <= 0){
-          showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
+          showFeedbackDanger(inputId = "max_iter", text = "Value must be a positive integer.")
           bool_correct_advanced_1 <- FALSE
         }
 
         rv_est_dropin_setting$bool_correct_advanced_1 <- bool_correct_advanced_1
       })
 
-      observeEvent(input$num_converged | input$max_mle_runs, {
-        num_converged <- input$num_converged
+      observeEvent(input$num_consistent | input$max_mle_runs, {
+        num_consistent <- input$num_consistent
         max_mle_runs <- input$max_mle_runs
 
-        hideFeedback("num_converged")
+        hideFeedback("num_consistent")
         hideFeedback("max_mle_runs")
         bool_correct_advanced_2 <- TRUE
 
-        if(!is.integer(num_converged) || num_converged <= 0){
-          showFeedbackDanger(inputId = "num_converged", text = "Value must be an integer greater than zero.")
+        if(!is.integer(num_consistent) || num_consistent <= 0){
+          showFeedbackDanger(inputId = "num_consistent", text = "Value must be a positive integer.")
           bool_correct_advanced_2 <- FALSE
         }
 
         if(!is.integer(max_mle_runs) || max_mle_runs <= 0){
-          showFeedbackDanger(inputId = "max_mle_runs", text = "Value must be an integer greater than zero.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "Value must be a positive integer.")
           bool_correct_advanced_2 <- FALSE
         }
 
-        if(is.integer(num_converged) && is.integer(max_mle_runs) && num_converged > max_mle_runs){
-          showFeedbackDanger(inputId = "num_converged", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_mle_runs", text = "Minimum value cannot be greater than maximum value.")
+        if(is.integer(num_consistent) && is.integer(max_mle_runs) && num_consistent > max_mle_runs){
+          showFeedbackDanger(inputId = "num_consistent", text = "The minimum number of consistent runs cannot exceed the number of MLE attempts.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "The minimum number of consistent runs cannot exceed the number of MLE attempts.")
           bool_correct_advanced_2 <- FALSE
         }
 
@@ -270,7 +270,7 @@ est_dropin_server <- function(id, path_pack){
         bool_correct_advanced_3 <- TRUE
 
         if(!is.numeric(max_diff_like) || max_diff_like < 0){
-          showFeedbackDanger(inputId = "max_diff_like", text = "Value must be a numeric value greater than zero.")
+          showFeedbackDanger(inputId = "max_diff_like", text = "Value must be a positive number.")
           bool_correct_advanced_3 <- FALSE
         }
 
@@ -297,7 +297,7 @@ est_dropin_server <- function(id, path_pack){
         rv_est_dropin_setting$min_scale_di <- input$min_scale_di
         rv_est_dropin_setting$max_scale_di <- input$max_scale_di
         rv_est_dropin_setting$max_iter <- input$max_iter
-        rv_est_dropin_setting$num_converged <- input$num_converged
+        rv_est_dropin_setting$num_consistent <- input$num_consistent
         rv_est_dropin_setting$max_mle_runs <- input$max_mle_runs
         rv_est_dropin_setting$max_diff_like <- input$max_diff_like
         removeModal()
@@ -323,7 +323,7 @@ est_dropin_server <- function(id, path_pack){
         req(rv_est_dropin_setting$min_scale_di)
         req(rv_est_dropin_setting$max_scale_di)
         req(rv_est_dropin_setting$max_iter)
-        req(rv_est_dropin_setting$num_converged)
+        req(rv_est_dropin_setting$num_consistent)
         req(rv_est_dropin_setting$max_mle_runs)
         req(rv_est_dropin_setting$max_diff_like)
         req(rv_est_dropin_setting$dt_kit)
@@ -336,7 +336,7 @@ est_dropin_server <- function(id, path_pack){
         min_scale_di <- rv_est_dropin_setting$min_scale_di
         max_scale_di <- rv_est_dropin_setting$max_scale_di
         max_iter <- rv_est_dropin_setting$max_iter
-        num_converged <- rv_est_dropin_setting$num_converged
+        num_consistent <- rv_est_dropin_setting$num_consistent
         max_mle_runs <- rv_est_dropin_setting$max_mle_runs
         max_diff_like <- rv_est_dropin_setting$max_diff_like
         dt_kit <- rv_est_dropin_setting$dt_kit
@@ -353,7 +353,7 @@ est_dropin_server <- function(id, path_pack){
           waiter_ui$hide()
           showModal(modalDialog(title = "Error", HTML(error_message), easyClose = TRUE, footer = NULL))
         }else{
-          data_est_dropin <- try(estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui))
+          data_est_dropin <- try(estimate_dropin_params(dt_ntc, dt_kit, at_dropin, min_shape_di, max_shape_di, min_scale_di, max_scale_di, max_iter, num_consistent, max_mle_runs, max_diff_like, waiter_ui))
           if(inherits(data_est_dropin, "try-error")){
             waiter_ui$hide()
             showModal(modalDialog(title = "Error", "An unexpected error has occurred.", easyClose = TRUE, footer = NULL))
@@ -366,7 +366,7 @@ est_dropin_server <- function(id, path_pack){
             data_est_dropin$min_scale_di <- min_scale_di
             data_est_dropin$max_scale_di <- max_scale_di
             data_est_dropin$max_iter <- max_iter
-            data_est_dropin$num_converged <- num_converged
+            data_est_dropin$num_consistent <- num_consistent
             data_est_dropin$max_mle_runs <- max_mle_runs
             data_est_dropin$max_diff_like <- max_diff_like
             rv_est_dropin_setting$data_est_dropin <- data_est_dropin
@@ -384,6 +384,7 @@ est_dropin_server <- function(id, path_pack){
           rv_est_dropin_result$dt_est_dropin <- data_est_dropin$dt_est_dropin
           rv_est_dropin_result$dt_dropin_data <- data_est_dropin$dt_dropin_data
           rv_est_dropin_result$dt_all_mle <- data_est_dropin$dt_all_mle
+          rv_est_dropin_result$index_mle_best <- data_est_dropin$index_mle_best
           rv_est_dropin_result$index_converged <- data_est_dropin$index_converged
 
           enable("act_saveas_est_dropin_1")
@@ -392,6 +393,7 @@ est_dropin_server <- function(id, path_pack){
           rv_est_dropin_result$dt_est_dropin <- NULL
           rv_est_dropin_result$dt_dropin_data <- NULL
           rv_est_dropin_result$dt_all_mle <- NULL
+          rv_est_dropin_result$index_mle_best <- NULL
           rv_est_dropin_result$index_converged <- NULL
 
           disable("act_saveas_est_dropin_1")
@@ -471,6 +473,12 @@ est_dropin_server <- function(id, path_pack){
       observeEvent(input$act_all_mle, {
         showModal(modalDialog(
           title = "All MLE attempts",
+
+          div(
+            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+          ),
+
           dataTableOutput(session$ns("dt_all_mle")),
           easyClose = TRUE,
           footer = NULL
@@ -479,13 +487,16 @@ est_dropin_server <- function(id, path_pack){
       })
 
       output$dt_all_mle <- renderDataTable({
-        req(rv_est_dropin_result$dt_all_mle)
+        req(rv_est_dropin_result$index_mle_best)
         req(rv_est_dropin_result$index_converged)
+        req(rv_est_dropin_result$dt_all_mle)
 
-        dt_all_mle <- rv_est_dropin_result$dt_all_mle
+        index_mle_best <- rv_est_dropin_result$index_mle_best
         index_converged <- rv_est_dropin_result$index_converged
+        dt_all_mle <- rv_est_dropin_result$dt_all_mle
 
-        name_converged <- paste0("MLE ", index_converged)
+        name_best <- paste0("MLE ", index_mle_best)
+        name_converged <- setdiff(paste0("MLE ", index_converged), name_best)
 
         datatable(
           dt_all_mle,
@@ -495,7 +506,8 @@ est_dropin_server <- function(id, path_pack){
         ) %>%
           formatSignif(columns = paste0("MLE ", 1:(ncol(dt_all_mle) - 1)), digits = 6) %>%
           formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
-          formatStyle(name_converged, backgroundColor = "lightblue")
+          formatStyle(name_best, backgroundColor = "#BFEFFF") %>%
+          formatStyle(name_converged, backgroundColor = "#ADD8E6")
       })
 
       output$warning_message <- renderUI({

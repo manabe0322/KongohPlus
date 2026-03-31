@@ -77,6 +77,7 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
       rv_est_gamma_result$dt_gamma_data <- NULL
       rv_est_gamma_result$dt_est_gamma <- NULL
       rv_est_gamma_result$dt_all_mle <- NULL
+      rv_est_gamma_result$index_mle_best <- NULL
       rv_est_gamma_result$index_converged <- NULL
 
       rv_est_gamma_result$df_select_gamma_allele <- NULL
@@ -91,6 +92,7 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
         rv_est_gamma_result$dt_gamma_data <- NULL
         rv_est_gamma_result$dt_est_gamma <- NULL
         rv_est_gamma_result$dt_all_mle <- NULL
+        rv_est_gamma_result$index_mle_best <- NULL
         rv_est_gamma_result$index_converged <- NULL
 
         rv_est_gamma_result$df_select_gamma_allele <- NULL
@@ -102,6 +104,7 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
           rv_est_gamma_result$dt_gamma_data <- data_est_gamma$dt_gamma_data
           rv_est_gamma_result$dt_est_gamma <- data_est_gamma$dt_est_gamma
           rv_est_gamma_result$dt_all_mle <- data_est_gamma$dt_all_mle
+          rv_est_gamma_result$index_mle_best <- data_est_gamma$index_mle_best
           rv_est_gamma_result$index_converged <- data_est_gamma$index_converged
 
           enable("act_saveas_est_gamma_1")
@@ -185,6 +188,12 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
       observeEvent(input$act_all_mle, {
         showModal(modalDialog(
           title = "All MLE attempts",
+
+          div(
+            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+          ),
+
           dataTableOutput(session$ns("dt_all_mle")),
           easyClose = TRUE,
           footer = NULL
@@ -193,13 +202,16 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
       })
 
       output$dt_all_mle <- renderDataTable({
-        req(rv_est_gamma_result$dt_all_mle)
+        req(rv_est_gamma_result$index_mle_best)
         req(rv_est_gamma_result$index_converged)
+        req(rv_est_gamma_result$dt_all_mle)
 
-        dt_all_mle <- rv_est_gamma_result$dt_all_mle
+        index_mle_best <- rv_est_gamma_result$index_mle_best
         index_converged <- rv_est_gamma_result$index_converged
+        dt_all_mle <- rv_est_gamma_result$dt_all_mle
 
-        name_converged <- paste0("MLE ", index_converged)
+        name_best <- paste0("MLE ", index_mle_best)
+        name_converged <- setdiff(paste0("MLE ", index_converged), name_best)
 
         datatable(
           dt_all_mle,
@@ -209,7 +221,8 @@ est_gamma_result_server <- function(id, path_pack, rv_est_gamma){
         ) %>%
           formatSignif(columns = paste0("MLE ", 1:(ncol(dt_all_mle) - 1)), digits = 6) %>%
           formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
-          formatStyle(name_converged, backgroundColor = "lightblue")
+          formatStyle(name_best, backgroundColor = "#BFEFFF") %>%
+          formatStyle(name_converged, backgroundColor = "#ADD8E6")
       })
 
       output$warning_message <- renderUI({

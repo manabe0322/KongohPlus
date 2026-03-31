@@ -50,11 +50,11 @@ create_dt_ae_data <- function(peak_list, height_list){
 #' @param min_alpha The minimum alpha
 #' @param max_alpha The maximum alpha
 #' @param max_iter Maximum number of iterations in one MLE run
-#' @param num_converged Number of converged MLE runs before stopping
+#' @param num_consistent Minimum number of consistent runs
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
-run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui = NULL){
+run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_consistent, max_mle_runs, max_diff_like, waiter_ui = NULL){
 
   # --- Define the likelihood function --- #
 
@@ -85,14 +85,13 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_con
   n_mk <- nrow(prop_ae_data_use)
   current_opt <- NULL
   current_score <- Inf
-  count_mle <- 0
   count_solution <- 0
   init_list <- list()
   opt_list <- list()
   est_par_list <- list()
   index_converged <- integer(0)
-  repeat{
-    count_mle <- count_mle + 1
+
+  for(count_mle in 1:max_mle_runs){
 
     if(!is.null(waiter_ui)){
       waiter_ui$update(
@@ -121,8 +120,6 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_con
       fn = like_fun_ae,
       control = list(maxit = max_iter)
     )
-
-    print(opt)
 
     score <- opt$value
 
@@ -153,27 +150,21 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_con
       count_solution <- count_solution + 1
       index_converged <- c(index_converged, count_mle)
     }
-
-    if(count_solution == num_converged){
-      break
-    }else if(count_mle == max_mle_runs){
-      current_opt <- NULL
-      break
-    }
   }
 
   # --- Create the warning message --- #
 
-  if(count_solution == num_converged){
+  if(length(index_converged) >= num_consistent){
     warning_message <- NULL
   }else{
-    warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged. This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
+    warning_message <- paste0("- The number of consistent runs is below ", num_consistent, ". This may indicate the presence of local optima.<br>")
   }
 
   # --- Extract the estimated parameters --- #
 
   dt_all_mle <- as.data.table(est_par_list)
-  mle_best <- dt_all_mle[[which.max(as.numeric(dt_all_mle[1, ]))]]
+  index_mle_best <- which.max(as.numeric(dt_all_mle[1, ]))
+  mle_best <- dt_all_mle[[index_mle_best]]
   est_param <- mle_best[2:(n_mk + 1)]
   names(est_param) <- paste0("alpha[", 1:n_mk, "]")
 
@@ -183,7 +174,13 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_con
   dt_all_mle[, Parameter := c("Log10 (likelihood)", paste0("alpha[", 1:n_mk, "]"))]
   setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
-  return(list(dt_all_mle = dt_all_mle, est_param = est_param, init_list = init_list, opt_list = opt_list, index_converged = index_converged, warning_message = warning_message))
+  return(list("dt_all_mle" = dt_all_mle,
+              "est_param" = est_param,
+              "init_list" = init_list,
+              "opt_list" = opt_list,
+              "index_mle_best" = index_mle_best,
+              "index_converged" = index_converged,
+              "warning_message" = warning_message))
 }
 
 #' estimate_lsae
@@ -196,13 +193,13 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_con
 #' @param min_alpha The minimum alpha
 #' @param max_alpha The maximum alpha
 #' @param max_iter Maximum number of iterations in one MLE run
-#' @param num_converged Number of converged MLE runs before stopping
+#' @param num_consistent Minimum number of consistent runs
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
 estimate_lsae <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
                           min_alpha, max_alpha,
-                          max_iter, num_converged, max_mle_runs, max_diff_like,
+                          max_iter, num_consistent, max_mle_runs, max_diff_like,
                           waiter_ui = NULL){
 
   # --- Extract the specified conditions --- #
@@ -256,11 +253,12 @@ estimate_lsae <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
 
   # --- Perform MLE for LSAE --- #
 
-  tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_converged, max_mle_runs, max_diff_like, waiter_ui)
+  tmp <- run_mle_ae(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_consistent, max_mle_runs, max_diff_like, waiter_ui)
   dt_all_mle <- tmp$dt_all_mle
   alpha <- tmp$est_param
   init_list <- tmp$init_list
   opt_list <- tmp$opt_list
+  index_mle_best <- tmp$index_mle_best
   index_converged <- tmp$index_converged
   warning_message <- tmp$warning_message
 
@@ -273,6 +271,7 @@ estimate_lsae <- function(dt_exp, dt_gt, list_dt_average_sr, dt_setting_est_par,
               "dt_all_mle" = dt_all_mle,
               "init_list" = init_list,
               "opt_list" = opt_list,
+              "index_mle_best" = index_mle_best,
               "index_converged" = index_converged,
               "warning_message" = warning_message,
               "dt_prop_ae_data_use" = dt_prop_ae_data_use))

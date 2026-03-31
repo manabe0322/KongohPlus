@@ -103,7 +103,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
       rv_est_sr_setting$min_sigma <- 1
       rv_est_sr_setting$max_sigma <- 10000
       rv_est_sr_setting$max_iter <- 500
-      rv_est_sr_setting$num_converged <- 3
+      rv_est_sr_setting$num_consistent <- 3
       rv_est_sr_setting$max_mle_runs <- 10
       rv_est_sr_setting$max_diff_like <- 0.005
       rv_est_sr_setting$bool_correct_mle_slope <- TRUE
@@ -183,8 +183,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
           fluidRow(
             column(6,
                    numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_sr_setting$max_iter),
-                   numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_est_sr_setting$num_converged),
-                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_sr_setting$max_mle_runs),
+                   numericInput(session$ns("max_mle_runs"), label = "Number of MLE attempts", value = rv_est_sr_setting$max_mle_runs),
+                   numericInput(session$ns("num_consistent"), label = "Minimum number of consistent runs", value = rv_est_sr_setting$num_consistent),
                    numericInput(session$ns("max_diff_like"), label = "Reproducibility threshold (log10-likelihood difference)", value = rv_est_sr_setting$max_diff_like)
             ),
             column(6,
@@ -225,8 +225,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         }
 
         if(is.numeric(min_slope) && is.numeric(max_slope) && max_slope < min_slope){
-          showFeedbackDanger(inputId = "min_slope", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_slope", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "min_slope", text = "The minimum value cannot exceed the maximum value.")
+          showFeedbackDanger(inputId = "max_slope", text = "The minimum value cannot exceed the maximum value.")
           rv_est_sr_setting$bool_correct_mle_slope <- FALSE
         }
       })
@@ -250,8 +250,8 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         }
 
         if(is.numeric(min_intercept) && is.numeric(max_intercept) && max_intercept < min_intercept){
-          showFeedbackDanger(inputId = "min_intercept", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_intercept", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "min_intercept", text = "The minimum value cannot exceed the maximum value.")
+          showFeedbackDanger(inputId = "max_intercept", text = "The minimum value cannot exceed the maximum value.")
           rv_est_sr_setting$bool_correct_mle_intercept <- FALSE
         }
       })
@@ -265,18 +265,18 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         rv_est_sr_setting$bool_correct_mle_myu <- TRUE
 
         if(!is.numeric(min_myu) || min_myu <= 0){
-          showFeedbackDanger(inputId = "min_myu", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "min_myu", text = "Value must be a positive number.")
           rv_est_sr_setting$bool_correct_mle_myu <- FALSE
         }
 
         if(!is.numeric(max_myu) || max_myu <= 0){
-          showFeedbackDanger(inputId = "max_myu", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "max_myu", text = "Value must be a positive number.")
           rv_est_sr_setting$bool_correct_mle_myu <- FALSE
         }
 
         if(is.numeric(min_myu) && is.numeric(max_myu) && max_myu < min_myu){
-          showFeedbackDanger(inputId = "min_myu", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_myu", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "min_myu", text = "The minimum value cannot exceed the maximum value.")
+          showFeedbackDanger(inputId = "max_myu", text = "The minimum value cannot exceed the maximum value.")
           rv_est_sr_setting$bool_correct_mle_myu <- FALSE
         }
       })
@@ -290,18 +290,18 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         rv_est_sr_setting$bool_correct_mle_sigma <- TRUE
 
         if(!is.numeric(min_sigma) || min_sigma <= 0){
-          showFeedbackDanger(inputId = "min_sigma", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "min_sigma", text = "Value must be a positive number.")
           rv_est_sr_setting$bool_correct_mle_sigma <- FALSE
         }
 
         if(!is.numeric(max_sigma) || max_sigma <= 0){
-          showFeedbackDanger(inputId = "max_sigma", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "max_sigma", text = "Value must be a positive number.")
           rv_est_sr_setting$bool_correct_mle_sigma <- FALSE
         }
 
         if(is.numeric(min_sigma) && is.numeric(max_sigma) && max_sigma < min_sigma){
-          showFeedbackDanger(inputId = "min_sigma", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_sigma", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "min_sigma", text = "The minimum value cannot exceed the maximum value.")
+          showFeedbackDanger(inputId = "max_sigma", text = "The minimum value cannot exceed the maximum value.")
           rv_est_sr_setting$bool_correct_mle_sigma <- FALSE
         }
       })
@@ -313,34 +313,34 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         bool_correct_advanced_1 <- TRUE
 
         if(!is.integer(max_iter) || max_iter <= 0){
-          showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
+          showFeedbackDanger(inputId = "max_iter", text = "Value must be a positive integer.")
           bool_correct_advanced_1 <- FALSE
         }
 
         rv_est_sr_setting$bool_correct_advanced_1 <- bool_correct_advanced_1
       })
 
-      observeEvent(input$num_converged | input$max_mle_runs, {
-        num_converged <- input$num_converged
+      observeEvent(input$num_consistent | input$max_mle_runs, {
+        num_consistent <- input$num_consistent
         max_mle_runs <- input$max_mle_runs
 
-        hideFeedback("num_converged")
+        hideFeedback("num_consistent")
         hideFeedback("max_mle_runs")
         bool_correct_advanced_2 <- TRUE
 
-        if(!is.integer(num_converged) || num_converged <= 0){
-          showFeedbackDanger(inputId = "num_converged", text = "Value must be an integer greater than zero.")
+        if(!is.integer(num_consistent) || num_consistent <= 0){
+          showFeedbackDanger(inputId = "num_consistent", text = "Value must be a positive integer.")
           bool_correct_advanced_2 <- FALSE
         }
 
         if(!is.integer(max_mle_runs) || max_mle_runs <= 0){
-          showFeedbackDanger(inputId = "max_mle_runs", text = "Value must be an integer greater than zero.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "Value must be a positive integer.")
           bool_correct_advanced_2 <- FALSE
         }
 
-        if(is.integer(num_converged) && is.integer(max_mle_runs) && num_converged > max_mle_runs){
-          showFeedbackDanger(inputId = "num_converged", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_mle_runs", text = "Minimum value cannot be greater than maximum value.")
+        if(is.integer(num_consistent) && is.integer(max_mle_runs) && num_consistent > max_mle_runs){
+          showFeedbackDanger(inputId = "num_consistent", text = "The minimum number of consistent runs cannot exceed the number of MLE attempts.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "The minimum number of consistent runs cannot exceed the number of MLE attempts.")
           bool_correct_advanced_2 <- FALSE
         }
 
@@ -354,7 +354,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         bool_correct_advanced_3 <- TRUE
 
         if(!is.numeric(max_diff_like) || max_diff_like < 0){
-          showFeedbackDanger(inputId = "max_diff_like", text = "Value must be a numeric value greater than zero.")
+          showFeedbackDanger(inputId = "max_diff_like", text = "Value must be a positive number.")
           bool_correct_advanced_3 <- FALSE
         }
 
@@ -387,7 +387,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         rv_est_sr_setting$min_sigma <- input$min_sigma
         rv_est_sr_setting$max_sigma <- input$max_sigma
         rv_est_sr_setting$max_iter <- input$max_iter
-        rv_est_sr_setting$num_converged <- input$num_converged
+        rv_est_sr_setting$num_consistent <- input$num_consistent
         rv_est_sr_setting$max_mle_runs <- input$max_mle_runs
         rv_est_sr_setting$max_diff_like <- input$max_diff_like
         removeModal()
@@ -427,7 +427,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         min_sigma <- rv_est_sr_setting$min_sigma
         max_sigma <- rv_est_sr_setting$max_sigma
         max_iter <- rv_est_sr_setting$max_iter
-        num_converged <- rv_est_sr_setting$num_converged
+        num_consistent <- rv_est_sr_setting$num_consistent
         max_mle_runs <- rv_est_sr_setting$max_mle_runs
         max_diff_like <- rv_est_sr_setting$max_diff_like
 
@@ -438,7 +438,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
         }else{
           data_est_sr <- try(estimate_average_sr(dt_exp_sr, dt_gt_sr, dt_kit, dt_setting_est_sr,
                                                  min_slope, max_slope, min_intercept, max_intercept, min_myu, max_myu, min_sigma, max_sigma,
-                                                 max_iter, num_converged, max_mle_runs, max_diff_like,
+                                                 max_iter, num_consistent, max_mle_runs, max_diff_like,
                                                  waiter_ui))
           if(inherits(data_est_sr, "try-error")){
             waiter_ui$hide()
@@ -457,7 +457,7 @@ est_sr_setting_server <- function(id, path_pack, session_est_sr_top){
             data_est_sr$min_sigma <- min_sigma
             data_est_sr$max_sigma <- max_sigma
             data_est_sr$max_iter <- max_iter
-            data_est_sr$num_converged <- num_converged
+            data_est_sr$num_consistent <- num_consistent
             data_est_sr$max_mle_runs <- max_mle_runs
             data_est_sr$max_diff_like <- max_diff_like
             rv_est_sr$data_est_sr <- data_est_sr

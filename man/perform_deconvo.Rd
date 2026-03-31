@@ -35,7 +35,7 @@ perform_deconvo(
   max_rep_ae,
   min_deg,
   max_iter,
-  num_converged,
+  num_consistent,
   max_mle_runs,
   max_diff_like,
   waiter_ui
@@ -100,7 +100,9 @@ perform_deconvo(
 
 \item{min_deg}{Minimum degradation parameter}
 
-\item{num_converged}{Number of converged MLE runs before stopping}
+\item{max_iter}{Maximum number of iterations in one MLE run}
+
+\item{num_consistent}{Minimum number of consistent runs}
 
 \item{max_mle_runs}{Maximum number of MLE attempts}
 

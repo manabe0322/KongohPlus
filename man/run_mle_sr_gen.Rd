@@ -17,7 +17,7 @@ run_mle_sr_gen(
   min_sigma,
   max_sigma,
   max_iter,
-  num_converged,
+  num_consistent,
   max_mle_runs,
   max_diff_like
 )
@@ -47,7 +47,7 @@ run_mle_sr_gen(
 
 \item{max_iter}{Maximum number of iterations in one MLE run}
 
-\item{num_converged}{Number of converged MLE runs before stopping}
+\item{num_consistent}{Minimum number of consistent runs}
 
 \item{max_mle_runs}{Maximum number of MLE attempts}
 

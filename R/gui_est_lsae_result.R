@@ -64,6 +64,7 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
       rv_est_lsae_result$dt_prop_ae_data_use <- NULL
       rv_est_lsae_result$dt_expect_ae <- NULL
       rv_est_lsae_result$dt_all_mle <- NULL
+      rv_est_lsae_result$index_mle_best <- NULL
       rv_est_lsae_result$index_converged <- NULL
       rv_est_lsae_result$df_select_lsae <- NULL
 
@@ -75,6 +76,7 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
         rv_est_lsae_result$dt_prop_ae_data_use <- NULL
         rv_est_lsae_result$dt_all_mle <- NULL
         rv_est_lsae_result$dt_expect_ae <- NULL
+        rv_est_lsae_result$index_mle_best <- NULL
         rv_est_lsae_result$index_converged <- NULL
         rv_est_lsae_result$df_select_lsae <- NULL
 
@@ -83,6 +85,7 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
           rv_est_lsae_result$dt_prop_ae_data_use <- data_est_lsae$dt_prop_ae_data_use
           rv_est_lsae_result$dt_all_mle <- data_est_lsae$dt_all_mle
           rv_est_lsae_result$dt_expect_ae <- data_est_lsae$dt_expect_ae
+          rv_est_lsae_result$index_mle_best <- data_est_lsae$index_mle_best
           rv_est_lsae_result$index_converged <- data_est_lsae$index_converged
           enable("act_saveas_est_lsae_1")
         }else{
@@ -165,6 +168,12 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
       observeEvent(input$act_all_mle, {
         showModal(modalDialog(
           title = "All MLE attempts",
+
+          div(
+            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+          ),
+
           dataTableOutput(session$ns("dt_all_mle")),
           easyClose = TRUE,
           footer = NULL
@@ -173,13 +182,16 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
       })
 
       output$dt_all_mle <- renderDataTable({
-        req(rv_est_lsae_result$dt_all_mle)
+        req(rv_est_lsae_result$index_mle_best)
         req(rv_est_lsae_result$index_converged)
+        req(rv_est_lsae_result$dt_all_mle)
 
-        dt_all_mle <- rv_est_lsae_result$dt_all_mle
+        index_mle_best <- rv_est_lsae_result$index_mle_best
         index_converged <- rv_est_lsae_result$index_converged
+        dt_all_mle <- rv_est_lsae_result$dt_all_mle
 
-        name_converged <- paste0("MLE ", index_converged)
+        name_best <- paste0("MLE ", index_mle_best)
+        name_converged <- setdiff(paste0("MLE ", index_converged), name_best)
 
         datatable(
           dt_all_mle,
@@ -189,7 +201,8 @@ est_lsae_result_server <- function(id, path_pack, rv_est_lsae){
         ) %>%
           formatSignif(columns = paste0("MLE ", 1:(ncol(dt_all_mle) - 1)), digits = 6) %>%
           formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
-          formatStyle(name_converged, backgroundColor = "lightblue")
+          formatStyle(name_best, backgroundColor = "#BFEFFF") %>%
+          formatStyle(name_converged, backgroundColor = "#ADD8E6")
       })
 
       output$warning_message <- renderUI({

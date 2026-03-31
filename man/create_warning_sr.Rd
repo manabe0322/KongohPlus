@@ -9,8 +9,7 @@ create_warning_sr(
   warning_record_list_all_mk_fsr,
   warning_record_list_all_mk_dsr,
   warning_record_list_all_mk_m2sr,
-  max_mle_runs,
-  num_converged
+  num_consistent
 )
 }
 \arguments{
@@ -22,9 +21,7 @@ create_warning_sr(
 
 \item{warning_record_list_all_mk_m2sr}{A list of the warning records for M2SR}
 
-\item{max_mle_runs}{Maximum number of MLE attempts}
-
-\item{num_converged}{Number of converged MLE runs before stopping}
+\item{num_consistent}{Minimum number of consistent runs}
 }
 \description{
 The function to create the warning message for the stutter ratios

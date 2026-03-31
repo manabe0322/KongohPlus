@@ -68,6 +68,7 @@ view_lsae_server <- function(id, path_pack){
       rv_view_lsae$dt_prop_ae_data_use <- NULL
       rv_view_lsae$dt_expect_ae <- NULL
       rv_view_lsae$dt_all_mle <- NULL
+      rv_view_lsae$index_mle_best <- NULL
       rv_view_lsae$index_converged <- NULL
       rv_view_lsae$df_select_lsae <- NULL
 
@@ -86,6 +87,7 @@ view_lsae_server <- function(id, path_pack){
           rv_view_lsae$dt_prop_ae_data_use <- data_est_lsae$dt_prop_ae_data_use
           rv_view_lsae$dt_expect_ae <- data_est_lsae$dt_expect_ae
           rv_view_lsae$dt_all_mle <- data_est_lsae$dt_all_mle
+          rv_view_lsae$index_mle_best <- data_est_lsae$index_mle_best
           rv_view_lsae$index_converged <- data_est_lsae$index_converged
         }
       })
@@ -117,6 +119,12 @@ view_lsae_server <- function(id, path_pack){
       observeEvent(input$act_all_mle, {
         showModal(modalDialog(
           title = "All MLE attempts",
+
+          div(
+            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+          ),
+
           dataTableOutput(session$ns("dt_all_mle")),
           easyClose = TRUE,
           footer = NULL
@@ -125,13 +133,16 @@ view_lsae_server <- function(id, path_pack){
       })
 
       output$dt_all_mle <- renderDataTable({
-        req(rv_view_lsae$dt_all_mle)
+        req(rv_view_lsae$index_mle_best)
         req(rv_view_lsae$index_converged)
+        req(rv_view_lsae$dt_all_mle)
 
-        dt_all_mle <- rv_view_lsae$dt_all_mle
+        index_mle_best <- rv_view_lsae$index_mle_best
         index_converged <- rv_view_lsae$index_converged
+        dt_all_mle <- rv_view_lsae$dt_all_mle
 
-        name_converged <- paste0("MLE ", index_converged)
+        name_best <- paste0("MLE ", index_mle_best)
+        name_converged <- setdiff(paste0("MLE ", index_converged), name_best)
 
         datatable(
           dt_all_mle,
@@ -141,7 +152,8 @@ view_lsae_server <- function(id, path_pack){
         ) %>%
           formatSignif(columns = paste0("MLE ", 1:(ncol(dt_all_mle) - 1)), digits = 6) %>%
           formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
-          formatStyle(name_converged, backgroundColor = "lightblue")
+          formatStyle(name_best, backgroundColor = "#BFEFFF") %>%
+          formatStyle(name_converged, backgroundColor = "#ADD8E6")
       })
 
       output$warning_message <- renderUI({
