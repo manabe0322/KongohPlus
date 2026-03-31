@@ -71,6 +71,7 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
     id,
     function(input, output, session){
       rv_deconvo_result <- reactiveValues()
+      rv_deconvo_result$index_mle_best <- NULL
       rv_deconvo_result$index_converged <- NULL
       rv_deconvo_result$dt_all_mle <- NULL
       rv_deconvo_result$dt_param <- NULL
@@ -100,6 +101,7 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         data_deconvo <- rv_deconvo$data_deconvo
         dt_anameth <- data_deconvo$dt_anameth
 
+        rv_deconvo_result$index_mle_best <- NULL
         rv_deconvo_result$index_converged <- NULL
         rv_deconvo_result$dt_all_mle <- NULL
         rv_deconvo_result$dt_param <- NULL
@@ -220,6 +222,12 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       observeEvent(input$act_all_mle, {
         showModal(modalDialog(
           title = "All MLE attempts",
+
+          div(
+            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+          ),
+
           dataTableOutput(session$ns("dt_all_mle")),
           easyClose = TRUE,
           footer = NULL
@@ -228,13 +236,16 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       })
 
       output$dt_all_mle <- renderDataTable({
+        req(rv_deconvo_result$index_mle_best)
         req(rv_deconvo_result$index_converged)
         req(rv_deconvo_result$dt_all_mle)
 
+        index_mle_best <- rv_deconvo_result$index_mle_best
         index_converged <- rv_deconvo_result$index_converged
         dt_all_mle <- rv_deconvo_result$dt_all_mle
 
-        name_converged <- paste0("MLE ", index_converged)
+        name_best <- paste0("MLE ", index_mle_best)
+        name_converged <- setdiff(paste0("MLE ", index_converged), name_best)
 
         datatable(
           dt_all_mle,
@@ -244,7 +255,8 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
         ) %>%
           formatSignif(columns = paste0("MLE ", 1:(ncol(dt_all_mle) - 1)), digits = 6) %>%
           formatStyle(names(dt_all_mle), lineHeight = "80%") %>%
-          formatStyle(name_converged, backgroundColor = "lightblue")
+          formatStyle(name_best, backgroundColor = "#BFEFFF") %>%
+          formatStyle(name_converged, backgroundColor = "#ADD8E6")
       })
 
       output$plot_ave_ph <- renderPlot({
@@ -270,11 +282,13 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
           data_hnc <- data_hnc_list[[index_hnc]]
           error_message <- data_hnc$error_message
           if(is.null(data_hnc$error_message)){
+            rv_deconvo_result$index_mle_best <- data_hnc$index_mle_best
             rv_deconvo_result$index_converged <- data_hnc$index_converged
             rv_deconvo_result$dt_all_mle <- data_hnc$dt_all_mle
             rv_deconvo_result$dt_param <- data_hnc$dt_param
             rv_deconvo_result$error_message <- NULL
           }else{
+            rv_deconvo_result$index_mle_best <- NULL
             rv_deconvo_result$index_converged <- NULL
             rv_deconvo_result$dt_all_mle <- NULL
             rv_deconvo_result$dt_param <- NULL

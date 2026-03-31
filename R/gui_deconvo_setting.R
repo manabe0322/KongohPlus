@@ -78,7 +78,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
       rv_deconvo_setting$max_rep_ae <- 5
       rv_deconvo_setting$min_deg <- 0.001
       rv_deconvo_setting$max_iter <- 500
-      rv_deconvo_setting$num_converged <- 3
+      rv_deconvo_setting$num_consistent <- 3
       rv_deconvo_setting$max_mle_runs <- 10
       rv_deconvo_setting$max_diff_like <- 0.005
       rv_deconvo_setting$bool_correct_noc <- TRUE
@@ -266,8 +266,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
           fluidRow(
             column(6,
                    numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_deconvo_setting$max_iter),
-                   numericInput(session$ns("num_converged"), label = "Minimum number of MLE attempts", value = rv_deconvo_setting$num_converged),
-                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_deconvo_setting$max_mle_runs),
+                   numericInput(session$ns("max_mle_runs"), label = "Number of MLE attempts", value = rv_deconvo_setting$max_mle_runs),
+                   numericInput(session$ns("num_consistent"), label = "Minimum number of consistent runs", value = rv_deconvo_setting$num_consistent),
                    numericInput(session$ns("max_diff_like"), label = "Reproducibility threshold (log10-likelihood difference)", value = rv_deconvo_setting$max_diff_like)
             ),
             column(6,
@@ -295,18 +295,18 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         bool_correct_advanced_temp <- TRUE
 
         if(!is.numeric(min_temp) || min_temp <= 0){
-          showFeedbackDanger(inputId = "min_temp", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "min_temp", text = "Value must be a positive number.")
           bool_correct_advanced_temp <- FALSE
         }
 
         if(!is.numeric(max_temp) || max_temp <= 0){
-          showFeedbackDanger(inputId = "max_temp", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "max_temp", text = "Value must be a positive number.")
           bool_correct_advanced_temp <- FALSE
         }
 
         if(is.numeric(min_temp) && is.numeric(max_temp) && max_temp < min_temp){
-          showFeedbackDanger(inputId = "min_temp", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_temp", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "min_temp", text = "The minimum value cannot exceed the maximum value.")
+          showFeedbackDanger(inputId = "max_temp", text = "The minimum value cannot exceed the maximum value.")
           bool_correct_advanced_temp <- FALSE
         }
 
@@ -322,18 +322,18 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         bool_correct_advanced_rep_ae <- TRUE
 
         if(!is.numeric(min_rep_ae) || min_rep_ae <= 0){
-          showFeedbackDanger(inputId = "min_rep_ae", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "min_rep_ae", text = "Value must be a positive number.")
           bool_correct_advanced_rep_ae <- FALSE
         }
 
         if(!is.numeric(max_rep_ae) || max_rep_ae <= 0){
-          showFeedbackDanger(inputId = "max_rep_ae", text = "Value must be positive.")
+          showFeedbackDanger(inputId = "max_rep_ae", text = "Value must be a positive number.")
           bool_correct_advanced_rep_ae <- FALSE
         }
 
         if(is.numeric(min_rep_ae) && is.numeric(max_rep_ae) && max_rep_ae < min_rep_ae){
-          showFeedbackDanger(inputId = "min_rep_ae", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_rep_ae", text = "Minimum value cannot be greater than maximum value.")
+          showFeedbackDanger(inputId = "min_rep_ae", text = "The minimum value cannot exceed the maximum value.")
+          showFeedbackDanger(inputId = "max_rep_ae", text = "The minimum value cannot exceed the maximum value.")
           bool_correct_advanced_rep_ae <- FALSE
         }
 
@@ -361,34 +361,34 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         bool_correct_advanced_1 <- TRUE
 
         if(!is.integer(max_iter) || max_iter <= 0){
-          showFeedbackDanger(inputId = "max_iter", text = "Value must be an integer greater than zero.")
+          showFeedbackDanger(inputId = "max_iter", text = "Value must be a positive integer.")
           bool_correct_advanced_1 <- FALSE
         }
 
         rv_deconvo_setting$bool_correct_advanced_1 <- bool_correct_advanced_1
       })
 
-      observeEvent(input$num_converged | input$max_mle_runs, {
-        num_converged <- input$num_converged
+      observeEvent(input$num_consistent | input$max_mle_runs, {
+        num_consistent <- input$num_consistent
         max_mle_runs <- input$max_mle_runs
 
-        hideFeedback("num_converged")
+        hideFeedback("num_consistent")
         hideFeedback("max_mle_runs")
         bool_correct_advanced_2 <- TRUE
 
-        if(!is.integer(num_converged) || num_converged <= 0){
-          showFeedbackDanger(inputId = "num_converged", text = "Value must be an integer greater than zero.")
+        if(!is.integer(num_consistent) || num_consistent <= 0){
+          showFeedbackDanger(inputId = "num_consistent", text = "Value must be a positive integer.")
           bool_correct_advanced_2 <- FALSE
         }
 
         if(!is.integer(max_mle_runs) || max_mle_runs <= 0){
-          showFeedbackDanger(inputId = "max_mle_runs", text = "Value must be an integer greater than zero.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "Value must be a positive integer.")
           bool_correct_advanced_2 <- FALSE
         }
 
-        if(is.integer(num_converged) && is.integer(max_mle_runs) && num_converged > max_mle_runs){
-          showFeedbackDanger(inputId = "num_converged", text = "Minimum value cannot be greater than maximum value.")
-          showFeedbackDanger(inputId = "max_mle_runs", text = "Minimum value cannot be greater than maximum value.")
+        if(is.integer(num_consistent) && is.integer(max_mle_runs) && num_consistent > max_mle_runs){
+          showFeedbackDanger(inputId = "num_consistent", text = "The minimum number of consistent runs cannot exceed the number of MLE attempts.")
+          showFeedbackDanger(inputId = "max_mle_runs", text = "The minimum number of consistent runs cannot exceed the number of MLE attempts.")
           bool_correct_advanced_2 <- FALSE
         }
 
@@ -401,8 +401,8 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         hideFeedback("max_diff_like")
         bool_correct_advanced_3 <- TRUE
 
-        if(!is.numeric(max_diff_like) || max_diff_like < 0){
-          showFeedbackDanger(inputId = "max_diff_like", text = "Value must be a numeric value greater than zero.")
+        if(!is.numeric(max_diff_like) || max_diff_like <= 0){
+          showFeedbackDanger(inputId = "max_diff_like", text = "Value must be a positive number.")
           bool_correct_advanced_3 <- FALSE
         }
 
@@ -431,7 +431,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         rv_deconvo_setting$max_rep_ae <- input$max_rep_ae
         rv_deconvo_setting$min_deg <- input$min_deg
         rv_deconvo_setting$max_iter <- input$max_iter
-        rv_deconvo_setting$num_converged <- input$num_converged
+        rv_deconvo_setting$num_consistent <- input$num_consistent
         rv_deconvo_setting$max_mle_runs <- input$max_mle_runs
         rv_deconvo_setting$max_diff_like <- input$max_diff_like
         removeModal()
@@ -464,7 +464,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
         max_rep_ae <- rv_deconvo_setting$max_rep_ae
         min_deg <- rv_deconvo_setting$min_deg
         max_iter <- rv_deconvo_setting$max_iter
-        num_converged <- rv_deconvo_setting$num_converged
+        num_consistent <- rv_deconvo_setting$num_consistent
         max_mle_runs <- rv_deconvo_setting$max_mle_runs
         max_diff_like <- rv_deconvo_setting$max_diff_like
 
@@ -495,7 +495,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
             }else{
               hnc_all <- hnc_from:hnc_to
               data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
-                                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_converged, max_mle_runs, max_diff_like,
+                                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_consistent, max_mle_runs, max_diff_like,
                                                       waiter_ui)
               data_deconvo$hnc_all <- hnc_all
               data_deconvo$theta <- theta
@@ -515,7 +515,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
               data_deconvo$max_rep_ae <- max_rep_ae
               data_deconvo$min_deg <- min_deg
               data_deconvo$max_iter <- max_iter
-              data_deconvo$num_converged <- num_converged
+              data_deconvo$num_consistent <- num_consistent
               data_deconvo$max_mle_runs <- max_mle_runs
               data_deconvo$max_diff_like <- max_diff_like
               rv_deconvo$data_deconvo <- data_deconvo

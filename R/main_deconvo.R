@@ -134,7 +134,8 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
 #' @param min_rep_ae Minimum replicate amplification efficiency
 #' @param max_rep_ae Maximum replicate amplification efficiency
 #' @param min_deg Minimum degradation parameter
-#' @param num_converged Number of converged MLE runs before stopping
+#' @param max_iter Maximum number of iterations in one MLE run
+#' @param num_consistent Minimum number of consistent runs
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
@@ -143,7 +144,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                             bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                             freq_di, shape_di, scale_di,
                             ae_use, scale_allele, scale_stutter, list_dt_average_sr,
-                            min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_converged, max_mle_runs, max_diff_like,
+                            min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_consistent, max_mle_runs, max_diff_like,
                             waiter_ui){
 
   # --- Start computation --- #
@@ -415,14 +416,13 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     # Perform MLE
     current_opt <- NULL
     current_score <- Inf
-    count_mle <- 0
     count_solution <- 0
     init_list <- list()
     opt_list <- list()
     est_par_list <- list()
     index_converged <- integer(0)
-    repeat{
-      count_mle <- count_mle + 1
+
+    for(count_mle in 1:max_mle_runs){
 
       if(!is.null(waiter_ui)){
         waiter_ui$update(
@@ -453,8 +453,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         fn = like_func,
         control = list(maxit = max_iter)
       )
-
-      print(opt)
 
       score <- opt$value
 
@@ -503,17 +501,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         count_solution <- count_solution + 1
         index_converged <- c(index_converged, count_mle)
       }
-
-      if(count_solution == num_converged){
-        break
-      }else if(count_mle == max_mle_runs){
-        break
-      }
     }
 
     # Extract estimated parameters
     dt_all_mle <- as.data.table(est_par_list)
-    mle_best <- dt_all_mle[[which.max(as.numeric(dt_all_mle[1, ]))]]
+    index_mle_best <- which.max(as.numeric(dt_all_mle[1, ]))
+    mle_best <- dt_all_mle[[index_mle_best]]
     temp <- mle_best[2:(hnc + 1)]
     deg <- mle_best[(hnc + 2):(2 * hnc + 1)]
     rep_ae <- mle_best[(2 * hnc + 2):(2 * hnc + n_rep + 1)]
@@ -526,10 +519,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     dt_all_mle[, Parameter := c("Log10 (likelihood)", rep("Template amount", hnc), rep("Degradation", hnc), rep("Replicate amplification efficiency", n_rep))]
     setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
-    if(count_solution == num_converged){
+    if(length(index_converged) >= num_consistent){
       warning_message <- NULL
     }else{
-      warning_message <- paste0("- A total of ", count_mle, " MLE runs were performed, of which ", count_solution, " converged under ", hnc, " contributor(s). This number is below the specified threshold of ", num_converged, " converged MLE runs , which may compromise the reliability of the results.<br>")
+      warning_message <- paste0("- The number of consistent runs is below ", num_consistent, ". This may indicate the presence of local optima.<br>")
     }
 
     # --- Calculate the likelihood using the estimated parameters --- #
@@ -577,6 +570,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                 "comp_time" = comp_time,
                 "init_list" = init_list,
                 "opt_list" = opt_list,
+                "index_mle_best" = index_mle_best,
                 "index_converged" = index_converged,
                 "warning_message" = warning_message,
                 "error_message" = NULL))
@@ -599,6 +593,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                 "comp_time" = NULL,
                 "init_list" = NULL,
                 "opt_list" = NULL,
+                "index_mle_best" = NULL,
                 "index_converged" = NULL,
                 "warning_message" = NULL,
                 "error_message" = error_message))
@@ -622,12 +617,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 #' @param max_rep_ae Maximum replicate amplification efficiency
 #' @param min_deg Minimum degradation parameter
 #' @param max_iter Maximum number of iterations in one MLE run
-#' @param num_converged Number of converged MLE runs before stopping
+#' @param num_consistent Minimum number of consistent runs
 #' @param max_mle_runs Maximum number of MLE attempts
 #' @param max_diff_like Reproducibility threshold (log10-likelihood difference)
 #' @param waiter_ui Information on UI for waiter
 perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
-                                    min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_converged, max_mle_runs, max_diff_like,
+                                    min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_consistent, max_mle_runs, max_diff_like,
                                     waiter_ui = NULL){
   markers_use <- dt_ignore_mk$Marker[!dt_ignore_mk$Ignore]
   n_mk <- length(markers_use)
@@ -698,7 +693,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                       bsr_fltr, fsr_fltr, dsr_fltr, m2sr_fltr, n_dropin_fltr, h_dropin_fltr,
                                       freq_di, shape_di, scale_di,
                                       ae_use, scale_allele, scale_stutter, list_dt_average_sr,
-                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_converged, max_mle_runs, max_diff_like,
+                                      min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_consistent, max_mle_runs, max_diff_like,
                                       waiter_ui))
       if(!inherits(data_hnc, "try-error")){
         data_hnc_list[[i]] <- data_hnc
@@ -711,6 +706,7 @@ perform_deconvo_all_noc <- function(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt
                                    "comp_time" = NULL,
                                    "init_list" = NULL,
                                    "opt_list" = NULL,
+                                   "index_mle_best" = NULL,
                                    "index_converged" = NULL,
                                    "warning_message" = NULL,
                                    "error_message" = "Unexpected error")
