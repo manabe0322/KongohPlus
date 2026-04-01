@@ -102,6 +102,36 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
   return(dt_pg_list)
 }
 
+#' make_temp_ordered
+#'
+#' @description The function to make ordered template amounts
+#' @param z_temp Numeric vector of unconstrained parameters used to generate ordered template amounts
+#' @param min_temp Minimum template amount
+#' @param max_temp Maximum template amount
+make_temp_ordered <- function(z_temp, min_temp, max_temp) {
+  hnc <- length(z_temp)
+
+  log10_min_temp <- log10(min_temp)
+  log10_max_temp <- log10(max_temp)
+
+  u <- plogis(z_temp)
+
+  log10temp <- numeric(hnc)
+
+  # smallest contributor
+  log10temp[hnc] <- log10_min_temp + u[hnc] * (log10_max_temp - log10_min_temp)
+
+  # build upward so that log10temp[i] >= log10temp[i+1]
+  if (hnc >= 2) {
+    for (i in (hnc - 1):1) {
+      log10temp[i] <- log10temp[i + 1] + u[i] * (log10_max_temp - log10temp[i + 1])
+    }
+  }
+
+  temp <- 10^log10temp
+  return(temp)
+}
+
 #' perform_deconvo
 #'
 #' @description The function to perform mixture deconvolution
@@ -373,17 +403,14 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     # --- Optimization --- #
 
-    # log10 scaling
-    log10_min_temp <- log10(min_temp)
-    log10_max_temp <- log10(max_temp)
-
     # likelihood function
     like_func <- function(z){
 
       # temp
-      u_temp <- plogis(z[1:hnc])
-      log10temp <- log10_min_temp + u_temp * (log10_max_temp - log10_min_temp)
-      temp <- 10^log10temp
+      temp <- make_temp_ordered(z[1:hnc], min_temp, max_temp)
+      #u_temp <- plogis(z[1:hnc])
+      #log10temp <- log10_min_temp + u_temp * (log10_max_temp - log10_min_temp)
+      #temp <- 10^log10temp
 
       # deg
       u_deg <- plogis(z[(hnc + 1):(2 * hnc)])
@@ -460,8 +487,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       est_z <- opt$par
 
       # Back-transform to the original scales for temp
-      u_temp <- plogis(est_z[1:hnc])  # 0-1 scale via logistic transform
-      temp <- 10^(log10_min_temp + u_temp * (log10_max_temp - log10_min_temp))  # back-transform to the original scales
+      temp <- make_temp_ordered(est_z[1:hnc], min_temp, max_temp)
 
       # Back-transform to the original scales for deg
       u_deg  <- plogis(est_z[(hnc + 1):(2 * hnc)])  # 0-1 scale via logistic transform
@@ -474,11 +500,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         u_rep <- plogis(est_z[(2 * hnc + 1):(2 * hnc + n_rep - 1)])  # 0-1 scale via logistic transform
         rep_ae <- c(1, min_rep_ae + (max_rep_ae - min_rep_ae) * u_rep)  # back-transform to the original scales
       }
-
-      # Descending order for estimated temp
-      index_order <- order(temp, decreasing = TRUE)
-      temp <- temp[index_order]
-      deg <- deg[index_order]
 
       est_par_list[[count_mle]] <- c(- score, temp, deg, rep_ae)
 
