@@ -150,11 +150,15 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_con
       count_solution <- count_solution + 1
       index_converged <- c(index_converged, count_mle)
     }
+
+    if(length(index_converged) == num_consistent){
+      break
+    }
   }
 
   # --- Create the warning message --- #
 
-  if(length(index_converged) >= num_consistent){
+  if(length(index_converged) == num_consistent){
     warning_message <- NULL
   }else{
     warning_message <- paste0("- The number of consistent runs is below ", num_consistent, ". This may indicate the presence of local optima.<br>")

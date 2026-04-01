@@ -408,9 +408,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
       # temp
       temp <- make_temp_ordered(z[1:hnc], min_temp, max_temp)
-      #u_temp <- plogis(z[1:hnc])
-      #log10temp <- log10_min_temp + u_temp * (log10_max_temp - log10_min_temp)
-      #temp <- 10^log10temp
 
       # deg
       u_deg <- plogis(z[(hnc + 1):(2 * hnc)])
@@ -522,6 +519,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         count_solution <- count_solution + 1
         index_converged <- c(index_converged, count_mle)
       }
+
+      if(length(index_converged) == num_consistent){
+        break
+      }
     }
 
     # Extract estimated parameters
@@ -540,7 +541,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     dt_all_mle[, Parameter := c("Log10 (likelihood)", rep("Template amount", hnc), rep("Degradation", hnc), rep("Replicate amplification efficiency", n_rep))]
     setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
-    if(length(index_converged) >= num_consistent){
+    if(length(index_converged) == num_consistent){
       warning_message <- NULL
     }else{
       warning_message <- paste0("- The number of consistent runs is below ", num_consistent, ". This may indicate the presence of local optima.<br>")

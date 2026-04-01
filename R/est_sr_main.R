@@ -499,14 +499,18 @@ run_mle_sr_gen <- function(mk, stutter_type, x_al, y_sr, tap, min_slope, max_slo
       count_solution <- count_solution + 1
       index_converged <- c(index_converged, count_mle)
     }
+
+    if(length(index_converged) == num_consistent){
+      break
+    }
   }
 
   # --- Create the warning message --- #
 
-  if(length(index_converged) >= num_consistent){
+  if(length(index_converged) == num_consistent){
     warning_record <- NULL
   }else{
-    warning_record <- paste0("&nbsp; &nbsp; - ", mk, ", ", stutter_type, " (", count_solution, ")")
+    warning_record <- paste0("&nbsp; &nbsp; - ", mk, ", ", stutter_type)
   }
 
   # --- Extract the estimated parameters --- #
@@ -639,14 +643,18 @@ run_mle_sr_uni <- function(mk, stutter_type, y_sr, tap, min_myu, max_myu, min_si
       count_solution <- count_solution + 1
       index_converged <- c(index_converged, count_mle)
     }
+
+    if(length(index_converged) == num_consistent){
+      break
+    }
   }
 
   # --- Create the warning message --- #
 
-  if(length(index_converged) >= num_consistent){
+  if(length(index_converged) == num_consistent){
     warning_record <- NULL
   }else{
-    warning_record <- paste0("&nbsp; &nbsp; - ", mk, ", ", stutter_type, " (", count_solution, ")")
+    warning_record <- paste0("&nbsp; &nbsp; - ", mk, ", ", stutter_type)
   }
 
   # --- Extract the estimated parameters --- #

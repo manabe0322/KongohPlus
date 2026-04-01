@@ -212,7 +212,7 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
           fluidRow(
             column(6,
                    numericInput(session$ns("max_iter"), label = "Maximum number of iterations", value = rv_est_gamma_setting$max_iter),
-                   numericInput(session$ns("max_mle_runs"), label = "Number of MLE attempts", value = rv_est_gamma_setting$max_mle_runs),
+                   numericInput(session$ns("max_mle_runs"), label = "Maximum number of MLE attempts", value = rv_est_gamma_setting$max_mle_runs),
                    numericInput(session$ns("num_consistent"), label = "Minimum number of consistent runs", value = rv_est_gamma_setting$num_consistent),
                    numericInput(session$ns("max_diff_like"), label = "Reproducibility threshold (log10-likelihood difference)", value = rv_est_gamma_setting$max_diff_like)
             ),
