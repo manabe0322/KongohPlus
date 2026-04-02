@@ -11,6 +11,7 @@ params:
   user_name: NA
   min_gt_prob_display: NA
   max_gtc_display: NA
+  ver_soft: NA
   dt_csp: NA
   fn_csp: NA
   fn_af: NA
@@ -29,7 +30,7 @@ params:
   max_rep_ae: NA
   min_deg: NA
   max_iter: NA
-  num_converged: NA
+  num_consistent: NA
   max_mle_runs: NA
   max_diff_like: NA
   theta: NA
@@ -53,6 +54,7 @@ case_name <- params$case_name
 user_name <- params$user_name
 min_gt_prob_display <- params$min_gt_prob_display
 max_gtc_display <- params$max_gtc_display
+ver_soft <- params$ver_soft
 dt_csp <- params$dt_csp
 fn_csp <- params$fn_csp
 fn_af <- params$fn_af
@@ -71,7 +73,7 @@ min_rep_ae <- params$min_rep_ae
 max_rep_ae <- params$max_rep_ae
 min_deg <- params$min_deg
 max_iter <- params$max_iter
-num_converged <- params$num_converged
+num_consistent <- params$num_consistent
 max_mle_runs <- params$max_mle_runs
 max_diff_like <- params$max_diff_like
 theta <- params$theta
@@ -86,7 +88,7 @@ lr_list <- params$lr_list
 # ---- Create the data.table for top ---- #
 
 dt_top <- data.table(A = c("Case Name", "User", "Date", "KongohPlus version"), 
-                     B = c(case_name, user_name, format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), as.character(packageVersion("KongohPlus"))))
+                     B = c(case_name, user_name, format(Sys.time(), "%Y-%m-%d %H:%M:%S %Z"), as.character(ver_soft)))
 
 datatable(
   dt_top,
@@ -156,8 +158,8 @@ if(is.null(theta) || is.na(theta)){
 if(is.null(max_iter) || is.na(max_iter)){
   max_iter <- ""
 }
-if(is.null(num_converged) || is.na(num_converged)){
-  num_converged <- ""
+if(is.null(num_consistent) || is.na(num_consistent)){
+  num_consistent <- ""
 }
 if(is.null(max_mle_runs) || is.na(max_mle_runs)){
   max_mle_runs <- ""
@@ -203,7 +205,7 @@ dt_setting <- data.table(A = c("Analysis method",
                                "Minimum replicate amplification efficiency", 
                                "Maximum replicate amplification efficiency", 
                                "Ignored markers"), 
-                         B = c(fn_anameth, theta, max_iter, num_converged, max_mle_runs, max_diff_like, min_temp, max_temp, min_deg, min_rep_ae, max_rep_ae, ignore_mk))
+                         B = c(fn_anameth, theta, max_iter, num_consistent, max_mle_runs, max_diff_like, min_temp, max_temp, min_deg, min_rep_ae, max_rep_ae, ignore_mk))
 
 # ---- Display the created data.table ---- #
 
@@ -229,6 +231,25 @@ datatable(
 
 ```{r deconvo, echo = FALSE, results ='asis'}
 
+format_time <- function(sec){
+
+  if(is.na(sec) || !is.numeric(sec)){
+    return(NA)
+  }
+
+  if(sec < 60){
+    return(sprintf("%.0f s", sec))
+  }
+
+  if(sec < 3600){
+    main <- sprintf("%.1f min", sec / 60)
+  } else {
+    main <- sprintf("%.1f h", sec / 3600)
+  }
+
+  sprintf("%s (%d s)", main, round(sec))
+}
+
 if (!is.null(data_hnc_list)) {
   cat("## Deconvolution\n\n")
   
@@ -238,10 +259,32 @@ if (!is.null(data_hnc_list)) {
     data_hnc <- data_hnc_list[[i]]
     dt_log10like <- data_hnc$dt_log10like
     dt_param <- data_hnc$dt_param
+    comp_time <- data_hnc$comp_time
     
     cat(paste0("### Number of contributors: ", hnc, "\n\n"))
     
     if(!is.null(dt_log10like) && !is.null(dt_param)){
+      
+      # --- Output: Computation time --- #
+      
+      dt_comp_time <- data.table(A = "Computation time", 
+                                 B = format_time(comp_time))
+      
+      tbl_comp_time <- datatable(
+        dt_comp_time,
+        rownames = FALSE,
+        colnames = NULL,
+        options = list(
+          dom = 't', 
+          ordering = FALSE, 
+          paging = FALSE, 
+          searching = FALSE
+        )
+      ) %>%
+        formatStyle(names(dt_comp_time), lineHeight = "80%")
+      
+      print(tagList(tbl_comp_time))
+      cat("\n\n")
       
       # --- Data Processing (Parameters) --- #
       

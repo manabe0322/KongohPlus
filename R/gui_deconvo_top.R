@@ -20,13 +20,14 @@ deconvo_ui <- function(id){
 #' @description The function to create the server module for deconvolution
 #' @param id The server ID
 #' @param path_pack The path of the package KongohPlus
+#' @param ver_soft The KongohPlus version
 #' @param session_top The top session
 #' @param rv_input The reactive values derived from the input file server
-deconvo_server <- function(id, path_pack, session_top, rv_input){
+deconvo_server <- function(id, path_pack, ver_soft, session_top, rv_input){
   moduleServer(
     id,
     function(input, output, session){
-      rv_deconvo <- deconvo_setting_server("deconvo_setting", path_pack, rv_input)
+      rv_deconvo <- deconvo_setting_server("deconvo_setting", path_pack, ver_soft, rv_input)
 
       observe({
         req(rv_deconvo)

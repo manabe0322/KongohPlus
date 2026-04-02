@@ -37,7 +37,7 @@ params:
   max_rep_ae: NA
   min_deg: NA
   max_iter: NA
-  num_converged: NA
+  num_consistent: NA
   max_mle_runs: NA
   max_diff_like: NA
   theta: NA
@@ -75,7 +75,7 @@ min_rep_ae <- params$min_rep_ae
 max_rep_ae <- params$max_rep_ae
 min_deg <- params$min_deg
 max_iter <- params$max_iter
-num_converged <- params$num_converged
+num_consistent <- params$num_consistent
 max_mle_runs <- params$max_mle_runs
 max_diff_like <- params$max_diff_like
 theta <- params$theta
@@ -149,8 +149,8 @@ if(!is.null(theta)){
 if(!is.null(max_iter)){
   setting_vals[3] <- max_iter
 }
-if(!is.null(num_converged)){
-  setting_vals[4] <- num_converged
+if(!is.null(num_consistent)){
+  setting_vals[4] <- num_consistent
 }
 if(!is.null(max_mle_runs)){
   setting_vals[5] <- max_mle_runs

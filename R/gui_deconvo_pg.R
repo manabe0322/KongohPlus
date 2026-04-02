@@ -237,7 +237,9 @@ deconvo_pg_server <- function(id, rv_deconvo){
           dt_param <- data_hnc$dt_param
           param_names <- dt_param[["Parameter"]]
           est_vals <- dt_param[["Estimated value"]]
-          temps <- est_vals[param_names == "Template amount"]
+          temp_total <- est_vals[param_names == "Template amount"]
+          mp <- est_vals[param_names == "Mixture proportion"]
+          temps <- temp_total * mp
           deg <- est_vals[param_names == "Degradation"]
           rep_ae <- est_vals[param_names == "Replicate amplification efficiency"]
           ae <- ae_use[markers_use == mk]
@@ -346,7 +348,9 @@ deconvo_pg_server <- function(id, rv_deconvo){
           dt_param <- data_hnc$dt_param
           param_names <- dt_param[["Parameter"]]
           est_vals <- dt_param[["Estimated value"]]
-          temps <- est_vals[param_names == "Template amount"]
+          temp_total <- est_vals[param_names == "Template amount"]
+          mp <- est_vals[param_names == "Mixture proportion"]
+          temps <- temp_total * mp
           deg <- est_vals[param_names == "Degradation"]
           rep_ae <- est_vals[param_names == "Replicate amplification efficiency"]
           ae <- ae_use[markers_use == mk]

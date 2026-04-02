@@ -11,7 +11,9 @@ create_fig_eph <- function(dt_param, min_size, max_size, base_size){
   max_size_round <- round(max_size, 0)
   x_val <- min_size_round:max_size_round
 
-  temp <- dt_param[["Estimated value"]][dt_param$Parameter == "Template amount"]
+  temp_total <- dt_param[["Estimated value"]][dt_param$Parameter == "Template amount"]
+  mp <- dt_param[["Estimated value"]][dt_param$Parameter == "Mixture proportion"]
+  temp <- temp_total * mp
   deg <- dt_param[["Estimated value"]][dt_param$Parameter == "Degradation"]
   rep_ae <- dt_param[["Estimated value"]][dt_param$Parameter == "Replicate amplification efficiency"]
   hnc <- length(temp)

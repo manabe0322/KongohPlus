@@ -28,6 +28,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
     id,
     function(input, output, session){
       rv_report <- reactiveValues()
+      rv_report$ver_soft <- NULL
       rv_report$dt_csp <- NULL
       rv_report$fn_csp <- NULL
       rv_report$fn_af <- NULL
@@ -46,7 +47,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
       rv_report$max_rep_ae <- 5
       rv_report$min_deg <- 0.0001
       rv_report$max_iter <- 500
-      rv_report$num_converged <- 3
+      rv_report$num_consistent <- 3
       rv_report$max_mle_runs <- 10
       rv_report$max_diff_like <- 0.005
       rv_report$theta <- NULL
@@ -62,6 +63,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
         data_deconvo <- rv_deconvo$data_deconvo
 
         if(!is.null(data_deconvo)){
+          rv_report$ver_soft <- data_deconvo$ver_soft
           rv_report$dt_csp <- data_deconvo$dt_csp
           rv_report$fn_csp <- data_deconvo$fn_csp
           rv_report$fn_af <- data_deconvo$fn_af
@@ -80,7 +82,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
           rv_report$max_rep_ae <- data_deconvo$max_rep_ae
           rv_report$min_deg <- data_deconvo$min_deg
           rv_report$max_iter <- data_deconvo$max_iter
-          rv_report$num_converged <- data_deconvo$num_converged
+          rv_report$num_consistent <- data_deconvo$num_consistent
           rv_report$max_mle_runs <- data_deconvo$max_mle_runs
           rv_report$max_diff_like <- data_deconvo$max_diff_like
           rv_report$theta <- data_deconvo$theta
@@ -174,6 +176,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
               user_name = input$user_name,
               min_gt_prob_display = input$min_gt_prob_display,
               max_gtc_display = input$max_gtc_display,
+              ver_soft = rv_report$ver_soft,
               dt_csp = rv_report$dt_csp,
               fn_csp = rv_report$fn_csp,
               fn_af = rv_report$fn_af,
@@ -192,7 +195,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
               max_rep_ae = rv_report$max_rep_ae,
               min_deg = rv_report$min_deg,
               max_iter = rv_report$max_iter,
-              num_converged = rv_report$num_converged,
+              num_consistent = rv_report$num_consistent,
               max_mle_runs = rv_report$max_mle_runs,
               max_diff_like = rv_report$max_diff_like,
               theta = rv_report$theta,

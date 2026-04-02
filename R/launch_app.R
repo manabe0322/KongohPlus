@@ -82,7 +82,7 @@ KongohPlus <- function(num_threads = NULL){
     # --- Define the modules for the analysis --- #
 
     rv_input <- file_server("file", session)
-    rv_deconvo <- deconvo_server("deconvo", path_pack, session, rv_input)
+    rv_deconvo <- deconvo_server("deconvo", path_pack, ver_soft, session, rv_input)
     rv_lr <- lr_server("lr", rv_input, rv_deconvo)
     report_server("report", path_pack, rv_deconvo, rv_lr)
 

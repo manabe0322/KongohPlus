@@ -102,34 +102,34 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
   return(dt_pg_list)
 }
 
-#' make_temp_ordered
+#' make_lambda_ordered_reduced
 #'
-#' @description The function to make ordered template amounts
-#' @param z_temp Numeric vector of unconstrained parameters used to generate ordered template amounts
-#' @param min_temp Minimum template amount
-#' @param max_temp Maximum template amount
-make_temp_ordered <- function(z_temp, min_temp, max_temp) {
-  hnc <- length(z_temp)
+#' @description The function to make ordered lambda
+#' @param z_lambda Initial z values for lambda
+make_lambda_ordered_reduced <- function(z_lambda){
+  # z_lambda has length hnc - 1
+  # returns lambda[1] >= lambda[2] >= ... >= lambda[hnc]
+  # with lambda[hnc] = 0
 
-  log10_min_temp <- log10(min_temp)
-  log10_max_temp <- log10(max_temp)
+  hnc <- length(z_lambda) + 1
 
-  u <- plogis(z_temp)
+  lambda <- numeric(hnc)
+  lambda[hnc] <- 0
 
-  log10temp <- numeric(hnc)
-
-  # smallest contributor
-  log10temp[hnc] <- log10_min_temp + u[hnc] * (log10_max_temp - log10_min_temp)
-
-  # build upward so that log10temp[i] >= log10temp[i+1]
-  if (hnc >= 2) {
-    for (i in (hnc - 1):1) {
-      log10temp[i] <- log10temp[i + 1] + u[i] * (log10_max_temp - log10temp[i + 1])
-    }
+  for(i in (hnc - 1):1) {
+    lambda[i] <- lambda[i + 1] + exp(z_lambda[i])
   }
 
-  temp <- 10^log10temp
-  return(temp)
+  return(lambda)
+}
+
+#' softmax_stable
+#'
+#' @description The softmax function
+#' @param x A numeric vector
+softmax_stable <- function(x){
+  ex <- exp(x - max(x))
+  ex / sum(ex)
 }
 
 #' perform_deconvo
@@ -403,11 +403,27 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     # --- Optimization --- #
 
+    log10_min_temp <- log10(min_temp)
+    log10_max_temp <- log10(max_temp)
+
     # likelihood function
     like_func <- function(z){
 
-      # temp
-      temp <- make_temp_ordered(z[1:hnc], min_temp, max_temp)
+      # total temp
+      u_temp <- plogis(z[1])
+      log10_temp_total <- log10_min_temp + (log10_max_temp  - log10_min_temp) * u_temp
+      temp_total <- 10^log10_temp_total
+
+      # mp
+      if(hnc == 1){
+        mp <- 1
+      }else{
+        lambda <- make_lambda_ordered_reduced(z[2:hnc])
+        mp <- softmax_stable(lambda)
+      }
+
+      # temp per contributor
+      temp <- temp_total * mp
 
       # deg
       u_deg <- plogis(z[(hnc + 1):(2 * hnc)])
@@ -459,16 +475,32 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         )
       }
 
+      # total temp (n = 1), mp (n = hnc - 1), deg (n = hnc), rep_ae (n = nrep - 1)
       dim <- 2 * hnc + (n_rep - 1)
+      init_z <- rep(0.5, dim)
 
-      # Initial values in (0,1) from a Beta(1,1) distribution
-      u0 <- rbeta(dim, 1, 1)
+      # Initial z value for total template amount
+      u0 <- rbeta(1, 1, 1)  # Initial values in (0,1) from a Beta(1,1) distribution
+      u0 <- pmin(pmax(u0, 1e-6), 1-1e-6)  # Avoid exact 0 or 1 to prevent divergence in the logit transform since qlogis(0) = -Inf and qlogis(1) = +Inf
+      init_z[1] <- qlogis(u0) # Transform to the unconstrained real space for CMA-ES
 
-      # Avoid exact 0 or 1 to prevent divergence in the logit transform since qlogis(0) = -Inf and qlogis(1) = +Inf
-      u0 <- pmin(pmax(u0, 1e-6), 1-1e-6)
+      # Initial z values for mixture proportions
+      if(hnc >= 2){
+        init_z[2:hnc] <- rnorm(hnc - 1, mean = 0, sd = 0.5)
+      }
 
-      # Transform to the unconstrained real space for CMA-ES
-      init_z <- qlogis(u0)
+      # Initial z values for degradation
+      u0 <- rbeta(hnc, 1, 1) # Initial values in (0,1) from a Beta(1,1) distribution
+      u0 <- pmin(pmax(u0, 1e-6), 1-1e-6) # Avoid exact 0 or 1 to prevent divergence in the logit transform since qlogis(0) = -Inf and qlogis(1) = +Inf
+      init_z[(hnc + 1):(2 * hnc)] <- qlogis(u0) # Transform to the unconstrained real space for CMA-ES
+
+      # Initial z values for replicate amplification efficiencies
+      if(n_rep >= 2){
+        u0 <- rbeta(n_rep - 1, 1, 1) # Initial values in (0,1) from a Beta(1,1) distribution
+        u0 <- pmin(pmax(u0, 1e-6), 1-1e-6) # Avoid exact 0 or 1 to prevent divergence in the logit transform since qlogis(0) = -Inf and qlogis(1) = +Inf
+        init_z[(2 * hnc + 1):dim] <- qlogis(u0) # Transform to the unconstrained real space for CMA-ES
+      }
+
       init_list[[count_mle]] <- init_z
 
       # Perform optimization
@@ -483,8 +515,21 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       # Extract unconstrained parameters
       est_z <- opt$par
 
-      # Back-transform to the original scales for temp
-      temp <- make_temp_ordered(est_z[1:hnc], min_temp, max_temp)
+      # Back-transform to the original scales for total temp
+      u_temp <- plogis(est_z[1])  # 0-1 scale via logistic transform
+      log10_temp_total <- log10_min_temp + (log10_max_temp  - log10_min_temp) * u_temp  # back-transform to the log-10 scales
+      temp_total <- 10^log10_temp_total
+
+      # Back-transform to the original scales for mp
+      if(hnc == 1){
+        mp <- 1
+      }else{
+        lambda <- make_lambda_ordered_reduced(est_z[2:hnc])
+        mp <- softmax_stable(lambda)
+      }
+
+      # temp per contributor
+      temp <- temp_total * mp
 
       # Back-transform to the original scales for deg
       u_deg  <- plogis(est_z[(hnc + 1):(2 * hnc)])  # 0-1 scale via logistic transform
@@ -498,7 +543,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         rep_ae <- c(1, min_rep_ae + (max_rep_ae - min_rep_ae) * u_rep)  # back-transform to the original scales
       }
 
-      est_par_list[[count_mle]] <- c(- score, temp, deg, rep_ae)
+      est_par_list[[count_mle]] <- c(- score, temp_total, mp, deg, rep_ae)
 
       # Convergence diagnosis
       if(score <= current_score){
@@ -529,16 +574,15 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     dt_all_mle <- as.data.table(est_par_list)
     index_mle_best <- which.max(as.numeric(dt_all_mle[1, ]))
     mle_best <- dt_all_mle[[index_mle_best]]
-    temp <- mle_best[2:(hnc + 1)]
-    deg <- mle_best[(hnc + 2):(2 * hnc + 1)]
-    rep_ae <- mle_best[(2 * hnc + 2):(2 * hnc + n_rep + 1)]
-
-    # Calculate mixture proportions
-    mp <- temp / sum(temp)
+    temp_total <- mle_best[2]
+    mp <- mle_best[3:(hnc + 2)]
+    temp <- temp_total * mp
+    deg <- mle_best[(hnc + 3):(2 * hnc + 2)]
+    rep_ae <- mle_best[(2 * hnc + 3):(2 * hnc + n_rep + 2)]
 
     # Arrange dt_all_mle
     names(dt_all_mle) <- paste0("MLE ", 1:count_mle)
-    dt_all_mle[, Parameter := c("Log10 (likelihood)", rep("Template amount", hnc), rep("Degradation", hnc), rep("Replicate amplification efficiency", n_rep))]
+    dt_all_mle[, Parameter := c("Log10 (likelihood)", "Template amount", rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Replicate amplification efficiency", n_rep))]
     setcolorder(dt_all_mle, c("Parameter", setdiff(names(dt_all_mle), "Parameter")))
 
     if(length(index_converged) == num_consistent){
@@ -575,10 +619,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     dt_log10like <- data.table(Marker = c(markers_use, "Overall"),
                                Log10_Likelihood = c(log10like_all_mk, sum(log10like_all_mk)))
 
-    dt_param <- data.table("Parameter" = c(rep("Template amount", hnc), rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Replicate amplification efficiency", n_rep)),
-                           "Contributor" = c(paste0("U", 1:hnc), paste0("U", 1:hnc), paste0("U", 1:hnc), rep(NA, n_rep)),
-                           "Replicate" = c(rep(NA, hnc), rep(NA, hnc), rep(NA, hnc), 1:n_rep),
-                           "Estimated value" = c(temp, temp / sum(temp), deg, rep_ae))
+    dt_param <- data.table("Parameter" = c("Template amount", rep("Mixture proportion", hnc), rep("Degradation", hnc), rep("Replicate amplification efficiency", n_rep)),
+                           "Contributor" = c(NA, paste0("U", 1:hnc), paste0("U", 1:hnc), rep(NA, n_rep)),
+                           "Replicate" = c(NA, rep(NA, hnc), rep(NA, hnc), 1:n_rep),
+                           "Estimated value" = c(temp_total, mp, deg, rep_ae))
 
     # End computation
     end_time <- proc.time()

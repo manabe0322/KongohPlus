@@ -57,8 +57,9 @@ deconvo_setting_ui <- function(id){
 #' @description The function to create the server module for setting conditions of deconvolution
 #' @param id The server ID
 #' @param path_pack The path of the package KongohPlus
+#' @param ver_soft The KongohPlus version
 #' @param rv_input rv_deconvo The reactive values derived from the input file server
-deconvo_setting_server <- function(id, path_pack, rv_input){
+deconvo_setting_server <- function(id, path_pack, ver_soft, rv_input){
   moduleServer(
     id,
     function(input, output, session){
@@ -497,6 +498,7 @@ deconvo_setting_server <- function(id, path_pack, rv_input){
               data_deconvo <- perform_deconvo_all_noc(dt_csp, dt_af, dt_kit_auto, dt_ignore_mk, dt_anameth, list_dt_average_sr, hnc_all, theta,
                                                       min_temp, max_temp, min_rep_ae, max_rep_ae, min_deg, max_iter, num_consistent, max_mle_runs, max_diff_like,
                                                       waiter_ui)
+              data_deconvo$ver_soft <- ver_soft
               data_deconvo$hnc_all <- hnc_all
               data_deconvo$theta <- theta
               data_deconvo$dt_csp <- dt_csp
