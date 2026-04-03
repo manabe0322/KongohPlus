@@ -102,34 +102,15 @@ make_dt_pg_list <- function(markers_use, label_contrib, gt_perm_use, gtc_logprob
   return(dt_pg_list)
 }
 
-#' make_lambda_ordered_reduced
+#' make_mp_from_z
 #'
-#' @description The function to make ordered lambda
-#' @param z_lambda Initial z values for lambda
-make_lambda_ordered_reduced <- function(z_lambda){
-  # z_lambda has length hnc - 1
-  # returns lambda[1] >= lambda[2] >= ... >= lambda[hnc]
-  # with lambda[hnc] = 0
-
-  hnc <- length(z_lambda) + 1
-
-  lambda <- numeric(hnc)
-  lambda[hnc] <- 0
-
-  for(i in (hnc - 1):1) {
-    lambda[i] <- lambda[i + 1] + exp(z_lambda[i])
-  }
-
-  return(lambda)
-}
-
-#' softmax_stable
-#'
-#' @description The softmax function
-#' @param x A numeric vector
-softmax_stable <- function(x){
-  ex <- exp(x - max(x))
-  ex / sum(ex)
+#' @description The function to make mp values from z (the unconstrained real space for CMA-ES)
+#' @param z Initial z values for mp (z has length hnc - 1)
+make_mp_from_z <- function(z){
+  eta <- c(z, 0)
+  exp_eta <- exp(eta - max(eta))
+  mp <- exp_eta / sum(exp_eta)
+  return(mp)
 }
 
 #' perform_deconvo
@@ -418,8 +399,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       if(hnc == 1){
         mp <- 1
       }else{
-        lambda <- make_lambda_ordered_reduced(z[2:hnc])
-        mp <- softmax_stable(lambda)
+        mp <- make_mp_from_z(z[2:hnc])
       }
 
       # temp per contributor
@@ -477,30 +457,15 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
       # total temp (n = 1), mp (n = hnc - 1), deg (n = hnc), rep_ae (n = nrep - 1)
       dim <- 2 * hnc + (n_rep - 1)
-      init_z <- rep(0.5, dim)
 
-      # Initial z value for total template amount
-      u0 <- rbeta(1, 1, 1)  # Initial values in (0,1) from a Beta(1,1) distribution
-      u0 <- pmin(pmax(u0, 1e-6), 1-1e-6)  # Avoid exact 0 or 1 to prevent divergence in the logit transform since qlogis(0) = -Inf and qlogis(1) = +Inf
-      init_z[1] <- qlogis(u0) # Transform to the unconstrained real space for CMA-ES
+      # Initial values in (0,1) from a Beta(1,1) distribution
+      u0 <- rbeta(dim, 1, 1)
 
-      # Initial z values for mixture proportions
-      if(hnc >= 2){
-        init_z[2:hnc] <- rnorm(hnc - 1, mean = 0, sd = 0.5)
-      }
+      # Avoid exact 0 or 1 to prevent divergence in the logit transform since qlogis(0) = -Inf and qlogis(1) = +Inf
+      u0 <- pmin(pmax(u0, 1e-6), 1-1e-6)
 
-      # Initial z values for degradation
-      u0 <- rbeta(hnc, 1, 1) # Initial values in (0,1) from a Beta(1,1) distribution
-      u0 <- pmin(pmax(u0, 1e-6), 1-1e-6) # Avoid exact 0 or 1 to prevent divergence in the logit transform since qlogis(0) = -Inf and qlogis(1) = +Inf
-      init_z[(hnc + 1):(2 * hnc)] <- qlogis(u0) # Transform to the unconstrained real space for CMA-ES
-
-      # Initial z values for replicate amplification efficiencies
-      if(n_rep >= 2){
-        u0 <- rbeta(n_rep - 1, 1, 1) # Initial values in (0,1) from a Beta(1,1) distribution
-        u0 <- pmin(pmax(u0, 1e-6), 1-1e-6) # Avoid exact 0 or 1 to prevent divergence in the logit transform since qlogis(0) = -Inf and qlogis(1) = +Inf
-        init_z[(2 * hnc + 1):dim] <- qlogis(u0) # Transform to the unconstrained real space for CMA-ES
-      }
-
+      # Transform to the unconstrained real space for CMA-ES
+      init_z <- qlogis(u0)
       init_list[[count_mle]] <- init_z
 
       # Perform optimization
@@ -524,8 +489,10 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
       if(hnc == 1){
         mp <- 1
       }else{
-        lambda <- make_lambda_ordered_reduced(est_z[2:hnc])
-        mp <- softmax_stable(lambda)
+        mp <- make_mp_from_z(est_z[2:hnc])
+
+        #lambda <- make_lambda_ordered_reduced(est_z[2:hnc])
+        #mp <- softmax_stable(lambda)
       }
 
       # temp per contributor
@@ -542,6 +509,12 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         u_rep <- plogis(est_z[(2 * hnc + 1):(2 * hnc + n_rep - 1)])  # 0-1 scale via logistic transform
         rep_ae <- c(1, min_rep_ae + (max_rep_ae - min_rep_ae) * u_rep)  # back-transform to the original scales
       }
+
+      # Descending order for estimated temp
+      index_order <- order(temp, decreasing = TRUE)
+      temp <- temp[index_order]
+      mp <- mp[index_order]
+      deg <- deg[index_order]
 
       est_par_list[[count_mle]] <- c(- score, temp_total, mp, deg, rep_ae)
 

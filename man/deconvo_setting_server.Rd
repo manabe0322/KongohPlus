@@ -4,12 +4,14 @@
 \alias{deconvo_setting_server}
 \title{deconvo_setting_server}
 \usage{
-deconvo_setting_server(id, path_pack, rv_input)
+deconvo_setting_server(id, path_pack, ver_soft, rv_input)
 }
 \arguments{
 \item{id}{The server ID}
 
 \item{path_pack}{The path of the package KongohPlus}
+
+\item{ver_soft}{The KongohPlus version}
 
 \item{rv_input}{rv_deconvo The reactive values derived from the input file server}
 }

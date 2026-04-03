@@ -4,12 +4,14 @@
 \alias{deconvo_server}
 \title{deconvo_server}
 \usage{
-deconvo_server(id, path_pack, session_top, rv_input)
+deconvo_server(id, path_pack, ver_soft, session_top, rv_input)
 }
 \arguments{
 \item{id}{The server ID}
 
 \item{path_pack}{The path of the package KongohPlus}
+
+\item{ver_soft}{The KongohPlus version}
 
 \item{session_top}{The top session}
 
