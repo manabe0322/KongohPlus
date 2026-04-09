@@ -79,7 +79,7 @@ deconvo_setting_server <- function(id, path_pack, ver_soft, rv_input){
       rv_deconvo_setting$max_rep_ae <- 5
       rv_deconvo_setting$min_deg <- 0.001
       rv_deconvo_setting$max_iter <- 500
-      rv_deconvo_setting$num_consistent <- 3
+      rv_deconvo_setting$num_consistent <- 5
       rv_deconvo_setting$max_mle_runs <- 10
       rv_deconvo_setting$max_diff_like <- 0.005
       rv_deconvo_setting$bool_correct_noc <- TRUE

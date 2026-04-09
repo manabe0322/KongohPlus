@@ -76,7 +76,7 @@ est_gamma_setting_server <- function(id, path_pack, session_gamma_top){
       rv_est_gamma_setting$min_scale_stutter <- 0.01
       rv_est_gamma_setting$max_scale_stutter <- 400
       rv_est_gamma_setting$max_iter <- 500
-      rv_est_gamma_setting$num_consistent <- 3
+      rv_est_gamma_setting$num_consistent <- 5
       rv_est_gamma_setting$max_mle_runs <- 10
       rv_est_gamma_setting$max_diff_like <- 0.005
       rv_est_gamma_setting$bool_correct_mle_scale_allele <- TRUE

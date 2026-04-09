@@ -450,7 +450,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
             spin_3k(),
             h3(paste0("Performing deconvolution assuming ", hnc, " contributor(s)...")),
             h3(paste0("Running MLE #", count_mle, " of ", max_mle_runs)),
-            h3(paste0("Number of convergences so far: ", count_solution))
+            h3(paste0("Number of consistent runs so far: ", count_solution))
           )
         )
       }
@@ -490,9 +490,6 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
         mp <- 1
       }else{
         mp <- make_mp_from_z(est_z[2:hnc])
-
-        #lambda <- make_lambda_ordered_reduced(est_z[2:hnc])
-        #mp <- softmax_stable(lambda)
       }
 
       # temp per contributor

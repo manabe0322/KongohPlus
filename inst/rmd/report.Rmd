@@ -196,8 +196,8 @@ if(n_ignore_mk == 0){
 dt_setting <- data.table(A = c("Analysis method", 
                                "Theta", 
                                "Maximum number of iterations", 
-                               "Minimum number of MLE attempts", 
-                               "Maximum number of MLE attempts", 
+                               "Number of MLE attempts", 
+                               "Minimum number of consistent runs", 
                                "Reproducibility threshold (log10-likelihood difference)", 
                                "Minimum template amount", 
                                "Maximum template amount", 
@@ -205,7 +205,7 @@ dt_setting <- data.table(A = c("Analysis method",
                                "Minimum replicate amplification efficiency", 
                                "Maximum replicate amplification efficiency", 
                                "Ignored markers"), 
-                         B = c(fn_anameth, theta, max_iter, num_consistent, max_mle_runs, max_diff_like, min_temp, max_temp, min_deg, min_rep_ae, max_rep_ae, ignore_mk))
+                         B = c(fn_anameth, theta, max_iter, max_mle_runs, num_consistent, max_diff_like, min_temp, max_temp, min_deg, min_rep_ae, max_rep_ae, ignore_mk))
 
 # ---- Display the created data.table ---- #
 

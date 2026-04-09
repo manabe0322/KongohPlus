@@ -78,7 +78,7 @@ run_mle_dropin <- function(n_dropin, heights, min_shape_di, max_shape_di, min_sc
           spin_3k(),
           h3("Performing MLE for drop-in parameters..."),
           h3(paste0("Running MLE #", count_mle, " of ", max_mle_runs)),
-          h3(paste0("Number of convergences so far: ", count_solution))
+          h3(paste0("Number of consistent runs so far: ", count_solution))
         )
       )
     }

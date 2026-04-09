@@ -348,7 +348,7 @@ run_mle_gamma <- function(ephs_gamma, ophs_gamma, ats_gamma, min_scale_allele, m
           spin_3k(),
           h3("Performing MLE for the gamma scale parameter..."),
           h3(paste0("Running MLE #", count_mle, " of ", max_mle_runs)),
-          h3(paste0("Number of convergences so far: ", count_solution))
+          h3(paste0("Number of consistent runs so far: ", count_solution))
         )
       )
     }

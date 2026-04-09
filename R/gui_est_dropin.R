@@ -88,7 +88,7 @@ est_dropin_server <- function(id, path_pack){
       rv_est_dropin_setting$min_scale_di <- 0.01
       rv_est_dropin_setting$max_scale_di <- 100
       rv_est_dropin_setting$max_iter <- 500
-      rv_est_dropin_setting$num_consistent <- 3
+      rv_est_dropin_setting$num_consistent <- 5
       rv_est_dropin_setting$max_mle_runs <- 10
       rv_est_dropin_setting$max_diff_like <- 0.005
       rv_est_dropin_setting$bool_correct_mle_shape_di <- TRUE

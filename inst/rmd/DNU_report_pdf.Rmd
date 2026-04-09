@@ -149,11 +149,11 @@ if(!is.null(theta)){
 if(!is.null(max_iter)){
   setting_vals[3] <- max_iter
 }
-if(!is.null(num_consistent)){
-  setting_vals[4] <- num_consistent
-}
 if(!is.null(max_mle_runs)){
-  setting_vals[5] <- max_mle_runs
+  setting_vals[4] <- max_mle_runs
+}
+if(!is.null(num_consistent)){
+  setting_vals[5] <- num_consistent
 }
 if(!is.null(max_diff_like)){
   setting_vals[6] <- max_diff_like
@@ -177,8 +177,8 @@ if(!is.null(min_deg)){
 dt_setting <- data.table(A = c("Analysis method", 
                                "Theta", 
                                "Maximum number of iterations", 
-                               "Minimum number of MLE attempts", 
-                               "Maximum number of MLE attempts", 
+                               "Number of MLE attempts", 
+                               "Minimum number of consistent runs",  
                                "Reproducibility threshold (log10-likelihood difference)", 
                                "Minimum template amount", 
                                "Maximum template amount", 

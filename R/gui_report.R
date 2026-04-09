@@ -47,7 +47,7 @@ report_server <- function(id, path_pack, rv_deconvo, rv_lr){
       rv_report$max_rep_ae <- 5
       rv_report$min_deg <- 0.0001
       rv_report$max_iter <- 500
-      rv_report$num_consistent <- 3
+      rv_report$num_consistent <- 5
       rv_report$max_mle_runs <- 10
       rv_report$max_diff_like <- 0.005
       rv_report$theta <- NULL

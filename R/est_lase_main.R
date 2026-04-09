@@ -99,7 +99,7 @@ run_mle_ae <- function(prop_ae_data_use, min_alpha, max_alpha, max_iter, num_con
           spin_3k(),
           h3("Performing MLE for LSAE..."),
           h3(paste0("Running MLE #", count_mle, " of ", max_mle_runs)),
-          h3(paste0("Number of convergences so far: ", count_solution))
+          h3(paste0("Number of consistent runs so far: ", count_solution))
         )
       )
     }
