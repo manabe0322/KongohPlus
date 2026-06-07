@@ -294,7 +294,7 @@ hd_true_random_server <- function(id, path_pack, rv_deconvo){
         lr_rand <- rv_hd_true_random$lr_rand
         log10_lr_rand <- log10(lr_rand)
         log10_lr_rand[log10_lr_rand < -300] <- -300
-        hist(log10_lr_rand)
+        hist(log10_lr_rand, xlab = expression(log[10](LR)), main = "")
       })
 
       return(rv_hd_true_random)

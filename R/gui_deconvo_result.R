@@ -136,20 +136,21 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       })
 
       output$warning_message <- renderUI({
-        req(!is.null(rv_deconvo_result$data_hnc_list))
-        req(!is.null(rv_deconvo_result$message_sr))
         data_hnc_list <- rv_deconvo_result$data_hnc_list
         message_sr <- rv_deconvo_result$message_sr
 
         warning_message <- ""
 
-        for(i in 1:length(data_hnc_list)){
-          data_hnc <- data_hnc_list[[i]]
-          tmp <- data_hnc$warning_message
-          if(!is.null(tmp)){
-            warning_message <- paste0(warning_message, tmp)
+        if(!is.null(data_hnc_list)){
+          for(i in 1:length(data_hnc_list)){
+            data_hnc <- data_hnc_list[[i]]
+            tmp <- data_hnc$warning_message
+            if(!is.null(tmp)){
+              warning_message <- paste0(warning_message, tmp)
+            }
           }
         }
+
         warning_message <- paste0(warning_message, message_sr)
         HTML(warning_message)
       })

@@ -70,7 +70,7 @@ KongohPlus <- function(num_threads = NULL){
                                         view_gamma_ui("view_gamma"),
                                         view_dropin_ui("view_dropin"),
                                         hd_true_random_ui("hd_true_random"),
-                                        hd_true_importance_ui("hd_true_importance")
+#                                        hd_true_importance_ui("hd_true_importance")
                              ),
 
                              manual_ui("manual")
@@ -94,7 +94,7 @@ KongohPlus <- function(num_threads = NULL){
     view_gamma_server("view_gamma", path_pack)
     view_dropin_server("view_dropin", path_pack)
     rv_hd_true_random <- hd_true_random_server("hd_true_random", path_pack, rv_deconvo)
-    rv_hd_true_importance <- hd_true_importance_server("hd_true_importance", path_pack, rv_deconvo)
+#    rv_hd_true_importance <- hd_true_importance_server("hd_true_importance", path_pack, rv_deconvo)
 
     # --- Define the modules for the manual --- #
 
@@ -125,7 +125,7 @@ KongohPlus <- function(num_threads = NULL){
       req(rv_deconvo)
       req(rv_lr)
       req(rv_hd_true_random)
-      req(rv_hd_true_importance)
+#      req(rv_hd_true_importance)
 
       rv_deconvo$data_deconvo <- data_deconvo <- rv_load_proj$data_deconvo
       rv_deconvo$bool_perform_deconvo <- FALSE
@@ -149,12 +149,12 @@ KongohPlus <- function(num_threads = NULL){
       rv_hd_true_random$dt_lr_rand <- hd_true_random$dt_lr_rand
       rv_hd_true_random$dt_gt_non_contrib <- hd_true_random$dt_gt_non_contrib
 
-      hd_true_importance <- rv_load_proj$hd_true_importance
-      rv_hd_true_importance$lr_importance <- hd_true_importance$lr_importance
-      rv_hd_true_importance$bias <- hd_true_importance$bias
-      rv_hd_true_importance$expect_lr_hd <- hd_true_importance$expect_lr_hd
-      rv_hd_true_importance$dt_lr_importance <- hd_true_importance$dt_lr_importance
-      rv_hd_true_importance$dt_gt_non_contrib <- hd_true_importance$dt_gt_non_contrib
+#      hd_true_importance <- rv_load_proj$hd_true_importance
+#      rv_hd_true_importance$lr_importance <- hd_true_importance$lr_importance
+#      rv_hd_true_importance$bias <- hd_true_importance$bias
+#      rv_hd_true_importance$expect_lr_hd <- hd_true_importance$expect_lr_hd
+#      rv_hd_true_importance$dt_lr_importance <- hd_true_importance$dt_lr_importance
+#      rv_hd_true_importance$dt_gt_non_contrib <- hd_true_importance$dt_gt_non_contrib
     })
 
     # --- Save project --- #
@@ -163,8 +163,8 @@ KongohPlus <- function(num_threads = NULL){
       req(rv_deconvo)
       req(rv_lr)
       req(rv_hd_true_random)
-      req(rv_hd_true_importance)
-      save_proj_server("save_proj", rv_deconvo, rv_lr, rv_hd_true_random, rv_hd_true_importance)
+#      req(rv_hd_true_importance)
+      save_proj_server("save_proj", rv_deconvo, rv_lr, rv_hd_true_random, rv_hd_true_importance = NULL)
     })
   }
 
