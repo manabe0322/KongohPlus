@@ -175,6 +175,7 @@ hd_true_importance_server <- function(id, path_pack, rv_deconvo){
 
           if(is.null(dt_lr_importance)){
             data_hnc_list <- rv_hd_true_importance$data_hnc_list
+            hnc_all <- rv_hd_true_importance$hnc_all
             data_h1 <- data_hnc_list[[which(hnc_all == hnc)]]
             error_message_h1 <- data_h1$error_message
             waiter_ui$hide()
