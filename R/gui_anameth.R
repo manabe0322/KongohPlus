@@ -392,12 +392,12 @@ anameth_server <- function(id, path_pack){
         dt_anameth_edit <- rv_anameth$dt_anameth_edit
 
         if(!is.null(dt_anameth_edit)){
-          dt_edit_deg <- data.table(Filter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Degradation"],
+          dt_edit_deg <- data.table(Parameter = dt_anameth_edit$Subcategory[dt_anameth_edit$Category == "Degradation"],
                                     Value = dt_anameth_edit$Value[dt_anameth_edit$Category == "Degradation"])
 
           rhandsontable(dt_edit_deg, rowHeaders = FALSE) %>%
             hot_table(fillHandle = FALSE, rowHeights = 30) %>%
-            hot_col("Filter", type = "text", readOnly = TRUE, width = 250) %>%
+            hot_col("Parameter", type = "text", readOnly = TRUE, width = 250) %>%
             hot_col("Value", type = "numeric", format = "0", width = 150)
         }
       })
