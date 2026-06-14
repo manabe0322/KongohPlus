@@ -558,7 +558,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
     if(length(index_converged) == num_consistent){
       warning_message <- NULL
     }else{
-      warning_message <- paste0("- The number of consistent runs is below ", num_consistent, ". This may indicate the presence of local optima.<br>")
+      warning_message <- paste0("- The number of consistent runs is below ", num_consistent, " under ", hnc, " contributor(s). This may indicate the presence of local optima.<br>")
     }
 
     # --- Calculate the likelihood using the estimated parameters --- #

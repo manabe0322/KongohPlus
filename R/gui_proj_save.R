@@ -63,8 +63,7 @@ save_proj_server <- function(id, rv_deconvo, rv_lr, rv_hd_true_random, rv_hd_tru
 
           save(list = c("data_deconvo",
                         "data_lr",
-                        "hd_true_random",
-                        "hd_true_importance"),
+                        "hd_true_random"), # "hd_true_importance"
                file = file)
 
           waiter_ui$hide()

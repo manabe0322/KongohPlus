@@ -53,7 +53,7 @@ load_proj_server <- function(id, session_top){
           rv_load_proj$data_deconvo <- data_deconvo
           rv_load_proj$data_lr <- data_lr
           rv_load_proj$hd_true_random <- hd_true_random
-          rv_load_proj$hd_true_importance <- hd_true_importance
+#          rv_load_proj$hd_true_importance <- hd_true_importance
 
           if(is.null(data_deconvo)){
             updateNavbarPage(session = session_top, "navbar", selected = "File")

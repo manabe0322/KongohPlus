@@ -299,8 +299,6 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
       })
 
       output$param <- renderUI({
-        req(rv_deconvo_result$dt_param)
-
         dt_param <- rv_deconvo_result$dt_param
         if(is.null(dt_param)){
           HTML(rv_deconvo_result$error_message)

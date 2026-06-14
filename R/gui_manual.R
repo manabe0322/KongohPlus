@@ -8,7 +8,7 @@ manual_ui <- function(id){
     "User manual",
     titlePanel("User manual"),
     br(),
-    downloadButton(ns("download_manual_jp"), "Manual (Japanese)", class = "btn btn-primary btn-lg")
+    disabled(downloadButton(ns("download_manual_jp"), "Manual (Japanese)", class = "btn btn-primary btn-lg"))
   )
 }
 
