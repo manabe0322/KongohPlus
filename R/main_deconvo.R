@@ -611,7 +611,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
                 "warning_message" = warning_message,
                 "error_message" = NULL))
   }else{
-    markers_unexplainable <- markers_use[n_gt_perm_use == 0]
+    markers_unexplainable <- markers_use[n_gt_comb_use == 0]
     if(hnc == 1){
       error_message <- paste0("The following marker(s) cannot be explained under ", hnc, " contributor.<br>")
     }else{
