@@ -10,11 +10,15 @@ file_ui <- function(id){
     sidebarLayout(
       sidebarPanel(
         width = 3,
-        fileInput(ns("file_csp"), label = h4("Crime stain profile"), accept = ".csv", buttonLabel = "Load"),
-        fileInput(ns("file_ref"), label = h4("Reference profile"), accept = ".csv", buttonLabel = "Load"),
-        fileInput(ns("file_af"), label = h4("Allele frequency"), accept = ".csv", buttonLabel = "Load"),
+        h4("Files used for deconvolution"),
+        fileInput(ns("file_csp"), label = "Crime stain profile", accept = ".csv", buttonLabel = "Load"),
+        fileInput(ns("file_af"), label = "Allele frequency", accept = ".csv", buttonLabel = "Load"),
         br(),
-        actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg")
+        h4("Files used for likelihood ratio calculation"),
+        fileInput(ns("file_ref"), label = "Reference profile", accept = ".csv", buttonLabel = "Load"),
+        br(),
+        actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg"),
+        actionButton(ns("act_lr"), label = "Likelihood ratio", class = "btn btn-primary btn-lg")
       ),
       mainPanel(
         width = 9,
@@ -26,12 +30,12 @@ file_ui <- function(id){
             uiOutput(ns("info_csp"))
           ),
           tabPanel(
-            "Reference profile",
-            uiOutput(ns("info_ref"))
-          ),
-          tabPanel(
             "Allele frequency",
             uiOutput(ns("info_af"))
+          ),
+          tabPanel(
+            "Reference profile",
+            uiOutput(ns("info_ref"))
           )
         )
       )
@@ -44,8 +48,8 @@ file_ui <- function(id){
 #' @description The function to create the server module for loading files
 #' @param id The server ID
 #' @param session_top The top session
-#' @param bool_load_proj TRUE/FALSE: Whether a project is loaded
-file_server <- function(id, session_top, bool_load_proj){
+#' @param rv_state A reactiveValues object containing application state variables
+file_server <- function(id, session_top, rv_state){
   moduleServer(
     id,
     function(input, output, session){
@@ -63,21 +67,70 @@ file_server <- function(id, session_top, bool_load_proj){
       # --- Load crime stain profiles --- #
 
       observeEvent(input$file_csp, {
-        file_input <- input$file_csp
-        if(!is.null(file_input)){
-          dt_csp <- fread(file_input$datapath)
-          dt_csp <- try(change_data_type_csp(dt_csp))
-          if(!inherits(dt_csp, "try-error")){
-            rv_input$dt_csp <- dt_csp
-            rv_input$fn_csp <- file_input$name
-            rv_input$bool_csp <- TRUE
-          }else{
-            showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
-            rv_input$dt_csp <- NULL
-            rv_input$fn_csp <- NULL
-            rv_input$bool_csp <- FALSE
+
+        if(isTRUE(rv_state$has_deconvo)){
+          showModal(
+            modalDialog(
+              title = "Error",
+              "Analysis results already exist. The crime stain profile cannot be changed after deconvolution has been completed. Please start a new project first.",
+              easyClose = TRUE,
+              footer = NULL
+            )
+          )
+        }
+
+        else{
+          file_input <- input$file_csp
+          if(!is.null(file_input)){
+            dt_csp <- fread(file_input$datapath)
+            dt_csp <- try(change_data_type_csp(dt_csp))
+            if(!inherits(dt_csp, "try-error")){
+              rv_input$dt_csp <- dt_csp
+              rv_input$fn_csp <- file_input$name
+              rv_input$bool_csp <- TRUE
+            }else{
+              showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
+              rv_input$dt_csp <- NULL
+              rv_input$fn_csp <- NULL
+              rv_input$bool_csp <- FALSE
+            }
+            updateTabsetPanel(inputId = "tabset_load_file", selected = "Crime stain profile")
           }
-          updateTabsetPanel(inputId = "tabset_load_file", selected = "Crime stain profile")
+        }
+      })
+
+      # --- Load allele frequencies --- #
+
+      observeEvent(input$file_af, {
+
+        if(isTRUE(rv_state$has_deconvo)){
+          showModal(
+            modalDialog(
+              title = "Error",
+              "Analysis results already exist. The allele frequencies cannot be changed after deconvolution has been completed. Please start a new project first.",
+              easyClose = TRUE,
+              footer = NULL
+            )
+          )
+        }
+
+        else{
+          file_input <- input$file_af
+          if(!is.null(file_input)){
+            dt_af <- fread(file_input$datapath)
+            dt_af <- try(change_data_type_af(dt_af))
+            if(!inherits(dt_af, "try-error")){
+              rv_input$dt_af <- dt_af
+              rv_input$fn_af <- file_input$name
+              rv_input$bool_af <- TRUE
+            }else{
+              showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
+              rv_input$dt_af <- NULL
+              rv_input$fn_af <- NULL
+              rv_input$bool_af <- FALSE
+            }
+            updateTabsetPanel(inputId = "tabset_load_file", selected = "Allele frequency")
+          }
         }
       })
 
@@ -99,27 +152,6 @@ file_server <- function(id, session_top, bool_load_proj){
             rv_input$bool_ref <- FALSE
           }
           updateTabsetPanel(inputId = "tabset_load_file", selected = "Reference profile")
-        }
-      })
-
-      # --- Load allele frequencies --- #
-
-      observeEvent(input$file_af, {
-        file_input <- input$file_af
-        if(!is.null(file_input)){
-          dt_af <- fread(file_input$datapath)
-          dt_af <- try(change_data_type_af(dt_af))
-          if(!inherits(dt_af, "try-error")){
-            rv_input$dt_af <- dt_af
-            rv_input$fn_af <- file_input$name
-            rv_input$bool_af <- TRUE
-          }else{
-            showModal(modalDialog(title = "Error", "The selected file format is invalid. Please upload a file in the correct format.", easyClose = TRUE, footer = NULL))
-            rv_input$dt_af <- NULL
-            rv_input$fn_af <- NULL
-            rv_input$bool_af <- FALSE
-          }
-          updateTabsetPanel(inputId = "tabset_load_file", selected = "Allele frequency")
         }
       })
 
@@ -171,6 +203,37 @@ file_server <- function(id, session_top, bool_load_proj){
             )
           ) %>%
             formatStyle(names(dt_display_csp), lineHeight = "80%")
+        }
+      })
+
+      # --- Display allele frequencies --- #
+
+      output$info_af <- renderUI({
+        if(rv_input$bool_af){
+          dataTableOutput(session$ns("dt_af"))
+        }
+
+        else{
+          tagList(
+            br(),
+            tags$p("The selected file format is invalid. Please upload a file in the correct format.", style = "color: red; font-weight: bold;")
+          )
+        }
+      })
+
+      output$dt_af <- renderDataTable({
+        dt_af <- rv_input$dt_af
+        if(!is.null(dt_af)){
+
+          datatable(
+            dt_af,
+            selection = "none",
+            extensions = c("FixedColumns", "FixedHeader"),
+            options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = FALSE, scrollX = TRUE, scrollY = "calc(100vh - 150px)",
+                           fixedHeader = FALSE, fixedColumns = list(leftColumns = 1, rightColumns = 0)),
+            rownames = FALSE
+            ) %>%
+              formatStyle(names(dt_af), lineHeight = "80%")
         }
       })
 
@@ -230,39 +293,12 @@ file_server <- function(id, session_top, bool_load_proj){
         }
       })
 
-      # --- Display allele frequencies --- #
-
-      output$info_af <- renderUI({
-        if(rv_input$bool_af){
-          dataTableOutput(session$ns("dt_af"))
-        }
-
-        else{
-          tagList(
-            br(),
-            tags$p("The selected file format is invalid. Please upload a file in the correct format.", style = "color: red; font-weight: bold;")
-          )
-        }
-      })
-
-      output$dt_af <- renderDataTable({
-        dt_af <- rv_input$dt_af
-        if(!is.null(dt_af)){
-
-          datatable(
-            dt_af,
-            selection = "none",
-            extensions = c("FixedColumns", "FixedHeader"),
-            options = list(dom = "t", iDisplayLength = nrow(dt_af), ordering = FALSE, autoWidth = FALSE, scrollX = TRUE, scrollY = "calc(100vh - 150px)",
-                           fixedHeader = FALSE, fixedColumns = list(leftColumns = 1, rightColumns = 0)),
-            rownames = FALSE
-            ) %>%
-              formatStyle(names(dt_af), lineHeight = "80%")
-        }
-      })
-
       observeEvent(input$act_deconvo, {
         updateNavbarPage(session = session_top, inputId = "navbar", selected = "Deconvolution")
+      })
+
+      observeEvent(input$act_lr, {
+        updateNavbarPage(session = session_top, inputId = "navbar", selected = "Likelihood ratio")
       })
 
       return(rv_input)

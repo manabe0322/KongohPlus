@@ -4,12 +4,14 @@
 \alias{load_proj_server}
 \title{load_proj_server}
 \usage{
-load_proj_server(id, session_top)
+load_proj_server(id, session_top, rv_input)
 }
 \arguments{
 \item{id}{The server ID}
 
 \item{session_top}{The top session}
+
+\item{rv_input}{The reactive values derived from the input file server}
 }
 \description{
 The function to create the server module for loading the project

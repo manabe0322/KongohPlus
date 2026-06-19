@@ -4,14 +4,14 @@
 \alias{file_server}
 \title{file_server}
 \usage{
-file_server(id, session_top, bool_load_proj)
+file_server(id, session_top, rv_state)
 }
 \arguments{
 \item{id}{The server ID}
 
 \item{session_top}{The top session}
 
-\item{bool_load_proj}{TRUE/FALSE: Whether a project is loaded}
+\item{rv_state}{A reactiveValues object containing application state variables}
 }
 \description{
 The function to create the server module for loading files

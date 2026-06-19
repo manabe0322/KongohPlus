@@ -20,7 +20,8 @@ load_proj_ui <- function(id){
 #' @description The function to create the server module for loading the project
 #' @param id The server ID
 #' @param session_top The top session
-load_proj_server <- function(id, session_top){
+#' @param rv_input The reactive values derived from the input file server
+load_proj_server <- function(id, session_top, rv_input){
   moduleServer(
     id,
     function(input, output, session){
@@ -40,29 +41,47 @@ load_proj_server <- function(id, session_top){
       })
 
       observeEvent(input$act_load_proj, {
-        proj <- load_proj()
-        if(is.null(proj)){
-          showModal(modalDialog(title = "Error", "Select a project file!", easyClose = TRUE, footer = NULL))
-        }else{
-          waiter_ui <- Waiter$new(html = tagList(spin_3k(),
-                                                 h3("Loading the project...")),
-                                  color = transparent(.5))
-          waiter_ui$show()
 
-          load(input$file_proj$datapath)
-          rv_load_proj$data_deconvo <- data_deconvo
-          rv_load_proj$data_lr <- data_lr
-          rv_load_proj$hd_true_random <- hd_true_random
-#          rv_load_proj$hd_true_importance <- hd_true_importance
+        if(!is.null(rv_input$dt_csp) ||
+           !is.null(rv_input$dt_ref) ||
+           !is.null(rv_input$dt_af)){
 
-          if(is.null(data_deconvo)){
-            updateNavbarPage(session = session_top, "navbar", selected = "File")
-          }else{
-            updateNavbarPage(session = session_top, "navbar", selected = "Deconvolution")
-          }
-
-          waiter_ui$hide()
+          showModal(
+            modalDialog(
+              title = "Warning",
+              "Please start a new project before loading another project.",
+              easyClose = TRUE,
+              footer = NULL
+            )
+          )
         }
+
+        else{
+          proj <- load_proj()
+          if(is.null(proj)){
+            showModal(modalDialog(title = "Error", "Select a project file!", easyClose = TRUE, footer = NULL))
+          }else{
+            waiter_ui <- Waiter$new(html = tagList(spin_3k(),
+                                                   h3("Loading the project...")),
+                                    color = transparent(.5))
+            waiter_ui$show()
+
+            load(input$file_proj$datapath)
+            rv_load_proj$data_deconvo <- data_deconvo
+            rv_load_proj$data_lr <- data_lr
+            rv_load_proj$hd_true_random <- hd_true_random
+#           rv_load_proj$hd_true_importance <- hd_true_importance
+
+            if(is.null(data_deconvo)){
+              updateNavbarPage(session = session_top, "navbar", selected = "File")
+            }else{
+              updateNavbarPage(session = session_top, "navbar", selected = "Deconvolution")
+            }
+
+            waiter_ui$hide()
+          }
+        }
+
       }, ignoreInit = TRUE)
 
       return(rv_load_proj)

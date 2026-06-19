@@ -79,10 +79,19 @@ KongohPlus <- function(num_threads = NULL){
 
   server <- function(input, output, session){
 
+    rv_state <- reactiveValues(
+      has_deconvo = FALSE
+    )
+
     # --- Define the modules for the analysis --- #
 
-    rv_input <- file_server("file", session)
+    rv_input <- file_server("file", session, rv_state)
     rv_deconvo <- deconvo_server("deconvo", path_pack, ver_soft, session, rv_input)
+
+    observe({
+      rv_state$has_deconvo <- !is.null(rv_deconvo$data_deconvo)
+    })
+
     rv_lr <- lr_server("lr", rv_input, rv_deconvo)
     report_server("report", path_pack, rv_deconvo, rv_lr)
 
@@ -118,7 +127,7 @@ KongohPlus <- function(num_threads = NULL){
 
     # --- Load project --- #
 
-    rv_load_proj <- load_proj_server("load_proj", session)
+    rv_load_proj <- load_proj_server("load_proj", session, rv_input)
     observe({
       req(rv_load_proj)
       req(rv_input)
