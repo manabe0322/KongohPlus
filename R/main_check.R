@@ -32,8 +32,25 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, markers_auto, method){
     for(i in 1:length(sn_all_csp)){
       sn1_csp <- sn_all_csp[i]
       dt_csp_sn1 <- dt_csp[SampleName == sn1_csp]
-      if(!all(is.element(markers_auto, dt_csp_sn1[, Marker]))){
+
+      # Check marker set
+      markers_csp <- dt_csp_sn1[, Marker]
+      if(!all(is.element(markers_auto, markers_csp))){
         error_message <- paste0(error_message, "Marker set of the crime stain profile '", sn1_csp, "' is not correct!<br>")
+      }
+
+      # Check duplicated markers
+      markers_csp_dup <- markers_csp[duplicated(markers_csp)]
+      if(length(markers_csp_dup) != 0){
+        error_message <- paste0(error_message, "Duplicate marker names detected in the crime stain profile '", sn1_csp, "' ! Each marker must be listed only once.<br>")
+      }
+
+      # Check OL, OMR, and Spike
+      rowindex_ol <- nrow(which(dt_csp_sn1[, grep("Allele", names(dt_csp_sn1)), with = FALSE] == "OL", arr.ind = TRUE))
+      rowindex_omr <- nrow(which(dt_csp_sn1[, grep("Allele", names(dt_csp_sn1)), with = FALSE] == "OMR", arr.ind = TRUE))
+      rowindex_spike <- nrow(which(dt_csp_sn1[, grep("Allele", names(dt_csp_sn1)), with = FALSE] == "Spike", arr.ind = TRUE))
+      if(rowindex_ol != 0 || rowindex_omr != 0 || rowindex_spike != 0){
+        error_message <- paste0(error_message, "Invalid allele label detected in the crime stain profile '", sn1_csp, "': contains OL, OMR, and/or Spike.<br>")
       }
     }
 
@@ -43,20 +60,43 @@ check_main_file <- function(dt_csp, dt_ref, dt_af, markers_auto, method){
       for(i in 1:length(sn_all_ref)){
         sn1_ref <- sn_all_ref[i]
         dt_ref_sn1 <- dt_ref[SampleName == sn1_ref]
-        if(!any(is.element(markers_auto, dt_ref_sn1[, Marker]))){
+
+        # Check marker set
+        markers_ref <- dt_ref_sn1[, Marker]
+        if(!any(is.element(markers_auto, markers_ref))){
           error_message <- paste0(error_message, "At least one of the CSP markers must be included in the reference profile '", sn1_ref, "'!<br>")
+        }else{
+
+          # Check duplicated markers
+          markers_ref_dup <- markers_ref[duplicated(markers_ref)]
+          if(length(markers_ref_dup) != 0){
+            error_message <- paste0(error_message, "Duplicate marker names detected in the reference profile '", sn1_ref, "' ! Each marker must be listed only once.<br>")
+          }
+
+          # Check genotype entries
+          else{
+            markers_ref_error <- character(0)
+
+            for(j in 1:length(markers_auto)){
+              mk <- markers_auto[j]
+              dt_ref_sn1_mk <- dt_ref_sn1[dt_ref_sn1$Marker == mk]
+              alleles <- c(dt_ref_sn1_mk$Allele1, dt_ref_sn1_mk$Allele2)
+              if(length(alleles[is.na(alleles)]) == 1){
+                markers_ref_error <- c(markers_ref_error, mk)
+              }
+            }
+
+            if(length(markers_ref_error) != 0){
+              error_message <- paste0(error_message, "Incomplete genotype entries detected in the reference profile '", sn1_ref, "': ", paste0(markers_ref_error, collapse = ", "), ". Please enter both alleles or leave both fields blank (the marker will be excluded from the LR calculation).<br>")
+            }
+          }
         }
       }
     }
-  }
 
-  # --- Check OL, OMR, and Spike --- #
-
-  rowindex_ol <- nrow(which(dt_csp[, grep("Allele", names(dt_csp)), with = FALSE] == "OL", arr.ind = TRUE))
-  rowindex_omr <- nrow(which(dt_csp[, grep("Allele", names(dt_csp)), with = FALSE] == "OMR", arr.ind = TRUE))
-  rowindex_spike <- nrow(which(dt_csp[, grep("Allele", names(dt_csp)), with = FALSE] == "Spike", arr.ind = TRUE))
-  if(rowindex_ol != 0 || rowindex_omr != 0 || rowindex_spike != 0){
-    error_message <- paste0(error_message, "Invalid allele label: contains OL, OMR, and/or Spike.<br>")
+    if(!all(is.element(markers_auto, names(dt_af)))){
+      error_message <- paste0(error_message, "Marker set of the allele frequencies is not correct!<br>")
+    }
   }
 
   return(error_message)

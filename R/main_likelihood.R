@@ -12,8 +12,15 @@ extract_prof_ref <- function(dt_ref, mk, refs){
     index_ref <- which(dt_ref_one_mk$SampleName == refs[i])
     if(length(index_ref) != 0){
       tmp <- dt_ref_one_mk[index_ref, ]
-      prof_ref[2 * i - 1] <- as.numeric(tmp$Allele1)
-      prof_ref[2 * i] <- as.numeric(tmp$Allele2)
+      a1 <- as.numeric(tmp$Allele1)
+      if(!is.na(a1)){
+        prof_ref[2 * i - 1] <- a1
+      }
+
+      a2 <- as.numeric(tmp$Allele2)
+      if(!is.na(a2)){
+        prof_ref[2 * i] <- a2
+      }
     }
   }
   return(prof_ref)
