@@ -244,7 +244,39 @@ hd_true_importance_server <- function(id, path_pack, rv_deconvo){
         lr_importance <- rv_hd_true_importance$lr_importance
         log10_lr_importance <- log10(lr_importance)
         log10_lr_importance[log10_lr_importance < -300] <- -300
-        hist(log10_lr_importance)
+
+        df_lr_importance <- data.frame(
+          log10LR = log10_lr_importance
+        )
+
+        ggplot(df_lr_importance, aes(x = log10LR)) +
+          geom_histogram(
+            binwidth = 1,
+            fill = "gray80",
+            color = "white"
+          ) +
+          labs(
+            x = expression(log[10]~"(LR)"),
+            y = "Number of non-contributors",
+            caption = "Note: log10(LR) values of -Inf are plotted at -300."
+          ) +
+          theme_bw() +
+          theme(
+            axis.title.x = element_text(
+              size = 16,
+              margin = margin(t = 12)
+            ),
+            axis.title.y = element_text(
+              size = 16,
+              margin = margin(r = 12)
+            ),
+            axis.text.x = element_text(size = 14),
+            axis.text.y = element_text(size = 14),
+            plot.caption = element_text(
+              size = 14,
+              hjust = 0
+            )
+          )
       })
 
       return(rv_hd_true_importance)

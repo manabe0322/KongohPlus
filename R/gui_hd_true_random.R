@@ -295,7 +295,39 @@ hd_true_random_server <- function(id, path_pack, rv_deconvo){
         lr_rand <- rv_hd_true_random$lr_rand
         log10_lr_rand <- log10(lr_rand)
         log10_lr_rand[log10_lr_rand < -300] <- -300
-        hist(log10_lr_rand, xlab = expression(log[10](LR)), main = "")
+
+        df_lr_rand <- data.frame(
+          log10LR = log10_lr_rand
+        )
+
+        ggplot(df_lr_rand, aes(x = log10LR)) +
+          geom_histogram(
+            binwidth = 1,
+            fill = "gray80",
+            color = "white"
+          ) +
+          labs(
+            x = expression(log[10]~"(LR)"),
+            y = "Number of non-contributors",
+            caption = "Note: log10(LR) values of -Inf are plotted at -300."
+          ) +
+          theme_bw() +
+          theme(
+            axis.title.x = element_text(
+              size = 16,
+              margin = margin(t = 12)
+            ),
+            axis.title.y = element_text(
+              size = 16,
+              margin = margin(r = 12)
+            ),
+            axis.text.x = element_text(size = 14),
+            axis.text.y = element_text(size = 14),
+            plot.caption = element_text(
+              size = 14,
+              hjust = 0
+            )
+          )
       })
 
       return(rv_hd_true_random)
