@@ -17,8 +17,7 @@ file_ui <- function(id){
         h4("Files used for likelihood ratio calculation"),
         fileInput(ns("file_ref"), label = "Reference profile", accept = ".csv", buttonLabel = "Load"),
         br(),
-        actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg"),
-        actionButton(ns("act_lr"), label = "Likelihood ratio", class = "btn btn-primary btn-lg")
+        actionButton(ns("act_deconvo"), label = "Deconvolution", class = "btn btn-primary btn-lg")
       ),
       mainPanel(
         width = 9,
@@ -295,10 +294,6 @@ file_server <- function(id, session_top, rv_state){
 
       observeEvent(input$act_deconvo, {
         updateNavbarPage(session = session_top, inputId = "navbar", selected = "Deconvolution")
-      })
-
-      observeEvent(input$act_lr, {
-        updateNavbarPage(session = session_top, inputId = "navbar", selected = "Likelihood ratio")
       })
 
       return(rv_input)
