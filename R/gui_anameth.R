@@ -202,6 +202,14 @@ anameth_server <- function(id, path_pack){
       # --- Edit an analysis method --- #
 
       observeEvent(input$act_anameth_edit, {
+        rv_anameth$dt_anameth_edit <- NULL
+        rv_anameth$anameth_edit <- NULL
+        rv_anameth$list_dt_average_sr_origin <- NULL
+        rv_anameth$list_dt_average_sr <- NULL
+        rv_anameth$dt_average_sr <- NULL
+        rv_anameth$current_mk <- NULL
+        rv_anameth$alart_anameth_edit <- character(0)
+
         index_select <- input$display_info_amameth_rows_selected
         if(length(index_select) == 1){
 
@@ -305,26 +313,13 @@ anameth_server <- function(id, path_pack){
             ),
             footer = tagList(
               actionButton(session$ns("act_anameth_edit_save"), "Save"),
-              actionButton(session$ns("act_anameth_edit_cancel"), "Cancel")
+              modalButton("Cancel")
             )
           ) %>% tagAppendAttributes(class = "edit-modal")
           )
         }else{
           showModal(modalDialog(title = "Error", "Select an analysis method!", easyClose = TRUE, footer = NULL))
         }
-      })
-
-      # Reset reactive values for editing the analysis method
-      observeEvent(input$act_anameth_edit_cancel, {
-        rv_anameth$dt_anameth_edit <- NULL
-        rv_anameth$anameth_edit <- NULL
-        rv_anameth$list_dt_average_sr_origin <- NULL
-        rv_anameth$list_dt_average_sr <- NULL
-        rv_anameth$dt_average_sr <- NULL
-        rv_anameth$current_mk <- NULL
-        rv_anameth$alart_anameth_edit <- character(0)
-
-        removeModal()
       })
 
       # UI for alart message
