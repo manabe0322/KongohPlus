@@ -38,7 +38,8 @@ simple_linear_regression <- function(x, y){
 #' @param markers_use A vector of the autosomal markers used
 #' @param ats_use A vector of the analytical thresholds for each marker
 make_peak_data <- function(dt_csp, dt_kit_auto, markers_use, ats_use){
-  # Column indices for alleles, sizes, and heights
+
+  # Column indices for alleles and heights
   names_csp <- names(dt_csp)
   index_allele <- grep("Allele", names_csp)
   index_height <- grep("Height", names_csp)
@@ -60,6 +61,7 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_use, ats_use){
     setindex(dt_csp_mk, SampleName)
     peaks_list_mk <- heights_list_mk <- vector(mode = "list", length = n_rep)
     for(j in 1:n_rep){
+
       # Extract information on peaks of a marker in one replicate
       rep1 <- name_csp_all[j]
       dt_csp_mk_rep1 <- dt_csp_mk[SampleName == rep1]
@@ -84,25 +86,81 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_use, ats_use){
     peaks_all_rep <- sort(unique(unlist(peaks_list_mk)))
     height_list_mk_new <- update_heights_list_mk(peaks_all_rep, peaks_list_mk, heights_list_mk)
 
-    # Extract information on sizes
+    # Simple linear regression analysis between allele and size
     alleles_kit <- as.numeric(dt_kit_auto_mk[["Allele"]])
     sizes_kit <- dt_kit_auto_mk[["Size"]]
-    sizes_all_rep <- rep(0, length(peaks_all_rep))
+    rep_uni_len <- dt_kit_auto_mk[["Repeat Unit Length"]][1]
+    alleles_scale_change <- change_var_al_plot(alleles_kit, rep_uni_len)
+    param_tmp <- simple_linear_regression(alleles_scale_change, sizes_kit)
+    slope <- param_tmp["slope"]
+    intercept <- param_tmp["intercept"]
+
+    # Determine sizes
+    sizes_al <- sizes_bs <- sizes_fs <- sizes_ds <- sizes_m2s <- rep(0, length(peaks_all_rep))
     if(length(peaks_all_rep) != 0){
+
+      # Determine sizes for alleles
       index_sizes <- match(peaks_all_rep, alleles_kit)
       index_sizes_na <- which(is.na(index_sizes))
       index_sizes_exist <- which(!is.na(index_sizes))
-      sizes_all_rep[index_sizes_exist] <- sizes_kit[index_sizes[index_sizes_exist]]
+      sizes_al[index_sizes_exist] <- sizes_kit[index_sizes[index_sizes_exist]]
 
       # Interpolation or extrapolation to determine the sizes without information
       if(length(index_sizes_na) != 0){
-        rep_uni_len <- dt_kit_auto_mk[["Repeat Unit Length"]][1]
-        alleles_scale_change <- change_var_al_plot(alleles_kit, rep_uni_len)
-        param_tmp <- simple_linear_regression(alleles_scale_change, sizes_kit)
-        slope <- param_tmp["slope"]
-        intercept <- param_tmp["intercept"]
         peaks_scale_change <- change_var_al_plot(peaks_all_rep[index_sizes_na], rep_uni_len)
-        sizes_all_rep[index_sizes_na] <- slope * peaks_scale_change + intercept
+        sizes_al[index_sizes_na] <- slope * peaks_scale_change + intercept
+      }
+
+      # Determine sizes for back stutters
+      peaks_par_al_bs <- calc_parent_al_bs(peaks_all_rep)
+      index_sizes <- match(peaks_par_al_bs, alleles_kit)
+      index_sizes_na <- which(is.na(index_sizes))
+      index_sizes_exist <- which(!is.na(index_sizes))
+      sizes_bs[index_sizes_exist] <- sizes_kit[index_sizes[index_sizes_exist]]
+
+      # Interpolation or extrapolation to determine the sizes without information
+      if(length(index_sizes_na) != 0){
+        peaks_scale_change <- change_var_al_plot(peaks_par_al_bs[index_sizes_na], rep_uni_len)
+        sizes_bs[index_sizes_na] <- slope * peaks_scale_change + intercept
+      }
+
+      # Determine sizes for forward stutters
+      peaks_par_al_fs <- calc_parent_al_fs(peaks_all_rep)
+      index_sizes <- match(peaks_par_al_fs, alleles_kit)
+      index_sizes_na <- which(is.na(index_sizes))
+      index_sizes_exist <- which(!is.na(index_sizes))
+      sizes_fs[index_sizes_exist] <- sizes_kit[index_sizes[index_sizes_exist]]
+
+      # Interpolation or extrapolation to determine the sizes without information
+      if(length(index_sizes_na) != 0){
+        peaks_scale_change <- change_var_al_plot(peaks_par_al_fs[index_sizes_na], rep_uni_len)
+        sizes_fs[index_sizes_na] <- slope * peaks_scale_change + intercept
+      }
+
+      # Determine sizes for double-back stutters
+      peaks_par_al_ds <- calc_parent_al_ds(peaks_all_rep)
+      index_sizes <- match(peaks_par_al_ds, alleles_kit)
+      index_sizes_na <- which(is.na(index_sizes))
+      index_sizes_exist <- which(!is.na(index_sizes))
+      sizes_ds[index_sizes_exist] <- sizes_kit[index_sizes[index_sizes_exist]]
+
+      # Interpolation or extrapolation to determine the sizes without information
+      if(length(index_sizes_na) != 0){
+        peaks_scale_change <- change_var_al_plot(peaks_par_al_ds[index_sizes_na], rep_uni_len)
+        sizes_ds[index_sizes_na] <- slope * peaks_scale_change + intercept
+      }
+
+      # Determine sizes for minus 2-nt stutters
+      peaks_par_al_m2s <- calc_parent_al_m2s(peaks_all_rep)
+      index_sizes <- match(peaks_par_al_m2s, alleles_kit)
+      index_sizes_na <- which(is.na(index_sizes))
+      index_sizes_exist <- which(!is.na(index_sizes))
+      sizes_m2s[index_sizes_exist] <- sizes_kit[index_sizes[index_sizes_exist]]
+
+      # Interpolation or extrapolation to determine the sizes without information
+      if(length(index_sizes_na) != 0){
+        peaks_scale_change <- change_var_al_plot(peaks_par_al_m2s[index_sizes_na], rep_uni_len)
+        sizes_m2s[index_sizes_na] <- slope * peaks_scale_change + intercept
       }
     }
 
@@ -111,7 +169,7 @@ make_peak_data <- function(dt_csp, dt_kit_auto, markers_use, ats_use){
 
     # Add information on the drop-out peak
     peaks_list[[i]] <- c(peaks_all_rep, 99)
-    sizes_list[[i]] <- c(sizes_all_rep, size_do)
+    sizes_list[[i]] <- c(sizes_al, size_do, sizes_bs, size_do, sizes_fs, size_do, sizes_ds, size_do, sizes_m2s, size_do)
     heights_all_rep_list <- vector(mode = "list", length = n_rep)
     for(j in 1:n_rep){
       heights_all_rep_list[[j]] <- c(height_list_mk_new[[j]], 0)

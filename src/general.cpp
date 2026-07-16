@@ -149,6 +149,16 @@ double calc_parent_al_bs_one(double bs){
 }
 
 // [[Rcpp::export]]
+std::vector<double> calc_parent_al_bs(std::vector<double> bss){
+  int n_bs = bss.size();
+  std::vector<double> alleles = std::vector<double>(n_bs);
+  for(int i = 0; i < n_bs; ++i){
+    alleles[i] = calc_parent_al_bs_one(bss[i]);
+  }
+  return(alleles);
+}
+
+// [[Rcpp::export]]
 double calc_parent_al_fs_one(double fs){
   double tmp = fs - 1;
   double par_al = round(tmp * 10) / 10;
@@ -156,10 +166,30 @@ double calc_parent_al_fs_one(double fs){
 }
 
 // [[Rcpp::export]]
+std::vector<double> calc_parent_al_fs(std::vector<double> fss){
+  int n_fs = fss.size();
+  std::vector<double> alleles = std::vector<double>(n_fs);
+  for(int i = 0; i < n_fs; ++i){
+    alleles[i] = calc_parent_al_fs_one(fss[i]);
+  }
+  return(alleles);
+}
+
+// [[Rcpp::export]]
 double calc_parent_al_ds_one(double ds){
   double tmp = ds + 2;
   double par_al = round(tmp * 10) / 10;
   return(par_al);
+}
+
+// [[Rcpp::export]]
+std::vector<double> calc_parent_al_ds(std::vector<double> dss){
+  int n_ds = dss.size();
+  std::vector<double> alleles = std::vector<double>(n_ds);
+  for(int i = 0; i < n_ds; ++i){
+    alleles[i] = calc_parent_al_ds_one(dss[i]);
+  }
+  return(alleles);
 }
 
 // [[Rcpp::export]]
@@ -174,6 +204,16 @@ double calc_parent_al_m2s_one(double m2s){
     par_al = round(tmp * 10) / 10;
   }
   return(par_al);
+}
+
+// [[Rcpp::export]]
+std::vector<double> calc_parent_al_m2s(std::vector<double> m2ss){
+  int n_m2s = m2ss.size();
+  std::vector<double> alleles = std::vector<double>(n_m2s);
+  for(int i = 0; i < n_m2s; ++i){
+    alleles[i] = calc_parent_al_m2s_one(m2ss[i]);
+  }
+  return(alleles);
 }
 
 // [[Rcpp::export]]

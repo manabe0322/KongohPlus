@@ -65,16 +65,32 @@ calc_parent_al_bs_one <- function(bs) {
     .Call(`_KongohPlus_calc_parent_al_bs_one`, bs)
 }
 
+calc_parent_al_bs <- function(bss) {
+    .Call(`_KongohPlus_calc_parent_al_bs`, bss)
+}
+
 calc_parent_al_fs_one <- function(fs) {
     .Call(`_KongohPlus_calc_parent_al_fs_one`, fs)
+}
+
+calc_parent_al_fs <- function(fss) {
+    .Call(`_KongohPlus_calc_parent_al_fs`, fss)
 }
 
 calc_parent_al_ds_one <- function(ds) {
     .Call(`_KongohPlus_calc_parent_al_ds_one`, ds)
 }
 
+calc_parent_al_ds <- function(dss) {
+    .Call(`_KongohPlus_calc_parent_al_ds`, dss)
+}
+
 calc_parent_al_m2s_one <- function(m2s) {
     .Call(`_KongohPlus_calc_parent_al_m2s_one`, m2s)
+}
+
+calc_parent_al_m2s <- function(m2ss) {
+    .Call(`_KongohPlus_calc_parent_al_m2s`, m2ss)
 }
 
 extract_gt_comb <- function(cand_gt, ind_gtc, hnc) {

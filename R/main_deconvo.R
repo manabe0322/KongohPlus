@@ -271,7 +271,7 @@ perform_deconvo <- function(hnc, n_rep, markers_use, ats_use, peaks_list, sizes_
 
     # --- Prepare the scale of degradation corrected by sizes --- #
 
-    deg_size_base_use[[i]] <- c(rep((sizes - base_size) / 100, 5), 0, -1)
+    deg_size_base_use[[i]] <- c((sizes - base_size) / 100, 0, -1)
 
     # --- Generate all possible genotype combinations --- #
 
