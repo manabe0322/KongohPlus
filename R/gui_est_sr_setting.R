@@ -47,26 +47,15 @@ create_init_dt_setting_est_sr <- function(dt_kit){
 
   dt_setting_est_sr <- data.table(Marker = markers)
 
-  if(nrow(dt_setting_est_sr) == 21){
-    dt_setting_est_sr$AT <- c(rep(35, 5), rep(65, 3), rep(45, 4), rep(50, 5), rep(60, 4))
-    dt_setting_est_sr$Model_BSR <- c("Linear (Allele)", "Linear (Allele)", "Linear (Allele)", "Linear (Allele)", "Linear (Allele)",
-                                     "Linear (Corrected Allele)", "Linear (Corrected Allele)", "Linear (Allele)",
-                                     "Linear (Corrected Allele)", "Linear (Allele)", "Linear (Corrected Allele)", "Linear (Corrected Allele)",
-                                     "Linear (Allele)", "Linear (Allele)", "Linear (Allele)", "Linear (Allele)", "Linear (Corrected Allele)",
-                                     "Linear (Allele)", "Linear (Corrected Allele)", "Linear (Corrected Allele)", "Linear (Corrected Allele)")
-    dt_setting_est_sr$Model_FSR <- "Uniform (Multiple loci)"
-    dt_setting_est_sr$Model_FSR[13] <- "Linear (Allele)"
-    dt_setting_est_sr$Model_DSR <- "Uniform (Multiple loci)"
-    dt_setting_est_sr$Model_M2SR <- "Not consider"
-    dt_setting_est_sr$Model_M2SR[17] <- "Uniform"
-    dt_setting_est_sr$Model_M2SR[19] <- "Uniform"
-  }else{
-    dt_setting_est_sr$AT <- 50
-    dt_setting_est_sr$Model_BSR <- "Linear (Allele)"
-    dt_setting_est_sr$Model_FSR <- "Uniform (Multiple loci)"
-    dt_setting_est_sr$Model_DSR <- "Uniform (Multiple loci)"
-    dt_setting_est_sr$Model_M2SR <- "Not consider"
-  }
+  dt_setting_est_sr$AT <- 35
+  dt_setting_est_sr$Model_BSR <- "Linear (Allele)"
+  dt_setting_est_sr$Model_FSR <- "Uniform (Multiple loci)"
+  dt_setting_est_sr$Model_DSR <- "Uniform (Multiple loci)"
+  dt_setting_est_sr$Model_M2SR <- "Not consider"
+
+  dt_setting_est_sr$Model_BSR[is.element(markers, c("D8S1179", "D21S11", "D2S441", "TH01", "FGA", "SE33", "D1S1656", "D12S391", "D2S1338"))] <- "Linear (Corrected Allele)"
+  dt_setting_est_sr$Model_FSR[is.element(markers, c("D22S1045"))] <- "Linear (Allele)"
+  dt_setting_est_sr$Model_M2SR[is.element(markers, c("SE33", "D1S1656"))] <- "Uniform"
 
   col_int <- c("AT")
   dt_setting_est_sr[, (col_int) := lapply(.SD, as.integer), .SDcols = col_int]

@@ -1,11 +1,11 @@
 #include <Rcpp.h>
 #include <algorithm>  // max_element
 #include <cmath>      // round, pow
-#include <iostream>   // push_back
+#include <iostream>
 #include <numeric>    // accumulate
 #include <omp.h>      // OpenMP
 #include <string>
-#include <vector>
+#include <vector>     // push_back
 #include <boost/math/distributions/gamma.hpp>
 using namespace Rcpp;
 
