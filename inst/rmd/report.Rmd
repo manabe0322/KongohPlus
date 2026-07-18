@@ -350,14 +350,18 @@ if (!is.null(data_hnc_list)) {
       }
       
       cat("#### Warnings\n\n")
-      cat("<div class='warnings'>", warning_text, "</div>\n\n")
+      cat("<div class=\"warnings\">\n")
+      cat(warning_text)
+      cat("\n</div>\n\n")
     }else{
       
       # --- Output: Error Message --- #
       
       error_message <- data_hnc$error_message
       cat("#### Error\n\n")
-      cat("<div class='error'>", error_message, "</div>\n\n")
+      cat("<div class=\"error\">\n")
+      cat(error_message)
+      cat("\n</div>\n\n")
     }
     
     cat("<div class=\"pagebreak\"></div>\n\n")
