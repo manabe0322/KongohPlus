@@ -29,7 +29,7 @@ create_fig_eph <- function(dt_param, min_size, max_size, base_size){
     names(y_list) <- paste0("U", 1:hnc)
     max_y_plot <- max(unlist(y_list))
 
-    base_plot <- ggplot() + xlab("Size") + ylab("Estimated peak height")
+    base_plot <- ggplot() + xlab("Size") + ylab("Average peak height")
     for(nm in names(y_list)){
       dt_plot <- data.table(X = x_val, Y = y_list[[nm]], group = nm)
       base_plot <- base_plot +

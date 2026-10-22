@@ -413,6 +413,12 @@ deconvo_pg_server <- function(id, rv_deconvo){
         x_min <- rv_deconvo_pg$x_min
         x_max <- rv_deconvo_pg$x_max
 
+        if (is.infinite(x_min) || x_min == -Inf ||
+            is.infinite(x_max) || x_max == -Inf){
+          x_min <- 0
+          x_max <- 1
+        }
+
         sliderInput(session$ns("x_range"),
                     "Range of the x-axis",
                     min = x_min,
@@ -423,6 +429,10 @@ deconvo_pg_server <- function(id, rv_deconvo){
 
       output$slider_y <- renderUI({
         y_max <- rv_deconvo_pg$y_max
+
+        if(is.infinite(y_max) || y_max < 10){
+          y_max <- 10
+        }
 
         sliderInput(session$ns("y_range"),
                     "Range of the y-axis (log10 scale)",

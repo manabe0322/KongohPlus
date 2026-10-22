@@ -114,7 +114,7 @@ info_al_server <- function(id, path_pack){
 
       observeEvent(input$select_marker, {
         # Keep data for the marker selected one before
-        dt_info_al <- hot_to_r(input$dt_info_al)
+        dt_info_al <- suppressWarnings(hot_to_r(input$dt_info_al))
         if(!is.null(dt_info_al)){
           rv_info_al$list_dt_info_al[[rv_info_al$select_marker]] <- dt_info_al
         }
@@ -164,7 +164,7 @@ info_al_server <- function(id, path_pack){
       })
 
       observeEvent(input$act_add_allele, {
-        dt_info_al <- hot_to_r(input$dt_info_al)
+        dt_info_al <- suppressWarnings(hot_to_r(input$dt_info_al))
         dt_info_al_add <- data.table("Allele" = input$allele_add,
                                      "Corrected Allele" = NA,
                                      "Size" = NA)
@@ -201,14 +201,14 @@ info_al_server <- function(id, path_pack){
       observeEvent(input$act_delete_allele, {
         allele_delete <- input$allele_delete
         if(!is.null(allele_delete)){
-          dt_info_al <- hot_to_r(input$dt_info_al)
+          dt_info_al <- suppressWarnings(hot_to_r(input$dt_info_al))
           index_delete <- which(dt_info_al[["Allele"]] == allele_delete)
           rv_info_al$list_dt_info_al[[input$select_marker]] <- dt_info_al[-index_delete]
         }
       })
 
       observeEvent(input$act_save_allele, {
-        rv_info_al$list_dt_info_al[[input$select_marker]] <- hot_to_r(input$dt_info_al)
+        rv_info_al$list_dt_info_al[[input$select_marker]] <- suppressWarnings(hot_to_r(input$dt_info_al))
 
         name_kit <- rv_info_al$name_kit
         list_dt_info_al <- rv_info_al$list_dt_info_al

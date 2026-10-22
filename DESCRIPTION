@@ -1,10 +1,10 @@
 Package: KongohPlus
 Type: Package
 Title: Probabilistic genotyping software based on a quantitative continuous model
-Version: 0.32.0
+Version: 1.0.0
 Author: Sho Manabe <manabe.sho@kmu.ac.jp>
 Maintainer: Sho Manabe <manabe.sho@kmu.ac.jp>
-Description: Probabilistic genotyping software based on a quantitative continuous model.
+Description: KongohPlus is a probabilistic genotyping software designed to perform likelihood ratio analysis of crime stain profiles. Based on a statistical model that incorporates peak height information, the software calculates the probability of observing a DNA profile under competing hypotheses and evaluates the likelihood ratio (LR) as the ratio of these probabilities.
 License: GPL (>= 3)
 Encoding: UTF-8
 LazyData: true

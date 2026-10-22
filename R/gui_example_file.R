@@ -15,7 +15,22 @@ example_file_ui <- function(id){
     downloadButton(ns("download_ref"), "Reference profile"),
     br(),
     br(),
-    downloadButton(ns("download_af"), "Allele frequencies")
+    downloadButton(ns("download_af"), "Allele frequencies"),
+    br(),
+    br(),
+
+    tags$hr(),
+    h4("References"),
+
+    tags$p(
+      tags$strong("Crime stain and reference profiles: "),
+      "L.E. Alfonse, A.D. Garrett, D.S. Lun, K.R. Duffy, C.M. Grgicak, A large-scale dataset of single and mixed-source short tandem repeat profiles to inform human identification strategies: PROVEDIt, Forensic Sci. Int. Genet. 32 (2018) 62–70."
+    ),
+
+    tags$p(
+      tags$strong("Allele frequencies: "),
+      "C.R. Steffen, M.D. Coble, K.B. Gettings, P.M. Vallone, Corrigendum to ‘U.S. Population Data for 29 Autosomal STR Loci’ [Forensic Sci. Int. Genet. 7 (2013) e82–e83], Forensic Sci. Int. Genet. 31 (2017) e36–e40."
+    )
   )
 }
 
@@ -57,12 +72,12 @@ example_file_server <- function(id, path_pack){
 
       # --- Download the example file for allele frequencies --- #
 
-      # Af: GlobalFiler, Japanese
+      # Af: GlobalFiler, Caucasian
 
       output$download_af <- downloadHandler(
-        filename = "Allele-count_GF_Japanese.csv",
+        filename = "example_af.csv",
         content = function(file){
-          csvfile <- read.csv(paste0(path_pack, "/extdata/examples/Allele-count_GF_Japanese.csv"))
+          csvfile <- read.csv(paste0(path_pack, "/extdata/examples/example_af.csv"))
           csvfile[is.na(csvfile)] <- ""
           write.csv(csvfile, file, row.names = FALSE)
         }

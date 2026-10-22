@@ -15,7 +15,12 @@ change_var_al_plot <- function(pk, rep_unit_len){
 #' @param q_distance The distance of the position Q from the maximum peak number
 create_peaks_plot <- function(peaks, rep_unit_len, q_distance = 3){
   peaks_plot <- change_var_al_plot(peaks, rep_unit_len)
-  pk_q <- max(setdiff(peaks_plot, c(99, 991, 992, 993, 994))) + q_distance
+  peaks_obs <- setdiff(peaks_plot, c(99, 991, 992, 993, 994))
+  if(length(peaks_obs) == 0){
+    pk_q <- -Inf
+  }else{
+    pk_q <- max(peaks_obs) + q_distance
+  }
 
   count_q <- 0
   if(any(peaks_plot == 991)){

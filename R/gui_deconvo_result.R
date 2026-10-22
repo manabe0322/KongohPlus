@@ -203,7 +203,7 @@ deconvo_result_server <- function(id, session_top, rv_deconvo){
 
       output$button_ave_ph <- renderUI({
         req(rv_deconvo$data_deconvo)
-        actionButton(session$ns("act_ave_ph"), label = "Illustrate the estimated peak height")
+        actionButton(session$ns("act_ave_ph"), label = "Illustrate the average peak height")
       })
 
       observeEvent(input$act_ave_ph, {
