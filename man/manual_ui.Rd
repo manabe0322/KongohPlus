@@ -6,6 +6,9 @@
 \usage{
 manual_ui(id)
 }
+\arguments{
+\item{id}{The ui ID}
+}
 \description{
 The function to create the ui module for the manual
 }

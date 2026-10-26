@@ -66,7 +66,7 @@ change_data_type_ref <- function(dt_ref){
 #' change_data_type_af
 #'
 #' @description The function to change data type of dt_af
-#' @param dt_csp The data.table of the allele frequency
+#' @param dt_af The data.table of the allele frequency
 change_data_type_af <- function(dt_af){
   names(dt_af) <- gsub(" ", "", names(dt_af))
   name_dt_af <- names(dt_af)

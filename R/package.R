@@ -1,5 +1,6 @@
 #' KongohPlus: Probabilistic genotyping software based on a quantitative continuous model
 #'
+#' @rawNamespace import(shiny, except = c(dataTableOutput, renderDataTable))
 #' @importFrom cmaes cma_es
 #' @importFrom combinat permn
 #' @importFrom data.table as.data.table data.table copy fread setcolorder setDT setindex

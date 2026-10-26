@@ -11,7 +11,7 @@ est_sr_setting_server(id, path_pack, session_est_sr_top)
 
 \item{path_pack}{The path of the package KongohPlus}
 
-\item{session_top}{The top session for estimating the stutter ratios}
+\item{session_est_sr_top}{The top session for estimating the stutter ratios}
 }
 \description{
 The function to create the server module to create the setting tab for estimating the average stutter ratios

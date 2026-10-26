@@ -2,7 +2,6 @@
 #'
 #' @description Main window
 #' @param num_threads Number of threads for parallelization
-#' @usage KongohPlus()
 #' @export
 KongohPlus <- function(num_threads = NULL){
 

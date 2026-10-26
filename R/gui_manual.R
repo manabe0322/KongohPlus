@@ -1,6 +1,7 @@
 #' manual_ui
 #'
 #' @description The function to create the ui module for the manual
+#' @param id The ui ID
 manual_ui <- function(id){
   ns <- NS(id)
 

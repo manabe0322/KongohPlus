@@ -7,7 +7,7 @@
 change_data_type_af(dt_af)
 }
 \arguments{
-\item{dt_csp}{The data.table of the allele frequency}
+\item{dt_af}{The data.table of the allele frequency}
 }
 \description{
 The function to change data type of dt_af

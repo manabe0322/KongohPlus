@@ -5,5 +5,5 @@
 \alias{KongohPlus-package}
 \title{KongohPlus: Probabilistic genotyping software based on a quantitative continuous model}
 \description{
-Probabilistic genotyping software based on a quantitative continuous model.
+KongohPlus is a probabilistic genotyping software designed to perform likelihood ratio analysis of crime stain profiles. Based on a statistical model that incorporates peak height information, the software calculates the probability of observing a DNA profile under competing hypotheses and evaluates the likelihood ratio (LR) as the ratio of these probabilities.
 }

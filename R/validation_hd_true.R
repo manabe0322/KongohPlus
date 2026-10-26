@@ -86,7 +86,7 @@ generate_importance_gt <- function(n_simu, markers_use, dt_pg_list_h1, pop_al_li
     gt_mk <- lapply(tmp_gt, as.numeric)
     pop_al <- pop_al_list[[mk]]
     pop_prob <- pop_prob_list[[mk]]
-    n_obs <- make_n_obs(pop_al, prof_ref = numeric(0))
+    n_obs <- make_n_obs(pop_al, prof_ref_lr = numeric(0))
     obs_al <- as.numeric(names(n_obs))
     gt_prob <- calc_gts_prob_mk(gt_mk, pop_al, pop_prob, theta = 0, prof_ref_99 = numeric(0), hyp_id = 0, n_obs, obs_al, index_dropout_cpp = integer(0))
 

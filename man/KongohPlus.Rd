@@ -4,7 +4,7 @@
 \alias{KongohPlus}
 \title{KongohPlus}
 \usage{
-KongohPlus()
+KongohPlus(num_threads = NULL)
 }
 \arguments{
 \item{num_threads}{Number of threads for parallelization}
