@@ -4,6 +4,7 @@
 #' @importFrom cmaes cma_es
 #' @importFrom combinat permn
 #' @importFrom data.table as.data.table data.table copy fread setcolorder setDT setindex
+#' @rawNamespace importFrom(data.table, .SD, ":=")
 #' @importFrom dplyr arrange desc full_join group_by_at summarise
 #' @importFrom DT datatable dataTableOutput formatRound formatSignif formatStyle JS renderDataTable
 #' @importFrom ggplot2 aes coord_cartesian element_text geom_abline geom_boxplot geom_col geom_histogram geom_hline geom_line geom_point geom_ribbon ggplot labs margin scale_color_manual scale_fill_manual scale_x_continuous scale_x_log10 scale_y_continuous scale_y_log10 sec_axis stat_function theme theme_bw theme_minimal xlab xlim ylab ylim
@@ -19,7 +20,9 @@
 #' @importFrom shinyFiles parseFilePaths shinyFilesButton shinyFileChoose
 #' @importFrom shinyjs disable disabled enable refresh useShinyjs
 #' @importFrom shinythemes shinytheme
+#' @importFrom stats coef dgamma dlnorm lm median pgamma plogis qgamma qlogis quantile rbeta
 #' @importFrom stringr str_replace
+#' @importFrom utils packageVersion read.csv write.csv
 #' @importFrom waiter useWaiter spin_3k transparent Waiter
 "_PACKAGE"
 
