@@ -1,5 +1,7 @@
 # KongohPlus
 
+KongohPlus is a probabilistic genotyping software designed to perform likelihood ratio analysis of crime stain profiles. Based on a statistical model that incorporates peak height information, the software calculates the probability of observing a DNA profile under competing hypotheses and evaluates the likelihood ratio (LR) as the ratio of these probabilities.
+
 ## Intended Use
 
 KongohPlus is primarily intended for research, development, and evaluation in forensic DNA mixture interpretation.
