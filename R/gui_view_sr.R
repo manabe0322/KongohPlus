@@ -407,8 +407,8 @@ view_sr_server <- function(id, path_pack){
           title = "All MLE attempts (BSR)",
 
           div(
-            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
-            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+            span(style = "color:#BFEFFF;", "\u25A0"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "\u25A0"), " : Close to the maximum likelihood"
           ),
 
           dataTableOutput(session$ns("dt_all_mle_bsr")),
@@ -447,8 +447,8 @@ view_sr_server <- function(id, path_pack){
           title = "All MLE attempts (FSR)",
 
           div(
-            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
-            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+            span(style = "color:#BFEFFF;", "\u25A0"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "\u25A0"), " : Close to the maximum likelihood"
           ),
 
           dataTableOutput(session$ns("dt_all_mle_fsr")),
@@ -487,8 +487,8 @@ view_sr_server <- function(id, path_pack){
           title = "All MLE attempts (DSR)",
 
           div(
-            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
-            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+            span(style = "color:#BFEFFF;", "\u25A0"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "\u25A0"), " : Close to the maximum likelihood"
           ),
 
           dataTableOutput(session$ns("dt_all_mle_dsr")),
@@ -527,8 +527,8 @@ view_sr_server <- function(id, path_pack){
           title = "All MLE attempts (M2SR)",
 
           div(
-            span(style = "color:#BFEFFF;", "■"), " : Selected maximum likelihood",
-            span(style = "color:#ADD8E6;", "■"), " : Close to the maximum likelihood"
+            span(style = "color:#BFEFFF;", "\u25A0"), " : Selected maximum likelihood",
+            span(style = "color:#ADD8E6;", "\u25A0"), " : Close to the maximum likelihood"
           ),
 
           dataTableOutput(session$ns("dt_all_mle_m2sr")),

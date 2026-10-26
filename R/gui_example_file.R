@@ -24,12 +24,12 @@ example_file_ui <- function(id){
 
     tags$p(
       tags$strong("Crime stain and reference profiles: "),
-      "L.E. Alfonse, A.D. Garrett, D.S. Lun, K.R. Duffy, C.M. Grgicak, A large-scale dataset of single and mixed-source short tandem repeat profiles to inform human identification strategies: PROVEDIt, Forensic Sci. Int. Genet. 32 (2018) 62–70."
+      "L.E. Alfonse, A.D. Garrett, D.S. Lun, K.R. Duffy, C.M. Grgicak, A large-scale dataset of single and mixed-source short tandem repeat profiles to inform human identification strategies: PROVEDIt, Forensic Sci. Int. Genet. 32 (2018) 62-70."
     ),
 
     tags$p(
       tags$strong("Allele frequencies: "),
-      "C.R. Steffen, M.D. Coble, K.B. Gettings, P.M. Vallone, Corrigendum to ‘U.S. Population Data for 29 Autosomal STR Loci’ [Forensic Sci. Int. Genet. 7 (2013) e82–e83], Forensic Sci. Int. Genet. 31 (2017) e36–e40."
+      "C.R. Steffen, M.D. Coble, K.B. Gettings, P.M. Vallone, Corrigendum to 'U.S. Population Data for 29 Autosomal STR Loci' [Forensic Sci. Int. Genet. 7 (2013) e82-e83], Forensic Sci. Int. Genet. 31 (2017) e36-e40."
     )
   )
 }
