@@ -31,7 +31,7 @@ KongohPlus is provided without warranty, as described in the GNU General Public 
 3. Execute the following command in R to install required packages.
 
 ``` r
-install.packages('https://github.com/manabe0322/KongohPlus/releases/download/v1.0.0/KongohPlus_v1.0.0/.zip', repos = NULL, type = 'win.binary')
+install.packages('https://github.com/manabe0322/KongohPlus/releases/download/v1.0.0/KongohPlus_1.0.0.zip', repos = NULL, type = 'win.binary')
 install.packages(c("shiny", "cmaes", "combinat", "data.table", "dplyr", "DT", "ggplot2", "gridExtra", "gtools", "htmltools", "magrittr", "parallel", "Rcpp", "rhandsontable", "rmarkdown", "shinyFeedback", "shinyFiles", "shinyjs", "shinythemes", "stringr", "waiter"))
 ```
 
